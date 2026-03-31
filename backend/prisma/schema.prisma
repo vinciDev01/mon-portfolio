@@ -1,0 +1,175 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model SiteSettings {
+  id          String   @id @default(uuid())
+  faviconPath String?  @map("favicon_path")
+  logoPath    String?  @map("logo_path")
+  bgColor     String   @default("#F0E68C") @map("bg_color")
+  textColor   String   @default("#000000") @map("text_color")
+  fontSize    Int      @default(16) @map("font_size")
+  fontFamily  String   @default("Figtree") @map("font_family")
+  toastMessage String? @map("toast_message")
+  toastDelayMs Int     @default(180000) @map("toast_delay_ms")
+  cvFilePath  String?  @map("cv_file_path")
+  createdAt   DateTime @default(now()) @map("created_at")
+  updatedAt   DateTime @updatedAt @map("updated_at")
+
+  @@map("site_settings")
+}
+
+model PersonalInfo {
+  id          String   @id @default(uuid())
+  name        String   @default("")
+  surname     String   @default("")
+  email       String   @default("")
+  phone       String?
+  githubUrl   String?  @map("github_url")
+  linkedinUrl String?  @map("linkedin_url")
+  avatarPath  String?  @map("avatar_path")
+  bio         String?
+  createdAt   DateTime @default(now()) @map("created_at")
+  updatedAt   DateTime @updatedAt @map("updated_at")
+
+  @@map("personal_info")
+}
+
+model Technology {
+  id        String   @id @default(uuid())
+  label     String
+  logoPath  String?  @map("logo_path")
+  sortOrder Int      @default(0) @map("sort_order")
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  skills              Skill[]
+  projectTechnologies ProjectTechnology[]
+
+  @@map("technologies")
+}
+
+model Organization {
+  id         String   @id @default(uuid())
+  label      String
+  logoPath   String?  @map("logo_path")
+  websiteUrl String?  @map("website_url")
+  sortOrder  Int      @default(0) @map("sort_order")
+  createdAt  DateTime @default(now()) @map("created_at")
+  updatedAt  DateTime @updatedAt @map("updated_at")
+
+  certifications Certification[]
+  services       Service[]
+
+  @@map("organizations")
+}
+
+model Presentation {
+  id          String   @id @default(uuid())
+  title       String
+  subtitle    String?
+  description String?  @db.Text
+  sortOrder   Int      @default(0) @map("sort_order")
+  createdAt   DateTime @default(now()) @map("created_at")
+  updatedAt   DateTime @updatedAt @map("updated_at")
+
+  @@map("presentations")
+}
+
+model Skill {
+  id           String     @id @default(uuid())
+  technologyId String     @map("technology_id")
+  technology   Technology @relation(fields: [technologyId], references: [id], onDelete: Cascade)
+  proficiency  Int?
+  sortOrder    Int        @default(0) @map("sort_order")
+  createdAt    DateTime   @default(now()) @map("created_at")
+  updatedAt    DateTime   @updatedAt @map("updated_at")
+
+  @@map("skills")
+}
+
+model Experience {
+  id          String    @id @default(uuid())
+  company     String
+  role        String
+  description String?   @db.Text
+  startDate   DateTime  @map("start_date")
+  endDate     DateTime? @map("end_date")
+  isCurrent   Boolean   @default(false) @map("is_current")
+  sortOrder   Int       @default(0) @map("sort_order")
+  createdAt   DateTime  @default(now()) @map("created_at")
+  updatedAt   DateTime  @updatedAt @map("updated_at")
+
+  @@map("experiences")
+}
+
+model Certification {
+  id             String       @id @default(uuid())
+  name           String
+  imagePath      String?      @map("image_path")
+  organizationId String       @map("organization_id")
+  organization   Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  description    String?      @db.Text
+  issueDate      DateTime?    @map("issue_date")
+  credentialUrl  String?      @map("credential_url")
+  sortOrder      Int          @default(0) @map("sort_order")
+  createdAt      DateTime     @default(now()) @map("created_at")
+  updatedAt      DateTime     @updatedAt @map("updated_at")
+
+  @@map("certifications")
+}
+
+model Project {
+  id          String   @id @default(uuid())
+  name        String
+  description String?  @db.Text
+  photo1Path  String?  @map("photo1_path")
+  photo2Path  String?  @map("photo2_path")
+  demoUrl     String?  @map("demo_url")
+  sortOrder   Int      @default(0) @map("sort_order")
+  createdAt   DateTime @default(now()) @map("created_at")
+  updatedAt   DateTime @updatedAt @map("updated_at")
+
+  technologies ProjectTechnology[]
+
+  @@map("projects")
+}
+
+model ProjectTechnology {
+  id           String     @id @default(uuid())
+  projectId    String     @map("project_id")
+  project      Project    @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  technologyId String     @map("technology_id")
+  technology   Technology @relation(fields: [technologyId], references: [id], onDelete: Cascade)
+
+  @@unique([projectId, technologyId])
+  @@map("project_technologies")
+}
+
+model Service {
+  id             String        @id @default(uuid())
+  label          String
+  description    String?       @db.Text
+  organizationId String?       @map("organization_id")
+  organization   Organization? @relation(fields: [organizationId], references: [id], onDelete: SetNull)
+  sortOrder      Int           @default(0) @map("sort_order")
+  createdAt      DateTime      @default(now()) @map("created_at")
+  updatedAt      DateTime      @updatedAt @map("updated_at")
+
+  @@map("services")
+}
+
+model About {
+  id        String   @id @default(uuid())
+  content   String   @db.Text
+  sortOrder Int      @default(0) @map("sort_order")
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  @@map("about")
+}

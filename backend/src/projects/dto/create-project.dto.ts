@@ -6,7 +6,6 @@ import {
   IsOptional,
   IsString,
   IsUrl,
-  IsUUID,
   Min,
 } from 'class-validator';
 
@@ -44,10 +43,10 @@ export class CreateProjectDto {
 
   @ApiPropertyOptional({
     type: [String],
-    description: 'Array of Technology UUIDs',
+    description: 'Array of Technology IDs',
   })
   @IsOptional()
   @IsArray()
-  @IsUUID('all', { each: true })
+  @IsString({ each: true })
   technologyIds?: string[];
 }

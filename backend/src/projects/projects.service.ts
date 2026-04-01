@@ -50,24 +50,26 @@ export class ProjectsService {
 
     const { technologyIds, ...projectData } = dto;
 
-    if (technologyIds !== undefined) {
-      await this.prisma.projectTechnology.deleteMany({
-        where: { projectId: id },
-      });
-    }
+    return this.prisma.$transaction(async (tx) => {
+      if (technologyIds !== undefined) {
+        await tx.projectTechnology.deleteMany({
+          where: { projectId: id },
+        });
+      }
 
-    return this.prisma.project.update({
-      where: { id },
-      data: {
-        ...projectData,
-        technologies:
-          technologyIds !== undefined
-            ? {
-                create: technologyIds.map((technologyId) => ({ technologyId })),
-              }
-            : undefined,
-      },
-      include: projectInclude,
+      return tx.project.update({
+        where: { id },
+        data: {
+          ...projectData,
+          technologies:
+            technologyIds !== undefined
+              ? {
+                  create: technologyIds.map((technologyId) => ({ technologyId })),
+                }
+              : undefined,
+        },
+        include: projectInclude,
+      });
     });
   }
 

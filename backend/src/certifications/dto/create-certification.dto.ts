@@ -6,7 +6,6 @@ import {
   IsOptional,
   IsString,
   IsUrl,
-  IsUUID,
   Min,
 } from 'class-validator';
 
@@ -20,8 +19,8 @@ export class CreateCertificationDto {
   @IsString()
   imagePath?: string;
 
-  @ApiProperty({ description: 'UUID of the related Organization' })
-  @IsUUID()
+  @ApiProperty({ description: 'ID of the related Organization' })
+  @IsString()
   organizationId: string;
 
   @ApiPropertyOptional()

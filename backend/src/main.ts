@@ -25,7 +25,7 @@ async function bootstrap() {
     }),
   );
 
-  const uploadsPath = path.resolve(__dirname, '..', '..', 'uploads');
+  const uploadsPath = path.resolve(process.cwd(), '..', 'uploads');
   app.useStaticAssets(uploadsPath, { prefix: '/uploads' });
 
   const swaggerConfig = new DocumentBuilder()

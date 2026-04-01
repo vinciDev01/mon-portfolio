@@ -13,6 +13,8 @@ const fontMono = Geist_Mono({
   variable: "--font-mono",
 });
 
+const DEFAULT_FONT = "Figtree";
+
 export const metadata: Metadata = {
   title: "Portfolio",
   description: "Mon portfolio professionnel",
@@ -24,6 +26,7 @@ export default async function RootLayout({
   children: React.ReactNode;
 }>) {
   let dynamicStyle: React.CSSProperties = {};
+  let googleFontUrl: string | null = null;
 
   try {
     const settings = await getSiteSettings();
@@ -38,8 +41,10 @@ export default async function RootLayout({
     if (settings.fontSize) {
       styleVars["--portfolio-font-size"] = `${settings.fontSize}px`;
     }
-    if (settings.fontFamily) {
-      styleVars["--portfolio-font-family"] = settings.fontFamily;
+    if (settings.fontFamily && settings.fontFamily !== DEFAULT_FONT) {
+      styleVars["--portfolio-font-family"] = `'${settings.fontFamily}', sans-serif`;
+      const encodedFamily = settings.fontFamily.replace(/ /g, "+");
+      googleFontUrl = `https://fonts.googleapis.com/css2?family=${encodedFamily}:wght@300;400;500;600;700&display=swap`;
     }
 
     dynamicStyle = styleVars as React.CSSProperties;
@@ -54,10 +59,18 @@ export default async function RootLayout({
       className={cn(
         "antialiased",
         fontMono.variable,
-        "font-sans",
         figtree.variable,
       )}
     >
+      <head>
+        {googleFontUrl && (
+          <>
+            <link rel="preconnect" href="https://fonts.googleapis.com" />
+            <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="anonymous" />
+            <link rel="stylesheet" href={googleFontUrl} />
+          </>
+        )}
+      </head>
       <body style={dynamicStyle}>
         <ThemeProvider>{children}</ThemeProvider>
       </body>

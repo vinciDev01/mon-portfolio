@@ -124,9 +124,8 @@
     }
   body {
     @apply bg-background text-foreground;
-    }
-  html {
-    @apply font-sans;
+    font-family: var(--portfolio-font-family, var(--font-sans));
+    font-size: var(--portfolio-font-size, inherit);
     }
 }
 

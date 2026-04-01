@@ -1,3 +1,5 @@
+"use client";
+
 import Image from "next/image";
 import type { ServiceDto } from "@portfolio/shared-types";
 import { getFileUrl } from "@/lib/api";
@@ -14,7 +16,7 @@ function ServiceCard({ service }: { service: ServiceDto }) {
     : null;
 
   return (
-    <div className="bg-card border border-border rounded-xl p-6 hover:border-muted-foreground/30 transition-colors flex flex-col gap-4">
+    <div className="animated-card bg-card rounded-xl p-6 transition-colors flex flex-col gap-4">
       {/* Organization logo */}
       {orgLogoUrl && (
         <div className="size-10 flex items-center justify-center">

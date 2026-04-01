@@ -56,7 +56,11 @@ export default function EditExperiencePage() {
           <div><label className="block text-sm font-medium mb-1">Date de fin</label><input type="date" value={endDate} onChange={(e) => setEndDate(e.target.value)} disabled={isCurrent} className="w-full px-3 py-2 border border-border rounded-md text-sm disabled:opacity-50" /></div>
         </div>
         <label className="flex items-center gap-2 text-sm"><input type="checkbox" checked={isCurrent} onChange={(e) => setIsCurrent(e.target.checked)} /> Poste actuel</label>
-        <div><label className="block text-sm font-medium mb-1">Ordre</label><input type="number" value={sortOrder} onChange={(e) => setSortOrder(Number(e.target.value))} className="w-full px-3 py-2 border border-border rounded-md text-sm" /></div>
+        <div>
+          <label className="block text-sm font-medium mb-1">Ordre</label>
+          <input type="number" value={sortOrder} onChange={(e) => setSortOrder(Number(e.target.value))} min={0} className="w-full px-3 py-2 border border-border rounded-md text-sm" />
+          <p className="text-xs text-muted-foreground mt-1">Entier positif ou nul</p>
+        </div>
         <button type="submit" disabled={saving} className="px-6 py-2 rounded-md bg-primary text-primary-foreground hover:bg-primary/90 disabled:opacity-50">{saving ? "Sauvegarde..." : "Sauvegarder"}</button>
       </form>
     </div>

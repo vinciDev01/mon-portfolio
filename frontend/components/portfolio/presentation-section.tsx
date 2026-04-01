@@ -1,3 +1,5 @@
+"use client";
+
 import type { PresentationDto } from "@portfolio/shared-types";
 import { SeeMoreList } from "./see-more-button";
 
@@ -31,7 +33,7 @@ export function PresentationSection({ presentations }: PresentationSectionProps)
   return (
     <section
       id="presentation"
-      className="min-h-[60vh] flex items-center py-20 px-6 md:px-12 lg:px-24"
+      className="min-h-[60vh] flex items-center py-20 px-8 md:px-20 lg:px-40 xl:px-52"
     >
       {presentations.length === 1 ? (
         <PresentationCard item={presentations[0]!} />

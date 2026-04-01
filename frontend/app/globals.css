@@ -139,3 +139,256 @@ html {
 .section-separator {
   border-top: 1px solid oklch(from var(--border) l c h / 0.5);
 }
+
+/* ═══════════════════════════════════════════════════════
+   ANIMATED CARD — Stacked cards effect + hover lift
+   ═══════════════════════════════════════════════════════ */
+
+.animated-card {
+  position: relative;
+  border: 1px solid var(--border);
+  background: var(--card);
+  transition:
+    transform 0.4s cubic-bezier(0.22, 1, 0.36, 1),
+    box-shadow 0.4s cubic-bezier(0.22, 1, 0.36, 1);
+  cursor: pointer;
+  will-change: transform;
+}
+
+/* Stack layer 1 (closest behind) */
+.animated-card::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  background: var(--card);
+  border: 1px solid var(--border);
+  z-index: -1;
+  transition:
+    transform 0.4s cubic-bezier(0.22, 1, 0.36, 1),
+    opacity 0.4s ease;
+  transform: translate(4px, 4px);
+  opacity: 0.5;
+  pointer-events: none;
+}
+
+/* Stack layer 2 (furthest behind) */
+.animated-card::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  background: var(--card);
+  border: 1px solid var(--border);
+  z-index: -2;
+  transition:
+    transform 0.4s cubic-bezier(0.22, 1, 0.36, 1),
+    opacity 0.4s ease;
+  transform: translate(8px, 8px);
+  opacity: 0.25;
+  pointer-events: none;
+}
+
+/* Hover: main card lifts, stacked layers fan out */
+.animated-card:hover {
+  transform: translateY(-3px);
+  box-shadow:
+    0 12px 32px -8px oklch(0 0 0 / 0.12),
+    0 4px 12px -4px oklch(0 0 0 / 0.06);
+}
+
+.animated-card:hover::before {
+  transform: translate(6px, 6px) rotate(1.5deg);
+  opacity: 0.45;
+}
+
+.animated-card:hover::after {
+  transform: translate(12px, 12px) rotate(3deg);
+  opacity: 0.2;
+}
+
+/* Dark mode adjustments */
+.dark .animated-card::before,
+.dark .animated-card::after {
+  border-color: oklch(1 0 0 / 0.08);
+}
+
+.dark .animated-card:hover {
+  box-shadow:
+    0 16px 40px -8px oklch(0 0 0 / 0.35),
+    0 6px 16px -4px oklch(0 0 0 / 0.2);
+}
+
+/* ═══════════════════════════════════════════════════════
+   SEE MORE — Staggered reveal animation
+   ═══════════════════════════════════════════════════════ */
+
+.see-more-item-enter {
+  animation: item-cascade 0.5s cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+
+@keyframes item-cascade {
+  0% {
+    opacity: 0;
+    transform: translateY(30px) scale(0.92) rotateX(8deg);
+    filter: blur(4px);
+  }
+  60% {
+    opacity: 1;
+    filter: blur(0px);
+  }
+  80% {
+    transform: translateY(-4px) scale(1.02) rotateX(0deg);
+  }
+  100% {
+    opacity: 1;
+    transform: translateY(0) scale(1) rotateX(0deg);
+    filter: blur(0px);
+  }
+}
+
+/* ═══════════════════════════════════════════════════════
+   SECTION TOAST — Polished navigation indicator
+   ═══════════════════════════════════════════════════════ */
+
+.section-toast {
+  position: fixed;
+  bottom: 28px;
+  right: 28px;
+  z-index: 100;
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  padding: 14px 22px 14px 16px;
+  border-radius: 16px;
+  background: var(--card);
+  border: 1px solid var(--border);
+  box-shadow:
+    0 12px 40px -8px oklch(0 0 0 / 0.16),
+    0 4px 12px -4px oklch(0 0 0 / 0.08),
+    inset 0 1px 0 oklch(1 0 0 / 0.06);
+  pointer-events: none;
+  backdrop-filter: blur(16px) saturate(1.2);
+}
+
+.section-toast-enter {
+  animation: toast-enter 0.45s cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+
+.section-toast-exit {
+  animation: toast-exit 0.3s cubic-bezier(0.55, 0, 1, 0.45) both;
+}
+
+.section-toast-icon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  width: 36px;
+  height: 36px;
+  border-radius: 10px;
+  background: var(--foreground);
+  color: var(--background);
+}
+
+.section-toast-icon svg {
+  width: 18px;
+  height: 18px;
+}
+
+.section-toast-content {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.section-toast-label {
+  font-size: 0.6rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: var(--muted-foreground);
+}
+
+.section-toast-title {
+  font-size: 0.875rem;
+  font-weight: 700;
+  color: var(--foreground);
+  letter-spacing: -0.01em;
+}
+
+/* Progress bar at the bottom of the toast */
+.section-toast-progress {
+  position: absolute;
+  bottom: 0;
+  left: 16px;
+  right: 16px;
+  height: 2px;
+  border-radius: 0 0 16px 16px;
+  overflow: hidden;
+}
+
+.section-toast-progress-bar {
+  height: 100%;
+  background: var(--foreground);
+  opacity: 0.25;
+  animation: toast-progress 2s linear both;
+  transform-origin: left;
+}
+
+@keyframes toast-enter {
+  0% {
+    opacity: 0;
+    transform: translateX(120%) translateY(10px) scale(0.9);
+  }
+  50% {
+    opacity: 1;
+  }
+  100% {
+    opacity: 1;
+    transform: translateX(0) translateY(0) scale(1);
+  }
+}
+
+@keyframes toast-exit {
+  0% {
+    opacity: 1;
+    transform: translateX(0) scale(1);
+  }
+  100% {
+    opacity: 0;
+    transform: translateX(40%) scale(0.92);
+  }
+}
+
+@keyframes toast-progress {
+  from { transform: scaleX(1); }
+  to { transform: scaleX(0); }
+}
+
+/* ═══════════════════════════════════════════════════════
+   REDUCED MOTION — Accessibility
+   ═══════════════════════════════════════════════════════ */
+
+@media (prefers-reduced-motion: reduce) {
+  .animated-card,
+  .animated-card::before,
+  .animated-card::after {
+    animation: none !important;
+    transition: none !important;
+  }
+  .animated-card:hover {
+    transform: none;
+  }
+  .see-more-item-enter {
+    animation: none !important;
+    opacity: 1 !important;
+  }
+  .section-toast-enter,
+  .section-toast-exit {
+    animation: none !important;
+  }
+  .section-toast-progress-bar {
+    animation: none !important;
+  }
+}

@@ -34,9 +34,12 @@ export class UploadController {
       storage: memoryStorage(),
       limits: { fileSize: 10 * 1024 * 1024 },
       fileFilter: (_req, file, callback) => {
-        if (!file.mimetype.startsWith('image/')) {
+        if (
+          !file.mimetype.startsWith('image/') &&
+          file.mimetype !== 'application/pdf'
+        ) {
           return callback(
-            new BadRequestException('Only image files are allowed'),
+            new BadRequestException('Only image and PDF files are allowed'),
             false,
           );
         }

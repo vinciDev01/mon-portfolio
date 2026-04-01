@@ -8,7 +8,7 @@ export class UploadService {
   private readonly uploadsRoot: string;
 
   constructor() {
-    this.uploadsRoot = path.resolve(__dirname, '..', '..', '..', 'uploads');
+    this.uploadsRoot = path.resolve(process.cwd(), '..', 'uploads');
   }
 
   async uploadFile(
@@ -20,14 +20,19 @@ export class UploadService {
     fs.mkdirSync(categoryDir, { recursive: true });
 
     const uuid = crypto.randomUUID();
-    const filename = `${uuid}.webp`;
+    const isPdf = file.mimetype === 'application/pdf';
+    const filename = isPdf ? `${uuid}.pdf` : `${uuid}.webp`;
     const outputPath = path.join(categoryDir, filename);
 
     try {
-      await sharp(file.buffer).webp({ quality: 85 }).toFile(outputPath);
+      if (isPdf) {
+        fs.writeFileSync(outputPath, file.buffer);
+      } else {
+        await sharp(file.buffer).webp({ quality: 85 }).toFile(outputPath);
+      }
     } catch (err) {
       throw new InternalServerErrorException(
-        `Failed to process image: ${(err as Error).message}`,
+        `Failed to process file: ${(err as Error).message}`,
       );
     }
 

@@ -9,12 +9,16 @@ import { ServicesSection } from "@/components/portfolio/services-section";
 import { AboutSection } from "@/components/portfolio/about-section";
 import { Footer } from "@/components/portfolio/footer";
 import { ToastNotification } from "@/components/portfolio/toast-notification";
+import { Confetti } from "@/components/portfolio/confetti";
+import { SectionToastObserver } from "@/components/portfolio/section-toast-observer";
 
 export default async function Page() {
   const data = await getPortfolioData();
 
   return (
     <main className="min-h-screen">
+      <Confetti />
+      <SectionToastObserver />
       <Header siteSettings={data.siteSettings} personalInfo={data.personalInfo} />
       <PresentationSection presentations={data.presentations} />
       <SkillsSection skills={data.skills} />

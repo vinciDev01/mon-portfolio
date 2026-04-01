@@ -84,6 +84,7 @@ export default function SiteSettingsPage() {
                 className="flex-1 px-3 py-2 border border-border rounded-md text-sm"
               />
             </div>
+            <p className="text-xs text-muted-foreground mt-1">Format hexadécimal (ex: #F0E68C)</p>
           </div>
           <div>
             <label className="block text-sm font-medium mb-1">Couleur du texte</label>
@@ -101,6 +102,7 @@ export default function SiteSettingsPage() {
                 className="flex-1 px-3 py-2 border border-border rounded-md text-sm"
               />
             </div>
+            <p className="text-xs text-muted-foreground mt-1">Format hexadécimal (ex: #000000)</p>
           </div>
         </div>
 
@@ -111,8 +113,11 @@ export default function SiteSettingsPage() {
               type="number"
               value={data.fontSize}
               onChange={(e) => setData({ ...data, fontSize: Number(e.target.value) })}
+              min={8}
+              max={32}
               className="w-full px-3 py-2 border border-border rounded-md text-sm"
             />
+            <p className="text-xs text-muted-foreground mt-1">Entre 8 et 32 px</p>
           </div>
           <div>
             <label className="block text-sm font-medium mb-1">Police</label>
@@ -144,6 +149,7 @@ export default function SiteSettingsPage() {
             className="w-full px-3 py-2 border border-border rounded-md text-sm"
             min={1}
           />
+          <p className="text-xs text-muted-foreground mt-1">Minimum 1 minute</p>
         </div>
 
         <div>

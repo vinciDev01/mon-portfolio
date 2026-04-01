@@ -1,4 +1,5 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
+import { PrismaClient } from '@prisma/client';
 import { PrismaService } from '../prisma/prisma.service';
 import { CreateProjectDto } from './dto/create-project.dto';
 import { UpdateProjectDto } from './dto/update-project.dto';
@@ -6,6 +7,9 @@ import { UpdateProjectDto } from './dto/update-project.dto';
 const projectInclude = {
   technologies: {
     include: { technology: true },
+  },
+  collaborators: {
+    orderBy: { sortOrder: 'asc' as const },
   },
 };
 
@@ -30,7 +34,7 @@ export class ProjectsService {
   }
 
   async create(dto: CreateProjectDto) {
-    const { technologyIds, ...projectData } = dto;
+    const { technologyIds, collaborators, ...projectData } = dto;
 
     return this.prisma.project.create({
       data: {
@@ -40,6 +44,9 @@ export class ProjectsService {
               create: technologyIds.map((technologyId) => ({ technologyId })),
             }
           : undefined,
+        collaborators: collaborators?.length
+          ? { create: collaborators }
+          : undefined,
       },
       include: projectInclude,
     });
@@ -48,11 +55,17 @@ export class ProjectsService {
   async update(id: string, dto: UpdateProjectDto) {
     await this.findOne(id);
 
-    const { technologyIds, ...projectData } = dto;
+    const { technologyIds, collaborators, ...projectData } = dto;
 
-    return this.prisma.$transaction(async (tx) => {
+    return this.prisma.$transaction(async (tx: Omit<PrismaClient, '$connect' | '$disconnect' | '$on' | '$transaction' | '$use' | '$extends'>) => {
       if (technologyIds !== undefined) {
         await tx.projectTechnology.deleteMany({
+          where: { projectId: id },
+        });
+      }
+
+      if (collaborators !== undefined) {
+        await tx.projectCollaborator.deleteMany({
           where: { projectId: id },
         });
       }
@@ -66,6 +79,10 @@ export class ProjectsService {
               ? {
                   create: technologyIds.map((technologyId) => ({ technologyId })),
                 }
+              : undefined,
+          collaborators:
+            collaborators !== undefined
+              ? { create: collaborators }
               : undefined,
         },
         include: projectInclude,

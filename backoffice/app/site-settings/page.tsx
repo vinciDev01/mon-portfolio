@@ -131,6 +131,20 @@ export default function SiteSettingsPage() {
         </div>
 
         <div>
+          <label className="block text-sm font-medium mb-1">Langue par défaut</label>
+          <select
+            value={data.defaultLanguage}
+            onChange={(e) => setData({ ...data, defaultLanguage: e.target.value })}
+            className="w-full px-3 py-2 border border-border rounded-md text-sm"
+          >
+            <option value="fr">Français</option>
+            <option value="en">English</option>
+            <option value="de">Deutsch</option>
+          </select>
+          <p className="text-xs text-muted-foreground mt-1">Langue affichée par défaut pour les visiteurs</p>
+        </div>
+
+        <div>
           <label className="block text-sm font-medium mb-1">Message Toast</label>
           <input
             type="text"
@@ -163,6 +177,34 @@ export default function SiteSettingsPage() {
           {data.cvFilePath && (
             <p className="text-xs text-muted-foreground mt-1">Fichier actuel : {data.cvFilePath}</p>
           )}
+        </div>
+
+        {/* Section visibility toggles */}
+        <div>
+          <h2 className="text-lg font-semibold mb-3">Visibilité des sections</h2>
+          <div className="grid grid-cols-2 gap-3">
+            {([
+              { key: "showPresentations", label: "Présentations" },
+              { key: "showSkills", label: "Compétences" },
+              { key: "showExperiences", label: "Expériences" },
+              { key: "showCertifications", label: "Certifications" },
+              { key: "showProjects", label: "Projets" },
+              { key: "showServices", label: "Services" },
+              { key: "showAbout", label: "À propos" },
+              { key: "showTestimonials", label: "Témoignages" },
+              { key: "showContact", label: "Contact" },
+            ] as const).map(({ key, label }) => (
+              <label key={key} className="flex items-center gap-2 text-sm cursor-pointer">
+                <input
+                  type="checkbox"
+                  checked={data[key]}
+                  onChange={(e) => setData({ ...data, [key]: e.target.checked })}
+                  className="rounded border-border"
+                />
+                {label}
+              </label>
+            ))}
+          </div>
         </div>
 
         <button

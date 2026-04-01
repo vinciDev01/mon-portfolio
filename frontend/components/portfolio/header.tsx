@@ -1,36 +1,43 @@
+"use client";
+
 import Image from "next/image";
 import Link from "next/link";
 import type { SiteSettingsDto, PersonalInfoDto } from "@portfolio/shared-types";
 import { getFileUrl } from "@/lib/api";
 import { ThemeToggle } from "./theme-toggle";
+import { LanguageSwitcher } from "./language-switcher";
 import { Button } from "@/components/ui/button";
+import { useTranslation } from "@/lib/i18n/i18n-context";
 
 interface HeaderProps {
   siteSettings: SiteSettingsDto;
   personalInfo: PersonalInfoDto;
 }
 
-const navLinks = [
-  { href: "#presentation", label: "Présentation." },
-  { href: "#skills", label: "Compétences." },
-  { href: "#experience", label: "Expérience." },
-  { href: "#certifications", label: "Certifications." },
-  { href: "#projects", label: "Projets." },
-  { href: "#services", label: "Services." },
-  { href: "#about", label: "À propos." },
+const allNavLinks = [
+  { href: "#presentation", tKey: "nav.presentation", key: "showPresentations" as const },
+  { href: "#skills", tKey: "nav.skills", key: "showSkills" as const },
+  { href: "#experience", tKey: "nav.experience", key: "showExperiences" as const },
+  { href: "#certifications", tKey: "nav.certifications", key: "showCertifications" as const },
+  { href: "#projects", tKey: "nav.projects", key: "showProjects" as const },
+  { href: "#services", tKey: "nav.services", key: "showServices" as const },
+  { href: "#about", tKey: "nav.about", key: "showAbout" as const },
+  { href: "#testimonials", tKey: "nav.testimonials", key: "showTestimonials" as const },
+  { href: "#contact", tKey: "nav.contact", key: "showContact" as const },
 ];
 
 export function Header({ siteSettings, personalInfo }: HeaderProps) {
   const logoUrl = getFileUrl(siteSettings.logoPath);
+  const { t } = useTranslation();
+
+  const navLinks = allNavLinks.filter((link) => siteSettings[link.key]);
 
   return (
     <header className="sticky top-0 z-50 w-full bg-background/80 backdrop-blur-md border-b border-border">
       <div className="mx-auto px-8 md:px-20 lg:px-40 xl:px-52 flex items-center justify-between h-16 gap-4">
-        {/* Logo / Name */}
         <Link
           href="/"
           className="flex items-center gap-3 shrink-0 hover:opacity-80 transition-opacity"
-          aria-label="Accueil"
         >
           {logoUrl ? (
             <Image
@@ -46,10 +53,8 @@ export function Header({ siteSettings, personalInfo }: HeaderProps) {
           </span>
         </Link>
 
-        {/* Desktop navigation */}
         <nav
           className="hidden lg:flex items-center gap-1"
-          aria-label="Navigation principale"
         >
           {navLinks.map((link) => (
             <Link
@@ -57,19 +62,19 @@ export function Header({ siteSettings, personalInfo }: HeaderProps) {
               href={link.href}
               className="px-3 py-1.5 text-sm text-muted-foreground hover:text-foreground hover:bg-muted rounded-md transition-colors"
             >
-              {link.label}
+              {t(link.tKey)}
             </Link>
           ))}
         </nav>
 
-        {/* Actions */}
         <div className="flex items-center gap-2 shrink-0">
+          <LanguageSwitcher />
           <ThemeToggle />
 
           {siteSettings.cvFilePath && (
             <Button asChild size="sm">
               <a href="/api/download-cv" download="CV.pdf">
-                Telecharger CV
+                {t("nav.downloadCv")}
               </a>
             </Button>
           )}

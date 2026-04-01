@@ -17,6 +17,8 @@ const navItems = [
   { href: "/projects", label: "Projets" },
   { href: "/services", label: "Services" },
   { href: "/about", label: "À propos" },
+  { href: "/contact-messages", label: "Messages de contact" },
+  { href: "/testimonials", label: "Témoignages" },
 ];
 
 export function SidebarNav() {

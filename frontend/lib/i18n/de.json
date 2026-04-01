@@ -1,0 +1,66 @@
+{
+  "nav.presentation": "Vorstellung.",
+  "nav.skills": "Kompetenzen.",
+  "nav.experience": "Erfahrung.",
+  "nav.certifications": "Zertifikate.",
+  "nav.projects": "Projekte.",
+  "nav.services": "Dienstleistungen.",
+  "nav.about": "Uber mich.",
+  "nav.testimonials": "Referenzen.",
+  "nav.contact": "Kontakt.",
+  "nav.downloadCv": "Lebenslauf herunterladen",
+
+  "section.presentation": "Vorstellung",
+  "section.skills": "Kompetenzen",
+  "section.experience": "Erfahrung",
+  "section.certifications": "Zertifikate",
+  "section.projects": "Projekte",
+  "section.services": "Dienstleistungen",
+  "section.about": "Uber mich",
+  "section.testimonials": "Referenzen",
+  "section.contact": "Kontakt",
+
+  "projects.clickForDetails": "Klicken fur mehr Details",
+  "projects.ongoing": "Laufend",
+  "projects.targetAudience": "Zielgruppe",
+  "projects.technologies": "Technologien",
+  "projects.collaborators": "Mitarbeiter",
+  "projects.viewDemo": "Demo ansehen",
+
+  "contact.firstName": "Vorname",
+  "contact.lastName": "Nachname",
+  "contact.email": "E-Mail",
+  "contact.subject": "Betreff",
+  "contact.message": "Nachricht",
+  "contact.send": "Senden",
+  "contact.sending": "Wird gesendet...",
+  "contact.success": "Nachricht gesendet!",
+  "contact.successDetail": "Vielen Dank, ich werde mich so schnell wie moglich bei Ihnen melden.",
+  "contact.sendAnother": "Weitere Nachricht senden",
+  "contact.error": "Ein Fehler ist aufgetreten. Bitte versuchen Sie es erneut.",
+
+  "testimonials.leaveOne": "Referenz hinterlassen",
+  "testimonials.thanks": "Vielen Dank fur Ihre Referenz!",
+  "testimonials.pendingApproval": "Sie wird nach Genehmigung sichtbar.",
+  "testimonials.firstName": "Vorname *",
+  "testimonials.lastName": "Nachname *",
+  "testimonials.company": "Unternehmen",
+  "testimonials.role": "Position",
+  "testimonials.content": "Ihre Referenz *",
+  "testimonials.none": "Noch keine Referenzen vorhanden.",
+  "testimonials.cancel": "Abbrechen",
+
+  "experience.ongoing": "Laufend",
+  "experience.today": "Heute",
+
+  "certifications.viewCert": "Zertifikat ansehen",
+
+  "seeMore.viewAll": "Alle anzeigen",
+  "seeMore.reduce": "Weniger anzeigen",
+
+  "footer.allRights": "Alle Rechte vorbehalten.",
+
+  "toast.section": "Bereich",
+
+  "meta.description": "Mein professionelles Portfolio"
+}

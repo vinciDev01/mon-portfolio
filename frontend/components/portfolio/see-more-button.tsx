@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useRef, useEffect, type ReactNode } from "react";
+import { useTranslation } from "@/lib/i18n/i18n-context";
 
 interface SeeMoreListProps<T> {
   items: T[];
@@ -19,6 +20,7 @@ export function SeeMoreList<T>({
   const [animating, setAnimating] = useState(false);
   const firstNewRef = useRef<HTMLDivElement>(null);
   const remaining = items.length - initialCount;
+  const { t } = useTranslation();
 
   const visible = showAll ? items : items.slice(0, initialCount);
 
@@ -31,7 +33,6 @@ export function SeeMoreList<T>({
   function handleExpand() {
     setAnimating(true);
     setShowAll(true);
-    // Scroll to first new item after render
     requestAnimationFrame(() => {
       requestAnimationFrame(() => {
         firstNewRef.current?.scrollIntoView({
@@ -82,14 +83,10 @@ export function SeeMoreList<T>({
                   stroke="currentColor"
                   strokeWidth={2.5}
                 >
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    d="M19 9l-7 7-7-7"
-                  />
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M19 9l-7 7-7-7" />
                 </svg>
                 <span className="text-sm font-semibold text-muted-foreground group-hover:text-foreground transition-colors">
-                  Reduire
+                  {t("seeMore.reduce")}
                 </span>
               </>
             ) : (
@@ -98,7 +95,7 @@ export function SeeMoreList<T>({
                   +{remaining}
                 </span>
                 <span className="text-sm font-semibold text-muted-foreground group-hover:text-foreground transition-colors">
-                  Voir tout
+                  {t("seeMore.viewAll")}
                 </span>
                 <svg
                   className="size-4 text-muted-foreground group-hover:text-foreground transition-all duration-300 group-hover:translate-y-0.5"
@@ -107,11 +104,7 @@ export function SeeMoreList<T>({
                   stroke="currentColor"
                   strokeWidth={2.5}
                 >
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    d="M19 9l-7 7-7-7"
-                  />
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M19 9l-7 7-7-7" />
                 </svg>
               </>
             )}

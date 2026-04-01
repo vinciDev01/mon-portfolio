@@ -12,6 +12,8 @@ const sections = [
   { href: "/projects", label: "Projets", desc: "Projets réalisés" },
   { href: "/services", label: "Services", desc: "Services proposés" },
   { href: "/about", label: "À propos", desc: "Présentation personnelle" },
+  { href: "/contact-messages", label: "Messages de contact", desc: "Messages reçus des visiteurs" },
+  { href: "/testimonials", label: "Témoignages", desc: "Avis et témoignages clients" },
 ];
 
 export default function DashboardPage() {

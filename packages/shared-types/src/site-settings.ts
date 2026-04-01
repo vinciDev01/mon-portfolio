@@ -9,4 +9,14 @@ export interface SiteSettingsDto {
   toastMessage: string | null;
   toastDelayMs: number;
   cvFilePath: string | null;
+  showPresentations: boolean;
+  showSkills: boolean;
+  showExperiences: boolean;
+  showCertifications: boolean;
+  showProjects: boolean;
+  showServices: boolean;
+  showAbout: boolean;
+  showContact: boolean;
+  showTestimonials: boolean;
+  defaultLanguage: string;
 }

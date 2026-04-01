@@ -16,6 +16,7 @@ export class PortfolioService {
       rawProjects,
       rawServices,
       about,
+      testimonials,
     ] = await Promise.all([
       this.prisma.siteSettings.findFirst(),
       this.prisma.personalInfo.findFirst(),
@@ -32,6 +33,7 @@ export class PortfolioService {
       this.prisma.project.findMany({
         include: {
           technologies: { include: { technology: true } },
+          collaborators: { orderBy: { sortOrder: 'asc' } },
         },
         orderBy: { sortOrder: 'asc' },
       }),
@@ -40,14 +42,18 @@ export class PortfolioService {
         orderBy: { sortOrder: 'asc' },
       }),
       this.prisma.about.findMany({ orderBy: { sortOrder: 'asc' } }),
+      this.prisma.testimonial.findMany({
+        where: { isApproved: true },
+        orderBy: { sortOrder: 'asc' },
+      }),
     ]);
 
-    const projects = rawProjects.map((project) => ({
+    const projects = rawProjects.map((project: typeof rawProjects[number]) => ({
       ...project,
-      technologies: project.technologies.map((pt) => pt.technology),
+      technologies: project.technologies.map((pt: typeof project.technologies[number]) => pt.technology),
     }));
 
-    const services = rawServices.map((service) => ({
+    const services = rawServices.map((service: typeof rawServices[number]) => ({
       ...service,
     }));
 
@@ -61,6 +67,7 @@ export class PortfolioService {
       projects,
       services,
       about,
+      testimonials,
     };
   }
 }

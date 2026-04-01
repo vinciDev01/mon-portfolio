@@ -18,6 +18,19 @@ model SiteSettings {
   toastMessage String? @map("toast_message")
   toastDelayMs Int     @default(180000) @map("toast_delay_ms")
   cvFilePath  String?  @map("cv_file_path")
+
+  showPresentations  Boolean @default(true) @map("show_presentations")
+  showSkills         Boolean @default(true) @map("show_skills")
+  showExperiences    Boolean @default(true) @map("show_experiences")
+  showCertifications Boolean @default(true) @map("show_certifications")
+  showProjects       Boolean @default(true) @map("show_projects")
+  showServices       Boolean @default(true) @map("show_services")
+  showAbout          Boolean @default(true) @map("show_about")
+  showContact        Boolean @default(true) @map("show_contact")
+  showTestimonials   Boolean @default(true) @map("show_testimonials")
+
+  defaultLanguage String @default("fr") @map("default_language")
+
   createdAt   DateTime @default(now()) @map("created_at")
   updatedAt   DateTime @updatedAt @map("updated_at")
 
@@ -125,19 +138,38 @@ model Certification {
 }
 
 model Project {
+  id             String    @id @default(uuid())
+  name           String
+  description    String?   @db.Text
+  photo1Path     String?   @map("photo1_path")
+  photo2Path     String?   @map("photo2_path")
+  demoUrl        String?   @map("demo_url")
+  targetAudience String?   @map("target_audience")
+  startDate      DateTime? @map("start_date")
+  endDate        DateTime? @map("end_date")
+  sortOrder      Int       @default(0) @map("sort_order")
+  createdAt      DateTime  @default(now()) @map("created_at")
+  updatedAt      DateTime  @updatedAt @map("updated_at")
+
+  technologies  ProjectTechnology[]
+  collaborators ProjectCollaborator[]
+
+  @@map("projects")
+}
+
+model ProjectCollaborator {
   id          String   @id @default(uuid())
-  name        String
-  description String?  @db.Text
-  photo1Path  String?  @map("photo1_path")
-  photo2Path  String?  @map("photo2_path")
-  demoUrl     String?  @map("demo_url")
+  firstName   String   @map("first_name")
+  lastName    String   @map("last_name")
+  email       String?
+  linkedinUrl String?  @map("linkedin_url")
+  projectId   String   @map("project_id")
+  project     Project  @relation(fields: [projectId], references: [id], onDelete: Cascade)
   sortOrder   Int      @default(0) @map("sort_order")
   createdAt   DateTime @default(now()) @map("created_at")
   updatedAt   DateTime @updatedAt @map("updated_at")
 
-  technologies ProjectTechnology[]
-
-  @@map("projects")
+  @@map("project_collaborators")
 }
 
 model ProjectTechnology {
@@ -172,4 +204,33 @@ model About {
   updatedAt DateTime @updatedAt @map("updated_at")
 
   @@map("about")
+}
+
+model ContactMessage {
+  id        String   @id @default(uuid())
+  firstName String   @map("first_name")
+  lastName  String   @map("last_name")
+  email     String
+  subject   String
+  message   String   @db.Text
+  isRead    Boolean  @default(false) @map("is_read")
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  @@map("contact_messages")
+}
+
+model Testimonial {
+  id         String   @id @default(uuid())
+  firstName  String   @map("first_name")
+  lastName   String   @map("last_name")
+  company    String?
+  role       String?
+  content    String   @db.Text
+  isApproved Boolean  @default(false) @map("is_approved")
+  sortOrder  Int      @default(0) @map("sort_order")
+  createdAt  DateTime @default(now()) @map("created_at")
+  updatedAt  DateTime @updatedAt @map("updated_at")
+
+  @@map("testimonials")
 }

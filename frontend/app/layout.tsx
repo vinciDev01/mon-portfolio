@@ -3,6 +3,7 @@ import { Geist_Mono, Figtree } from "next/font/google";
 
 import "./globals.css";
 import { ThemeProvider } from "@/components/theme-provider";
+import { I18nProvider } from "@/lib/i18n/i18n-context";
 import { cn } from "@/lib/utils";
 import { getSiteSettings } from "@/lib/api";
 
@@ -27,9 +28,11 @@ export default async function RootLayout({
 }>) {
   let dynamicStyle: React.CSSProperties = {};
   let googleFontUrl: string | null = null;
+  let defaultLanguage = "fr";
 
   try {
     const settings = await getSiteSettings();
+    defaultLanguage = settings.defaultLanguage || "fr";
 
     const styleVars: Record<string, string> = {};
     if (settings.bgColor) {
@@ -72,7 +75,11 @@ export default async function RootLayout({
         )}
       </head>
       <body style={dynamicStyle}>
-        <ThemeProvider>{children}</ThemeProvider>
+        <ThemeProvider>
+          <I18nProvider defaultLocale={defaultLanguage}>
+            {children}
+          </I18nProvider>
+        </ThemeProvider>
       </body>
     </html>
   );

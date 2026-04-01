@@ -7,6 +7,7 @@ import type { CertificationDto } from "./certification";
 import type { ProjectDto } from "./project";
 import type { ServiceDto } from "./service";
 import type { AboutDto } from "./about";
+import type { TestimonialDto } from "./testimonial";
 
 export interface PortfolioData {
   siteSettings: SiteSettingsDto;
@@ -18,4 +19,5 @@ export interface PortfolioData {
   projects: ProjectDto[];
   services: ServiceDto[];
   about: AboutDto[];
+  testimonials: TestimonialDto[];
 }

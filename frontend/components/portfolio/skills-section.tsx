@@ -5,6 +5,7 @@ import type { SkillDto } from "@portfolio/shared-types";
 import { getFileUrl } from "@/lib/api";
 import { SectionWrapper } from "./section-wrapper";
 import { SeeMoreList } from "./see-more-button";
+import { useTranslation } from "@/lib/i18n/i18n-context";
 
 interface SkillsSectionProps {
   skills: SkillDto[];
@@ -32,16 +33,11 @@ function SkillCard({ skill }: { skill: SkillDto }) {
           </div>
         )}
       </div>
-      <span className="text-sm font-medium text-center leading-tight">
-        {skill.technology.label}
-      </span>
+      <span className="text-sm font-medium text-center leading-tight">{skill.technology.label}</span>
       {skill.proficiency !== null && (
         <div className="w-full">
           <div className="h-1 rounded-full bg-muted overflow-hidden">
-            <div
-              className="h-full rounded-full bg-foreground/60 transition-all"
-              style={{ width: `${skill.proficiency}%` }}
-            />
+            <div className="h-full rounded-full bg-foreground/60 transition-all" style={{ width: `${skill.proficiency}%` }} />
           </div>
         </div>
       )}
@@ -50,10 +46,11 @@ function SkillCard({ skill }: { skill: SkillDto }) {
 }
 
 export function SkillsSection({ skills }: SkillsSectionProps) {
+  const { t } = useTranslation();
   if (!skills.length) return null;
 
   return (
-    <SectionWrapper id="skills" title="Compétences">
+    <SectionWrapper id="skills" title={t("section.skills")}>
       <SeeMoreList
         items={skills}
         initialCount={8}

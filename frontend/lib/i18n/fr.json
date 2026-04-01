@@ -1,0 +1,66 @@
+{
+  "nav.presentation": "Presentation.",
+  "nav.skills": "Competences.",
+  "nav.experience": "Experience.",
+  "nav.certifications": "Certifications.",
+  "nav.projects": "Projets.",
+  "nav.services": "Services.",
+  "nav.about": "A propos.",
+  "nav.testimonials": "Temoignages.",
+  "nav.contact": "Contact.",
+  "nav.downloadCv": "Telecharger CV",
+
+  "section.presentation": "Presentation",
+  "section.skills": "Competences",
+  "section.experience": "Experience",
+  "section.certifications": "Certifications",
+  "section.projects": "Projets",
+  "section.services": "Services",
+  "section.about": "A propos",
+  "section.testimonials": "Temoignages",
+  "section.contact": "Contact",
+
+  "projects.clickForDetails": "Cliquer pour plus de details",
+  "projects.ongoing": "En cours",
+  "projects.targetAudience": "Public concerne",
+  "projects.technologies": "Technologies",
+  "projects.collaborators": "Collaborateurs",
+  "projects.viewDemo": "Voir la demo",
+
+  "contact.firstName": "Prenom",
+  "contact.lastName": "Nom",
+  "contact.email": "Email",
+  "contact.subject": "Sujet",
+  "contact.message": "Message",
+  "contact.send": "Envoyer",
+  "contact.sending": "Envoi...",
+  "contact.success": "Message envoye !",
+  "contact.successDetail": "Merci, je vous repondrai dans les plus brefs delais.",
+  "contact.sendAnother": "Envoyer un autre message",
+  "contact.error": "Une erreur est survenue. Veuillez reessayer.",
+
+  "testimonials.leaveOne": "Laisser un temoignage",
+  "testimonials.thanks": "Merci pour votre temoignage !",
+  "testimonials.pendingApproval": "Il sera visible apres approbation.",
+  "testimonials.firstName": "Prenom *",
+  "testimonials.lastName": "Nom *",
+  "testimonials.company": "Entreprise",
+  "testimonials.role": "Poste",
+  "testimonials.content": "Votre temoignage *",
+  "testimonials.none": "Aucun temoignage pour le moment.",
+  "testimonials.cancel": "Annuler",
+
+  "experience.ongoing": "En cours",
+  "experience.today": "Aujourd'hui",
+
+  "certifications.viewCert": "Voir la certification",
+
+  "seeMore.viewAll": "Voir tout",
+  "seeMore.reduce": "Reduire",
+
+  "footer.allRights": "Tous droits reserves.",
+
+  "toast.section": "Section",
+
+  "meta.description": "Mon portfolio professionnel"
+}

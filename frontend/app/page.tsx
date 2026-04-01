@@ -7,6 +7,8 @@ import { CertificationsSection } from "@/components/portfolio/certifications-sec
 import { ProjectsSection } from "@/components/portfolio/projects-section";
 import { ServicesSection } from "@/components/portfolio/services-section";
 import { AboutSection } from "@/components/portfolio/about-section";
+import { TestimonialsSection } from "@/components/portfolio/testimonials-section";
+import { ContactSection } from "@/components/portfolio/contact-section";
 import { Footer } from "@/components/portfolio/footer";
 import { ToastNotification } from "@/components/portfolio/toast-notification";
 import { Confetti } from "@/components/portfolio/confetti";
@@ -14,23 +16,26 @@ import { SectionToastObserver } from "@/components/portfolio/section-toast-obser
 
 export default async function Page() {
   const data = await getPortfolioData();
+  const s = data.siteSettings;
 
   return (
     <main className="min-h-screen">
       <Confetti />
       <SectionToastObserver />
-      <Header siteSettings={data.siteSettings} personalInfo={data.personalInfo} />
-      <PresentationSection presentations={data.presentations} />
-      <SkillsSection skills={data.skills} />
-      <ExperienceSection experiences={data.experiences} />
-      <CertificationsSection certifications={data.certifications} />
-      <ProjectsSection projects={data.projects} />
-      <ServicesSection services={data.services} />
-      <AboutSection about={data.about} />
+      <Header siteSettings={s} personalInfo={data.personalInfo} />
+      {s.showPresentations && <PresentationSection presentations={data.presentations} />}
+      {s.showSkills && <SkillsSection skills={data.skills} />}
+      {s.showExperiences && <ExperienceSection experiences={data.experiences} />}
+      {s.showCertifications && <CertificationsSection certifications={data.certifications} />}
+      {s.showProjects && <ProjectsSection projects={data.projects} />}
+      {s.showServices && <ServicesSection services={data.services} />}
+      {s.showAbout && <AboutSection about={data.about} />}
+      {s.showTestimonials && <TestimonialsSection testimonials={data.testimonials} />}
+      {s.showContact && <ContactSection />}
       <Footer personalInfo={data.personalInfo} />
       <ToastNotification
-        message={data.siteSettings.toastMessage}
-        delayMs={data.siteSettings.toastDelayMs}
+        message={s.toastMessage}
+        delayMs={s.toastDelayMs}
       />
     </main>
   );

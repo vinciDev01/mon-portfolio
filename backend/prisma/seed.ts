@@ -14,6 +14,16 @@ async function main() {
         fontFamily: "Figtree",
         toastMessage: "Merci de visiter mon portfolio !",
         toastDelayMs: 180000,
+        showPresentations: true,
+        showSkills: true,
+        showExperiences: true,
+        showCertifications: true,
+        showProjects: true,
+        showServices: true,
+        showAbout: true,
+        showContact: true,
+        showTestimonials: true,
+        defaultLanguage: "fr",
       },
     });
     console.log("✔ SiteSettings seeded");
@@ -263,6 +273,9 @@ async function main() {
       name: "AGBLE",
       description:
         "Application de gestion et de structuration de l'espace agricole. Solution mobile permettant aux agriculteurs de gérer leurs parcelles, suivre leurs cultures et optimiser leur production.",
+      targetAudience: "Agriculteurs, Coopératives agricoles, ONG",
+      startDate: new Date("2024-03-01"),
+      endDate: new Date("2024-09-15"),
       sortOrder: 0,
       techIds: ["tech-flutter", "tech-dart", "tech-firebase", "tech-git", "tech-github"],
     },
@@ -271,6 +284,9 @@ async function main() {
       name: "Dumevi-Gbalè",
       description:
         "Application de gestion des mairies. Plateforme web complète permettant la gestion administrative des collectivités locales : état civil, gestion des documents, suivi des demandes citoyennes.",
+      targetAudience: "Mairies, Collectivités locales, Citoyens",
+      startDate: new Date("2024-10-01"),
+      endDate: new Date("2025-03-30"),
       sortOrder: 1,
       techIds: ["tech-spring-boot", "tech-java", "tech-angular", "tech-typescript", "tech-postgresql", "tech-git", "tech-github"],
     },
@@ -279,6 +295,9 @@ async function main() {
       name: "Portfolio Personnel",
       description:
         "Site portfolio full-stack avec un backoffice d'administration complet. Toutes les données sont configurables dynamiquement depuis l'interface admin.",
+      targetAudience: "Recruteurs, Clients, Développeurs",
+      startDate: new Date("2025-12-01"),
+      endDate: null,
       sortOrder: 2,
       techIds: ["tech-nextjs", "tech-nestjs", "tech-typescript", "tech-prisma", "tech-postgresql", "tech-tailwindcss", "tech-git"],
     },
@@ -302,6 +321,44 @@ async function main() {
       });
     }
   }
+
+  // --- Project Collaborators ---
+  const collaboratorData = [
+    {
+      id: "collab-1",
+      projectId: "proj-agble",
+      firstName: "Jean",
+      lastName: "Dupont",
+      email: "jean.dupont@example.com",
+      sortOrder: 0,
+    },
+    {
+      id: "collab-2",
+      projectId: "proj-agble",
+      firstName: "Marie",
+      lastName: "Koffi",
+      linkedinUrl: "https://linkedin.com/in/marie-koffi",
+      sortOrder: 1,
+    },
+    {
+      id: "collab-3",
+      projectId: "proj-dumevi-gbale",
+      firstName: "Kofi",
+      lastName: "Mensah",
+      email: "kofi.mensah@example.com",
+      linkedinUrl: "https://linkedin.com/in/kofi-mensah",
+      sortOrder: 0,
+    },
+  ];
+
+  for (const c of collaboratorData) {
+    await prisma.projectCollaborator.upsert({
+      where: { id: c.id },
+      update: {},
+      create: c,
+    });
+  }
+
   console.log("✔ Projects seeded");
 
   // --- Services ---
@@ -377,6 +434,93 @@ async function main() {
     });
   }
   console.log("✔ About seeded");
+
+  // --- Contact Messages ---
+  const contactMessageData = [
+    {
+      id: "msg-1",
+      firstName: "Alice",
+      lastName: "Martin",
+      email: "alice.martin@example.com",
+      subject: "Collaboration possible",
+      message:
+        "Bonjour, je suis intéressée par vos services de développement web. Pourriez-vous me contacter ?",
+      isRead: true,
+    },
+    {
+      id: "msg-2",
+      firstName: "Thomas",
+      lastName: "Dubois",
+      email: "thomas.dubois@example.com",
+      subject: "Demande de devis",
+      message:
+        "Bonjour, j'aurais besoin d'une application mobile pour mon entreprise. Pourriez-vous me faire un devis ?",
+      isRead: false,
+    },
+    {
+      id: "msg-3",
+      firstName: "Sophie",
+      lastName: "Bernard",
+      email: "sophie.b@example.com",
+      subject: "Stage",
+      message:
+        "Bonjour, je suis étudiante en informatique et je cherche un stage. Votre profil m'intéresse beaucoup.",
+      isRead: false,
+    },
+  ];
+
+  for (const m of contactMessageData) {
+    await prisma.contactMessage.upsert({
+      where: { id: m.id },
+      update: {},
+      create: m,
+    });
+  }
+  console.log("✔ Contact Messages seeded");
+
+  // --- Testimonials ---
+  const testimonialData = [
+    {
+      id: "testimonial-1",
+      firstName: "Pierre",
+      lastName: "Akakpo",
+      company: "OssanAsur",
+      role: "Chef de projet",
+      content:
+        "Fanuel est un développeur très compétent et rigoureux. Son travail sur nos projets Spring Boot a été remarquable.",
+      isApproved: true,
+      sortOrder: 0,
+    },
+    {
+      id: "testimonial-2",
+      firstName: "Amina",
+      lastName: "Traoré",
+      company: "AgriTech Togo",
+      role: "Directrice",
+      content:
+        "L'application AGBLE a transformé la gestion de nos coopératives agricoles. Un travail de qualité !",
+      isApproved: true,
+      sortOrder: 1,
+    },
+    {
+      id: "testimonial-3",
+      firstName: "Marc",
+      lastName: "Kouassi",
+      content:
+        "Très bon développeur, je recommande vivement ses services.",
+      isApproved: false,
+      sortOrder: 2,
+    },
+  ];
+
+  for (const t of testimonialData) {
+    await prisma.testimonial.upsert({
+      where: { id: t.id },
+      update: {},
+      create: t,
+    });
+  }
+  console.log("✔ Testimonials seeded");
 
   console.log("\n🎉 Seed complete!");
 }

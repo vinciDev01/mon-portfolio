@@ -6,7 +6,7 @@ export type { PresentationDto } from "./presentation";
 export type { SkillDto } from "./skill";
 export type { ExperienceDto } from "./experience";
 export type { CertificationDto } from "./certification";
-export type { ProjectDto } from "./project";
+export type { ProjectDto, ProjectTechnologyDto, ProjectRawDto } from "./project";
 export type { ServiceDto } from "./service";
 export type { AboutDto } from "./about";
 export type { PortfolioData } from "./portfolio";

@@ -11,13 +11,13 @@ interface HeaderProps {
 }
 
 const navLinks = [
-  { href: "#presentation", label: "Présentation" },
-  { href: "#skills", label: "Compétences" },
-  { href: "#experience", label: "Expérience" },
-  { href: "#certifications", label: "Certifications" },
-  { href: "#projects", label: "Projets" },
-  { href: "#services", label: "Services" },
-  { href: "#about", label: "À propos" },
+  { href: "#presentation", label: "Présentation." },
+  { href: "#skills", label: "Compétences." },
+  { href: "#experience", label: "Expérience." },
+  { href: "#certifications", label: "Certifications." },
+  { href: "#projects", label: "Projets." },
+  { href: "#services", label: "Services." },
+  { href: "#about", label: "À propos." },
 ];
 
 export function Header({ siteSettings, personalInfo }: HeaderProps) {
@@ -25,7 +25,7 @@ export function Header({ siteSettings, personalInfo }: HeaderProps) {
 
   return (
     <header className="sticky top-0 z-50 w-full bg-background/80 backdrop-blur-md border-b border-border">
-      <div className="max-w-7xl mx-auto px-6 md:px-12 lg:px-24 flex items-center justify-between h-16 gap-4">
+      <div className="mx-auto px-8 md:px-20 lg:px-40 xl:px-52 flex items-center justify-between h-16 gap-4">
         {/* Logo / Name */}
         <Link
           href="/"

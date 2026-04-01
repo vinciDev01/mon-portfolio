@@ -17,7 +17,7 @@ export function SectionWrapper({
     <section
       id={id}
       className={cn(
-        "py-16 px-6 md:px-12 lg:px-24 section-separator",
+        "py-20 px-8 md:px-20 lg:px-40 xl:px-52 section-separator",
         className,
       )}
     >

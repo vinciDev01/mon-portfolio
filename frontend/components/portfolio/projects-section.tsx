@@ -1,3 +1,5 @@
+"use client";
+
 import Image from "next/image";
 import type { ProjectDto } from "@portfolio/shared-types";
 import { getFileUrl } from "@/lib/api";
@@ -15,7 +17,7 @@ function ProjectCard({ project }: { project: ProjectDto }) {
   const photos = [photo1Url, photo2Url].filter(Boolean) as string[];
 
   return (
-    <div className="bg-card border border-border rounded-xl overflow-hidden hover:border-muted-foreground/30 transition-colors flex flex-col">
+    <div className="animated-card bg-card rounded-xl overflow-hidden transition-colors flex flex-col">
       {/* Project photos */}
       {photos.length > 0 && (
         <div

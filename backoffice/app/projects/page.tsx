@@ -6,15 +6,15 @@ import { fetchEntities, deleteEntity } from "@/lib/api";
 import { PageHeader } from "@/components/page-header";
 import { ConfirmDialog } from "@/components/confirm-dialog";
 import { toast } from "sonner";
-import type { ProjectDto } from "@portfolio/shared-types";
+import type { ProjectRawDto } from "@portfolio/shared-types";
 
 export default function ProjectsPage() {
   const router = useRouter();
-  const [items, setItems] = useState<ProjectDto[]>([]);
+  const [items, setItems] = useState<ProjectRawDto[]>([]);
   const [loading, setLoading] = useState(true);
   const [deleteId, setDeleteId] = useState<string | null>(null);
 
-  useEffect(() => { fetchEntities<ProjectDto>("projects").then(setItems).catch(() => toast.error("Erreur")).finally(() => setLoading(false)); }, []);
+  useEffect(() => { fetchEntities<ProjectRawDto>("projects").then(setItems).catch(() => toast.error("Erreur")).finally(() => setLoading(false)); }, []);
 
   async function handleDelete() {
     if (!deleteId) return;
@@ -31,7 +31,7 @@ export default function ProjectsPage() {
         <tbody>{items.map((item) => (
           <tr key={item.id} className="border-b border-border">
             <td className="py-3 px-2">{item.name}</td>
-            <td className="py-3 px-2 text-xs text-muted-foreground">{item.technologies?.map((t) => t.label).join(", ") || "-"}</td>
+            <td className="py-3 px-2 text-xs text-muted-foreground">{item.technologies?.map((pt) => pt.technology.label).join(", ") || "-"}</td>
             <td className="py-3 px-2 text-xs">{item.demoUrl ? "Oui" : "-"}</td>
             <td className="py-3 px-2 text-right space-x-2">
               <button onClick={() => router.push(`/projects/${item.id}/edit`)} className="text-xs px-3 py-1 rounded border border-border hover:bg-accent">Modifier</button>

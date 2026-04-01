@@ -1,3 +1,5 @@
+"use client";
+
 import type { ExperienceDto } from "@portfolio/shared-types";
 import { SectionWrapper } from "./section-wrapper";
 import { SeeMoreList } from "./see-more-button";
@@ -19,7 +21,7 @@ function ExperienceCard({ experience }: { experience: ExperienceDto }) {
       {/* Timeline dot */}
       <div className="absolute left-[-4px] top-1.5 size-2 rounded-full bg-foreground border-2 border-background" />
 
-      <div className="bg-card border border-border rounded-xl p-6 hover:border-muted-foreground/30 transition-colors">
+      <div className="animated-card bg-card rounded-xl p-6 transition-colors">
         <div className="flex flex-wrap items-start justify-between gap-2 mb-3">
           <div>
             <h3 className="font-semibold text-base">{experience.role}</h3>

@@ -36,8 +36,16 @@ export default function EditOrganizationPage() {
       <form onSubmit={handleSubmit} className="space-y-6">
         <div><label className="block text-sm font-medium mb-1">Libellé</label><input type="text" value={data.label} onChange={(e) => setData({ ...data, label: e.target.value })} required className="w-full px-3 py-2 border border-border rounded-md text-sm" /></div>
         <ImageUpload currentPath={data.logoPath} category="organizations" onUpload={(p) => setData({ ...data, logoPath: p })} label="Logo" />
-        <div><label className="block text-sm font-medium mb-1">Site web</label><input type="url" value={data.websiteUrl || ""} onChange={(e) => setData({ ...data, websiteUrl: e.target.value })} className="w-full px-3 py-2 border border-border rounded-md text-sm" /></div>
-        <div><label className="block text-sm font-medium mb-1">Ordre</label><input type="number" value={data.sortOrder} onChange={(e) => setData({ ...data, sortOrder: Number(e.target.value) })} className="w-full px-3 py-2 border border-border rounded-md text-sm" /></div>
+        <div>
+          <label className="block text-sm font-medium mb-1">Site web</label>
+          <input type="url" value={data.websiteUrl || ""} onChange={(e) => setData({ ...data, websiteUrl: e.target.value })} className="w-full px-3 py-2 border border-border rounded-md text-sm" />
+          <p className="text-xs text-muted-foreground mt-1">URL valide (ex: https://example.com)</p>
+        </div>
+        <div>
+          <label className="block text-sm font-medium mb-1">Ordre</label>
+          <input type="number" value={data.sortOrder} onChange={(e) => setData({ ...data, sortOrder: Number(e.target.value) })} min={0} className="w-full px-3 py-2 border border-border rounded-md text-sm" />
+          <p className="text-xs text-muted-foreground mt-1">Entier positif ou nul</p>
+        </div>
         <button type="submit" disabled={saving} className="px-6 py-2 rounded-md bg-primary text-primary-foreground hover:bg-primary/90 disabled:opacity-50">{saving ? "Sauvegarde..." : "Sauvegarder"}</button>
       </form>
     </div>

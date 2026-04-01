@@ -1,3 +1,5 @@
+"use client";
+
 import Image from "next/image";
 import type { SkillDto } from "@portfolio/shared-types";
 import { getFileUrl } from "@/lib/api";
@@ -12,7 +14,7 @@ function SkillCard({ skill }: { skill: SkillDto }) {
   const logoUrl = getFileUrl(skill.technology.logoPath);
 
   return (
-    <div className="flex flex-col items-center gap-3 p-4 rounded-xl bg-card border border-border hover:border-muted-foreground/30 transition-colors group">
+    <div className="animated-card flex flex-col items-center gap-3 p-4 rounded-xl bg-card transition-colors group">
       <div className="size-12 flex items-center justify-center">
         {logoUrl ? (
           <Image

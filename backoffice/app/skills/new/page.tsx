@@ -38,8 +38,16 @@ export default function NewSkillPage() {
             {technologies.map((t) => <option key={t.id} value={t.id}>{t.label}</option>)}
           </select>
         </div>
-        <div><label className="block text-sm font-medium mb-1">Niveau (0-100)</label><input type="number" value={proficiency} onChange={(e) => setProficiency(e.target.value === "" ? "" : Number(e.target.value))} min={0} max={100} className="w-full px-3 py-2 border border-border rounded-md text-sm" /></div>
-        <div><label className="block text-sm font-medium mb-1">Ordre</label><input type="number" value={sortOrder} onChange={(e) => setSortOrder(Number(e.target.value))} className="w-full px-3 py-2 border border-border rounded-md text-sm" /></div>
+        <div>
+          <label className="block text-sm font-medium mb-1">Niveau (0-100)</label>
+          <input type="number" value={proficiency} onChange={(e) => setProficiency(e.target.value === "" ? "" : Number(e.target.value))} min={0} max={100} className="w-full px-3 py-2 border border-border rounded-md text-sm" />
+          <p className="text-xs text-muted-foreground mt-1">Entier entre 0 et 100</p>
+        </div>
+        <div>
+          <label className="block text-sm font-medium mb-1">Ordre</label>
+          <input type="number" value={sortOrder} onChange={(e) => setSortOrder(Number(e.target.value))} min={0} className="w-full px-3 py-2 border border-border rounded-md text-sm" />
+          <p className="text-xs text-muted-foreground mt-1">Entier positif ou nul</p>
+        </div>
         <button type="submit" disabled={saving} className="px-6 py-2 rounded-md bg-primary text-primary-foreground hover:bg-primary/90 disabled:opacity-50">{saving ? "Création..." : "Créer"}</button>
       </form>
     </div>

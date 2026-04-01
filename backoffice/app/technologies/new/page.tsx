@@ -48,8 +48,10 @@ export default function NewTechnologyPage() {
             type="number"
             value={sortOrder}
             onChange={(e) => setSortOrder(Number(e.target.value))}
+            min={0}
             className="w-full px-3 py-2 border border-border rounded-md text-sm"
           />
+          <p className="text-xs text-muted-foreground mt-1">Entier positif ou nul</p>
         </div>
         <button
           type="submit"

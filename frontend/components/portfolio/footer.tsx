@@ -8,7 +8,7 @@ export function Footer({ personalInfo }: FooterProps) {
   const currentYear = new Date().getFullYear();
 
   return (
-    <footer className="py-10 px-6 md:px-12 lg:px-24 border-t border-border">
+    <footer className="py-10 px-8 md:px-20 lg:px-40 xl:px-52 border-t border-border">
       <div className="max-w-7xl mx-auto flex flex-col sm:flex-row items-center justify-between gap-4">
         {/* Social links */}
         <div className="flex items-center gap-4">

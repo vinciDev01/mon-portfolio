@@ -9,6 +9,8 @@ const nextConfig = {
         pathname: "/uploads/**",
       },
     ],
+    dangerouslyAllowSVG: true,
+    unoptimized: true,
   },
 }
 

@@ -24,7 +24,10 @@ export default function PersonalInfoPage() {
     setSaving(true);
     try {
       const { id, ...rest } = data;
-      await updateSingleton("personal-info", rest);
+      const payload = Object.fromEntries(
+        Object.entries(rest).map(([k, v]) => [k, v === "" ? undefined : v]),
+      );
+      await updateSingleton("personal-info", payload);
       toast.success("Informations sauvegardées");
     } catch {
       toast.error("Erreur de sauvegarde");
@@ -76,6 +79,7 @@ export default function PersonalInfoPage() {
             onChange={(e) => setData({ ...data, email: e.target.value })}
             className="w-full px-3 py-2 border border-border rounded-md text-sm"
           />
+          <p className="text-xs text-muted-foreground mt-1">Adresse email valide</p>
         </div>
 
         <div>
@@ -96,6 +100,7 @@ export default function PersonalInfoPage() {
             onChange={(e) => setData({ ...data, githubUrl: e.target.value })}
             className="w-full px-3 py-2 border border-border rounded-md text-sm"
           />
+          <p className="text-xs text-muted-foreground mt-1">URL valide (ex: https://github.com/username)</p>
         </div>
 
         <div>
@@ -106,6 +111,7 @@ export default function PersonalInfoPage() {
             onChange={(e) => setData({ ...data, linkedinUrl: e.target.value })}
             className="w-full px-3 py-2 border border-border rounded-md text-sm"
           />
+          <p className="text-xs text-muted-foreground mt-1">URL valide (ex: https://linkedin.com/in/profil)</p>
         </div>
 
         <div>

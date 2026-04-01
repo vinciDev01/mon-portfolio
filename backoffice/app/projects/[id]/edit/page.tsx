@@ -5,7 +5,7 @@ import { useRouter, useParams } from "next/navigation";
 import { fetchEntity, updateEntity, fetchEntities } from "@/lib/api";
 import { ImageUpload } from "@/components/image-upload";
 import { toast } from "sonner";
-import type { ProjectDto, TechnologyDto } from "@portfolio/shared-types";
+import type { ProjectRawDto, TechnologyDto } from "@portfolio/shared-types";
 
 export default function EditProjectPage() {
   const router = useRouter();
@@ -22,12 +22,12 @@ export default function EditProjectPage() {
   const [saving, setSaving] = useState(false);
 
   useEffect(() => {
-    Promise.all([fetchEntity<ProjectDto>("projects", id), fetchEntities<TechnologyDto>("technologies")])
+    Promise.all([fetchEntity<ProjectRawDto>("projects", id), fetchEntities<TechnologyDto>("technologies")])
       .then(([project, technologies]) => {
         setName(project.name); setDescription(project.description || "");
         setPhoto1Path(project.photo1Path); setPhoto2Path(project.photo2Path);
         setDemoUrl(project.demoUrl || ""); setSortOrder(project.sortOrder);
-        setTechnologyIds(project.technologies?.map((t) => t.id) || []);
+        setTechnologyIds(project.technologies?.map((pt) => pt.technologyId) || []);
         setTechs(technologies);
       }).catch(() => toast.error("Erreur")).finally(() => setLoading(false));
   }, [id]);
@@ -58,7 +58,11 @@ export default function EditProjectPage() {
           <ImageUpload currentPath={photo1Path} category="projects" onUpload={setPhoto1Path} label="Photo 1" />
           <ImageUpload currentPath={photo2Path} category="projects" onUpload={setPhoto2Path} label="Photo 2" />
         </div>
-        <div><label className="block text-sm font-medium mb-1">Lien démo</label><input type="url" value={demoUrl} onChange={(e) => setDemoUrl(e.target.value)} className="w-full px-3 py-2 border border-border rounded-md text-sm" /></div>
+        <div>
+          <label className="block text-sm font-medium mb-1">Lien démo</label>
+          <input type="url" value={demoUrl} onChange={(e) => setDemoUrl(e.target.value)} className="w-full px-3 py-2 border border-border rounded-md text-sm" />
+          <p className="text-xs text-muted-foreground mt-1">URL valide (ex: https://example.com)</p>
+        </div>
         <div>
           <label className="block text-sm font-medium mb-2">Technologies</label>
           <div className="flex flex-wrap gap-2">
@@ -70,7 +74,11 @@ export default function EditProjectPage() {
             ))}
           </div>
         </div>
-        <div><label className="block text-sm font-medium mb-1">Ordre</label><input type="number" value={sortOrder} onChange={(e) => setSortOrder(Number(e.target.value))} className="w-full px-3 py-2 border border-border rounded-md text-sm" /></div>
+        <div>
+          <label className="block text-sm font-medium mb-1">Ordre</label>
+          <input type="number" value={sortOrder} onChange={(e) => setSortOrder(Number(e.target.value))} min={0} className="w-full px-3 py-2 border border-border rounded-md text-sm" />
+          <p className="text-xs text-muted-foreground mt-1">Entier positif ou nul</p>
+        </div>
         <button type="submit" disabled={saving} className="px-6 py-2 rounded-md bg-primary text-primary-foreground hover:bg-primary/90 disabled:opacity-50">{saving ? "Sauvegarde..." : "Sauvegarder"}</button>
       </form>
     </div>

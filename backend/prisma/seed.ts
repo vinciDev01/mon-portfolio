@@ -1,4 +1,5 @@
 import { PrismaClient } from "@prisma/client";
+import * as bcrypt from "bcrypt";
 
 const prisma = new PrismaClient();
 
@@ -23,7 +24,13 @@ async function main() {
         showAbout: true,
         showContact: true,
         showTestimonials: true,
+        allowTestimonialSubmission: true,
         defaultLanguage: "fr",
+        availabilityStatus: "available",
+        availabilityLabel: "Disponible pour freelance",
+        maintenanceMode: false,
+        seoTitle: "Fanuel BENYO - Developpeur d'Applications",
+        seoDescription: "Portfolio professionnel de Fanuel BENYO. Developpeur Java Spring Boot, Flutter, Web.",
       },
     });
     console.log("✔ SiteSettings seeded");
@@ -521,6 +528,61 @@ async function main() {
     });
   }
   console.log("✔ Testimonials seeded");
+
+  // --- Admin User ---
+  const passwordHash = await bcrypt.hash("admin123", 10);
+  await prisma.adminUser.upsert({
+    where: { id: "admin-1" },
+    update: {},
+    create: {
+      id: "admin-1",
+      email: "benyofanuel@gmail.com",
+      passwordHash,
+    },
+  });
+  console.log("✔ Admin User seeded (email: benyofanuel@gmail.com, password: admin123)");
+
+  // --- Blog Posts ---
+  const blogPostData = [
+    {
+      id: "blog-1",
+      title: "Pourquoi j'ai choisi Spring Boot pour mes projets backend",
+      slug: "pourquoi-spring-boot",
+      content: `# Pourquoi Spring Boot ?\n\nSpring Boot est mon framework backend de prédilection. Voici pourquoi.\n\n## Productivité\n\nAvec Spring Boot, je peux démarrer un projet en quelques minutes grâce à Spring Initializr et l'auto-configuration.\n\n## Écosystème riche\n\n- Spring Security pour l'authentification\n- Spring Data JPA pour la persistance\n- Spring Cloud pour les microservices\n\n## Performance\n\nLe framework offre d'excellentes performances out-of-the-box avec un serveur embarqué optimisé.\n\n## Conclusion\n\nSi vous cherchez un framework robuste et mature pour vos APIs, Spring Boot reste un excellent choix.`,
+      excerpt: "Découvrez pourquoi Spring Boot est mon choix privilégié pour le développement backend.",
+      isPublished: true,
+      publishedAt: new Date("2025-11-15"),
+      sortOrder: 0,
+    },
+    {
+      id: "blog-2",
+      title: "Flutter vs React Native : mon retour d'expérience",
+      slug: "flutter-vs-react-native",
+      content: `# Flutter vs React Native\n\nAprès avoir travaillé avec les deux frameworks, voici mon analyse comparative.\n\n## Flutter\n\n**Avantages :**\n- Performance native grâce au moteur Skia\n- Hot reload ultra-rapide\n- Un seul langage (Dart) pour tout\n\n**Inconvénients :**\n- Dart est moins populaire\n- Taille des applications plus grande\n\n## React Native\n\n**Avantages :**\n- JavaScript/TypeScript (large communauté)\n- Accès direct aux modules natifs\n\n**Inconvénients :**\n- Bridge JavaScript-natif = overhead\n- Moins de widgets built-in\n\n## Mon choix\n\nPour mes projets actuels, je préfère **Flutter** pour sa consistance UI et ses performances.`,
+      excerpt: "Comparaison détaillée entre Flutter et React Native après plusieurs projets avec chaque technologie.",
+      isPublished: true,
+      publishedAt: new Date("2025-12-20"),
+      sortOrder: 1,
+    },
+    {
+      id: "blog-3",
+      title: "Architecture hexagonale en pratique",
+      slug: "architecture-hexagonale",
+      content: `# Architecture Hexagonale\n\nL'architecture hexagonale (ports & adapters) est un pattern que j'applique systématiquement.\n\n## Le principe\n\nSéparer le domaine métier de l'infrastructure technique.\n\n## En pratique\n\nCe brouillon sera complété prochainement...`,
+      excerpt: "Comment j'applique l'architecture hexagonale dans mes projets Java.",
+      isPublished: false,
+      sortOrder: 2,
+    },
+  ];
+
+  for (const b of blogPostData) {
+    await prisma.blogPost.upsert({
+      where: { id: b.id },
+      update: {},
+      create: b,
+    });
+  }
+  console.log("✔ Blog Posts seeded");
 
   console.log("\n🎉 Seed complete!");
 }

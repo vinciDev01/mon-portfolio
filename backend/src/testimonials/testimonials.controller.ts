@@ -8,6 +8,7 @@ import {
   Post,
 } from '@nestjs/common';
 import { ApiOperation, ApiTags } from '@nestjs/swagger';
+import { Public } from '../auth/auth.guard';
 import { TestimonialsService } from './testimonials.service';
 import { CreateTestimonialDto } from './dto/create-testimonial.dto';
 import { UpdateTestimonialDto } from './dto/update-testimonial.dto';
@@ -23,6 +24,7 @@ export class TestimonialsController {
     return this.testimonialsService.findAll();
   }
 
+  @Public()
   @Get('approved')
   @ApiOperation({ summary: 'Get approved testimonials (public)' })
   findApproved() {
@@ -35,6 +37,7 @@ export class TestimonialsController {
     return this.testimonialsService.findOne(id);
   }
 
+  @Public()
   @Post()
   @ApiOperation({ summary: 'Submit a testimonial (public)' })
   create(@Body() dto: CreateTestimonialDto) {

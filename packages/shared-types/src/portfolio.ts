@@ -8,6 +8,8 @@ import type { ProjectDto } from "./project";
 import type { ServiceDto } from "./service";
 import type { AboutDto } from "./about";
 import type { TestimonialDto } from "./testimonial";
+import type { BlogPostDto } from "./blog-post";
+import type { StatsDto } from "./stats";
 
 export interface PortfolioData {
   siteSettings: SiteSettingsDto;
@@ -20,4 +22,6 @@ export interface PortfolioData {
   services: ServiceDto[];
   about: AboutDto[];
   testimonials: TestimonialDto[];
+  blogPosts: BlogPostDto[];
+  stats: StatsDto;
 }

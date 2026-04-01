@@ -193,6 +193,8 @@ export default function SiteSettingsPage() {
               { key: "showAbout", label: "À propos" },
               { key: "showTestimonials", label: "Témoignages" },
               { key: "showContact", label: "Contact" },
+              { key: "allowTestimonialSubmission", label: "Autoriser l'envoi de témoignages" },
+              { key: "maintenanceMode", label: "Mode maintenance" },
             ] as const).map(({ key, label }) => (
               <label key={key} className="flex items-center gap-2 text-sm cursor-pointer">
                 <input
@@ -204,6 +206,86 @@ export default function SiteSettingsPage() {
                 {label}
               </label>
             ))}
+          </div>
+        </div>
+
+        {/* Disponibilité */}
+        <div>
+          <h2 className="text-lg font-semibold mb-3">Disponibilité</h2>
+          <div className="grid grid-cols-2 gap-4">
+            <div>
+              <label className="block text-sm font-medium mb-1">Statut</label>
+              <select
+                value={data.availabilityStatus}
+                onChange={(e) => setData({ ...data, availabilityStatus: e.target.value })}
+                className="w-full px-3 py-2 border border-border rounded-md text-sm"
+              >
+                <option value="available">Disponible</option>
+                <option value="busy">Occupé</option>
+                <option value="unavailable">Indisponible</option>
+              </select>
+            </div>
+            <div>
+              <label className="block text-sm font-medium mb-1">Label personnalisé</label>
+              <input
+                type="text"
+                value={data.availabilityLabel || ""}
+                onChange={(e) => setData({ ...data, availabilityLabel: e.target.value })}
+                placeholder="Ex: Disponible pour freelance"
+                className="w-full px-3 py-2 border border-border rounded-md text-sm"
+              />
+            </div>
+          </div>
+        </div>
+
+        {/* SEO */}
+        <div>
+          <h2 className="text-lg font-semibold mb-3">SEO</h2>
+          <div className="space-y-4">
+            <div>
+              <label className="block text-sm font-medium mb-1">Titre SEO</label>
+              <input
+                type="text"
+                value={data.seoTitle || ""}
+                onChange={(e) => setData({ ...data, seoTitle: e.target.value })}
+                className="w-full px-3 py-2 border border-border rounded-md text-sm"
+                placeholder="Titre affiché dans les résultats de recherche"
+              />
+            </div>
+            <div>
+              <label className="block text-sm font-medium mb-1">Description SEO</label>
+              <textarea
+                value={data.seoDescription || ""}
+                onChange={(e) => setData({ ...data, seoDescription: e.target.value })}
+                rows={2}
+                className="w-full px-3 py-2 border border-border rounded-md text-sm"
+                placeholder="Description affichée dans les résultats de recherche"
+              />
+            </div>
+            <ImageUpload
+              label="Image SEO (Open Graph)"
+              currentPath={data.seoImagePath}
+              category="site"
+              onUpload={(p) => setData({ ...data, seoImagePath: p })}
+            />
+          </div>
+        </div>
+
+        {/* Notifications */}
+        <div>
+          <h2 className="text-lg font-semibold mb-3">Notifications</h2>
+          <div>
+            <label className="block text-sm font-medium mb-1">Email de notification</label>
+            <input
+              type="email"
+              value={data.notificationEmail || ""}
+              onChange={(e) => setData({ ...data, notificationEmail: e.target.value })}
+              placeholder="Email pour recevoir les notifications"
+              className="w-full px-3 py-2 border border-border rounded-md text-sm"
+            />
+            <p className="text-xs text-muted-foreground mt-1">
+              Cet email recevra les nouveaux messages de contact et témoignages
+            </p>
           </div>
         </div>
 

@@ -17,6 +17,11 @@ export class PortfolioService {
       rawServices,
       about,
       testimonials,
+      blogPosts,
+      projectCount,
+      certificationCount,
+      technologyCount,
+      experienceCount,
     ] = await Promise.all([
       this.prisma.siteSettings.findFirst(),
       this.prisma.personalInfo.findFirst(),
@@ -46,6 +51,14 @@ export class PortfolioService {
         where: { isApproved: true },
         orderBy: { sortOrder: 'asc' },
       }),
+      this.prisma.blogPost.findMany({
+        where: { isPublished: true },
+        orderBy: { publishedAt: 'desc' },
+      }),
+      this.prisma.project.count(),
+      this.prisma.certification.count(),
+      this.prisma.technology.count(),
+      this.prisma.experience.count(),
     ]);
 
     const projects = rawProjects.map((project: typeof rawProjects[number]) => ({
@@ -56,6 +69,13 @@ export class PortfolioService {
     const services = rawServices.map((service: typeof rawServices[number]) => ({
       ...service,
     }));
+
+    const stats = {
+      projects: projectCount,
+      certifications: certificationCount,
+      technologies: technologyCount,
+      experiences: experienceCount,
+    };
 
     return {
       siteSettings,
@@ -68,6 +88,8 @@ export class PortfolioService {
       services,
       about,
       testimonials,
+      blogPosts,
+      stats,
     };
   }
 }

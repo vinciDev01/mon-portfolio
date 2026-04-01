@@ -11,4 +11,6 @@ export type { ServiceDto } from "./service";
 export type { AboutDto } from "./about";
 export type { ContactMessageDto } from "./contact-message";
 export type { TestimonialDto } from "./testimonial";
+export type { BlogPostDto } from "./blog-post";
+export type { StatsDto } from "./stats";
 export type { PortfolioData } from "./portfolio";

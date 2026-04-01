@@ -37,6 +37,8 @@
   "contact.success": "Message sent!",
   "contact.successDetail": "Thank you, I will get back to you as soon as possible.",
   "contact.sendAnother": "Send another message",
+  "contact.headline": "Have a project? Let's talk!",
+  "contact.subtitle": "Feel free to reach out for any collaboration or inquiry.",
   "contact.error": "An error occurred. Please try again.",
 
   "testimonials.leaveOne": "Leave a testimonial",
@@ -62,5 +64,19 @@
 
   "toast.section": "Section",
 
-  "meta.description": "My professional portfolio"
+  "meta.description": "My professional portfolio",
+
+  "stats.projects": "Projects",
+  "stats.certifications": "Certifications",
+  "stats.technologies": "Technologies",
+  "stats.experiences": "Experiences",
+
+  "availability.available": "Available",
+  "availability.busy": "Busy",
+  "availability.unavailable": "Unavailable",
+
+  "maintenance.title": "Site under maintenance",
+  "maintenance.message": "We'll be back soon.",
+
+  "nav.blog": "Blog."
 }

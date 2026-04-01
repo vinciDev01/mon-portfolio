@@ -37,6 +37,8 @@
   "contact.success": "Message envoye !",
   "contact.successDetail": "Merci, je vous repondrai dans les plus brefs delais.",
   "contact.sendAnother": "Envoyer un autre message",
+  "contact.headline": "Vous avez un projet ? Discutons-en !",
+  "contact.subtitle": "N'hesitez pas a me contacter pour toute collaboration ou demande d'information.",
   "contact.error": "Une erreur est survenue. Veuillez reessayer.",
 
   "testimonials.leaveOne": "Laisser un temoignage",
@@ -62,5 +64,19 @@
 
   "toast.section": "Section",
 
-  "meta.description": "Mon portfolio professionnel"
+  "meta.description": "Mon portfolio professionnel",
+
+  "stats.projects": "Projets",
+  "stats.certifications": "Certifications",
+  "stats.technologies": "Technologies",
+  "stats.experiences": "Experiences",
+
+  "availability.available": "Disponible",
+  "availability.busy": "Occupe",
+  "availability.unavailable": "Indisponible",
+
+  "maintenance.title": "Site en maintenance",
+  "maintenance.message": "Nous revenons bientot.",
+
+  "nav.blog": "Blog."
 }

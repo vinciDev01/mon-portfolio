@@ -1,6 +1,6 @@
 "use client";
 
-import { createContext, useContext, useState, useCallback, type ReactNode } from "react";
+import { createContext, useContext, useState, useCallback, useEffect, type ReactNode } from "react";
 import fr from "./fr.json";
 import en from "./en.json";
 import de from "./de.json";
@@ -17,13 +17,6 @@ interface I18nContextValue {
 
 const I18nContext = createContext<I18nContextValue | null>(null);
 
-function getInitialLocale(defaultLocale: Locale): Locale {
-  if (typeof window === "undefined") return defaultLocale;
-  const stored = localStorage.getItem("portfolio-locale") as Locale | null;
-  if (stored && dictionaries[stored]) return stored;
-  return defaultLocale;
-}
-
 export function I18nProvider({
   defaultLocale = "fr",
   children,
@@ -32,7 +25,16 @@ export function I18nProvider({
   children: ReactNode;
 }) {
   const safeDefault = (dictionaries[defaultLocale as Locale] ? defaultLocale : "fr") as Locale;
-  const [locale, setLocaleState] = useState<Locale>(() => getInitialLocale(safeDefault));
+  // Initialize with server-safe default to avoid hydration mismatch
+  const [locale, setLocaleState] = useState<Locale>(safeDefault);
+
+  // After hydration, read localStorage preference
+  useEffect(() => {
+    const stored = localStorage.getItem("portfolio-locale") as Locale | null;
+    if (stored && dictionaries[stored]) {
+      setLocaleState(stored);
+    }
+  }, []);
 
   const setLocale = useCallback((newLocale: Locale) => {
     setLocaleState(newLocale);

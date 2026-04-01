@@ -1,5 +1,6 @@
 import { Body, Controller, Get, Patch } from '@nestjs/common';
 import { ApiOperation, ApiTags } from '@nestjs/swagger';
+import { Public } from '../auth/auth.guard';
 import { UpdateSiteSettingsDto } from './dto/update-site-settings.dto';
 import { SiteSettingsService } from './site-settings.service';
 
@@ -8,6 +9,7 @@ import { SiteSettingsService } from './site-settings.service';
 export class SiteSettingsController {
   constructor(private readonly siteSettingsService: SiteSettingsService) {}
 
+  @Public()
   @Get()
   @ApiOperation({ summary: 'Get site settings' })
   findOne() {

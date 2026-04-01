@@ -29,12 +29,47 @@ model SiteSettings {
   showContact        Boolean @default(true) @map("show_contact")
   showTestimonials   Boolean @default(true) @map("show_testimonials")
 
-  defaultLanguage String @default("fr") @map("default_language")
+  allowTestimonialSubmission Boolean @default(true) @map("allow_testimonial_submission")
+  defaultLanguage            String  @default("fr") @map("default_language")
+
+  availabilityStatus  String  @default("available") @map("availability_status")
+  availabilityLabel   String? @map("availability_label")
+  maintenanceMode     Boolean @default(false) @map("maintenance_mode")
+  seoTitle            String? @map("seo_title")
+  seoDescription      String? @map("seo_description")
+  seoImagePath        String? @map("seo_image_path")
+  notificationEmail   String? @map("notification_email")
 
   createdAt   DateTime @default(now()) @map("created_at")
   updatedAt   DateTime @updatedAt @map("updated_at")
 
   @@map("site_settings")
+}
+
+model AdminUser {
+  id           String   @id @default(uuid())
+  email        String   @unique
+  passwordHash String   @map("password_hash")
+  createdAt    DateTime @default(now()) @map("created_at")
+  updatedAt    DateTime @updatedAt @map("updated_at")
+
+  @@map("admin_users")
+}
+
+model BlogPost {
+  id             String    @id @default(uuid())
+  title          String
+  slug           String    @unique
+  coverImagePath String?   @map("cover_image_path")
+  content        String    @db.Text
+  excerpt        String?
+  isPublished    Boolean   @default(false) @map("is_published")
+  publishedAt    DateTime? @map("published_at")
+  sortOrder      Int       @default(0) @map("sort_order")
+  createdAt      DateTime  @default(now()) @map("created_at")
+  updatedAt      DateTime  @updatedAt @map("updated_at")
+
+  @@map("blog_posts")
 }
 
 model PersonalInfo {

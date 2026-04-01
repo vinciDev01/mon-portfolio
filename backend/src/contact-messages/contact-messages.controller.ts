@@ -8,6 +8,7 @@ import {
   Post,
 } from '@nestjs/common';
 import { ApiOperation, ApiTags } from '@nestjs/swagger';
+import { Public } from '../auth/auth.guard';
 import { ContactMessagesService } from './contact-messages.service';
 import { CreateContactMessageDto } from './dto/create-contact-message.dto';
 import { UpdateContactMessageDto } from './dto/update-contact-message.dto';
@@ -31,6 +32,7 @@ export class ContactMessagesController {
     return this.contactMessagesService.findOne(id);
   }
 
+  @Public()
   @Post()
   @ApiOperation({ summary: 'Submit a contact message (public)' })
   create(@Body() dto: CreateContactMessageDto) {

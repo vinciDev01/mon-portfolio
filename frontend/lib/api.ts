@@ -20,5 +20,6 @@ export async function getSiteSettings(): Promise<SiteSettingsDto> {
 
 export function getFileUrl(path: string | null | undefined): string | null {
   if (!path) return null;
+  if (path.startsWith("http://") || path.startsWith("https://")) return path;
   return `${API_URL}/uploads/${path}`;
 }

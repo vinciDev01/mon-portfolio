@@ -1,6 +1,6 @@
 import "./globals.css";
-import { SidebarNav } from "@/components/sidebar-nav";
 import { Toaster } from "sonner";
+import { AppShell } from "@/components/app-shell";
 
 export const metadata = {
   title: "Portfolio Admin",
@@ -15,10 +15,7 @@ export default function RootLayout({
   return (
     <html lang="fr">
       <body className="antialiased">
-        <div className="flex min-h-screen">
-          <SidebarNav />
-          <main className="flex-1 p-8">{children}</main>
-        </div>
+        <AppShell>{children}</AppShell>
         <Toaster position="top-right" richColors />
       </body>
     </html>

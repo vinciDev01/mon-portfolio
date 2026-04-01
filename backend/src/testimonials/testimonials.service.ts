@@ -1,11 +1,15 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service';
+import { NotificationsService } from '../notifications/notifications.service';
 import { CreateTestimonialDto } from './dto/create-testimonial.dto';
 import { UpdateTestimonialDto } from './dto/update-testimonial.dto';
 
 @Injectable()
 export class TestimonialsService {
-  constructor(private readonly prisma: PrismaService) {}
+  constructor(
+    private readonly prisma: PrismaService,
+    private readonly notifications: NotificationsService,
+  ) {}
 
   findAll() {
     return this.prisma.testimonial.findMany({
@@ -28,8 +32,21 @@ export class TestimonialsService {
     return record;
   }
 
-  create(dto: CreateTestimonialDto) {
-    return this.prisma.testimonial.create({ data: dto });
+  async create(dto: CreateTestimonialDto) {
+    const testimonial = await this.prisma.testimonial.create({ data: dto });
+
+    const settings = await this.prisma.siteSettings.findFirst();
+    if (settings?.notificationEmail) {
+      this.notifications
+        .sendEmail(
+          settings.notificationEmail,
+          `Nouveau temoignage de ${dto.firstName} ${dto.lastName}`,
+          `<p><strong>${dto.firstName} ${dto.lastName}</strong>${dto.company ? ` - ${dto.company}` : ''}</p><blockquote>${dto.content}</blockquote><p><em>En attente d'approbation</em></p>`,
+        )
+        .catch(() => {});
+    }
+
+    return testimonial;
   }
 
   async update(id: string, dto: UpdateTestimonialDto) {

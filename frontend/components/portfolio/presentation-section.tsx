@@ -1,7 +1,6 @@
 "use client";
 
 import type { PresentationDto } from "@portfolio/shared-types";
-import { SeeMoreList } from "./see-more-button";
 
 interface PresentationSectionProps {
   presentations: PresentationDto[];
@@ -35,21 +34,11 @@ export function PresentationSection({ presentations }: PresentationSectionProps)
       id="presentation"
       className="min-h-[60vh] flex items-center py-20 px-8 md:px-20 lg:px-40 xl:px-52"
     >
-      {presentations.length === 1 ? (
-        <PresentationCard item={presentations[0]!} />
-      ) : (
-        <div className="w-full">
-          <SeeMoreList
-            items={presentations}
-            initialCount={1}
-            renderItem={(item) => (
-              <div key={item.id} className="mb-12">
-                <PresentationCard item={item} />
-              </div>
-            )}
-          />
-        </div>
-      )}
+      <div className="w-full space-y-12">
+        {presentations.map((item) => (
+          <PresentationCard key={item.id} item={item} />
+        ))}
+      </div>
     </section>
   );
 }

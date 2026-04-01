@@ -44,6 +44,10 @@ export function ContactSection() {
   return (
     <SectionWrapper id="contact" title={t("section.contact")}>
       <div className="max-w-xl mx-auto">
+        <div className="text-center mb-8">
+          <p className="text-2xl font-bold mb-2">{t("contact.headline")}</p>
+          <p className="text-sm text-muted-foreground">{t("contact.subtitle")}</p>
+        </div>
         {status === "success" ? (
           <div className="text-center py-8">
             <div className="size-12 mx-auto mb-4 rounded-full bg-green-100 dark:bg-green-900/30 flex items-center justify-center">

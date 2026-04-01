@@ -105,8 +105,48 @@ export class UpdateSiteSettingsDto {
   @IsBoolean()
   showTestimonials?: boolean;
 
+  @ApiPropertyOptional()
+  @IsOptional()
+  @IsBoolean()
+  allowTestimonialSubmission?: boolean;
+
   @ApiPropertyOptional({ example: 'fr' })
   @IsOptional()
   @IsString()
   defaultLanguage?: string;
+
+  @ApiPropertyOptional({ example: 'available' })
+  @IsOptional()
+  @IsString()
+  availabilityStatus?: string;
+
+  @ApiPropertyOptional()
+  @IsOptional()
+  @IsString()
+  availabilityLabel?: string;
+
+  @ApiPropertyOptional()
+  @IsOptional()
+  @IsBoolean()
+  maintenanceMode?: boolean;
+
+  @ApiPropertyOptional()
+  @IsOptional()
+  @IsString()
+  seoTitle?: string;
+
+  @ApiPropertyOptional()
+  @IsOptional()
+  @IsString()
+  seoDescription?: string;
+
+  @ApiPropertyOptional()
+  @IsOptional()
+  @IsString()
+  seoImagePath?: string;
+
+  @ApiPropertyOptional()
+  @IsOptional()
+  @IsString()
+  notificationEmail?: string;
 }

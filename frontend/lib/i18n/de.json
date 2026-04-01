@@ -37,6 +37,8 @@
   "contact.success": "Nachricht gesendet!",
   "contact.successDetail": "Vielen Dank, ich werde mich so schnell wie moglich bei Ihnen melden.",
   "contact.sendAnother": "Weitere Nachricht senden",
+  "contact.headline": "Haben Sie ein Projekt? Lassen Sie uns reden!",
+  "contact.subtitle": "Kontaktieren Sie mich gerne fur jede Zusammenarbeit oder Anfrage.",
   "contact.error": "Ein Fehler ist aufgetreten. Bitte versuchen Sie es erneut.",
 
   "testimonials.leaveOne": "Referenz hinterlassen",
@@ -62,5 +64,19 @@
 
   "toast.section": "Bereich",
 
-  "meta.description": "Mein professionelles Portfolio"
+  "meta.description": "Mein professionelles Portfolio",
+
+  "stats.projects": "Projekte",
+  "stats.certifications": "Zertifikate",
+  "stats.technologies": "Technologien",
+  "stats.experiences": "Erfahrungen",
+
+  "availability.available": "Verfugbar",
+  "availability.busy": "Beschaftigt",
+  "availability.unavailable": "Nicht verfugbar",
+
+  "maintenance.title": "Wartungsmodus",
+  "maintenance.message": "Wir sind bald zuruck.",
+
+  "nav.blog": "Blog."
 }

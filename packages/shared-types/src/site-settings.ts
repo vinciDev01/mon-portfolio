@@ -18,5 +18,13 @@ export interface SiteSettingsDto {
   showAbout: boolean;
   showContact: boolean;
   showTestimonials: boolean;
+  allowTestimonialSubmission: boolean;
   defaultLanguage: string;
+  availabilityStatus: string;
+  availabilityLabel: string | null;
+  maintenanceMode: boolean;
+  seoTitle: string | null;
+  seoDescription: string | null;
+  seoImagePath: string | null;
+  notificationEmail: string | null;
 }

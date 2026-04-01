@@ -1,10 +1,14 @@
 "use client";
 
 import { useTheme } from "next-themes";
+import { useEffect, useState } from "react";
 import { Button } from "@/components/ui/button";
 
 export function ThemeToggle() {
   const { resolvedTheme, setTheme } = useTheme();
+  const [mounted, setMounted] = useState(false);
+
+  useEffect(() => setMounted(true), []);
 
   const isDark = resolvedTheme === "dark";
 
@@ -25,7 +29,7 @@ export function ThemeToggle() {
         strokeWidth="2"
         strokeLinecap="round"
         strokeLinejoin="round"
-        className={`size-4 transition-transform ${isDark ? "block" : "hidden"}`}
+        className={`size-4 transition-transform ${mounted && isDark ? "block" : "hidden"}`}
         aria-hidden="true"
       >
         <circle cx="12" cy="12" r="4" />
@@ -40,7 +44,7 @@ export function ThemeToggle() {
         strokeWidth="2"
         strokeLinecap="round"
         strokeLinejoin="round"
-        className={`size-4 transition-transform ${isDark ? "hidden" : "block"}`}
+        className={`size-4 transition-transform ${!mounted || !isDark ? "block" : "hidden"}`}
         aria-hidden="true"
       >
         <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z" />

@@ -15,11 +15,41 @@ const fontMono = Geist_Mono({
 });
 
 const DEFAULT_FONT = "Figtree";
+const API_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:4000";
 
-export const metadata: Metadata = {
-  title: "Portfolio",
-  description: "Mon portfolio professionnel",
-};
+export async function generateMetadata(): Promise<Metadata> {
+  try {
+    const settings = await getSiteSettings();
+    const title = settings.seoTitle ?? "Portfolio";
+    const description = settings.seoDescription ?? "Mon portfolio professionnel";
+    const imageUrl = settings.seoImagePath
+      ? `${API_URL}/uploads/${settings.seoImagePath}`
+      : undefined;
+
+    return {
+      title,
+      description,
+      openGraph: {
+        title,
+        description,
+        ...(imageUrl && {
+          images: [{ url: imageUrl }],
+        }),
+      },
+      twitter: {
+        card: "summary_large_image",
+        title,
+        description,
+        ...(imageUrl && { images: [imageUrl] }),
+      },
+    };
+  } catch {
+    return {
+      title: "Portfolio",
+      description: "Mon portfolio professionnel",
+    };
+  }
+}
 
 export default async function RootLayout({
   children,

@@ -1023,8 +1023,11 @@ describe("sommetsFaisceau", () => {
   });
 
   it("suit la tete quand elle pivote vers le haut", () => {
-    const bas = sommets(Math.PI + 0.4);
-    const haut = sommets(Math.PI - 0.4);
+    // Repere ecran : y croit vers le bas, donc depuis le repos (PI, vers la
+    // gauche) AUGMENTER l'angle fait monter la tete et le DIMINUER la fait
+    // descendre. Verifie numeriquement : dir(PI + 0.4).y = -0.389.
+    const haut = sommets(Math.PI + 0.4);
+    const bas = sommets(Math.PI - 0.4);
     expect(haut[1].y).toBeLessThan(bas[1].y);
   });
 

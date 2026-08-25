@@ -36,6 +36,14 @@ export function I18nProvider({
     }
   }, []);
 
+  // Garde `lang` sur `<html>` synchronise avec la locale courante (assainie,
+  // jamais la valeur brute) a chaque changement — WCAG 3.1.2. S'execute apres
+  // le montage, donc le rendu serveur et le premier rendu client restent
+  // identiques : aucune divergence d'hydratation.
+  useEffect(() => {
+    document.documentElement.lang = locale;
+  }, [locale]);
+
   const setLocale = useCallback((newLocale: Locale) => {
     setLocaleState(newLocale);
     localStorage.setItem("portfolio-locale", newLocale);

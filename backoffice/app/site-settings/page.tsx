@@ -85,7 +85,7 @@ export default function SiteSettingsPage() {
                 className="flex-1 px-3 py-2 border border-border rounded-md text-sm"
               />
             </div>
-            <p className="text-xs text-muted-foreground mt-1">Format hexadécimal (ex: #F0E68C)</p>
+            <p className="text-xs text-muted-foreground mt-1">Format hexadécimal (ex: #131518)</p>
           </div>
           <div>
             <label className="block text-sm font-medium mb-1">Couleur du texte</label>
@@ -103,7 +103,7 @@ export default function SiteSettingsPage() {
                 className="flex-1 px-3 py-2 border border-border rounded-md text-sm"
               />
             </div>
-            <p className="text-xs text-muted-foreground mt-1">Format hexadécimal (ex: #000000)</p>
+            <p className="text-xs text-muted-foreground mt-1">Format hexadécimal (ex: #E4E5E3)</p>
           </div>
         </div>
 

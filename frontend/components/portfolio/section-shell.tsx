@@ -61,7 +61,7 @@ export function SectionShell({
         </p>
 
         <h2
-          style={{ marginBottom: "var(--espace-4)", color: "var(--texte)" }}
+          style={{ marginBottom: "var(--espace-4)" }}
           onMouseEnter={(e) => survolTitre(e.currentTarget)}
           onMouseLeave={relacher}
         >

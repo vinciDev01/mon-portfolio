@@ -114,7 +114,7 @@ export class UpdateSiteSettingsDto {
 
   @ApiPropertyOptional({ example: 'fr' })
   @IsOptional()
-  @IsString()
+  @IsIn(['fr', 'en', 'de'])
   defaultLanguage?: string;
 
   @ApiPropertyOptional({ example: 'available' })

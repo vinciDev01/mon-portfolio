@@ -1,146 +1,197 @@
 import { Injectable } from '@nestjs/common';
 import PDFDocument from 'pdfkit';
 import { PrismaService } from '../prisma/prisma.service';
+import { ordonnerSections, type SectionBase } from './ordre-sections';
+
+/** Rangs implicites des sections alimentees par la base. */
+const RANG = {
+  presentation: 10,
+  technologies: 30,
+  certifications: 40,
+  experiences: 50,
+  projets: 60,
+} as const;
+
+/** Mise en page, en points PostScript. 56 pt valent environ 2 cm. */
+const MARGE = 56;
+const CORPS = 10.5;
+const TITRE_SECTION = 11;
+const NOM = 13;
+const INTERLIGNE = 3;
+/** Blanc avant un titre de section, en interlignes. */
+const AVANT_SECTION = 0.9;
+
+const LIEN = '#1A0DAB';
+const ENCRE = '#000000';
+
+type Polices = { normal: string; gras: string };
+
+/**
+ * Le canevas est en serif ; le site, lui, est en sans-serif. Le choix se fait
+ * depuis le backoffice (SiteSettings.cvFontFamily) plutot que d'etre fige ici.
+ * On se limite aux polices de base du PDF, qui n'ont pas besoin d'etre
+ * embarquees : le fichier reste leger et s'ouvre partout.
+ */
+function choisirPolices(reglage: string | undefined): Polices {
+  return reglage === 'sans'
+    ? { normal: 'Helvetica', gras: 'Helvetica-Bold' }
+    : { normal: 'Times-Roman', gras: 'Times-Bold' };
+}
+
+/** « Juillet 2025 ». */
+function moisAnnee(date: Date | null | undefined): string {
+  if (!date) return '';
+  const s = new Intl.DateTimeFormat('fr-FR', {
+    month: 'long',
+    year: 'numeric',
+  }).format(new Date(date));
+  return s.charAt(0).toUpperCase() + s.slice(1);
+}
 
 @Injectable()
 export class CvGeneratorService {
   constructor(private readonly prisma: PrismaService) {}
 
   async generatePdf(): Promise<Buffer> {
-    const [personalInfo, experiences, skills, certifications] =
-      await Promise.all([
-        this.prisma.personalInfo.findFirst(),
-        this.prisma.experience.findMany({ orderBy: { startDate: 'desc' } }),
-        this.prisma.skill.findMany({
-          include: { technology: true },
-          orderBy: { sortOrder: 'asc' },
+    const [
+      personalInfo,
+      reglages,
+      presentations,
+      technologies,
+      certifications,
+      experiences,
+      projets,
+      sectionsLibres,
+    ] = await Promise.all([
+      this.prisma.personalInfo.findFirst(),
+      this.prisma.siteSettings.findFirst(),
+      this.prisma.presentation.findMany({ orderBy: { sortOrder: 'asc' } }),
+      this.prisma.technology.findMany({ orderBy: { sortOrder: 'asc' } }),
+      this.prisma.certification.findMany({
+        include: { organization: true },
+        orderBy: { sortOrder: 'asc' },
+      }),
+      this.prisma.experience.findMany({ orderBy: { startDate: 'desc' } }),
+      this.prisma.project.findMany({ orderBy: { sortOrder: 'asc' } }),
+      this.prisma.cvSection.findMany({ orderBy: { sortOrder: 'asc' } }),
+    ]);
+
+    const polices = choisirPolices(reglages?.cvFontFamily);
+
+    // ── Sections alimentees par la base ──────────────────────────────────
+    const base: SectionBase[] = [
+      {
+        titre: 'PRÉSENTATION',
+        rang: RANG.presentation,
+        lignes: presentations
+          .map((p) => p.description ?? p.subtitle ?? p.title)
+          .filter((l): l is string => Boolean(l)),
+      },
+      {
+        titre: 'TECHNOLOGIES',
+        rang: RANG.technologies,
+        lignes: technologies.length
+          ? [technologies.map((t) => t.label).join(', ')]
+          : [],
+      },
+      {
+        titre: 'CERTIFICATIONS',
+        rang: RANG.certifications,
+        lignes: certifications.map((c) => {
+          const annee = c.issueDate ? new Date(c.issueDate).getFullYear() : null;
+          const organisme = c.organization?.label ?? '';
+          const suffixe = organisme ? ` – ${organisme}` : '';
+          return `${annee ? `${annee} : ` : ''}${c.name}${suffixe}`;
         }),
-        this.prisma.certification.findMany({
-          include: { organization: true },
-          orderBy: { sortOrder: 'asc' },
+      },
+      {
+        titre: 'EXPÉRIENCES PROFESSIONNELLES',
+        rang: RANG.experiences,
+        lignes: experiences.map((e) => {
+          const debut = moisAnnee(e.startDate);
+          const fin = e.isCurrent ? "aujourd'hui" : moisAnnee(e.endDate);
+          const periode = [debut, fin].filter(Boolean).join(' à ');
+          return `${periode ? `${periode} : ` : ''}${e.role} à ${e.company}`;
         }),
-      ]);
+      },
+      {
+        titre: 'PROJETS RÉALISÉS',
+        rang: RANG.projets,
+        lignes: projets.map((p, i) => {
+          const detail = p.description ? ` : ${p.description}` : '';
+          return `${i + 1}. ${p.name}${detail}`;
+        }),
+      },
+    ];
+
+    const sections = ordonnerSections(base, sectionsLibres);
 
     return new Promise<Buffer>((resolve, reject) => {
-      const doc = new PDFDocument({ margin: 50, size: 'A4' });
-      const chunks: Buffer[] = [];
-
-      doc.on('data', (chunk: Buffer) => chunks.push(chunk));
-      doc.on('end', () => resolve(Buffer.concat(chunks)));
+      const doc = new PDFDocument({ margin: MARGE, size: 'A4' });
+      const morceaux: Buffer[] = [];
+      doc.on('data', (c: Buffer) => morceaux.push(c));
+      doc.on('end', () => resolve(Buffer.concat(morceaux)));
       doc.on('error', reject);
 
-      // ── Header ────────────────────────────────────────────────────────────
-      const fullName = personalInfo
+      const ligneSimple = (texte: string) =>
+        doc.font(polices.normal).fontSize(CORPS).fillColor(ENCRE).text(texte);
+
+      const lien = (etiquette: string, url: string) => {
+        doc
+          .font(polices.normal)
+          .fontSize(CORPS)
+          .fillColor(ENCRE)
+          .text(etiquette, { continued: true })
+          .fillColor(LIEN)
+          .text(url, { link: url, underline: true })
+          .fillColor(ENCRE);
+      };
+
+      // ── En-tete ────────────────────────────────────────────────────────
+      const nomComplet = personalInfo
         ? `${personalInfo.name} ${personalInfo.surname}`.trim()
         : 'Curriculum Vitae';
 
-      doc
-        .fontSize(22)
-        .font('Helvetica-Bold')
-        .text(fullName, { align: 'center' });
-      doc.moveDown(0.3);
+      doc.font(polices.gras).fontSize(NOM).fillColor(ENCRE).text(nomComplet);
+      doc.moveDown(0.25);
 
-      const contactParts: string[] = [];
-      if (personalInfo?.email) contactParts.push(personalInfo.email);
-      if (personalInfo?.phone) contactParts.push(personalInfo.phone);
-      if (personalInfo?.githubUrl) contactParts.push(personalInfo.githubUrl);
-      if (personalInfo?.linkedinUrl)
-        contactParts.push(personalInfo.linkedinUrl);
-
-      if (contactParts.length > 0) {
-        doc
-          .fontSize(10)
-          .font('Helvetica')
-          .text(contactParts.join('  |  '), { align: 'center' });
+      if (personalInfo?.nationalite) ligneSimple(personalInfo.nationalite);
+      // L'adresse postale ne sort que sur decision explicite : le CV est
+      // telechargeable depuis un site public.
+      if (personalInfo?.adresse && personalInfo.adressePublique) {
+        ligneSimple(`Adresse : ${personalInfo.adresse}`);
       }
+      if (personalInfo?.phone) ligneSimple(`Tel : ${personalInfo.phone}`);
+      if (personalInfo?.email) lien('Email : ', personalInfo.email);
+      if (personalInfo?.githubUrl) lien('Github : ', personalInfo.githubUrl);
+      if (personalInfo?.linkedinUrl) lien('LinkedIn : ', personalInfo.linkedinUrl);
 
-      doc.moveDown(1);
-      doc
-        .moveTo(50, doc.y)
-        .lineTo(doc.page.width - 50, doc.y)
-        .stroke();
-      doc.moveDown(0.5);
+      // ── Sections ───────────────────────────────────────────────────────
+      for (const section of sections) {
+        doc.moveDown(AVANT_SECTION);
+        doc
+          .font(polices.gras)
+          .fontSize(TITRE_SECTION)
+          .fillColor(ENCRE)
+          // toUpperCase() preserve les accents ('é' -> 'É'), et normalise ce
+          // qui est saisi au backoffice sans imposer la saisie en capitales.
+          .text(section.titre.toUpperCase());
+        doc.moveDown(0.2);
 
-      // ── Experience ────────────────────────────────────────────────────────
-      if (experiences.length > 0) {
-        doc.fontSize(14).font('Helvetica-Bold').text('Experience');
-        doc.moveDown(0.4);
-
-        for (const exp of experiences) {
-          const startYear = exp.startDate
-            ? new Date(exp.startDate).getFullYear()
-            : '';
-          const endYear = exp.isCurrent
-            ? 'Present'
-            : exp.endDate
-              ? new Date(exp.endDate).getFullYear()
-              : '';
-          const period =
-            startYear || endYear ? `${startYear} – ${endYear}` : '';
-
+        for (const entree of section.lignes) {
+          // Les entrees deja numerotees (« 1. … ») gardent leur numero ;
+          // les autres recoivent une puce. Le canevas d'origine affiche un
+          // carre, mais c'est un glyphe Wingdings que les lecteurs PDF ne
+          // resolvent pas : on utilise une puce encodable en WinAnsi.
+          const numerotee = /^\d+\.\s/.test(entree);
           doc
-            .fontSize(11)
-            .font('Helvetica-Bold')
-            .text(`${exp.role}`, { continued: true })
-            .font('Helvetica')
-            .text(`  —  ${exp.company}${period ? '  (' + period + ')' : ''}`);
-
-          if (exp.description) {
-            doc.fontSize(10).font('Helvetica').text(exp.description, {
-              indent: 10,
+            .font(polices.normal)
+            .fontSize(CORPS)
+            .fillColor(ENCRE)
+            .text(numerotee ? entree : `• ${entree}`, {
+              indent: numerotee ? 0 : 0,
+              lineGap: INTERLIGNE - 2,
             });
-          }
-
-          doc.moveDown(0.5);
-        }
-
-        doc.moveDown(0.3);
-      }
-
-      // ── Skills ────────────────────────────────────────────────────────────
-      if (skills.length > 0) {
-        doc.fontSize(14).font('Helvetica-Bold').text('Skills');
-        doc.moveDown(0.4);
-
-        const skillLines = skills.map((s) => {
-          const label = s.technology?.label ?? 'Unknown';
-          const level =
-            s.proficiency !== null && s.proficiency !== undefined
-              ? ` (${s.proficiency}%)`
-              : '';
-          return `${label}${level}`;
-        });
-
-        doc
-          .fontSize(10)
-          .font('Helvetica')
-          .text(skillLines.join('   ·   '), { indent: 10 });
-
-        doc.moveDown(0.8);
-      }
-
-      // ── Certifications ────────────────────────────────────────────────────
-      if (certifications.length > 0) {
-        doc.fontSize(14).font('Helvetica-Bold').text('Certifications');
-        doc.moveDown(0.4);
-
-        for (const cert of certifications) {
-          const orgLabel = cert.organization?.label ?? '';
-          const issueYear = cert.issueDate
-            ? new Date(cert.issueDate).getFullYear()
-            : '';
-          const meta = [orgLabel, issueYear ? String(issueYear) : '']
-            .filter(Boolean)
-            .join(', ');
-
-          doc
-            .fontSize(11)
-            .font('Helvetica-Bold')
-            .text(cert.name, { continued: !!meta })
-            .font('Helvetica')
-            .text(meta ? `  —  ${meta}` : '');
-
-          doc.moveDown(0.4);
         }
       }
 

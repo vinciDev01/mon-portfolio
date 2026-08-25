@@ -40,6 +40,7 @@ export interface SiteSettingsDto {
   animationsEnabled: boolean;
   animationSpeed: number;
   respectReducedMotion: boolean;
+  cvFontFamily: string;
   accentHue: number;
   accentSaturation: number;
 }

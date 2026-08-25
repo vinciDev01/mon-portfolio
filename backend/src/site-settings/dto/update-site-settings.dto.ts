@@ -246,6 +246,13 @@ export class UpdateSiteSettingsDto {
   @IsBoolean()
   respectReducedMotion?: boolean;
 
+  // --- CV genere ---
+
+  @ApiPropertyOptional({ example: 'serif' })
+  @IsOptional()
+  @IsIn(['serif', 'sans'])
+  cvFontFamily?: string;
+
   // --- Accent ---
 
   @ApiPropertyOptional({ example: 107 })

@@ -371,7 +371,27 @@ export default function SiteSettingsPage() {
           </div>
         </fieldset>
 
-        {/* --- Rythme --- */}
+        {/* --- CV genere --- */}
+<fieldset className="border border-border rounded-md p-4 space-y-4">
+  <legend className="text-sm font-semibold px-2">CV téléchargeable</legend>
+  <div>
+    <label className="block text-sm font-medium mb-1">Police du CV</label>
+    <select
+      value={data.cvFontFamily}
+      onChange={(e) => setData({ ...data, cvFontFamily: e.target.value })}
+      className="w-full px-3 py-2 border border-border rounded-md text-sm"
+    >
+      <option value="serif">Serif (Times)</option>
+      <option value="sans">Sans-serif (Helvetica)</option>
+    </select>
+    <p className="text-xs text-muted-foreground mt-1">
+      Le serif suit le canevas d&apos;origine du CV ; le sans-serif s&apos;accorde
+      avec la police du site.
+    </p>
+  </div>
+</fieldset>
+
+{/* --- Rythme --- */}
         <fieldset className="border border-border rounded-md p-4 space-y-4">
           <legend className="text-sm font-semibold px-2">Rythme</legend>
 

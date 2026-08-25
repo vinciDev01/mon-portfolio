@@ -66,3 +66,15 @@ describe('UpdateSiteSettingsDto', () => {
     });
   });
 });
+
+describe('cvFontFamily', () => {
+  it('accepte les deux polices prevues', async () => {
+    for (const police of ['serif', 'sans']) {
+      expect(await erreursSur('cvFontFamily', police)).toEqual([]);
+    }
+  });
+
+  it('refuse une police inconnue', async () => {
+    expect(await erreursSur('cvFontFamily', 'comic')).toContain('cvFontFamily');
+  });
+});

@@ -61,6 +61,9 @@ model SiteSettings {
   animationSpeed       Float   @default(1.0)  @map("animation_speed")
   respectReducedMotion Boolean @default(true) @map("respect_reduced_motion")
 
+  // CV genere
+  cvFontFamily      String  @default("serif") @map("cv_font_family")
+
   // Accent
   accentHue         Int     @default(107) @map("accent_hue")
   accentSaturation  Int     @default(16)  @map("accent_saturation")
@@ -107,6 +110,10 @@ model PersonalInfo {
   linkedinUrl String?  @map("linkedin_url")
   avatarPath  String?  @map("avatar_path")
   bio         String?
+  nationalite String?
+  adresse     String?
+  /** L'adresse postale ne part dans le CV public que sur decision explicite. */
+  adressePublique Boolean @default(false) @map("adresse_publique")
   createdAt   DateTime @default(now()) @map("created_at")
   updatedAt   DateTime @updatedAt @map("updated_at")
 
@@ -293,4 +300,26 @@ model Testimonial {
   updatedAt  DateTime @updatedAt @map("updated_at")
 
   @@map("testimonials")
+}
+
+/**
+ * Section libre du CV genere.
+ *
+ * Les sections issues de la base (presentation, technologies, certifications,
+ * experiences, projets) portent un rang implicite de 10 a 60 ; celles-ci
+ * s'intercalent par leur `sortOrder`. Une section a 20 tombe donc entre la
+ * presentation et les technologies.
+ */
+model CvSection {
+  id        String   @id @default(uuid())
+  titre     String
+  /** Une entree par ligne. */
+  lignes    String
+  /** Fausse pour tout ce qui ne doit pas partir dans le CV telechargeable. */
+  publique  Boolean  @default(true)
+  sortOrder Int      @default(0) @map("sort_order")
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  @@map("cv_sections")
 }

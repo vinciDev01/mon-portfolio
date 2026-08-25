@@ -20,6 +20,7 @@ const navItems = [
   { href: "/about", label: "À propos" },
   { href: "/contact-messages", label: "Messages de contact" },
   { href: "/testimonials", label: "Témoignages" },
+  { href: "/cv-sections", label: "Sections du CV" },
   { href: "/blog", label: "Blog" },
 ];
 

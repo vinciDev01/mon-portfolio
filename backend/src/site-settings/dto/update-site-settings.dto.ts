@@ -2,7 +2,9 @@ import { ApiPropertyOptional } from '@nestjs/swagger';
 import { Type } from 'class-transformer';
 import {
   IsBoolean,
+  IsIn,
   IsInt,
+  IsNumber,
   IsOptional,
   IsString,
   Max,
@@ -149,4 +151,116 @@ export class UpdateSiteSettingsDto {
   @IsOptional()
   @IsString()
   notificationEmail?: string;
+
+  // --- Lampe d'atelier ---
+
+  @ApiPropertyOptional()
+  @IsOptional()
+  @IsBoolean()
+  lampEnabled?: boolean;
+
+  @ApiPropertyOptional()
+  @IsOptional()
+  @IsBoolean()
+  lampOnByDefault?: boolean;
+
+  @ApiPropertyOptional({ example: 28, description: 'Ouverture totale du faisceau en degres' })
+  @IsOptional()
+  @Type(() => Number)
+  @IsInt()
+  @Min(8)
+  @Max(45)
+  lampBeamAngle?: number;
+
+  @ApiPropertyOptional({ example: 70 })
+  @IsOptional()
+  @Type(() => Number)
+  @IsInt()
+  @Min(0)
+  @Max(100)
+  lampIntensity?: number;
+
+  @ApiPropertyOptional({ example: 40, description: 'Au-dela de 40, le contraste hors faisceau passe sous le seuil AA' })
+  @IsOptional()
+  @Type(() => Number)
+  @IsInt()
+  @Min(0)
+  @Max(65)
+  lampDimLevel?: number;
+
+  // --- Visibilite ---
+
+  @ApiPropertyOptional()
+  @IsOptional()
+  @IsBoolean()
+  showStats?: boolean;
+
+  // --- Rythme typographique ---
+
+  @ApiPropertyOptional({ example: 'normal' })
+  @IsOptional()
+  @IsIn(['compact', 'normal', 'airy'])
+  typeScale?: string;
+
+  @ApiPropertyOptional({ example: 1.6 })
+  @IsOptional()
+  @Type(() => Number)
+  @IsNumber()
+  @Min(1.3)
+  @Max(2.0)
+  lineHeight?: number;
+
+  @ApiPropertyOptional({ example: 50 })
+  @IsOptional()
+  @Type(() => Number)
+  @IsInt()
+  @Min(0)
+  @Max(100)
+  zigzagAmplitude?: number;
+
+  @ApiPropertyOptional({ example: 120 })
+  @IsOptional()
+  @Type(() => Number)
+  @IsInt()
+  @Min(64)
+  @Max(240)
+  sectionSpacing?: number;
+
+  // --- Mouvement ---
+
+  @ApiPropertyOptional()
+  @IsOptional()
+  @IsBoolean()
+  animationsEnabled?: boolean;
+
+  @ApiPropertyOptional({ example: 1.0 })
+  @IsOptional()
+  @Type(() => Number)
+  @IsNumber()
+  @Min(0.5)
+  @Max(2.0)
+  animationSpeed?: number;
+
+  @ApiPropertyOptional()
+  @IsOptional()
+  @IsBoolean()
+  respectReducedMotion?: boolean;
+
+  // --- Accent ---
+
+  @ApiPropertyOptional({ example: 107 })
+  @IsOptional()
+  @Type(() => Number)
+  @IsInt()
+  @Min(0)
+  @Max(360)
+  accentHue?: number;
+
+  @ApiPropertyOptional({ example: 16, description: 'Plafonne a 30 : interdit structurellement toute couleur vive' })
+  @IsOptional()
+  @Type(() => Number)
+  @IsInt()
+  @Min(0)
+  @Max(30)
+  accentSaturation?: number;
 }

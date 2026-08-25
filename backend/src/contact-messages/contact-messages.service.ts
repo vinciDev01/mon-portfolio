@@ -21,8 +21,7 @@ export class ContactMessagesService {
     const record = await this.prisma.contactMessage.findUnique({
       where: { id },
     });
-    if (!record)
-      throw new NotFoundException(`ContactMessage #${id} not found`);
+    if (!record) throw new NotFoundException(`ContactMessage #${id} not found`);
     return record;
   }
 

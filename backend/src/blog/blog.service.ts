@@ -28,7 +28,8 @@ export class BlogService {
 
   async findBySlug(slug: string) {
     const record = await this.prisma.blogPost.findUnique({ where: { slug } });
-    if (!record) throw new NotFoundException(`BlogPost with slug "${slug}" not found`);
+    if (!record)
+      throw new NotFoundException(`BlogPost with slug "${slug}" not found`);
     return record;
   }
 

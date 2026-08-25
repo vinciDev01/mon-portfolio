@@ -57,37 +57,51 @@ export class ProjectsService {
 
     const { technologyIds, collaborators, ...projectData } = dto;
 
-    return this.prisma.$transaction(async (tx: Omit<PrismaClient, '$connect' | '$disconnect' | '$on' | '$transaction' | '$use' | '$extends'>) => {
-      if (technologyIds !== undefined) {
-        await tx.projectTechnology.deleteMany({
-          where: { projectId: id },
-        });
-      }
+    return this.prisma.$transaction(
+      async (
+        tx: Omit<
+          PrismaClient,
+          | '$connect'
+          | '$disconnect'
+          | '$on'
+          | '$transaction'
+          | '$use'
+          | '$extends'
+        >,
+      ) => {
+        if (technologyIds !== undefined) {
+          await tx.projectTechnology.deleteMany({
+            where: { projectId: id },
+          });
+        }
 
-      if (collaborators !== undefined) {
-        await tx.projectCollaborator.deleteMany({
-          where: { projectId: id },
-        });
-      }
+        if (collaborators !== undefined) {
+          await tx.projectCollaborator.deleteMany({
+            where: { projectId: id },
+          });
+        }
 
-      return tx.project.update({
-        where: { id },
-        data: {
-          ...projectData,
-          technologies:
-            technologyIds !== undefined
-              ? {
-                  create: technologyIds.map((technologyId) => ({ technologyId })),
-                }
-              : undefined,
-          collaborators:
-            collaborators !== undefined
-              ? { create: collaborators }
-              : undefined,
-        },
-        include: projectInclude,
-      });
-    });
+        return tx.project.update({
+          where: { id },
+          data: {
+            ...projectData,
+            technologies:
+              technologyIds !== undefined
+                ? {
+                    create: technologyIds.map((technologyId) => ({
+                      technologyId,
+                    })),
+                  }
+                : undefined,
+            collaborators:
+              collaborators !== undefined
+                ? { create: collaborators }
+                : undefined,
+          },
+          include: projectInclude,
+        });
+      },
+    );
   }
 
   async remove(id: string) {

@@ -45,7 +45,7 @@ describe('UpdateSiteSettingsDto', () => {
       ['accentHue', -1, false],
       ['accentHue', 361, false],
     ])('%s = %s -> valide:%s', async (champ, valeur, doitPasser) => {
-      const erreurs = await erreursSur(champ as string, valeur);
+      const erreurs = await erreursSur(champ, valeur);
       if (doitPasser) {
         expect(erreurs).toEqual([]);
       } else {

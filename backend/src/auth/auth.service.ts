@@ -4,7 +4,8 @@ import * as jwt from 'jsonwebtoken';
 import { PrismaService } from '../prisma/prisma.service';
 import { LoginDto } from './dto/login.dto';
 
-const JWT_SECRET = process.env.JWT_SECRET || 'portfolio-secret-key-change-in-prod';
+const JWT_SECRET =
+  process.env.JWT_SECRET || 'portfolio-secret-key-change-in-prod';
 
 @Injectable()
 export class AuthService {

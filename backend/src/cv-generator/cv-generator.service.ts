@@ -34,14 +34,18 @@ export class CvGeneratorService {
         ? `${personalInfo.name} ${personalInfo.surname}`.trim()
         : 'Curriculum Vitae';
 
-      doc.fontSize(22).font('Helvetica-Bold').text(fullName, { align: 'center' });
+      doc
+        .fontSize(22)
+        .font('Helvetica-Bold')
+        .text(fullName, { align: 'center' });
       doc.moveDown(0.3);
 
       const contactParts: string[] = [];
       if (personalInfo?.email) contactParts.push(personalInfo.email);
       if (personalInfo?.phone) contactParts.push(personalInfo.phone);
       if (personalInfo?.githubUrl) contactParts.push(personalInfo.githubUrl);
-      if (personalInfo?.linkedinUrl) contactParts.push(personalInfo.linkedinUrl);
+      if (personalInfo?.linkedinUrl)
+        contactParts.push(personalInfo.linkedinUrl);
 
       if (contactParts.length > 0) {
         doc

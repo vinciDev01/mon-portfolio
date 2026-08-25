@@ -27,7 +27,9 @@ export class BlogController {
 
   // 'all' must be declared before ':slug' to avoid route conflicts
   @Get('all')
-  @ApiOperation({ summary: 'Get all blog posts including unpublished (backoffice)' })
+  @ApiOperation({
+    summary: 'Get all blog posts including unpublished (backoffice)',
+  })
   findAll() {
     return this.blogService.findAll();
   }

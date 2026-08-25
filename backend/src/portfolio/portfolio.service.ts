@@ -61,14 +61,20 @@ export class PortfolioService {
       this.prisma.experience.count(),
     ]);
 
-    const projects = rawProjects.map((project: typeof rawProjects[number]) => ({
-      ...project,
-      technologies: project.technologies.map((pt: typeof project.technologies[number]) => pt.technology),
-    }));
+    const projects = rawProjects.map(
+      (project: (typeof rawProjects)[number]) => ({
+        ...project,
+        technologies: project.technologies.map(
+          (pt: (typeof project.technologies)[number]) => pt.technology,
+        ),
+      }),
+    );
 
-    const services = rawServices.map((service: typeof rawServices[number]) => ({
-      ...service,
-    }));
+    const services = rawServices.map(
+      (service: (typeof rawServices)[number]) => ({
+        ...service,
+      }),
+    );
 
     const stats = {
       projects: projectCount,

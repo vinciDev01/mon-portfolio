@@ -14,14 +14,18 @@ interface HeaderProps {
   personalInfo: PersonalInfoDto;
 }
 
+// Les ancres suivent les identifiants francais rendus par SectionShell dans
+// app/page.tsx. "certifications" n'a plus de section propre : c'est un
+// sous-bloc de "experience", donc pas d'entree dediee ici (elle ferait
+// doublon avec le lien "experience").
 const allNavLinks = [
-  { href: "#skills", tKey: "nav.skills", key: "showSkills" as const },
+  { href: "#ouverture", tKey: "nav.presentation", key: "showPresentations" as const },
+  { href: "#competences", tKey: "nav.skills", key: "showSkills" as const },
   { href: "#experience", tKey: "nav.experience", key: "showExperiences" as const },
-  { href: "#certifications", tKey: "nav.certifications", key: "showCertifications" as const },
-  { href: "#projects", tKey: "nav.projects", key: "showProjects" as const },
+  { href: "#projets", tKey: "nav.projects", key: "showProjects" as const },
   { href: "#services", tKey: "nav.services", key: "showServices" as const },
-  { href: "#about", tKey: "nav.about", key: "showAbout" as const },
-  { href: "#testimonials", tKey: "nav.testimonials", key: "showTestimonials" as const },
+  { href: "#a-propos", tKey: "nav.about", key: "showAbout" as const },
+  { href: "#temoignages", tKey: "nav.testimonials", key: "showTestimonials" as const },
   { href: "#contact", tKey: "nav.contact", key: "showContact" as const },
 ];
 

@@ -45,19 +45,19 @@ export default async function Page() {
         <Header siteSettings={s} personalInfo={data.personalInfo} />
 
         {s.showPresentations && (
-          <SectionShell id="ouverture" titre="Ouverture" index={rang()}>
+          <SectionShell id="ouverture" cleTitre="section.ouverture" index={rang()}>
             <PresentationSection presentations={data.presentations} />
           </SectionShell>
         )}
 
         {s.showSkills && (
-          <SectionShell id="competences" titre="Compétences" index={rang()}>
+          <SectionShell id="competences" cleTitre="section.skills" index={rang()}>
             <SkillsSection skills={data.skills} />
           </SectionShell>
         )}
 
         {s.showExperiences && (
-          <SectionShell id="experience" titre="Expérience" index={rang()}>
+          <SectionShell id="experience" cleTitre="section.experience" index={rang()}>
             <ExperienceSection
               experiences={data.experiences}
               certifications={data.certifications}
@@ -67,36 +67,36 @@ export default async function Page() {
         )}
 
         {s.showProjects && (
-          <SectionShell id="projets" titre="Projets" index={rang()}>
+          <SectionShell id="projets" cleTitre="section.projects" index={rang()}>
             <ProjectsSection projects={data.projects} />
           </SectionShell>
         )}
 
         {s.showAbout && (
-          <SectionShell id="a-propos" titre="À propos" index={rang()}>
+          <SectionShell id="a-propos" cleTitre="section.about" index={rang()}>
             <AboutSection about={data.about} />
           </SectionShell>
         )}
 
         {s.showContact && (
-          <SectionShell id="contact" titre="Contact" index={rang()}>
+          <SectionShell id="contact" cleTitre="section.contact" index={rang()}>
             <ContactSection />
           </SectionShell>
         )}
 
         {/* --- Sections dormantes, reactivables depuis le backoffice --- */}
         {s.showStats && (
-          <SectionShell id="stats" titre="Chiffres" index={rang()}>
+          <SectionShell id="stats" cleTitre="section.stats" index={rang()}>
             <StatsSection stats={data.stats} />
           </SectionShell>
         )}
         {s.showServices && (
-          <SectionShell id="services" titre="Services" index={rang()}>
+          <SectionShell id="services" cleTitre="section.services" index={rang()}>
             <ServicesSection services={data.services} />
           </SectionShell>
         )}
         {s.showTestimonials && (
-          <SectionShell id="temoignages" titre="Témoignages" index={rang()}>
+          <SectionShell id="temoignages" cleTitre="section.testimonials" index={rang()}>
             <TestimonialsSection
               testimonials={data.testimonials}
               allowSubmission={s.allowTestimonialSubmission}

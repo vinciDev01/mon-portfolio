@@ -37,6 +37,7 @@ export default async function Page() {
 
   return (
     <LampProvider reglages={reglagesLampe}>
+      <LampSwitch />
       <main className="min-h-screen">
         <SectionToastObserver />
         <Header siteSettings={s} personalInfo={data.personalInfo} />
@@ -106,7 +107,6 @@ export default async function Page() {
         <ToastNotification message={s.toastMessage} delayMs={s.toastDelayMs} />
       </main>
       <LampStage />
-      <LampSwitch />
     </LampProvider>
   );
 }

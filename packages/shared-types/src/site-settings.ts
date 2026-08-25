@@ -27,4 +27,19 @@ export interface SiteSettingsDto {
   seoDescription: string | null;
   seoImagePath: string | null;
   notificationEmail: string | null;
+  lampEnabled: boolean;
+  lampOnByDefault: boolean;
+  lampBeamAngle: number;
+  lampIntensity: number;
+  lampDimLevel: number;
+  showStats: boolean;
+  typeScale: "compact" | "normal" | "airy";
+  lineHeight: number;
+  zigzagAmplitude: number;
+  sectionSpacing: number;
+  animationsEnabled: boolean;
+  animationSpeed: number;
+  respectReducedMotion: boolean;
+  accentHue: number;
+  accentSaturation: number;
 }

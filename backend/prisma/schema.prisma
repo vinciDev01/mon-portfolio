@@ -11,10 +11,10 @@ model SiteSettings {
   id          String   @id @default(uuid())
   faviconPath String?  @map("favicon_path")
   logoPath    String?  @map("logo_path")
-  bgColor     String   @default("#F0E68C") @map("bg_color")
-  textColor   String   @default("#000000") @map("text_color")
-  fontSize    Int      @default(16) @map("font_size")
-  fontFamily  String   @default("Figtree") @map("font_family")
+  bgColor     String   @default("#131518") @map("bg_color")
+  textColor   String   @default("#E4E5E3") @map("text_color")
+  fontSize    Int      @default(17) @map("font_size")
+  fontFamily  String   @default("IBM Plex Sans") @map("font_family")
   toastMessage String? @map("toast_message")
   toastDelayMs Int     @default(180000) @map("toast_delay_ms")
   cvFilePath  String?  @map("cv_file_path")
@@ -39,6 +39,31 @@ model SiteSettings {
   seoDescription      String? @map("seo_description")
   seoImagePath        String? @map("seo_image_path")
   notificationEmail   String? @map("notification_email")
+
+  // Lampe d'atelier
+  lampEnabled       Boolean @default(true)  @map("lamp_enabled")
+  lampOnByDefault   Boolean @default(false) @map("lamp_on_by_default")
+  lampBeamAngle     Int     @default(28)    @map("lamp_beam_angle")
+  lampIntensity     Int     @default(70)    @map("lamp_intensity")
+  lampDimLevel      Int     @default(40)    @map("lamp_dim_level")
+
+  // Visibilité manquante : StatsSection était rendue sans condition
+  showStats         Boolean @default(false) @map("show_stats")
+
+  // Rythme typographique
+  typeScale         String  @default("normal") @map("type_scale")
+  lineHeight        Float   @default(1.6)      @map("line_height")
+  zigzagAmplitude   Int     @default(50)       @map("zigzag_amplitude")
+  sectionSpacing    Int     @default(120)      @map("section_spacing")
+
+  // Mouvement
+  animationsEnabled    Boolean @default(true) @map("animations_enabled")
+  animationSpeed       Float   @default(1.0)  @map("animation_speed")
+  respectReducedMotion Boolean @default(true) @map("respect_reduced_motion")
+
+  // Accent
+  accentHue         Int     @default(128) @map("accent_hue")
+  accentSaturation  Int     @default(18)  @map("accent_saturation")
 
   createdAt   DateTime @default(now()) @map("created_at")
   updatedAt   DateTime @updatedAt @map("updated_at")

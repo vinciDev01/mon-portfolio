@@ -2419,8 +2419,10 @@ git commit -m "feat(lampe): interrupteur accessible, branchement et retrait du c
 **Files:**
 - Create: `frontend/lib/use-reveal.ts`
 - Create: `frontend/components/portfolio/section-shell.tsx`
-- Delete: `frontend/components/portfolio/scroll-animate.tsx`
-- Delete: `frontend/components/portfolio/section-wrapper.tsx`
+
+Les composants `scroll-animate.tsx` et `section-wrapper.tsx` ne sont **pas**
+supprimés ici : les sections en dépendent encore. Leur suppression appartient à
+la Task 14, une fois les sections réécrites.
 
 **Interfaces:**
 - Consumes: `useBeamTarget` (Task 9)
@@ -2560,20 +2562,14 @@ cran à l'autre. Ajouter la règle correspondante à la fin de
 }
 ```
 
-- [ ] **Étape 3 : Supprimer les anciens composants**
+- [ ] **Étape 3 : Recenser ce que la Task 14 devra remplacer**
 
 ```bash
 grep -rn "ScrollAnimate\|SectionWrapper" frontend/app frontend/components
 ```
 
-Chaque occurrence sera remplacée en Task 14. Une fois ce remplacement fait, supprimer :
-
-```bash
-rm frontend/components/portfolio/scroll-animate.tsx
-rm frontend/components/portfolio/section-wrapper.tsx
-```
-
-Ne pas exécuter cette suppression avant la Task 14 : les sections en dépendent encore.
+Noter la liste dans le rapport de tâche. Ne rien supprimer : la Task 14 s'en
+charge après avoir réécrit les sections.
 
 - [ ] **Étape 4 : Vérifier la compilation**
 
@@ -2665,8 +2661,11 @@ export function ExperienceSection({
           <ul className="mesure space-y-4">
             {certifications.map((c) => (
               <li key={c.id}>
-                <p>{c.title}</p>
-                <p className="meta">{c.issuer}</p>
+                <p>{c.name}</p>
+                <p className="meta">
+                  {c.organization?.name}
+                  {c.issueDate ? ` · ${new Date(c.issueDate).getFullYear()}` : ""}
+                </p>
               </li>
             ))}
           </ul>
@@ -2677,11 +2676,9 @@ export function ExperienceSection({
 }
 ```
 
-Adapter les noms de champs de `CertificationDto` à ceux réellement présents :
-
-```bash
-grep -n -A12 "interface CertificationDto" packages/shared-types/src/*.ts
-```
+Les champs utilisés ci-dessus sont ceux réellement présents sur
+`CertificationDto` : `name`, `organization.name` et `issueDate`. Il n'existe ni
+`title` ni `issuer` sur ce type.
 
 - [ ] **Étape 4 : Réécrire la page**
 

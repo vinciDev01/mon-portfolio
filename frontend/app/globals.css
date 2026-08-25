@@ -512,4 +512,16 @@ html {
   .titre-retrait {
     color: var(--bordure);
   }
+
+  /* Zigzag : le bloc se deplace dans la grille, il ne s'etire jamais. */
+  .zigzag {
+    margin-inline-start: 0;
+  }
+
+  @media (min-width: 900px) {
+    .zigzag[data-cote="droite"] {
+      /* A amplitude 1, le bloc vient affleurer le bord droit de la grille. */
+      margin-inline-start: calc(var(--portfolio-zigzag, 0.5) * (100% - 66ch));
+    }
+  }
 }

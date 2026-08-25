@@ -7,19 +7,6 @@
 @theme inline {
   --font-heading: var(--font-sans);
   --font-sans: var(--font-sans);
-  --color-sidebar-ring: var(--sidebar-ring);
-  --color-sidebar-border: var(--sidebar-border);
-  --color-sidebar-accent-foreground: var(--sidebar-accent-foreground);
-  --color-sidebar-accent: var(--sidebar-accent);
-  --color-sidebar-primary-foreground: var(--sidebar-primary-foreground);
-  --color-sidebar-primary: var(--sidebar-primary);
-  --color-sidebar-foreground: var(--sidebar-foreground);
-  --color-sidebar: var(--sidebar);
-  --color-chart-5: var(--chart-5);
-  --color-chart-4: var(--chart-4);
-  --color-chart-3: var(--chart-3);
-  --color-chart-2: var(--chart-2);
-  --color-chart-1: var(--chart-1);
   --color-ring: var(--ring);
   --color-input: var(--input);
   --color-border: var(--border);
@@ -439,90 +426,100 @@ html {
   }
 }
 
-body {
-  font-size: var(--corps);
-  line-height: var(--interligne);
-  font-variant-numeric: tabular-nums;
+/* Correction ronde 1 : les selecteurs de balises rejoignent la couche
+   `base` de Tailwind, sinon ils l'emportent sans condition sur les
+   utilitaires (non-layered bat toujours layered, quelle que soit la
+   specificite). */
+@layer base {
+  body {
+    font-size: var(--corps);
+    line-height: var(--interligne);
+    font-variant-numeric: tabular-nums;
+  }
+
+  h1 {
+    font-size: var(--h1);
+    line-height: 1.1;
+    letter-spacing: -0.02em;
+  }
+  h2 {
+    font-size: var(--h2);
+    line-height: 1.25;
+    letter-spacing: -0.01em;
+  }
+  h3 {
+    font-size: var(--h3);
+    line-height: 1.35;
+  }
 }
 
-/* Mesure de lecture : 66 caracteres, l'optimum de Bringhurst. */
-.mesure {
-  max-width: 66ch;
-}
+/* Correction ronde 1 : classes du projet dans `components`, meme
+   raison que ci-dessus. */
+@layer components {
+  /* Mesure de lecture : 66 caracteres, l'optimum de Bringhurst. */
+  .mesure {
+    max-width: 66ch;
+  }
 
-/* Metadonnees : dates, versions, etiquettes techniques. */
-.meta {
-  font-family: var(--font-mono);
-  font-size: var(--meta);
-  line-height: 1.4;
-  letter-spacing: 0.08em;
-  text-transform: uppercase;
-  color: var(--texte-secondaire);
-}
+  /* Metadonnees : dates, versions, etiquettes techniques. */
+  .meta {
+    font-family: var(--font-mono);
+    font-size: var(--meta);
+    line-height: 1.4;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: var(--texte-secondaire);
+  }
 
-h1 {
-  font-size: var(--h1);
-  line-height: 1.1;
-  letter-spacing: -0.02em;
-}
-h2 {
-  font-size: var(--h2);
-  line-height: 1.25;
-  letter-spacing: -0.01em;
-}
-h3 {
-  font-size: var(--h3);
-  line-height: 1.35;
-}
-
-/* ---------------------------------------------------------------
-   Entree des blocs : le seul mouvement du contenu.
-   --------------------------------------------------------------- */
-.reveal {
-  opacity: 0;
-  transform: translateY(8px);
-}
-.reveal-visible {
-  opacity: 1;
-  transform: none;
-  transition:
-    opacity var(--duree) var(--courbe),
-    transform var(--duree) var(--courbe);
-}
-
-@media (prefers-reduced-motion: reduce) {
-  :root:not([data-mouvement="force"]) .reveal {
+  /* -----------------------------------------------------------
+     Entree des blocs : le seul mouvement du contenu.
+     ----------------------------------------------------------- */
+  .reveal {
+    opacity: 0;
+    transform: translateY(8px);
+  }
+  .reveal-visible {
     opacity: 1;
     transform: none;
+    transition:
+      opacity var(--duree) var(--courbe),
+      transform var(--duree) var(--courbe);
   }
-  :root:not([data-mouvement="force"]) .reveal-visible {
-    transition: none;
+
+  @media (prefers-reduced-motion: reduce) {
+    :root:not([data-mouvement="force"]) .reveal {
+      opacity: 1;
+      transform: none;
+    }
+    :root:not([data-mouvement="force"]) .reveal-visible {
+      transition: none;
+    }
   }
-}
 
-/* ---------------------------------------------------------------
-   Couche lumineuse. Inerte : ne recoit jamais d'evenement.
-   --------------------------------------------------------------- */
-.beam-layer {
-  position: fixed;
-  inset: 0;
-  width: 100%;
-  height: 100%;
-  pointer-events: none;
-  z-index: 40;
-}
+  /* -----------------------------------------------------------
+     Couche lumineuse. Inerte : ne recoit jamais d'evenement.
+     ----------------------------------------------------------- */
+  .beam-layer {
+    position: fixed;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    pointer-events: none;
+    z-index: 40;
+  }
 
-/* Le titre eclaire, superpose au titre en retrait. */
-.titre-double {
-  position: relative;
-  display: inline-block;
-}
-.titre-eclaire {
-  position: absolute;
-  inset: 0;
-  color: var(--texte);
-  pointer-events: none;
-}
-.titre-retrait {
-  color: var(--bordure);
+  /* Le titre eclaire, superpose au titre en retrait. */
+  .titre-double {
+    position: relative;
+    display: inline-block;
+  }
+  .titre-eclaire {
+    position: absolute;
+    inset: 0;
+    color: var(--texte);
+    pointer-events: none;
+  }
+  .titre-retrait {
+    color: var(--bordure);
+  }
 }

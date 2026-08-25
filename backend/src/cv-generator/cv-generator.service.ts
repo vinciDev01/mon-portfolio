@@ -1,7 +1,22 @@
 import { Injectable } from '@nestjs/common';
 import PDFDocument from 'pdfkit';
 import { PrismaService } from '../prisma/prisma.service';
+import {
+  AlignmentType,
+  Document,
+  ExternalHyperlink,
+  HeadingLevel,
+  Packer,
+  Paragraph,
+  TextRun,
+} from 'docx';
 import { ordonnerSections, type SectionBase } from './ordre-sections';
+import {
+  hrefDeLien,
+  lignesContact,
+  nomFichier,
+  type LigneContact,
+} from './en-tete';
 
 /** Rangs implicites des sections alimentees par la base. */
 const RANG = {
@@ -38,6 +53,14 @@ function choisirPolices(reglage: string | undefined): Polices {
     : { normal: 'Times-Roman', gras: 'Times-Bold' };
 }
 
+/** Equivalent Word du meme reglage. Word n'a pas les polices de base du PDF. */
+function policeWord(reglage: string | undefined): string {
+  return reglage === 'sans' ? 'Arial' : 'Times New Roman';
+}
+
+/** Document produit : le contenu et le nom sous lequel il se telecharge. */
+export type DocumentCv = { contenu: Buffer; nom: string };
+
 /** « Juillet 2025 ». */
 function moisAnnee(date: Date | null | undefined): string {
   if (!date) return '';
@@ -50,9 +73,15 @@ function moisAnnee(date: Date | null | undefined): string {
 
 @Injectable()
 export class CvGeneratorService {
-  constructor(private readonly prisma: PrismaService) {}
+  constructor(private readonly prisma: PrismaService) { }
 
-  async generatePdf(): Promise<Buffer> {
+  /**
+   * Collecte unique, partagee par les deux rendus.
+   *
+   * C'est ce qui garantit que le PDF et le Word ne divergeront pas : ajouter
+   * une rubrique ici la fait apparaitre dans les deux formats.
+   */
+  private async collecter() {
     const [
       personalInfo,
       reglages,
@@ -100,7 +129,7 @@ export class CvGeneratorService {
         lignes: certifications.map((c) => {
           const annee = c.issueDate ? new Date(c.issueDate).getFullYear() : null;
           const organisme = c.organization?.label ?? '';
-          const suffixe = organisme ? ` – ${organisme}` : '';
+          const suffixe = organisme ? ` - ${organisme}` : '';
           return `${annee ? `${annee} : ` : ''}${c.name}${suffixe}`;
         }),
       },
@@ -124,9 +153,37 @@ export class CvGeneratorService {
       },
     ];
 
-    const sections = ordonnerSections(base, sectionsLibres);
+    return {
+      personalInfo,
+      reglages,
+      sections: ordonnerSections(base, sectionsLibres),
+      contact: lignesContact(
+        personalInfo
+          ? {
+              nationalite: personalInfo.nationalite,
+              adresse: personalInfo.adresse,
+              adressePublique: personalInfo.adressePublique,
+              phone: personalInfo.phone,
+              email: personalInfo.email,
+              githubUrl: personalInfo.githubUrl,
+              linkedinUrl: personalInfo.linkedinUrl,
+            }
+          : null,
+      ),
+      nomComplet: personalInfo
+        ? `${personalInfo.name} ${personalInfo.surname}`.trim()
+        : 'Curriculum Vitae',
+      nom: personalInfo?.name ?? '',
+      prenom: personalInfo?.surname ?? '',
+    };
+  }
 
-    return new Promise<Buffer>((resolve, reject) => {
+  async generatePdf(): Promise<DocumentCv> {
+    const { reglages, sections, contact, nomComplet, nom, prenom } =
+      await this.collecter();
+    const polices = choisirPolices(reglages?.cvFontFamily);
+
+    const contenu = await new Promise<Buffer>((resolve, reject) => {
       const doc = new PDFDocument({ margin: MARGE, size: 'A4' });
       const morceaux: Buffer[] = [];
       doc.on('data', (c: Buffer) => morceaux.push(c));
@@ -143,28 +200,18 @@ export class CvGeneratorService {
           .fillColor(ENCRE)
           .text(etiquette, { continued: true })
           .fillColor(LIEN)
-          .text(url, { link: url, underline: true })
+          .text(url, { link: hrefDeLien(url), underline: true })
           .fillColor(ENCRE);
       };
 
       // ── En-tete ────────────────────────────────────────────────────────
-      const nomComplet = personalInfo
-        ? `${personalInfo.name} ${personalInfo.surname}`.trim()
-        : 'Curriculum Vitae';
-
       doc.font(polices.gras).fontSize(NOM).fillColor(ENCRE).text(nomComplet);
       doc.moveDown(0.25);
 
-      if (personalInfo?.nationalite) ligneSimple(personalInfo.nationalite);
-      // L'adresse postale ne sort que sur decision explicite : le CV est
-      // telechargeable depuis un site public.
-      if (personalInfo?.adresse && personalInfo.adressePublique) {
-        ligneSimple(`Adresse : ${personalInfo.adresse}`);
+      for (const l of contact) {
+        if (l.genre === 'texte') ligneSimple(l.texte);
+        else lien(l.etiquette, l.url);
       }
-      if (personalInfo?.phone) ligneSimple(`Tel : ${personalInfo.phone}`);
-      if (personalInfo?.email) lien('Email : ', personalInfo.email);
-      if (personalInfo?.githubUrl) lien('Github : ', personalInfo.githubUrl);
-      if (personalInfo?.linkedinUrl) lien('LinkedIn : ', personalInfo.linkedinUrl);
 
       // ── Sections ───────────────────────────────────────────────────────
       for (const section of sections) {
@@ -197,5 +244,92 @@ export class CvGeneratorService {
 
       doc.end();
     });
+
+    return { contenu, nom: nomFichier(nom, prenom, 'pdf') };
+  }
+
+  /**
+   * Meme structure que le PDF, rendue en Word.
+   *
+   * On s'appuie sur les vrais styles du document (Title, Heading 1, Normal)
+   * plutot que sur du formatage direct : c'est ce qui permet au destinataire
+   * de restyler le CV d'un clic, fait fonctionner le volet de navigation, et
+   * garde le fichier reellement modifiable.
+   */
+  async generateDocx(): Promise<DocumentCv> {
+    const { reglages, sections, contact, nomComplet, nom, prenom } =
+      await this.collecter();
+    const police = policeWord(reglages?.cvFontFamily);
+
+    const ligneDeContact = (l: LigneContact): Paragraph =>
+      new Paragraph({
+        spacing: { after: 0 },
+        children:
+          l.genre === 'texte'
+            ? [new TextRun(l.texte)]
+            : [
+                new TextRun(l.etiquette),
+                new ExternalHyperlink({
+                  link: hrefDeLien(l.url),
+                  children: [new TextRun({ text: l.url, style: 'Hyperlink' })],
+                }),
+              ],
+      });
+
+    const corps: Paragraph[] = [
+      new Paragraph({ text: nomComplet, heading: HeadingLevel.TITLE }),
+      ...contact.map(ligneDeContact),
+    ];
+
+    for (const section of sections) {
+      corps.push(
+        new Paragraph({
+          text: section.titre.toUpperCase(),
+          heading: HeadingLevel.HEADING_1,
+        }),
+      );
+      for (const entree of section.lignes) {
+        // Les entrees deja numerotees gardent leur numero ; les autres
+        // recoivent une puce Word, qui reste une vraie liste a puces.
+        const numerotee = /^\d+\.\s/.test(entree);
+        corps.push(
+          new Paragraph({
+            text: entree,
+            spacing: { after: 0 },
+            ...(numerotee ? {} : { bullet: { level: 0 } }),
+          }),
+        );
+      }
+    }
+
+    const doc = new Document({
+      styles: {
+        default: {
+          document: {
+            run: { font: police, size: 21 }, // 21 demi-points = 10,5 pt
+            paragraph: { spacing: { after: 60 } },
+          },
+          title: {
+            run: { font: police, size: 26, bold: true, color: '000000' },
+            paragraph: { spacing: { after: 60 }, alignment: AlignmentType.LEFT },
+          },
+          heading1: {
+            run: { font: police, size: 22, bold: true, color: '000000' },
+            paragraph: { spacing: { before: 240, after: 80 } },
+          },
+        },
+      },
+      sections: [
+        {
+          properties: {
+            page: { margin: { top: 1120, bottom: 1120, left: 1120, right: 1120 } },
+          },
+          children: corps,
+        },
+      ],
+    });
+
+    const contenu = await Packer.toBuffer(doc);
+    return { contenu: Buffer.from(contenu), nom: nomFichier(nom, prenom, 'docx') };
   }
 }

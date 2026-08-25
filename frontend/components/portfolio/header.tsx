@@ -87,13 +87,23 @@ export function Header({ siteSettings, personalInfo }: HeaderProps) {
         <div className="flex items-center gap-2 shrink-0">
           <LanguageSwitcher />
 
-          {siteSettings.cvFilePath && (
-            <Button asChild size="sm">
-              <a href="/api/download-cv" download="CV.pdf">
-                {t("nav.downloadCv")}
-              </a>
-            </Button>
-          )}
+          {/*
+            Deux formats, toujours disponibles : le CV est genere depuis la
+            base, il n'a plus besoin qu'un fichier ait ete televerse pour
+            exister. Le nom du fichier est decide par le generateur, d'ou
+            l'attribut `download` sans valeur : il laisse passer celui que
+            le serveur annonce.
+          */}
+          <Button asChild size="sm">
+            <a href="/api/download-cv" download>
+              {t("nav.downloadCv")} · PDF
+            </a>
+          </Button>
+          <Button asChild size="sm" variant="outline">
+            <a href="/api/download-cv-word" download>
+              Word
+            </a>
+          </Button>
         </div>
       </div>
     </header>

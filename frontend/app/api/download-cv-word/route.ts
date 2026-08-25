@@ -1,5 +1,5 @@
 import { servirCv } from "@/lib/cv-telechargement";
 
 export async function GET() {
-  return servirCv("pdf");
+  return servirCv("docx");
 }

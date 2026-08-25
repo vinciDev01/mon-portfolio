@@ -11,15 +11,15 @@ import { WorkLamp } from "./work-lamp";
  */
 export function LampStage() {
   const trou = useRef<SVGPolygonElement | null>(null);
-  const voile = useRef<SVGPolygonElement | null>(null);
+  const voiles = useRef<SVGGElement | null>(null);
   const tete = useRef<SVGGElement | null>(null);
   const bras = useRef<SVGGElement | null>(null);
 
-  useLampEngine({ trou, voile, tete, bras });
+  useLampEngine({ trou, voiles, tete, bras });
 
   return (
     <>
-      <BeamLayer trou={trou} voile={voile} />
+      <BeamLayer trou={trou} voiles={voiles} />
       <WorkLamp tete={tete} bras={bras} />
     </>
   );

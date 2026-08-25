@@ -48,7 +48,7 @@ model SiteSettings {
   lampDimLevel      Int     @default(40)    @map("lamp_dim_level")
 
   // Visibilité manquante : StatsSection était rendue sans condition
-  showStats         Boolean @default(false) @map("show_stats")
+  showStats         Boolean @default(true)  @map("show_stats")
 
   // Rythme typographique
   typeScale         String  @default("normal") @map("type_scale")

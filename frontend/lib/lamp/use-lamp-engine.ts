@@ -2,12 +2,19 @@
 
 import { useEffect, type RefObject } from "react";
 import { EVENEMENT_REVEIL_LAMPE, useLampe } from "./lamp-context";
-import { angleVers, formaterSommets, sommetsFaisceau } from "./geometry";
+import {
+  angleVers,
+  bandesRetombee,
+  couchesPenombre,
+  formaterSommets,
+} from "./geometry";
 import { differenceAngulaire, estImmobile, pasRessort } from "./spring";
 
 export type RefsLampe = {
+  /** Le trou du scrim : polygone unique et net, il porte la revelation. */
   trou: RefObject<SVGPolygonElement | null>;
-  voile: RefObject<SVGPolygonElement | null>;
+  /** Groupe des polygones du voile lumineux, dans l'ordre couche puis bande. */
+  voiles: RefObject<SVGGElement | null>;
   tete: RefObject<SVGGElement | null>;
   bras: RefObject<SVGGElement | null>;
 };
@@ -18,11 +25,29 @@ const OMEGA_SUIVEUR = 7;
 const ZETA = 0.9;
 
 /** Distance du pivot a l'ouverture de la tete, en pixels. */
-const LONGUEUR_TETE = 44;
+const LONGUEUR_TETE = 70;
 /** Demi-hauteur de l'ouverture, en pixels. */
-const RAYON_OUVERTURE = 26;
-/** Largeur du rail occupe par le bras, en pixels. */
-const RAIL = 48;
+const RAYON_OUVERTURE = 42;
+/**
+ * Emprise horizontale de la lampe, en pixels. Le pivot est place au milieu :
+ * a 70 px du bord droit. Les sections reservent cette marge a droite
+ * (voir la regle .zigzag de globals.css).
+ */
+const RAIL = 140;
+
+/**
+ * Imperfections de la lumiere. Une source reelle n'est pas ponctuelle : ses
+ * bords portent une penombre, et son intensite retombe avec la distance.
+ * On les rend par empilement d'aplats plutot que par un degrade, que la
+ * charte du projet interdit.
+ */
+const COUCHES_PENOMBRE = 3;
+const ECART_PENOMBRE = (0.4 * Math.PI) / 180;
+const BANDES_RETOMBEE = 3;
+/** Attenuation de chaque bande en s'eloignant de la tete. */
+const FACTEURS_BANDE = [1, 0.66, 0.4] as const;
+/** Opacite de reference du voile, avant reglage d'intensite. */
+const OPACITE_VOILE = 0.12;
 
 export function useLampEngine(refs: RefsLampe) {
   const { activee, allumee, cibleRef, biaisRef, reglages } = useLampe();
@@ -56,16 +81,45 @@ export function useLampEngine(refs: RefsLampe) {
       return { x: r.left + r.width / 2, y: r.top + r.height / 2 };
     };
 
+    // Les polygones du voile sont fixes en nombre : on les resout une fois.
+    let polygones: SVGPolygonElement[] | null = null;
+    // L'opacite ne depend que du reglage et du survol, jamais de l'image.
+    // On la reecrit donc seulement quand le glow a bouge.
+    let dernierGlow = Number.NaN;
+    const voiles = () => {
+      if (!polygones && refs.voiles.current) {
+        polygones = Array.from(
+          refs.voiles.current.querySelectorAll("polygon"),
+        ) as SVGPolygonElement[];
+      }
+      return polygones;
+    };
+
     const peindre = () => {
       const p = pivot();
       const viewport = { width: window.innerWidth, height: window.innerHeight };
-      const sommets = sommetsFaisceau(
+      const couches = couchesPenombre(
         p, tete.valeur, meneur.valeur, suiveur.valeur,
         LONGUEUR_TETE, RAYON_OUVERTURE, viewport,
+        COUCHES_PENOMBRE, ECART_PENOMBRE,
       );
-      const points = formaterSommets(sommets);
-      refs.trou.current?.setAttribute("points", points);
-      refs.voile.current?.setAttribute("points", points);
+
+      // Le trou du scrim ne prend que le coeur : bord franc, revelation nette.
+      refs.trou.current?.setAttribute("points", formaterSommets(couches[0]));
+
+      const cibles = voiles();
+      if (cibles) {
+        for (let k = 0; k < couches.length; k++) {
+          const bandes = bandesRetombee(couches[k], BANDES_RETOMBEE);
+          for (let j = 0; j < bandes.length; j++) {
+            cibles[k * BANDES_RETOMBEE + j]?.setAttribute(
+              "points",
+              formaterSommets(bandes[j]),
+            );
+          }
+        }
+      }
+
       refs.tete.current?.setAttribute(
         "transform",
         `rotate(${(tete.valeur * 180) / Math.PI} ${p.x} ${p.y})`,
@@ -75,10 +129,20 @@ export function useLampEngine(refs: RefsLampe) {
         "transform",
         `translate(${biaisRef.current.brasX} 0)`,
       );
-      refs.voile.current?.setAttribute(
-        "opacity",
-        String((reglages.intensite / 100) * 0.12 * biaisRef.current.glow),
-      );
+      const glow = biaisRef.current.glow;
+      if (cibles && glow !== dernierGlow) {
+        dernierGlow = glow;
+        const base =
+          ((reglages.intensite / 100) * OPACITE_VOILE * glow) / COUCHES_PENOMBRE;
+        for (let k = 0; k < COUCHES_PENOMBRE; k++) {
+          for (let j = 0; j < BANDES_RETOMBEE; j++) {
+            cibles[k * BANDES_RETOMBEE + j]?.setAttribute(
+              "opacity",
+              String(base * FACTEURS_BANDE[j]),
+            );
+          }
+        }
+      }
     };
 
     const boucle = (temps: number) => {
@@ -171,7 +235,7 @@ export function useLampEngine(refs: RefsLampe) {
     cibleRef,
     biaisRef,
     refs.trou,
-    refs.voile,
+    refs.voiles,
     refs.tete,
     refs.bras,
   ]);

@@ -1,112 +1,57 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
 import type { StatsDto } from "@portfolio/shared-types";
 import { useTranslation } from "@/lib/i18n/i18n-context";
 
-interface StatCounterProps {
-  target: number;
-  label: string;
-  isVisible: boolean;
-  delay?: number;
-}
-
-function StatCounter({ target, label, isVisible, delay = 0 }: StatCounterProps) {
-  const [count, setCount] = useState(0);
-  const animatedRef = useRef(false);
-
-  useEffect(() => {
-    if (!isVisible || animatedRef.current) return;
-    animatedRef.current = true;
-
-    const duration = 1200;
-    const startTime = performance.now() + delay;
-
-    const step = (currentTime: number) => {
-      if (currentTime < startTime) {
-        requestAnimationFrame(step);
-        return;
-      }
-      const elapsed = currentTime - startTime;
-      const progress = Math.min(elapsed / duration, 1);
-      // Ease-out cubic
-      const eased = 1 - Math.pow(1 - progress, 3);
-      setCount(Math.round(eased * target));
-
-      if (progress < 1) {
-        requestAnimationFrame(step);
-      }
-    };
-
-    requestAnimationFrame(step);
-  }, [isVisible, target, delay]);
-
-  return (
-    <div className="flex flex-col items-center gap-1 px-6 py-4">
-      <span className="text-4xl font-bold tabular-nums leading-none">
-        {count}
-        <span className="text-2xl">+</span>
-      </span>
-      <span className="text-sm font-medium text-muted-foreground uppercase tracking-widest mt-1">
-        {label}
-      </span>
-    </div>
-  );
-}
-
-interface StatsSectionProps {
-  stats: StatsDto;
-}
-
-export function StatsSection({ stats }: StatsSectionProps) {
+/**
+ * Bandeau de reperes chiffres.
+ *
+ * Volontairement sans compteur anime : la contrainte du projet n'admet que
+ * deux mouvements sur tout le site, l'entree d'un bloc et la lampe. Et sur des
+ * nombres a un ou deux chiffres, un compteur qui defile jusqu'a « 2 » dessert
+ * le propos qu'il pretend servir. On informe, on ne cherche pas a impressionner.
+ *
+ * L'enveloppe, le titre et l'observateur d'entree sont fournis par
+ * SectionShell : ce composant ne rend que la grille.
+ */
+export function StatsSection({ stats }: { stats: StatsDto }) {
   const { t } = useTranslation();
-  const ref = useRef<HTMLDivElement>(null);
-  const [isVisible, setIsVisible] = useState(false);
 
-  useEffect(() => {
-    const el = ref.current;
-    if (!el) return;
-
-    const observer = new IntersectionObserver(
-      (entries) => {
-        entries.forEach((entry) => {
-          if (entry.isIntersecting) {
-            setIsVisible(true);
-            observer.unobserve(el);
-          }
-        });
-      },
-      { threshold: 0.2 },
-    );
-
-    observer.observe(el);
-    return () => observer.disconnect();
-  }, []);
-
-  const items = [
-    { value: stats.projects, labelKey: "stats.projects" },
-    { value: stats.certifications, labelKey: "stats.certifications" },
-    { value: stats.technologies, labelKey: "stats.technologies" },
-    { value: stats.experiences, labelKey: "stats.experiences" },
+  const reperes = [
+    { valeur: stats.technologies, cle: "stats.technologies" },
+    { valeur: stats.certifications, cle: "stats.certifications" },
+    { valeur: stats.projects, cle: "stats.projects" },
+    { valeur: stats.experiences, cle: "stats.experiences" },
   ] as const;
 
   return (
-    <div ref={ref} className="w-full">
-      <div className="mx-auto px-8 md:px-20 lg:px-40 xl:px-52 py-8">
-        <div className="bg-foreground/5 backdrop-blur-sm border border-border/50 rounded-2xl">
-          <div className="grid grid-cols-2 md:grid-cols-4 divide-x divide-y md:divide-y-0 divide-border/40">
-            {items.map((item, index) => (
-              <StatCounter
-                key={item.labelKey}
-                target={item.value}
-                label={t(item.labelKey)}
-                isVisible={isVisible}
-                delay={index * 150}
-              />
-            ))}
-          </div>
+    <dl className="grid grid-cols-2 md:grid-cols-4">
+      {reperes.map((repere) => (
+        <div
+          key={repere.cle}
+          className="border-t"
+          style={{
+            borderColor: "var(--bordure)",
+            paddingTop: "var(--espace-2)",
+            paddingBottom: "var(--espace-3)",
+            paddingRight: "var(--espace-3)",
+          }}
+        >
+          <dd
+            style={{
+              fontSize: "var(--h2)",
+              lineHeight: 1.1,
+              fontWeight: 500,
+              letterSpacing: "-0.01em",
+            }}
+          >
+            {repere.valeur}
+          </dd>
+          <dt className="meta" style={{ marginTop: "var(--espace-1)" }}>
+            {t(repere.cle)}
+          </dt>
         </div>
-      </div>
-    </div>
+      ))}
+    </dl>
   );
 }

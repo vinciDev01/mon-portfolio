@@ -68,3 +68,78 @@ export function formaterSommets(sommets: readonly Point[]): string {
     .map((p) => `${Math.round(p.x * 10) / 10},${Math.round(p.y * 10) / 10}`)
     .join(" ");
 }
+
+/**
+ * Couches de penombre du faisceau, du coeur vers l'exterieur.
+ *
+ * La premiere couche est le faisceau nu ; chaque couche suivante ecarte ses
+ * deux bords lointains de `ecartRadians` supplementaires, sans toucher a
+ * l'ouverture de la tete. Superposees a faible opacite decroissante, elles
+ * produisent la penombre d'une source non ponctuelle : le bord reste franc,
+ * mais il cesse d'etre une decoupe parfaite.
+ *
+ * Le trou du scrim, lui, n'utilise jamais ces couches : il reste un polygone
+ * unique et net, pour que la revelation du texte et son contraste ne dependent
+ * pas d'un empilement d'opacites.
+ */
+export function couchesPenombre(
+  pivot: Point,
+  angleTete: number,
+  angleMeneur: number,
+  angleSuiveur: number,
+  longueurTete: number,
+  rayonOuverture: number,
+  viewport: Viewport,
+  nombreCouches: number,
+  ecartRadians: number,
+): Array<[Point, Point, Point, Point]> {
+  if (nombreCouches < 1) {
+    throw new Error("couchesPenombre : il faut au moins une couche");
+  }
+  return Array.from({ length: nombreCouches }, (_, i) =>
+    sommetsFaisceau(
+      pivot,
+      angleTete,
+      angleMeneur - i * ecartRadians,
+      angleSuiveur + i * ecartRadians,
+      longueurTete,
+      rayonOuverture,
+      viewport,
+    ),
+  );
+}
+
+/**
+ * Decoupe le trapeze en bandes successives le long de son axe, de l'ouverture
+ * de la tete vers le lointain. Peintes a opacite decroissante, elles simulent
+ * la retombee de l'intensite avec la distance.
+ *
+ * C'est une approximation en escalier, assumee : la charte du projet interdit
+ * les degrades. Aux opacites visees les marches restent sous le seuil de
+ * perception ; si un banding apparaissait, la parade est de reduire a une
+ * seule bande plutot que d'introduire un degrade.
+ */
+export function bandesRetombee(
+  sommets: readonly [Point, Point, Point, Point],
+  nombreBandes: number,
+): Array<[Point, Point, Point, Point]> {
+  if (nombreBandes < 1) {
+    throw new Error("bandesRetombee : il faut au moins une bande");
+  }
+  const [A, C, D, B] = sommets;
+  const entre = (p: Point, q: Point, t: number): Point => ({
+    x: p.x + (q.x - p.x) * t,
+    y: p.y + (q.y - p.y) * t,
+  });
+
+  return Array.from({ length: nombreBandes }, (_, i) => {
+    const t0 = i / nombreBandes;
+    const t1 = (i + 1) / nombreBandes;
+    return [
+      i === 0 ? A : entre(A, C, t0),
+      entre(A, C, t1),
+      entre(B, D, t1),
+      i === 0 ? B : entre(B, D, t0),
+    ] as [Point, Point, Point, Point];
+  });
+}

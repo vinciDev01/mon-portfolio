@@ -65,6 +65,25 @@ export function LampProvider({
   children: React.ReactNode;
 }) {
   const [allumee, setAllumee] = useState(reglages.allumeeParDefaut);
+
+  /*
+    La lampe est un objet de bureau : elle suppose une marge droite ou se
+    loger. Sous 900 px cette marge n'existe pas, et sa tete recouvrirait le
+    texte. On la neutralise donc entierement plutot que de la reduire — le
+    moteur ne tourne pas, l'objet n'est pas rendu, l'interrupteur disparait.
+    Initialise a `true` pour que le rendu serveur et le premier rendu client
+    coincident : rien de visible n'en depend avant le premier effet.
+  */
+  const [assezLarge, setAssezLarge] = useState(true);
+  useEffect(() => {
+    const mq = window.matchMedia("(min-width: 900px)");
+    const maj = () => setAssezLarge(mq.matches);
+    maj();
+    mq.addEventListener("change", maj);
+    return () => mq.removeEventListener("change", maj);
+  }, []);
+
+  const activee = reglages.activee && assezLarge;
   const cibleRef = useRef<HTMLElement | null>(null);
   const cibles = useRef<Set<HTMLElement>>(new Set());
   const biaisRef = useRef<BiaisLampe>({ ...BIAIS_NEUTRE });
@@ -75,7 +94,7 @@ export function LampProvider({
   // Une seule instance d'observateur pour toutes les sections. On retient
   // l'element dont le centre est le plus proche du centre du viewport.
   useEffect(() => {
-    if (!reglages.activee) return;
+    if (!activee) return;
 
     const choisir = () => {
       const centreEcran = window.innerHeight / 2;
@@ -106,7 +125,7 @@ export function LampProvider({
       window.removeEventListener("resize", choisir);
       window.removeEventListener(EVENEMENT_REVEIL_LAMPE, choisir);
     };
-  }, [reglages.activee]);
+  }, [activee]);
 
   // --- Cible focalisee ---
   // En navigation au clavier, le faisceau doit suivre le focus. Sans cela, la
@@ -119,7 +138,7 @@ export function LampProvider({
   // Sans ce test, ce meme focus retargetterait `cibleRef` comme n'importe
   // quel autre element et ferait pivoter la tete, contredisant la souris.
   useEffect(() => {
-    if (!reglages.activee) return;
+    if (!activee) return;
     let dansMarge = false;
     const surFocus = (e: FocusEvent) => {
       const el = e.target as HTMLElement | null;
@@ -137,11 +156,11 @@ export function LampProvider({
     };
     document.addEventListener("focusin", surFocus);
     return () => document.removeEventListener("focusin", surFocus);
-  }, [reglages.activee]);
+  }, [activee]);
 
   const valeur = useMemo<ValeurContexte>(
     () => ({
-      activee: reglages.activee,
+      activee,
       allumee,
       basculer,
       cibleRef,
@@ -149,7 +168,7 @@ export function LampProvider({
       biaisRef,
       reglages,
     }),
-    [reglages, allumee, basculer],
+    [reglages, activee, allumee, basculer],
   );
 
   return <Contexte.Provider value={valeur}>{children}</Contexte.Provider>;

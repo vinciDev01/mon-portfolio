@@ -43,8 +43,14 @@ export function SectionShell({
   return (
     <section
       id={id}
-      className="grid grid-cols-12 px-8 lg:px-16"
-      style={{ paddingTop: "var(--espace-section)", paddingBottom: 0 }}
+      className="grid grid-cols-12 pl-8 lg:pl-16"
+      style={{
+        paddingTop: "var(--espace-section)",
+        paddingBottom: 0,
+        // Style inline, et non une classe : les utilitaires Tailwind vivent
+        // dans @layer utilities et l'emporteraient sur une regle en couche.
+        paddingRight: "var(--marge-droite-lampe)",
+      }}
     >
       <div
         ref={(el) => {

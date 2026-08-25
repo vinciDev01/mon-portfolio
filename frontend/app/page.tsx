@@ -50,6 +50,12 @@ export default async function Page() {
           </SectionShell>
         )}
 
+        {s.showStats && (
+          <SectionShell id="stats" cleTitre="section.stats" index={rang()}>
+            <StatsSection stats={data.stats} />
+          </SectionShell>
+        )}
+
         {s.showSkills && (
           <SectionShell id="competences" cleTitre="section.skills" index={rang()}>
             <SkillsSection skills={data.skills} />
@@ -85,11 +91,6 @@ export default async function Page() {
         )}
 
         {/* --- Sections dormantes, reactivables depuis le backoffice --- */}
-        {s.showStats && (
-          <SectionShell id="stats" cleTitre="section.stats" index={rang()}>
-            <StatsSection stats={data.stats} />
-          </SectionShell>
-        )}
         {s.showServices && (
           <SectionShell id="services" cleTitre="section.services" index={rang()}>
             <ServicesSection services={data.services} />

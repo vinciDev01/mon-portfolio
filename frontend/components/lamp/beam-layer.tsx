@@ -4,12 +4,15 @@ import type { RefObject } from "react";
 import { useLampe } from "@/lib/lamp/lamp-context";
 import { PALETTE } from "@/lib/design/tokens";
 
+/** Doit correspondre a COUCHES_PENOMBRE x BANDES_RETOMBEE du moteur. */
+const NOMBRE_POLYGONES_VOILE = 9;
+
 export function BeamLayer({
   trou,
-  voile,
+  voiles,
 }: {
   trou: RefObject<SVGPolygonElement | null>;
-  voile: RefObject<SVGPolygonElement | null>;
+  voiles: RefObject<SVGGElement | null>;
 }) {
   const { activee, allumee, reglages } = useLampe();
 
@@ -20,7 +23,12 @@ export function BeamLayer({
       <defs>
         <mask id="faisceau">
           <rect width="100%" height="100%" fill="white" />
-          {/* Noir = perce le scrim. Bords parfaitement nets, aucun flou. */}
+          {/*
+            Le trou est un polygone UNIQUE et net. C'est lui qui revele le
+            texte : sa nettete conditionne la lisibilite et le plancher de
+            contraste, il ne participe donc pas aux imperfections de la
+            lumiere, qui restent cantonnees au voile ci-dessous.
+          */}
           <polygon ref={trou} points="0,0 0,0 0,0 0,0" fill="black" />
         </mask>
       </defs>
@@ -34,14 +42,19 @@ export function BeamLayer({
         mask="url(#faisceau)"
       />
 
-      {/* La lumiere chaude, posee a l'interieur du faisceau */}
-      <polygon
-        ref={voile}
-        points="0,0 0,0 0,0 0,0"
-        fill={PALETTE.lumiere}
-        opacity={(reglages.intensite / 100) * 0.12}
-        style={{ mixBlendMode: "plus-lighter" }}
-      />
+      {/*
+        Le voile lumineux, en neuf aplats : trois couches de penombre, chacune
+        decoupee en trois bandes qui s'attenuent avec la distance. Empiles, ils
+        donnent un coeur plein, un bord qui s'adoucit sur quelques pixels et une
+        retombee le long du faisceau — sans un seul degrade.
+        Le moteur ecrit leurs `points` et leur `opacity` ; l'ordre des enfants
+        est celui qu'il attend : couche, puis bande.
+      */}
+      <g ref={voiles} style={{ mixBlendMode: "plus-lighter" }}>
+        {Array.from({ length: NOMBRE_POLYGONES_VOILE }, (_, i) => (
+          <polygon key={i} points="0,0 0,0 0,0 0,0" fill={PALETTE.lumiere} opacity="0" />
+        ))}
+      </g>
     </svg>
   );
 }

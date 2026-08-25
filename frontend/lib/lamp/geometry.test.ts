@@ -108,3 +108,132 @@ function segmentsSeCroisent(
   const d3 = d(p1, p2, p3), d4 = d(p1, p2, p4);
   return ((d1 > 0) !== (d2 > 0)) && ((d3 > 0) !== (d4 > 0));
 }
+
+// --- Imperfections de la lumiere -------------------------------------------
+
+import { couchesPenombre, bandesRetombee } from "./geometry";
+
+const PHI = (28 / 2) * (Math.PI / 180);
+const TETE = Math.PI;
+
+function coeur() {
+  return sommetsFaisceau(PIVOT, TETE, TETE - PHI, TETE + PHI, 70, 42, VIEWPORT);
+}
+
+/**
+ * Ouverture angulaire vue depuis le pivot, entre les deux sommets lointains.
+ * L'ecart est replie dans (-pi, pi] : sans cela, un faisceau pointant vers la
+ * gauche (angle proche de +/-pi) verrait ses deux bords tomber de part et
+ * d'autre de la coupure d'atan2, et la mesure renverrait l'angle reflexe.
+ */
+function ouverture(couche: { x: number; y: number }[]) {
+  const [, C, D] = couche;
+  const aC = Math.atan2(C.y - PIVOT.y, C.x - PIVOT.x);
+  const aD = Math.atan2(D.y - PIVOT.y, D.x - PIVOT.x);
+  let d = (aD - aC) % (2 * Math.PI);
+  if (d > Math.PI) d -= 2 * Math.PI;
+  if (d <= -Math.PI) d += 2 * Math.PI;
+  return Math.abs(d);
+}
+
+describe("couchesPenombre", () => {
+  const ECART = 0.4 * (Math.PI / 180);
+
+  function couches(n = 3) {
+    return couchesPenombre(
+      PIVOT, TETE, TETE - PHI, TETE + PHI, 70, 42, VIEWPORT, n, ECART,
+    );
+  }
+
+  it("renvoie autant de couches que demande", () => {
+    expect(couches(3)).toHaveLength(3);
+    expect(couches(1)).toHaveLength(1);
+  });
+
+  it("place le coeur en premiere couche, identique au faisceau nu", () => {
+    expect(couches()[0]).toEqual(coeur());
+  });
+
+  it("elargit strictement chaque couche successive", () => {
+    const cs = couches(4);
+    for (let i = 1; i < cs.length; i++) {
+      expect(ouverture(cs[i])).toBeGreaterThan(ouverture(cs[i - 1]));
+    }
+  });
+
+  it("elargit des deux cotes, pas d un seul", () => {
+    const [coeurC, penombre] = couches(2);
+    // le bord meneur s'ecarte d'un cote, le suiveur de l'autre
+    const dMeneur = Math.atan2(penombre[1].y - PIVOT.y, penombre[1].x - PIVOT.x)
+      - Math.atan2(coeurC[1].y - PIVOT.y, coeurC[1].x - PIVOT.x);
+    const dSuiveur = Math.atan2(penombre[2].y - PIVOT.y, penombre[2].x - PIVOT.x)
+      - Math.atan2(coeurC[2].y - PIVOT.y, coeurC[2].x - PIVOT.x);
+    expect(Math.sign(dMeneur)).toBe(-Math.sign(dSuiveur));
+    expect(Math.abs(dMeneur)).toBeCloseTo(ECART, 6);
+    expect(Math.abs(dSuiveur)).toBeCloseTo(ECART, 6);
+  });
+
+  it("garde l ouverture de la tete commune a toutes les couches", () => {
+    const cs = couches(3);
+    for (const c of cs) {
+      expect(c[0]).toEqual(cs[0][0]);
+      expect(c[3]).toEqual(cs[0][3]);
+    }
+  });
+
+  it("renvoie des coordonnees finies pour tout angle", () => {
+    for (let a = -Math.PI; a <= Math.PI; a += Math.PI / 8) {
+      const cs = couchesPenombre(PIVOT, a, a - PHI, a + PHI, 70, 42, VIEWPORT, 3, ECART);
+      for (const couche of cs) {
+        for (const p of couche) {
+          expect(Number.isFinite(p.x) && Number.isFinite(p.y)).toBe(true);
+        }
+      }
+    }
+  });
+
+  it("refuse un nombre de couches inferieur a un", () => {
+    expect(() => couches(0)).toThrow();
+  });
+});
+
+describe("bandesRetombee", () => {
+  it("renvoie autant de bandes que demande", () => {
+    expect(bandesRetombee(coeur(), 3)).toHaveLength(3);
+  });
+
+  it("rend le trapeze intact quand on ne demande qu une bande", () => {
+    expect(bandesRetombee(coeur(), 1)[0]).toEqual(coeur());
+  });
+
+  it("fait partir la premiere bande de l ouverture de la tete", () => {
+    const [A, , , B] = coeur();
+    const premiere = bandesRetombee(coeur(), 3)[0];
+    expect(premiere[0]).toEqual(A);
+    expect(premiere[3]).toEqual(B);
+  });
+
+  it("fait finir la derniere bande sur le bord lointain", () => {
+    const [, C, D] = coeur();
+    const bandes = bandesRetombee(coeur(), 3);
+    const derniere = bandes[bandes.length - 1];
+    expect(derniere[1].x).toBeCloseTo(C.x, 6);
+    expect(derniere[1].y).toBeCloseTo(C.y, 6);
+    expect(derniere[2].x).toBeCloseTo(D.x, 6);
+    expect(derniere[2].y).toBeCloseTo(D.y, 6);
+  });
+
+  it("colle les bandes bout a bout, sans trou ni recouvrement", () => {
+    const bandes = bandesRetombee(coeur(), 4);
+    for (let i = 1; i < bandes.length; i++) {
+      expect(bandes[i][0].x).toBeCloseTo(bandes[i - 1][1].x, 6);
+      expect(bandes[i][0].y).toBeCloseTo(bandes[i - 1][1].y, 6);
+      expect(bandes[i][3].x).toBeCloseTo(bandes[i - 1][2].x, 6);
+      expect(bandes[i][3].y).toBeCloseTo(bandes[i - 1][2].y, 6);
+    }
+  });
+
+  it("refuse un nombre de bandes inferieur a un", () => {
+    expect(() => bandesRetombee(coeur(), 0)).toThrow();
+  });
+});

@@ -20,6 +20,7 @@ interface HeaderProps {
 // doublon avec le lien "experience").
 const allNavLinks = [
   { href: "#ouverture", tKey: "nav.presentation", key: "showPresentations" as const },
+  { href: "#stats", tKey: "section.stats", key: "showStats" as const },
   { href: "#competences", tKey: "nav.skills", key: "showSkills" as const },
   { href: "#experience", tKey: "nav.experience", key: "showExperiences" as const },
   { href: "#projets", tKey: "nav.projects", key: "showProjects" as const },

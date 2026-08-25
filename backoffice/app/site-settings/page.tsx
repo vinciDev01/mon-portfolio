@@ -6,6 +6,7 @@ import { ImageUpload } from "@/components/image-upload";
 import { toast } from "sonner";
 import type { SiteSettingsDto } from "@portfolio/shared-types";
 import { ratioContraste, melanger } from "@/lib/contrast";
+import { TelechargementCv } from "@/components/telechargement-cv";
 
 export default function SiteSettingsPage() {
   const [data, setData] = useState<SiteSettingsDto | null>(null);
@@ -388,6 +389,33 @@ export default function SiteSettingsPage() {
       Le serif suit le canevas d&apos;origine du CV ; le sans-serif s&apos;accorde
       avec la police du site.
     </p>
+  </div>
+
+  <label className="flex items-start gap-3 text-sm">
+    <input
+      type="checkbox"
+      checked={data.showCvDownload}
+      onChange={(e) => setData({ ...data, showCvDownload: e.target.checked })}
+      className="mt-1"
+    />
+    <span>
+      Proposer le téléchargement du CV sur le site
+      <span className="block text-xs text-muted-foreground mt-1">
+        Décoché, aucun bouton n&apos;apparaît et l&apos;adresse de
+        téléchargement répond « introuvable ». Coché, les visiteurs peuvent
+        récupérer votre CV <strong>au format Word uniquement</strong>. Le PDF
+        reste réservé à cette page.
+      </span>
+    </span>
+  </label>
+
+  <div className="pt-2 border-t border-border">
+    <p className="text-sm font-medium mb-2">Récupérer le CV</p>
+    <p className="text-xs text-muted-foreground mb-3">
+      Généré à l&apos;instant depuis vos données. Le PDF n&apos;est jamais
+      accessible aux visiteurs.
+    </p>
+    <TelechargementCv />
   </div>
 </fieldset>
 

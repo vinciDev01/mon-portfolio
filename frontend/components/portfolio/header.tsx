@@ -88,22 +88,19 @@ export function Header({ siteSettings, personalInfo }: HeaderProps) {
           <LanguageSwitcher />
 
           {/*
-            Deux formats, toujours disponibles : le CV est genere depuis la
-            base, il n'a plus besoin qu'un fichier ait ete televerse pour
-            exister. Le nom du fichier est decide par le generateur, d'ou
-            l'attribut `download` sans valeur : il laisse passer celui que
-            le serveur annonce.
+            Un seul format public, le Word, et seulement si la section est
+            activee dans les reglages du site. Le PDF reste reserve a
+            l'administrateur, qui le recupere depuis le backoffice.
+            L'attribut `download` sans valeur laisse passer le nom de fichier
+            annonce par le serveur.
           */}
-          <Button asChild size="sm">
-            <a href="/api/download-cv" download>
-              {t("nav.downloadCv")} · PDF
-            </a>
-          </Button>
-          <Button asChild size="sm" variant="outline">
-            <a href="/api/download-cv-word" download>
-              Word
-            </a>
-          </Button>
+          {siteSettings.showCvDownload && (
+            <Button asChild size="sm">
+              <a href="/api/download-cv-word" download>
+                {t("nav.downloadCv")}
+              </a>
+            </Button>
+          )}
         </div>
       </div>
     </header>

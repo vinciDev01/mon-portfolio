@@ -41,6 +41,7 @@ export interface SiteSettingsDto {
   animationSpeed: number;
   respectReducedMotion: boolean;
   cvFontFamily: string;
+  showCvDownload: boolean;
   accentHue: number;
   accentSaturation: number;
 }

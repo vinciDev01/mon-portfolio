@@ -253,6 +253,15 @@ export class UpdateSiteSettingsDto {
   @IsIn(['serif', 'sans'])
   cvFontFamily?: string;
 
+  @ApiPropertyOptional({
+    default: false,
+    description:
+      'Le CV n est telechargeable depuis le site que si cette case est cochee.',
+  })
+  @IsOptional()
+  @IsBoolean()
+  showCvDownload?: boolean;
+
   // --- Accent ---
 
   @ApiPropertyOptional({ example: 107 })

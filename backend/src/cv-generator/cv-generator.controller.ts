@@ -1,7 +1,7 @@
-import { Controller, Get } from '@nestjs/common';
+import { Controller, Get, NotFoundException, Res } from '@nestjs/common';
 import { ApiOperation, ApiTags } from '@nestjs/swagger';
 import type { Response } from 'express';
-import { Res } from '@nestjs/common';
+import { PrismaService } from '../prisma/prisma.service';
 import { Public } from '../auth/auth.guard';
 import { CvGeneratorService } from './cv-generator.service';
 import type { DocumentCv } from './cv-generator.service';
@@ -12,24 +12,53 @@ const TYPE_DOCX =
 @ApiTags('cv-generator')
 @Controller('cv-generator')
 export class CvGeneratorController {
-  constructor(private readonly cvGeneratorService: CvGeneratorService) {}
+  constructor(
+    private readonly cvGeneratorService: CvGeneratorService,
+    private readonly prisma: PrismaService,
+  ) {}
 
   /**
-   * Le CV genere est public : c'est ce qui permet au site de le proposer sans
-   * qu'un fichier soit televerse a la main, et de le garder toujours a jour.
-   * Ce qu'il contient est gouverne par le drapeau `publique` de chaque section.
+   * PDF : reserve a l'administrateur.
+   *
+   * Il sert a l'envoi par courriel, pas a la publication. Le laisser public
+   * sans lien depuis le site ne serait qu'une securite par l'obscurite :
+   * l'adresse figure dans la documentation Swagger.
    */
-  @Public()
   @Get('generate')
-  @ApiOperation({ summary: 'Telecharger le CV au format PDF' })
+  @ApiOperation({ summary: 'Telecharger le CV au format PDF (administrateur)' })
   async generate(@Res() res: Response) {
-    this.envoyer(res, await this.cvGeneratorService.generatePdf(), 'application/pdf');
+    this.envoyer(
+      res,
+      await this.cvGeneratorService.generatePdf(),
+      'application/pdf',
+    );
   }
 
-  @Public()
+  /** Word, pour relecture depuis le backoffice avant publication. */
   @Get('generate.docx')
-  @ApiOperation({ summary: 'Telecharger le CV au format Word' })
+  @ApiOperation({ summary: 'Telecharger le CV au format Word (administrateur)' })
   async generateDocx(@Res() res: Response) {
+    this.envoyer(res, await this.cvGeneratorService.generateDocx(), TYPE_DOCX);
+  }
+
+  /**
+   * Word, publiquement telechargeable — mais seulement si la case
+   * « CV telechargeable » est cochee dans les reglages du site.
+   *
+   * Le refus est un 404 et non un 403 : quand la section est desactivee, la
+   * ressource n'existe pas pour un visiteur, et rien ne doit lui indiquer
+   * qu'elle existerait dans une autre configuration.
+   */
+  @Public()
+  @Get('public.docx')
+  @ApiOperation({ summary: 'Telecharger le CV au format Word (site public)' })
+  async publicDocx(@Res() res: Response) {
+    const reglages = await this.prisma.siteSettings.findFirst({
+      select: { showCvDownload: true },
+    });
+    if (!reglages?.showCvDownload) {
+      throw new NotFoundException('CV indisponible');
+    }
     this.envoyer(res, await this.cvGeneratorService.generateDocx(), TYPE_DOCX);
   }
 

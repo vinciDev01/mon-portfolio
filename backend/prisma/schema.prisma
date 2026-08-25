@@ -63,6 +63,12 @@ model SiteSettings {
 
   // CV genere
   cvFontFamily      String  @default("serif") @map("cv_font_family")
+  /**
+   * Le CV n'est telechargeable depuis le site que si cette case est cochee.
+   * Le format Word est le seul propose publiquement ; le PDF reste reserve a
+   * l'administrateur. Faux par defaut : la publication est une decision.
+   */
+  showCvDownload    Boolean @default(false) @map("show_cv_download")
 
   // Accent
   accentHue         Int     @default(107) @map("accent_hue")

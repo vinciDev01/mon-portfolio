@@ -62,8 +62,8 @@ model SiteSettings {
   respectReducedMotion Boolean @default(true) @map("respect_reduced_motion")
 
   // Accent
-  accentHue         Int     @default(128) @map("accent_hue")
-  accentSaturation  Int     @default(18)  @map("accent_saturation")
+  accentHue         Int     @default(107) @map("accent_hue")
+  accentSaturation  Int     @default(16)  @map("accent_saturation")
 
   createdAt   DateTime @default(now()) @map("created_at")
   updatedAt   DateTime @updatedAt @map("updated_at")

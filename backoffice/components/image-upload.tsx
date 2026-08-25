@@ -97,7 +97,7 @@ export function ImageUpload({ currentPath, category, onUpload, label = "Image" }
         className="hidden"
       />
 
-      {/* URL input — always visible */}
+      {/* URL input - always visible */}
       <div className="mt-2">
         <input
           type="url"

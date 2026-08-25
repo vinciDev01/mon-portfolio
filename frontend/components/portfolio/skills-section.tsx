@@ -3,9 +3,7 @@
 import Image from "next/image";
 import type { SkillDto } from "@portfolio/shared-types";
 import { getFileUrl } from "@/lib/api";
-import { SectionWrapper } from "./section-wrapper";
 import { SeeMoreList } from "./see-more-button";
-import { useTranslation } from "@/lib/i18n/i18n-context";
 
 interface SkillsSectionProps {
   skills: SkillDto[];
@@ -46,17 +44,16 @@ function SkillCard({ skill }: { skill: SkillDto }) {
 }
 
 export function SkillsSection({ skills }: SkillsSectionProps) {
-  const { t } = useTranslation();
   if (!skills.length) return null;
 
   return (
-    <SectionWrapper id="skills" title={t("section.skills")}>
+    <>
       <SeeMoreList
         items={skills}
         initialCount={8}
         renderItem={(skill) => <SkillCard key={skill.id} skill={skill} />}
         className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-4"
       />
-    </SectionWrapper>
+    </>
   );
 }

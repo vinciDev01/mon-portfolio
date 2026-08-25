@@ -4,7 +4,6 @@ import { useState, useEffect, useCallback } from "react";
 import Image from "next/image";
 import type { ProjectDto } from "@portfolio/shared-types";
 import { getFileUrl } from "@/lib/api";
-import { SectionWrapper } from "./section-wrapper";
 import { SeeMoreList } from "./see-more-button";
 import { Button } from "@/components/ui/button";
 import { useTranslation } from "@/lib/i18n/i18n-context";
@@ -63,7 +62,7 @@ function ProjectCard({
         <h3 className="font-semibold text-base leading-snug">{project.name}</h3>
 
         {project.description && (
-          <p className="text-sm text-muted-foreground leading-relaxed flex-1 line-clamp-3">
+          <p className="mesure text-sm text-muted-foreground leading-relaxed flex-1 line-clamp-3">
             {project.description}
           </p>
         )}
@@ -181,7 +180,7 @@ function ProjectDetailModal({
           )}
 
           {project.description && (
-            <p className="text-sm text-muted-foreground leading-relaxed whitespace-pre-line">
+            <p className="mesure text-sm text-muted-foreground leading-relaxed whitespace-pre-line">
               {project.description}
             </p>
           )}
@@ -265,12 +264,11 @@ function ProjectDetailModal({
 
 export function ProjectsSection({ projects }: ProjectsSectionProps) {
   const [selected, setSelected] = useState<ProjectDto | null>(null);
-  const { t } = useTranslation();
 
   if (!projects.length) return null;
 
   return (
-    <SectionWrapper id="projects" title={t("section.projects")}>
+    <>
       <SeeMoreList
         items={projects}
         initialCount={4}
@@ -282,6 +280,6 @@ export function ProjectsSection({ projects }: ProjectsSectionProps) {
       {selected && (
         <ProjectDetailModal project={selected} onClose={() => setSelected(null)} />
       )}
-    </SectionWrapper>
+    </>
   );
 }

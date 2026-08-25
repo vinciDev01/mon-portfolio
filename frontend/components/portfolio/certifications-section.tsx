@@ -3,7 +3,6 @@
 import Image from "next/image";
 import type { CertificationDto } from "@portfolio/shared-types";
 import { getFileUrl } from "@/lib/api";
-import { SectionWrapper } from "./section-wrapper";
 import { SeeMoreList } from "./see-more-button";
 import { Button } from "@/components/ui/button";
 import { useTranslation } from "@/lib/i18n/i18n-context";
@@ -43,7 +42,7 @@ function CertificationCard({ certification }: { certification: CertificationDto 
         <h3 className="font-semibold text-sm leading-snug">{certification.name}</h3>
 
         {certification.description && (
-          <p className="text-xs text-muted-foreground leading-relaxed flex-1">{certification.description}</p>
+          <p className="mesure text-xs text-muted-foreground leading-relaxed flex-1">{certification.description}</p>
         )}
 
         {certification.credentialUrl && (
@@ -59,17 +58,16 @@ function CertificationCard({ certification }: { certification: CertificationDto 
 }
 
 export function CertificationsSection({ certifications }: CertificationsSectionProps) {
-  const { t } = useTranslation();
   if (!certifications.length) return null;
 
   return (
-    <SectionWrapper id="certifications" title={t("section.certifications")}>
+    <>
       <SeeMoreList
         items={certifications}
         initialCount={4}
         renderItem={(cert) => <CertificationCard key={cert.id} certification={cert} />}
         className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6"
       />
-    </SectionWrapper>
+    </>
   );
 }

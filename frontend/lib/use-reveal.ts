@@ -4,8 +4,8 @@ import { useCallback, useRef } from "react";
 
 /**
  * Une seule instance d'IntersectionObserver pour toute la page, partagee par
- * tous les blocs. L'ancien ScrollAnimate en creait une par bloc, avec des
- * seuils qui pouvaient diverger d'une section a l'autre.
+ * tous les blocs. L'ancien composant d'animation au defilement en creait une
+ * par bloc, avec des seuils qui pouvaient diverger d'une section a l'autre.
  */
 let observateur: IntersectionObserver | null = null;
 

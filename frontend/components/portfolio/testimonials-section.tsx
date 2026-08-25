@@ -2,7 +2,6 @@
 
 import { useState, useEffect, useCallback } from "react";
 import type { TestimonialDto } from "@portfolio/shared-types";
-import { SectionWrapper } from "./section-wrapper";
 import { Button } from "@/components/ui/button";
 import { useTranslation } from "@/lib/i18n/i18n-context";
 
@@ -211,13 +210,13 @@ export function TestimonialsSection({ testimonials, allowSubmission }: Testimoni
   const { t } = useTranslation();
 
   return (
-    <SectionWrapper id="testimonials" title={t("section.testimonials")}>
+    <>
       {testimonials.length > 0 ? (
         <TestimonialCarousel testimonials={testimonials} />
       ) : (
         <p className="text-sm text-muted-foreground text-center">{t("testimonials.none")}</p>
       )}
       {allowSubmission && <TestimonialForm />}
-    </SectionWrapper>
+    </>
   );
 }

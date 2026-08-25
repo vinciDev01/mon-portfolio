@@ -1,7 +1,6 @@
 "use client";
 
 import { useState } from "react";
-import { SectionWrapper } from "./section-wrapper";
 import { Button } from "@/components/ui/button";
 import { useTranslation } from "@/lib/i18n/i18n-context";
 
@@ -42,8 +41,8 @@ export function ContactSection() {
   };
 
   return (
-    <SectionWrapper id="contact" title={t("section.contact")}>
-      <div className="max-w-xl mx-auto">
+    <>
+      <div className="mesure">
         <div className="text-center mb-8">
           <p className="text-2xl font-bold mb-2">{t("contact.headline")}</p>
           <p className="text-sm text-muted-foreground">{t("contact.subtitle")}</p>
@@ -94,6 +93,6 @@ export function ContactSection() {
           </form>
         )}
       </div>
-    </SectionWrapper>
+    </>
   );
 }

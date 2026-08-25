@@ -1,20 +1,19 @@
 import { getPortfolioData } from "@/lib/api";
 import { Header } from "@/components/portfolio/header";
+import { Footer } from "@/components/portfolio/footer";
+import { SectionShell } from "@/components/portfolio/section-shell";
 import { PresentationSection } from "@/components/portfolio/presentation-section";
 import { SkillsSection } from "@/components/portfolio/skills-section";
 import { ExperienceSection } from "@/components/portfolio/experience-section";
-import { CertificationsSection } from "@/components/portfolio/certifications-section";
 import { ProjectsSection } from "@/components/portfolio/projects-section";
-import { ServicesSection } from "@/components/portfolio/services-section";
 import { AboutSection } from "@/components/portfolio/about-section";
-import { TestimonialsSection } from "@/components/portfolio/testimonials-section";
 import { ContactSection } from "@/components/portfolio/contact-section";
-import { Footer } from "@/components/portfolio/footer";
 import { ToastNotification } from "@/components/portfolio/toast-notification";
 import { SectionToastObserver } from "@/components/portfolio/section-toast-observer";
-import { ScrollAnimate } from "@/components/portfolio/scroll-animate";
-import { StatsSection } from "@/components/portfolio/stats-section";
 import { MaintenancePage } from "@/components/portfolio/maintenance-page";
+import { StatsSection } from "@/components/portfolio/stats-section";
+import { ServicesSection } from "@/components/portfolio/services-section";
+import { TestimonialsSection } from "@/components/portfolio/testimonials-section";
 import { LampProvider } from "@/lib/lamp/lamp-context";
 import { LampStage } from "@/components/lamp/lamp-stage";
 import { LampSwitch } from "@/components/lamp/lamp-switch";
@@ -23,89 +22,92 @@ export default async function Page() {
   const data = await getPortfolioData();
   const s = data.siteSettings;
 
-  if (s.maintenanceMode) {
-    return <MaintenancePage />;
-  }
+  if (s.maintenanceMode) return <MaintenancePage />;
 
-  const reglagesLampe = {
-    activee: s.lampEnabled,
-    allumeeParDefaut: s.lampOnByDefault,
-    ouverture: s.lampBeamAngle,
-    intensite: s.lampIntensity,
-    assombrissement: s.lampDimLevel,
-  };
+  // Les sections dormantes gardent leur code mais ne comptent pas dans la
+  // numerotation du parcours principal.
+  let n = 0;
+  const rang = () => ++n;
 
   return (
-    <LampProvider reglages={reglagesLampe}>
+    <LampProvider
+      reglages={{
+        activee: s.lampEnabled,
+        allumeeParDefaut: s.lampOnByDefault,
+        ouverture: s.lampBeamAngle,
+        intensite: s.lampIntensity,
+        assombrissement: s.lampDimLevel,
+      }}
+    >
       <LampSwitch />
       <main className="min-h-screen">
         <SectionToastObserver />
         <Header siteSettings={s} personalInfo={data.personalInfo} />
 
         {s.showPresentations && (
-          <ScrollAnimate>
+          <SectionShell id="ouverture" titre="Ouverture" index={rang()}>
             <PresentationSection presentations={data.presentations} />
-          </ScrollAnimate>
+          </SectionShell>
         )}
 
-        <ScrollAnimate delay={100}>
-          <StatsSection stats={data.stats} />
-        </ScrollAnimate>
-
         {s.showSkills && (
-          <ScrollAnimate>
+          <SectionShell id="competences" titre="Compétences" index={rang()}>
             <SkillsSection skills={data.skills} />
-          </ScrollAnimate>
+          </SectionShell>
         )}
 
         {s.showExperiences && (
-          <ScrollAnimate>
-            <ExperienceSection experiences={data.experiences} />
-          </ScrollAnimate>
-        )}
-
-        {s.showCertifications && (
-          <ScrollAnimate>
-            <CertificationsSection certifications={data.certifications} />
-          </ScrollAnimate>
+          <SectionShell id="experience" titre="Expérience" index={rang()}>
+            <ExperienceSection
+              experiences={data.experiences}
+              certifications={data.certifications}
+              afficherCertifications={s.showCertifications}
+            />
+          </SectionShell>
         )}
 
         {s.showProjects && (
-          <ScrollAnimate>
+          <SectionShell id="projets" titre="Projets" index={rang()}>
             <ProjectsSection projects={data.projects} />
-          </ScrollAnimate>
-        )}
-
-        {s.showServices && (
-          <ScrollAnimate>
-            <ServicesSection services={data.services} />
-          </ScrollAnimate>
+          </SectionShell>
         )}
 
         {s.showAbout && (
-          <ScrollAnimate>
+          <SectionShell id="a-propos" titre="À propos" index={rang()}>
             <AboutSection about={data.about} />
-          </ScrollAnimate>
+          </SectionShell>
         )}
 
+        {s.showContact && (
+          <SectionShell id="contact" titre="Contact" index={rang()}>
+            <ContactSection />
+          </SectionShell>
+        )}
+
+        {/* --- Sections dormantes, reactivables depuis le backoffice --- */}
+        {s.showStats && (
+          <SectionShell id="stats" titre="Chiffres" index={rang()}>
+            <StatsSection stats={data.stats} />
+          </SectionShell>
+        )}
+        {s.showServices && (
+          <SectionShell id="services" titre="Services" index={rang()}>
+            <ServicesSection services={data.services} />
+          </SectionShell>
+        )}
         {s.showTestimonials && (
-          <ScrollAnimate>
+          <SectionShell id="temoignages" titre="Témoignages" index={rang()}>
             <TestimonialsSection
               testimonials={data.testimonials}
               allowSubmission={s.allowTestimonialSubmission}
             />
-          </ScrollAnimate>
-        )}
-
-        {s.showContact && (
-          <ScrollAnimate>
-            <ContactSection />
-          </ScrollAnimate>
+          </SectionShell>
         )}
 
         <Footer personalInfo={data.personalInfo} />
         <ToastNotification message={s.toastMessage} delayMs={s.toastDelayMs} />
       </main>
+
       <LampStage />
     </LampProvider>
   );

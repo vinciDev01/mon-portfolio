@@ -6,19 +6,19 @@ interface PresentationSectionProps {
   presentations: PresentationDto[];
 }
 
-function PresentationCard({ item }: { item: PresentationDto }) {
+function PresentationCard({ item, index }: { item: PresentationDto; index: number }) {
   return (
-    <div className="max-w-3xl">
-      <h1 className="text-4xl md:text-5xl lg:text-6xl font-bold tracking-tight leading-tight mb-4">
+    <div className="mesure" style={index > 0 ? { marginTop: "var(--espace-5)" } : undefined}>
+      <h3 className="text-2xl md:text-3xl font-bold tracking-tight leading-tight mb-4">
         {item.title}
-      </h1>
+      </h3>
       {item.subtitle && (
-        <p className="text-xl md:text-2xl text-muted-foreground font-medium mb-6">
+        <p className="mesure text-lg md:text-xl text-muted-foreground font-medium mb-6">
           {item.subtitle}
         </p>
       )}
       {item.description && (
-        <p className="text-base md:text-lg text-muted-foreground leading-relaxed">
+        <p className="mesure text-base md:text-lg text-muted-foreground leading-relaxed">
           {item.description}
         </p>
       )}
@@ -30,15 +30,10 @@ export function PresentationSection({ presentations }: PresentationSectionProps)
   if (!presentations.length) return null;
 
   return (
-    <section
-      id="presentation"
-      className="min-h-[60vh] flex items-center py-20 px-8 md:px-20 lg:px-40 xl:px-52"
-    >
-      <div className="w-full space-y-12">
-        {presentations.map((item) => (
-          <PresentationCard key={item.id} item={item} />
-        ))}
-      </div>
-    </section>
+    <>
+      {presentations.map((item, index) => (
+        <PresentationCard key={item.id} item={item} index={index} />
+      ))}
+    </>
   );
 }

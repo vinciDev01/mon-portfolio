@@ -1,12 +1,13 @@
 "use client";
 
-import type { ExperienceDto } from "@portfolio/shared-types";
-import { SectionWrapper } from "./section-wrapper";
+import type { ExperienceDto, CertificationDto } from "@portfolio/shared-types";
 import { SeeMoreList } from "./see-more-button";
 import { useTranslation } from "@/lib/i18n/i18n-context";
 
 interface ExperienceSectionProps {
   experiences: ExperienceDto[];
+  certifications: CertificationDto[];
+  afficherCertifications: boolean;
 }
 
 const localeMap: Record<string, string> = { fr: "fr-FR", en: "en-US", de: "de-DE" };
@@ -42,19 +43,23 @@ function ExperienceCard({ experience }: { experience: ExperienceDto }) {
           </div>
         </div>
         {experience.description && (
-          <p className="text-sm text-muted-foreground leading-relaxed">{experience.description}</p>
+          <p className="mesure text-sm text-muted-foreground leading-relaxed">{experience.description}</p>
         )}
       </div>
     </div>
   );
 }
 
-export function ExperienceSection({ experiences }: ExperienceSectionProps) {
+export function ExperienceSection({
+  experiences,
+  certifications,
+  afficherCertifications,
+}: ExperienceSectionProps) {
   const { t } = useTranslation();
   if (!experiences.length) return null;
 
   return (
-    <SectionWrapper id="experience" title={t("section.experience")}>
+    <>
       <SeeMoreList
         items={experiences}
         initialCount={3}
@@ -63,6 +68,23 @@ export function ExperienceSection({ experiences }: ExperienceSectionProps) {
         )}
         className="flex flex-col"
       />
-    </SectionWrapper>
+
+      {afficherCertifications && certifications.length > 0 && (
+        <div style={{ marginTop: "var(--espace-5)" }}>
+          <h3 style={{ marginBottom: "var(--espace-3)" }}>{t("section.certifications")}</h3>
+          <ul className="mesure space-y-4">
+            {certifications.map((c) => (
+              <li key={c.id}>
+                <p>{c.name}</p>
+                <p className="meta">
+                  {c.organization?.label}
+                  {c.issueDate ? ` · ${new Date(c.issueDate).getFullYear()}` : ""}
+                </p>
+              </li>
+            ))}
+          </ul>
+        </div>
+      )}
+    </>
   );
 }

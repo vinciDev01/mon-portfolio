@@ -3,9 +3,7 @@
 import Image from "next/image";
 import type { ServiceDto } from "@portfolio/shared-types";
 import { getFileUrl } from "@/lib/api";
-import { SectionWrapper } from "./section-wrapper";
 import { SeeMoreList } from "./see-more-button";
-import { useTranslation } from "@/lib/i18n/i18n-context";
 
 interface ServicesSectionProps {
   services: ServiceDto[];
@@ -28,24 +26,23 @@ function ServiceCard({ service }: { service: ServiceDto }) {
         )}
       </div>
       {service.description && (
-        <p className="text-sm text-muted-foreground leading-relaxed flex-1">{service.description}</p>
+        <p className="mesure text-sm text-muted-foreground leading-relaxed flex-1">{service.description}</p>
       )}
     </div>
   );
 }
 
 export function ServicesSection({ services }: ServicesSectionProps) {
-  const { t } = useTranslation();
   if (!services.length) return null;
 
   return (
-    <SectionWrapper id="services" title={t("section.services")}>
+    <>
       <SeeMoreList
         items={services}
         initialCount={4}
         renderItem={(service) => <ServiceCard key={service.id} service={service} />}
         className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6"
       />
-    </SectionWrapper>
+    </>
   );
 }

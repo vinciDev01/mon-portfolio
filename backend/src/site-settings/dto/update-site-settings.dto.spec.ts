@@ -9,37 +9,60 @@ async function erreursSur(champ: string, valeur: unknown): Promise<string[]> {
 }
 
 describe('UpdateSiteSettingsDto', () => {
-  it('refuse une saturation d accent au-dela de 30', async () => {
-    expect(await erreursSur('accentSaturation', 80)).toContain('accentSaturation');
+  describe('bornes numeriques', () => {
+    it.each([
+      // champ, valeur, doitPasser
+      ['accentSaturation', 30, true],
+      ['accentSaturation', 31, false],
+      ['lampDimLevel', 65, true],
+      ['lampDimLevel', 66, false],
+      ['lampBeamAngle', 8, true],
+      ['lampBeamAngle', 45, true],
+      ['lampBeamAngle', 7, false],
+      ['lampBeamAngle', 46, false],
+      ['lineHeight', 1.3, true],
+      ['lineHeight', 2.0, true],
+      ['lineHeight', 1.29, false],
+      ['lineHeight', 2.01, false],
+      ['animationSpeed', 0.5, true],
+      ['animationSpeed', 2.0, true],
+      ['animationSpeed', 0.49, false],
+      ['animationSpeed', 2.01, false],
+      ['lampIntensity', 0, true],
+      ['lampIntensity', 100, true],
+      ['lampIntensity', -1, false],
+      ['lampIntensity', 101, false],
+      ['zigzagAmplitude', 0, true],
+      ['zigzagAmplitude', 100, true],
+      ['zigzagAmplitude', -1, false],
+      ['zigzagAmplitude', 101, false],
+      ['sectionSpacing', 64, true],
+      ['sectionSpacing', 240, true],
+      ['sectionSpacing', 63, false],
+      ['sectionSpacing', 241, false],
+      ['accentHue', 0, true],
+      ['accentHue', 360, true],
+      ['accentHue', -1, false],
+      ['accentHue', 361, false],
+    ])('%s = %s -> valide:%s', async (champ, valeur, doitPasser) => {
+      const erreurs = await erreursSur(champ as string, valeur);
+      if (doitPasser) {
+        expect(erreurs).toEqual([]);
+      } else {
+        expect(erreurs).toContain(champ);
+      }
+    });
   });
 
-  it('accepte une saturation d accent dans la plage', async () => {
-    expect(await erreursSur('accentSaturation', 18)).toEqual([]);
-  });
+  describe('typeScale', () => {
+    it('refuse une echelle typographique inconnue', async () => {
+      expect(await erreursSur('typeScale', 'enorme')).toContain('typeScale');
+    });
 
-  it('refuse un assombrissement au-dela de 65', async () => {
-    expect(await erreursSur('lampDimLevel', 90)).toContain('lampDimLevel');
-  });
-
-  it('refuse un interligne inferieur a 1.3', async () => {
-    expect(await erreursSur('lineHeight', 0)).toContain('lineHeight');
-  });
-
-  it('refuse une vitesse d animation aberrante', async () => {
-    expect(await erreursSur('animationSpeed', 50)).toContain('animationSpeed');
-  });
-
-  it('refuse une echelle typographique inconnue', async () => {
-    expect(await erreursSur('typeScale', 'enorme')).toContain('typeScale');
-  });
-
-  it('accepte les trois echelles typographiques', async () => {
-    for (const echelle of ['compact', 'normal', 'airy']) {
-      expect(await erreursSur('typeScale', echelle)).toEqual([]);
-    }
-  });
-
-  it('refuse une ouverture de faisceau hors plage', async () => {
-    expect(await erreursSur('lampBeamAngle', 120)).toContain('lampBeamAngle');
+    it('accepte les trois echelles typographiques', async () => {
+      for (const echelle of ['compact', 'normal', 'airy']) {
+        expect(await erreursSur('typeScale', echelle)).toEqual([]);
+      }
+    });
   });
 });

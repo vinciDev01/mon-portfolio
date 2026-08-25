@@ -11,11 +11,13 @@ import { TestimonialsSection } from "@/components/portfolio/testimonials-section
 import { ContactSection } from "@/components/portfolio/contact-section";
 import { Footer } from "@/components/portfolio/footer";
 import { ToastNotification } from "@/components/portfolio/toast-notification";
-import { Confetti } from "@/components/portfolio/confetti";
 import { SectionToastObserver } from "@/components/portfolio/section-toast-observer";
 import { ScrollAnimate } from "@/components/portfolio/scroll-animate";
 import { StatsSection } from "@/components/portfolio/stats-section";
 import { MaintenancePage } from "@/components/portfolio/maintenance-page";
+import { LampProvider } from "@/lib/lamp/lamp-context";
+import { LampStage } from "@/components/lamp/lamp-stage";
+import { LampSwitch } from "@/components/lamp/lamp-switch";
 
 export default async function Page() {
   const data = await getPortfolioData();
@@ -25,75 +27,86 @@ export default async function Page() {
     return <MaintenancePage />;
   }
 
+  const reglagesLampe = {
+    activee: s.lampEnabled,
+    allumeeParDefaut: s.lampOnByDefault,
+    ouverture: s.lampBeamAngle,
+    intensite: s.lampIntensity,
+    assombrissement: s.lampDimLevel,
+  };
+
   return (
-    <main className="min-h-screen">
-      <Confetti />
-      <SectionToastObserver />
-      <Header siteSettings={s} personalInfo={data.personalInfo} />
+    <LampProvider reglages={reglagesLampe}>
+      <main className="min-h-screen">
+        <SectionToastObserver />
+        <Header siteSettings={s} personalInfo={data.personalInfo} />
 
-      {s.showPresentations && (
-        <ScrollAnimate>
-          <PresentationSection presentations={data.presentations} />
+        {s.showPresentations && (
+          <ScrollAnimate>
+            <PresentationSection presentations={data.presentations} />
+          </ScrollAnimate>
+        )}
+
+        <ScrollAnimate delay={100}>
+          <StatsSection stats={data.stats} />
         </ScrollAnimate>
-      )}
 
-      <ScrollAnimate delay={100}>
-        <StatsSection stats={data.stats} />
-      </ScrollAnimate>
+        {s.showSkills && (
+          <ScrollAnimate>
+            <SkillsSection skills={data.skills} />
+          </ScrollAnimate>
+        )}
 
-      {s.showSkills && (
-        <ScrollAnimate>
-          <SkillsSection skills={data.skills} />
-        </ScrollAnimate>
-      )}
+        {s.showExperiences && (
+          <ScrollAnimate>
+            <ExperienceSection experiences={data.experiences} />
+          </ScrollAnimate>
+        )}
 
-      {s.showExperiences && (
-        <ScrollAnimate>
-          <ExperienceSection experiences={data.experiences} />
-        </ScrollAnimate>
-      )}
+        {s.showCertifications && (
+          <ScrollAnimate>
+            <CertificationsSection certifications={data.certifications} />
+          </ScrollAnimate>
+        )}
 
-      {s.showCertifications && (
-        <ScrollAnimate>
-          <CertificationsSection certifications={data.certifications} />
-        </ScrollAnimate>
-      )}
+        {s.showProjects && (
+          <ScrollAnimate>
+            <ProjectsSection projects={data.projects} />
+          </ScrollAnimate>
+        )}
 
-      {s.showProjects && (
-        <ScrollAnimate>
-          <ProjectsSection projects={data.projects} />
-        </ScrollAnimate>
-      )}
+        {s.showServices && (
+          <ScrollAnimate>
+            <ServicesSection services={data.services} />
+          </ScrollAnimate>
+        )}
 
-      {s.showServices && (
-        <ScrollAnimate>
-          <ServicesSection services={data.services} />
-        </ScrollAnimate>
-      )}
+        {s.showAbout && (
+          <ScrollAnimate>
+            <AboutSection about={data.about} />
+          </ScrollAnimate>
+        )}
 
-      {s.showAbout && (
-        <ScrollAnimate>
-          <AboutSection about={data.about} />
-        </ScrollAnimate>
-      )}
+        {s.showTestimonials && (
+          <ScrollAnimate>
+            <TestimonialsSection
+              testimonials={data.testimonials}
+              allowSubmission={s.allowTestimonialSubmission}
+            />
+          </ScrollAnimate>
+        )}
 
-      {s.showTestimonials && (
-        <ScrollAnimate>
-          <TestimonialsSection
-            testimonials={data.testimonials}
-            allowSubmission={s.allowTestimonialSubmission}
-          />
-        </ScrollAnimate>
-      )}
+        {s.showContact && (
+          <ScrollAnimate>
+            <ContactSection />
+          </ScrollAnimate>
+        )}
 
-      {s.showContact && (
-        <ScrollAnimate>
-          <ContactSection />
-        </ScrollAnimate>
-      )}
-
-      <Footer personalInfo={data.personalInfo} />
-      <ToastNotification message={s.toastMessage} delayMs={s.toastDelayMs} />
-    </main>
+        <Footer personalInfo={data.personalInfo} />
+        <ToastNotification message={s.toastMessage} delayMs={s.toastDelayMs} />
+      </main>
+      <LampStage />
+      <LampSwitch />
+    </LampProvider>
   );
 }

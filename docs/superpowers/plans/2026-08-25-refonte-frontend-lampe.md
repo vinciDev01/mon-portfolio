@@ -2217,7 +2217,15 @@ export function WorkLamp({ tete }: { tete: RefObject<SVGGElement | null> }) {
       {/* --- Groupe tete : pivote autour du bouton molete --- */}
       {/* Le transform est ecrit par useLampEngine a chaque image. */}
       <g ref={tete}>
-        {/* Corps du projecteur, pointant vers la gauche au repos */}
+        {/* Corps du projecteur, dessine dans l'orientation ANGLE ZERO, donc
+          pointant vers la DROITE. Le moteur ecrit rotate(theta, px, py) avec
+          l'angle absolu de la tete, et une rotation mappe la direction 0 vers
+          theta : la geometrie de base doit donc etre celle de l'angle 0.
+          Au repos (theta = PI) la tete apparait bien tournee vers la gauche.
+          Verifie numeriquement : l'ouverture dessinee en px+44, apres
+          rotate(180), tombe en px-44 — exactement la ou sommetsFaisceau place
+          l'ouverture du faisceau. Dessinee vers la gauche, elle tomberait en
+          px+44 et la tete tournerait le dos a son propre faisceau. */}
         <path
           d="M calc(100% - 24px) calc(50% - 14px)
              L calc(100% - 68px) calc(50% - 26px)

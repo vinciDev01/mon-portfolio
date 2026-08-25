@@ -1601,7 +1601,7 @@ git commit -m "feat(frontend): identite sombre, echelle modulaire et rythme de 8
 
 **Interfaces:**
 - Consumes: `SiteSettingsDto` étendu (Task 1), `ECHELLE_TYPO` (Task 4)
-- Produces: variables CSS sur `<body>` — `--portfolio-bg`, `--portfolio-text`, `--portfolio-font-size`, `--portfolio-line-height`, `--portfolio-section-spacing`, `--portfolio-zigzag`, `--portfolio-animation-speed`, `--ratio`, `--accent` ; attribut `data-mouvement` sur `<html>`
+- Produces: variables CSS sur `<html>` (l'element cible de `:root`) — `--portfolio-bg`, `--portfolio-text`, `--portfolio-font-size`, `--portfolio-line-height`, `--portfolio-section-spacing`, `--portfolio-zigzag`, `--portfolio-animation-speed`, `--ratio`, `--accent` ; attribut `data-mouvement` sur `<html>`
 
 Le site n'a plus qu'un thème. Le sélecteur clair/sombre disparaît : maintenir deux thèmes obligerait à calibrer deux fois chaque état du faisceau, pour un bénéfice nul sur une identité qui est sombre par nature.
 

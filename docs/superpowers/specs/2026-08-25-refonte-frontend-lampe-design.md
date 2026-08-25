@@ -367,8 +367,14 @@ Le plafond de saturation à 30 est la garantie structurelle de la contrainte
 ### Propagation
 
 Les champs traversent `PortfolioData` via `packages/shared-types`, puis sont
-injectés en variables CSS au rendu serveur — même chemin que `bgColor` et
-`fontFamily` aujourd'hui, donc aucun flash au chargement.
+injectés en variables CSS au rendu serveur, **sur l'element `<html>`** — donc
+aucun flash au chargement.
+
+L'element porteur n'est pas un detail : `globals.css` declare ses regles
+consommatrices dans un bloc `:root`, qui cible `<html>`. La substitution d'un
+`var()` dans une declaration de propriete personnalisee se resout sur l'element
+ou la regle s'applique, et l'heritage ne remonte pas. Une variable injectee sur
+`<body>` serait donc structurellement invisible pour ces declarations.
 
 ### Backoffice
 

@@ -1,20 +1,26 @@
 import type { Metadata } from "next";
-import { Geist_Mono, Figtree } from "next/font/google";
+import { IBM_Plex_Sans, IBM_Plex_Mono } from "next/font/google";
 
 import "./globals.css";
 import { ThemeProvider } from "@/components/theme-provider";
 import { I18nProvider } from "@/lib/i18n/i18n-context";
 import { cn } from "@/lib/utils";
 import { getSiteSettings } from "@/lib/api";
+import { ECHELLE_TYPO } from "@/lib/design/tokens";
 
-const figtree = Figtree({ subsets: ["latin"], variable: "--font-sans" });
-
-const fontMono = Geist_Mono({
+const plexSans = IBM_Plex_Sans({
   subsets: ["latin"],
+  weight: ["300", "400", "500", "600"],
+  variable: "--font-sans",
+});
+
+const plexMono = IBM_Plex_Mono({
+  subsets: ["latin"],
+  weight: ["400", "500"],
   variable: "--font-mono",
 });
 
-const DEFAULT_FONT = "Figtree";
+const POLICE_PAR_DEFAUT = "IBM Plex Sans";
 const API_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:4000";
 
 export async function generateMetadata(): Promise<Metadata> {
@@ -59,10 +65,12 @@ export default async function RootLayout({
   let dynamicStyle: React.CSSProperties = {};
   let googleFontUrl: string | null = null;
   let defaultLanguage = "fr";
+  let respecterMouvementReduit = true;
 
   try {
     const settings = await getSiteSettings();
     defaultLanguage = settings.defaultLanguage || "fr";
+    respecterMouvementReduit = settings.respectReducedMotion;
 
     const styleVars: Record<string, string> = {};
     if (settings.bgColor) {
@@ -74,11 +82,25 @@ export default async function RootLayout({
     if (settings.fontSize) {
       styleVars["--portfolio-font-size"] = `${settings.fontSize}px`;
     }
-    if (settings.fontFamily && settings.fontFamily !== DEFAULT_FONT) {
+    if (settings.fontFamily && settings.fontFamily !== POLICE_PAR_DEFAUT) {
       styleVars["--portfolio-font-family"] = `'${settings.fontFamily}', sans-serif`;
       const encodedFamily = settings.fontFamily.replace(/ /g, "+");
       googleFontUrl = `https://fonts.googleapis.com/css2?family=${encodedFamily}:wght@300;400;500;600;700&display=swap`;
     }
+
+    // Echelle typographique
+    styleVars["--ratio"] = String(ECHELLE_TYPO[settings.typeScale] ?? ECHELLE_TYPO.normal);
+    styleVars["--portfolio-line-height"] = String(settings.lineHeight);
+    styleVars["--portfolio-section-spacing"] = `${settings.sectionSpacing}px`;
+    styleVars["--portfolio-zigzag"] = String(settings.zigzagAmplitude / 100);
+
+    // Mouvement
+    styleVars["--portfolio-animation-speed"] = String(
+      settings.animationsEnabled ? settings.animationSpeed : 0.001,
+    );
+
+    // Accent, borne par le DTO a 30% de saturation
+    styleVars["--accent"] = `hsl(${settings.accentHue} ${settings.accentSaturation}% 54%)`;
 
     dynamicStyle = styleVars as React.CSSProperties;
   } catch {
@@ -89,10 +111,11 @@ export default async function RootLayout({
     <html
       lang="fr"
       suppressHydrationWarning
+      data-mouvement={respecterMouvementReduit ? undefined : "force"}
       className={cn(
         "antialiased",
-        fontMono.variable,
-        figtree.variable,
+        plexMono.variable,
+        plexSans.variable,
       )}
     >
       <head>
@@ -105,7 +128,7 @@ export default async function RootLayout({
         )}
       </head>
       <body style={dynamicStyle}>
-        <ThemeProvider>
+        <ThemeProvider forcedTheme="dark">
           <I18nProvider defaultLocale={defaultLanguage}>
             {children}
           </I18nProvider>

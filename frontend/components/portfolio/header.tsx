@@ -4,7 +4,6 @@ import Image from "next/image";
 import Link from "next/link";
 import type { SiteSettingsDto, PersonalInfoDto } from "@portfolio/shared-types";
 import { getFileUrl } from "@/lib/api";
-import { ThemeToggle } from "./theme-toggle";
 import { LanguageSwitcher } from "./language-switcher";
 import { Button } from "@/components/ui/button";
 import { useTranslation } from "@/lib/i18n/i18n-context";
@@ -82,7 +81,6 @@ export function Header({ siteSettings, personalInfo }: HeaderProps) {
 
         <div className="flex items-center gap-2 shrink-0">
           <LanguageSwitcher />
-          <ThemeToggle />
 
           {siteSettings.cvFilePath && (
             <Button asChild size="sm">

@@ -112,6 +112,7 @@ export default async function RootLayout({
       lang="fr"
       suppressHydrationWarning
       data-mouvement={respecterMouvementReduit ? undefined : "force"}
+      style={dynamicStyle}
       className={cn(
         "antialiased",
         plexMono.variable,
@@ -127,7 +128,7 @@ export default async function RootLayout({
           </>
         )}
       </head>
-      <body style={dynamicStyle}>
+      <body>
         <ThemeProvider forcedTheme="dark">
           <I18nProvider defaultLocale={defaultLanguage}>
             {children}

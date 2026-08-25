@@ -78,16 +78,6 @@
     font-family: var(--portfolio-font-family, var(--font-sans));
     font-size: var(--portfolio-font-size, inherit);
   }
-
-  :root body {
-    background-color: var(--portfolio-bg, var(--background));
-    color: var(--portfolio-text, var(--foreground));
-  }
-
-  .dark body {
-    background-color: var(--background);
-    color: var(--foreground);
-  }
 }
 
 /* Smooth scroll for anchor navigation */

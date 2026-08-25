@@ -1,6 +1,6 @@
 "use client";
 
-import { useBeamTarget } from "@/lib/lamp/lamp-context";
+import { useBeamTarget, useBiaisLampe } from "@/lib/lamp/lamp-context";
 import { useReveal } from "@/lib/use-reveal";
 import { useTranslation } from "@/lib/i18n/i18n-context";
 
@@ -34,6 +34,7 @@ export function SectionShell({
 }) {
   const cible = useBeamTarget();
   const reveal = useReveal();
+  const { survolTitre, relacher } = useBiaisLampe();
   const { t } = useTranslation();
   const titre = t(cleTitre);
   const aGauche = index % 2 === 1;
@@ -58,7 +59,12 @@ export function SectionShell({
           {String(index).padStart(2, "0")}
         </p>
 
-        <h2 className="titre-double" style={{ marginBottom: "var(--espace-4)" }}>
+        <h2
+          className="titre-double"
+          style={{ marginBottom: "var(--espace-4)" }}
+          onMouseEnter={(e) => survolTitre(e.currentTarget)}
+          onMouseLeave={relacher}
+        >
           <span className="titre-retrait">{titre}</span>
           <span className="titre-eclaire" aria-hidden="true">
             {titre}

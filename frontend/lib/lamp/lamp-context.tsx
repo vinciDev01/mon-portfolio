@@ -22,6 +22,27 @@ export type ReglagesLampe = {
   assombrissement: number;
 };
 
+export type BiaisLampe = {
+  /** Radians ajoutes a l'angle vise. */
+  angle: number;
+  /** Pixels de glissement horizontal du bras. */
+  brasX: number;
+  /** Multiplicateur de l'opacite du voile lumineux. */
+  glow: number;
+};
+
+const BIAIS_NEUTRE: BiaisLampe = { angle: 0, brasX: 0, glow: 1 };
+
+/**
+ * Evenement synthetique qui reveille le moteur (voir use-lamp-engine.ts)
+ * sans passer par "scroll" : ce dernier est deja ecoute par l'effet
+ * "Cible visible" ci-dessous, qui recalculerait aussitot `cibleRef` a partir
+ * de la section la plus proche du centre de l'ecran et effacerait la cible
+ * de precision (titre ou bouton) que le survol vient de poser. Un nom
+ * d'evenement dedie decouple le reveil du moteur de ce recalcul.
+ */
+export const EVENEMENT_REVEIL_LAMPE = "lampe:reveil";
+
 type ValeurContexte = {
   activee: boolean;
   allumee: boolean;
@@ -29,6 +50,8 @@ type ValeurContexte = {
   cibleRef: MutableRefObject<HTMLElement | null>;
   /** Registre des zones eclairables declarees par les sections. */
   cibles: MutableRefObject<Set<HTMLElement>>;
+  /** Biais applique par les micro-interactions de survol. */
+  biaisRef: MutableRefObject<BiaisLampe>;
   reglages: ReglagesLampe;
 };
 
@@ -44,6 +67,7 @@ export function LampProvider({
   const [allumee, setAllumee] = useState(reglages.allumeeParDefaut);
   const cibleRef = useRef<HTMLElement | null>(null);
   const cibles = useRef<Set<HTMLElement>>(new Set());
+  const biaisRef = useRef<BiaisLampe>({ ...BIAIS_NEUTRE });
 
   const basculer = useCallback(() => setAllumee((v) => !v), []);
 
@@ -95,7 +119,15 @@ export function LampProvider({
   }, [reglages.activee]);
 
   const valeur = useMemo<ValeurContexte>(
-    () => ({ activee: reglages.activee, allumee, basculer, cibleRef, cibles, reglages }),
+    () => ({
+      activee: reglages.activee,
+      allumee,
+      basculer,
+      cibleRef,
+      cibles,
+      biaisRef,
+      reglages,
+    }),
     [reglages, allumee, basculer],
   );
 
@@ -127,5 +159,45 @@ export function useBeamTarget() {
       }
     },
     [cibleRef, cibles],
+  );
+}
+
+const DEGRE = Math.PI / 180;
+
+/**
+ * Handlers de survol. Ils ecrivent dans une ref lue par le moteur : aucun
+ * re-rendu React n'est declenche par un simple deplacement de souris.
+ */
+export function useBiaisLampe() {
+  const { biaisRef, cibleRef } = useLampe();
+
+  const appliquer = useCallback(
+    (b: Partial<BiaisLampe>) => {
+      biaisRef.current = { ...BIAIS_NEUTRE, ...b };
+      // Reveille le moteur, qui s'arrete des qu'il est immobile. Evenement
+      // dedie plutot que "scroll" : voir EVENEMENT_REVEIL_LAMPE ci-dessus.
+      window.dispatchEvent(new Event(EVENEMENT_REVEIL_LAMPE));
+    },
+    [biaisRef],
+  );
+
+  return useMemo(
+    () => ({
+      /** La tete recentre son faisceau sur le titre survole. */
+      survolTitre: (el: HTMLElement) => {
+        cibleRef.current = el;
+        appliquer({ angle: 0.6 * DEGRE });
+      },
+      /** La tete s'incline vers le bouton et le faisceau s'intensifie. */
+      survolCta: (el: HTMLElement) => {
+        cibleRef.current = el;
+        appliquer({ angle: 1.2 * DEGRE, glow: 1.6 });
+      },
+      /** Le bras glisse, la tete ne tourne pas. */
+      survolMarge: () => appliquer({ brasX: 6 }),
+      /** Retour au neutre. */
+      relacher: () => appliquer({}),
+    }),
+    [appliquer, cibleRef],
   );
 }

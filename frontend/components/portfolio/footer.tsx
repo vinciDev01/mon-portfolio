@@ -1,6 +1,7 @@
 "use client";
 
 import type { PersonalInfoDto } from "@portfolio/shared-types";
+import { useBiaisLampe } from "@/lib/lamp/lamp-context";
 import { useTranslation } from "@/lib/i18n/i18n-context";
 
 interface FooterProps {
@@ -10,11 +11,16 @@ interface FooterProps {
 export function Footer({ personalInfo }: FooterProps) {
   const currentYear = new Date().getFullYear();
   const { t } = useTranslation();
+  const { survolMarge, relacher } = useBiaisLampe();
 
   return (
     <footer className="py-10 px-8 md:px-20 lg:px-40 xl:px-52 border-t border-border">
       <div className="max-w-7xl mx-auto flex flex-col sm:flex-row items-center justify-between gap-4">
-        <div className="flex items-center gap-4">
+        <div
+          className="flex items-center gap-4"
+          onMouseEnter={survolMarge}
+          onMouseLeave={relacher}
+        >
           {personalInfo.githubUrl && (
             <a
               href={personalInfo.githubUrl}

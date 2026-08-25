@@ -13,13 +13,14 @@ export function LampStage() {
   const trou = useRef<SVGPolygonElement | null>(null);
   const voile = useRef<SVGPolygonElement | null>(null);
   const tete = useRef<SVGGElement | null>(null);
+  const bras = useRef<SVGGElement | null>(null);
 
-  useLampEngine({ trou, voile, tete });
+  useLampEngine({ trou, voile, tete, bras });
 
   return (
     <>
       <BeamLayer trou={trou} voile={voile} />
-      <WorkLamp tete={tete} />
+      <WorkLamp tete={tete} bras={bras} />
     </>
   );
 }

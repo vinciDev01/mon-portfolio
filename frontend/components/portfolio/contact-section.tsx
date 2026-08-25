@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
+import { useBiaisLampe } from "@/lib/lamp/lamp-context";
 import { useTranslation } from "@/lib/i18n/i18n-context";
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:4000";
@@ -16,6 +17,7 @@ export function ContactSection() {
   });
   const [status, setStatus] = useState<"idle" | "loading" | "success" | "error">("idle");
   const { t } = useTranslation();
+  const { survolCta, relacher } = useBiaisLampe();
 
   const handleChange = (
     e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>,
@@ -87,7 +89,13 @@ export function ContactSection() {
             {status === "error" && (
               <p className="text-sm text-red-500">{t("contact.error")}</p>
             )}
-            <Button type="submit" disabled={status === "loading"} className="w-full">
+            <Button
+              type="submit"
+              disabled={status === "loading"}
+              className="w-full"
+              onMouseEnter={(e) => survolCta(e.currentTarget)}
+              onMouseLeave={relacher}
+            >
               {status === "loading" ? t("contact.sending") : t("contact.send")}
             </Button>
           </form>

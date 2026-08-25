@@ -8,7 +8,13 @@ const PIVOT_CORPS = "#1E2126"; // bouton molette
 const INTERIEUR = "#EDEAE3"; // blanc poli mat du diffuseur
 const BISEAU = "#3A3F45"; // fin liseré clair du bord
 
-export function WorkLamp({ tete }: { tete: RefObject<SVGGElement | null> }) {
+export function WorkLamp({
+  tete,
+  bras,
+}: {
+  tete: RefObject<SVGGElement | null>;
+  bras: RefObject<SVGGElement | null>;
+}) {
   const { activee, allumee } = useLampe();
 
   // SVG n'accepte pas calc() dans les attributs de geometrie (x, y, cx, cy,
@@ -41,7 +47,7 @@ export function WorkLamp({ tete }: { tete: RefObject<SVGGElement | null> }) {
       focusable="false"
     >
       {/* --- Groupe fixe : le bras est un axe de reference, il ne pivote pas --- */}
-      <g>
+      <g ref={bras} className="lampe-bras">
         {/* Bras tubulaire, colle au bord droit, sortant du cadre en bas */}
         <rect x={px - 6} y={0} width="12" height={taille.h} fill={CORPS} />
         {/* Levier de verrouillage */}

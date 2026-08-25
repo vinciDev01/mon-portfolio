@@ -498,6 +498,16 @@ html {
     z-index: 40;
   }
 
+  /* Reponses immediates au survol (titre, CTA, marge) : ce sont des
+     micro-interactions, pas des mouvements de masse, donc une transition
+     CSS plutot que le ressort du moteur. */
+  .beam-layer polygon,
+  .lampe-bras {
+    transition:
+      opacity var(--duree) var(--courbe),
+      transform var(--duree) var(--courbe);
+  }
+
   /* Le titre eclaire, superpose au titre en retrait. */
   .titre-double {
     position: relative;

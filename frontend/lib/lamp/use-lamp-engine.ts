@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, type RefObject } from "react";
-import { useLampe } from "./lamp-context";
+import { EVENEMENT_REVEIL_LAMPE, useLampe } from "./lamp-context";
 import { angleVers, formaterSommets, sommetsFaisceau } from "./geometry";
 import { differenceAngulaire, estImmobile, pasRessort } from "./spring";
 
@@ -9,6 +9,7 @@ export type RefsLampe = {
   trou: RefObject<SVGPolygonElement | null>;
   voile: RefObject<SVGPolygonElement | null>;
   tete: RefObject<SVGGElement | null>;
+  bras: RefObject<SVGGElement | null>;
 };
 
 const OMEGA_TETE = 9;
@@ -24,7 +25,7 @@ const RAYON_OUVERTURE = 26;
 const RAIL = 48;
 
 export function useLampEngine(refs: RefsLampe) {
-  const { activee, allumee, cibleRef, reglages } = useLampe();
+  const { activee, allumee, cibleRef, biaisRef, reglages } = useLampe();
 
   useEffect(() => {
     if (!activee || !allumee) return;
@@ -69,6 +70,15 @@ export function useLampEngine(refs: RefsLampe) {
         "transform",
         `rotate(${(tete.valeur * 180) / Math.PI} ${p.x} ${p.y})`,
       );
+      // Le bras glisse horizontalement, il ne pivote jamais.
+      refs.bras.current?.setAttribute(
+        "transform",
+        `translate(${biaisRef.current.brasX} 0)`,
+      );
+      refs.voile.current?.setAttribute(
+        "opacity",
+        String((reglages.intensite / 100) * 0.12 * biaisRef.current.glow),
+      );
     };
 
     const boucle = (temps: number) => {
@@ -77,7 +87,8 @@ export function useLampEngine(refs: RefsLampe) {
       dernierTemps = temps;
 
       const p = pivot();
-      const brut = angleVers(p, cible());
+      const biais = biaisRef.current;
+      const brut = angleVers(p, cible()) + biais.angle;
       // On vise par le chemin angulaire le plus court, sinon la tete peut
       // faire un tour complet au passage de +/-pi.
       const viseeTete = tete.valeur + differenceAngulaire(tete.valeur, brut);
@@ -136,6 +147,10 @@ export function useLampEngine(refs: RefsLampe) {
     relancer();
     window.addEventListener("scroll", relancer, { passive: true });
     window.addEventListener("resize", relancer);
+    // Reveil dedie aux micro-interactions de survol (lamp-context.tsx) :
+    // volontairement distinct de "scroll" pour ne pas se declencher en
+    // meme temps que l'effet "Cible visible" du provider.
+    window.addEventListener(EVENEMENT_REVEIL_LAMPE, relancer);
     document.addEventListener("focusin", relancer);
     document.addEventListener("visibilitychange", surVisibilite);
 
@@ -144,8 +159,20 @@ export function useLampEngine(refs: RefsLampe) {
       cancelAnimationFrame(image);
       window.removeEventListener("scroll", relancer);
       window.removeEventListener("resize", relancer);
+      window.removeEventListener(EVENEMENT_REVEIL_LAMPE, relancer);
       document.removeEventListener("focusin", relancer);
       document.removeEventListener("visibilitychange", surVisibilite);
     };
-  }, [activee, allumee, reglages.ouverture, cibleRef, refs.trou, refs.voile, refs.tete]);
+  }, [
+    activee,
+    allumee,
+    reglages.ouverture,
+    reglages.intensite,
+    cibleRef,
+    biaisRef,
+    refs.trou,
+    refs.voile,
+    refs.tete,
+    refs.bras,
+  ]);
 }

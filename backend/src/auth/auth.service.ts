@@ -4,8 +4,11 @@ import * as jwt from 'jsonwebtoken';
 import { PrismaService } from '../prisma/prisma.service';
 import { LoginDto } from './dto/login.dto';
 
-const JWT_SECRET =
-  process.env.JWT_SECRET || 'portfolio-secret-key-change-in-prod';
+import { lireSecretJwt } from '../config/secrets';
+
+// Lu au chargement du module : une configuration manquante fait echouer le
+// demarrage, pas la premiere tentative de connexion d'un visiteur.
+const JWT_SECRET = lireSecretJwt(process.env);
 
 @Injectable()
 export class AuthService {

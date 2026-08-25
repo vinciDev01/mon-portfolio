@@ -524,17 +524,36 @@ async function main() {
   console.log("✔ Testimonials seeded");
 
   // --- Admin User ---
-  const passwordHash = await bcrypt.hash("admin123", 10);
+  // Identifiants de l'administrateur : jamais en dur.
+  // Un mot de passe ecrit ici finirait publie avec le depot, et tout lecteur
+  // pourrait entrer dans le backoffice.
+  const adminEmail = process.env.ADMIN_EMAIL;
+  const adminPassword = process.env.ADMIN_PASSWORD;
+
+  if (!adminEmail || !adminPassword) {
+    throw new Error(
+      "ADMIN_EMAIL et ADMIN_PASSWORD doivent etre definis pour creer " +
+        "l'administrateur. Voir backend/.env.example.",
+    );
+  }
+  if (adminPassword.length < 12) {
+    throw new Error(
+      `ADMIN_PASSWORD fait ${adminPassword.length} caracteres ; il en faut au ` +
+        "moins 12. Generez-en un avec : openssl rand -base64 24",
+    );
+  }
+
+  const passwordHash = await bcrypt.hash(adminPassword, 10);
   await prisma.adminUser.upsert({
     where: { id: "admin-1" },
-    update: {},
+    update: { email: adminEmail, passwordHash },
     create: {
       id: "admin-1",
-      email: "benyofanuel@gmail.com",
+      email: adminEmail,
       passwordHash,
     },
   });
-  console.log("✔ Admin User seeded (email: benyofanuel@gmail.com, password: admin123)");
+  console.log(`✔ Admin User seeded (email: ${adminEmail}, mot de passe : voir ADMIN_PASSWORD)`);
 
   // --- Blog Posts ---
   const blogPostData = [

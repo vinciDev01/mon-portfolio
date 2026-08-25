@@ -134,15 +134,24 @@ Toujours dans `model SiteSettings`, remplacer les quatre lignes existantes :
   fontFamily  String   @default("IBM Plex Sans") @map("font_family")
 ```
 
-- [ ] **Étape 3 : Générer la migration**
+- [ ] **Étape 3 : Générer la migration SANS l'appliquer**
+
+Le drapeau `--create-only` est indispensable : il écrit le SQL sans le jouer, ce
+qui laisse la place à l'`UPDATE` de l'étape suivante. Sans lui, la migration
+part en base avant d'être complétée et la ligne existante n'est jamais mise à
+jour.
 
 ```bash
-cd backend && npx prisma migrate dev --name add_lamp_and_typography_settings
+cd backend && npx prisma migrate dev --create-only --name add_lamp_and_typography_settings
 ```
+
+**Ne jamais utiliser `prisma migrate reset` sur cette base.** Elle contient les
+données réelles du portfolio saisies depuis le backoffice ; un reset les
+remplacerait par le seed.
 
 - [ ] **Étape 4 : Ajouter la mise à jour de la ligne existante**
 
-`prisma migrate dev` ne modifie que les valeurs par défaut des futures insertions. La ligne déjà en base garde ses valeurs kaki. Ouvrir le `migration.sql` qui vient d'être généré et **ajouter à la fin** :
+Les valeurs par défaut Prisma ne s'appliquent qu'aux insertions futures. La ligne déjà en base garde ses valeurs kaki. Ouvrir le `migration.sql` qui vient d'être généré et **ajouter à la fin** :
 
 ```sql
 -- Bascule de l'enregistrement existant vers la nouvelle identité visuelle
@@ -156,11 +165,14 @@ SET "bg_color"    = '#131518',
     "show_stats"        = false;
 ```
 
-- [ ] **Étape 5 : Rejouer la migration sur la base**
+- [ ] **Étape 5 : Appliquer la migration**
 
 ```bash
-cd backend && npx prisma migrate reset --skip-seed --force && npx prisma migrate deploy && npx prisma db seed
+cd backend && npx prisma migrate dev
 ```
+
+Cette commande joue le fichier complété à l'étape 4, `UPDATE` compris, et
+régénère le client Prisma. Aucune donnée n'est perdue.
 
 Vérifier que la ligne a bien basculé :
 

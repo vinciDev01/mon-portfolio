@@ -104,12 +104,18 @@ export function useLampEngine(refs: RefsLampe) {
     const relancer = () => {
       if (!enCours) return;
       if (mouvementReduit) {
-        // Pas d'animation : on saute directement a la position finale.
-        const brut = angleVers(pivot(), cible());
-        tete = { valeur: brut, vitesse: 0 };
-        meneur = { valeur: brut - phi, vitesse: 0 };
-        suiveur = { valeur: brut + phi, vitesse: 0 };
-        peindre();
+        // Pas d'animation, mais on coalesce quand meme : un defilement emet des
+        // dizaines d'evenements par seconde, et peindre a chaque fois forcerait
+        // autant de recalculs de mise en page.
+        if (image) return;
+        image = requestAnimationFrame(() => {
+          image = 0;
+          const brut = angleVers(pivot(), cible());
+          tete = { valeur: brut, vitesse: 0 };
+          meneur = { valeur: brut - phi, vitesse: 0 };
+          suiveur = { valeur: brut + phi, vitesse: 0 };
+          peindre();
+        });
         return;
       }
       if (!image) {
@@ -141,5 +147,5 @@ export function useLampEngine(refs: RefsLampe) {
       document.removeEventListener("focusin", relancer);
       document.removeEventListener("visibilitychange", surVisibilite);
     };
-  }, [activee, allumee, reglages.ouverture, cibleRef, refs]);
+  }, [activee, allumee, reglages.ouverture, cibleRef, refs.trou, refs.voile, refs.tete]);
 }

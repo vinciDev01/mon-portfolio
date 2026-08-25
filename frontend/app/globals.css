@@ -508,6 +508,7 @@ html {
     inset: 0;
     color: var(--texte);
     pointer-events: none;
+    user-select: none;
   }
   .titre-retrait {
     color: var(--bordure);

@@ -39,7 +39,7 @@ export function SectionShell({
         // par app/layout.tsx. A 0 les deux cotes se confondent : colonne unique.
         data-cote={aGauche ? "gauche" : "droite"}
       >
-        <p className="meta" style={{ marginBottom: "var(--espace-1)" }}>
+        <p className="meta" style={{ marginBottom: "var(--espace-1)" }} aria-hidden="true">
           {String(index).padStart(2, "0")}
         </p>
 

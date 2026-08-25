@@ -46,7 +46,7 @@ séparations décoratives, pas des éléments porteurs d'information. Toute fron
 qui identifie un composant interactif utilise l'accent (5.95:1), afin de
 satisfaire le critère WCAG 1.4.11 sur les composants non textuels.
 
-Le vert est `#6DB33F` (Spring Boot) ramené à 18 % de saturation. Il ne sert qu'à
+Le vert est `#6DB33F` (Spring Boot) ramené à 16 % de saturation. En HSL, `#7E9B76` vaut exactement `hsl(107 16% 54%)` — ce sont les valeurs par défaut de `accentHue` et `accentSaturation`, et les deux définitions doivent rester d'accord. Il ne sert qu'à
 trois usages : l'anneau de la lampe, l'état actif de la navigation, le
 soulignement des liens au survol. Aucun aplat coloré, aucun dégradé.
 
@@ -317,8 +317,8 @@ animationSpeed       Float   @default(1.0)  @map("animation_speed")
 respectReducedMotion Boolean @default(true) @map("respect_reduced_motion")
 
 // Accent
-accentHue         Int     @default(128)   @map("accent_hue")
-accentSaturation  Int     @default(18)    @map("accent_saturation")
+accentHue         Int     @default(107)   @map("accent_hue")
+accentSaturation  Int     @default(16)    @map("accent_saturation")
 ```
 
 Les défauts existants basculent : `bgColor` → `#131518`, `textColor` →

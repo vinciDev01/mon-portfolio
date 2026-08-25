@@ -119,8 +119,8 @@ Dans `backend/prisma/schema.prisma`, à l'intérieur de `model SiteSettings`, ju
   respectReducedMotion Boolean @default(true) @map("respect_reduced_motion")
 
   // Accent
-  accentHue         Int     @default(128) @map("accent_hue")
-  accentSaturation  Int     @default(18)  @map("accent_saturation")
+  accentHue         Int     @default(107) @map("accent_hue")
+  accentSaturation  Int     @default(16)  @map("accent_saturation")
 ```
 
 - [ ] **Étape 2 : Changer les valeurs par défaut de l'identité visuelle**
@@ -395,7 +395,7 @@ Dans `backend/src/site-settings/dto/update-site-settings.dto.ts`, compléter l'i
 
   // --- Accent ---
 
-  @ApiPropertyOptional({ example: 128 })
+  @ApiPropertyOptional({ example: 107 })
   @IsOptional()
   @Type(() => Number)
   @IsInt()
@@ -403,7 +403,7 @@ Dans `backend/src/site-settings/dto/update-site-settings.dto.ts`, compléter l'i
   @Max(360)
   accentHue?: number;
 
-  @ApiPropertyOptional({ example: 18, description: 'Plafonne a 30 : interdit structurellement toute couleur vive' })
+  @ApiPropertyOptional({ example: 16, description: 'Plafonne a 30 : interdit structurellement toute couleur vive' })
   @IsOptional()
   @Type(() => Number)
   @IsInt()

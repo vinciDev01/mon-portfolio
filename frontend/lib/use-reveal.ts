@@ -31,8 +31,16 @@ export function useReveal() {
     if (precedent.current) obtenirObservateur().unobserve(precedent.current);
     precedent.current = el;
     if (el) {
-      el.classList.add("reveal");
-      obtenirObservateur().observe(el);
+      // Deja visible a l'ouverture (au-dessus de la ligne de flottaison) :
+      // on le peint directement, sans passer par l'etat masque, pour eviter
+      // le clignotement peint -> efface -> refondu au premier rendu client.
+      const dejaVisible = el.getBoundingClientRect().top < window.innerHeight;
+      if (dejaVisible) {
+        el.classList.add("reveal-visible");
+      } else {
+        el.classList.add("reveal");
+        obtenirObservateur().observe(el);
+      }
     }
   }, []);
 }

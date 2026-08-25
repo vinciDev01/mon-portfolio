@@ -80,6 +80,23 @@ export function ExperienceSection({
                   {c.organization?.label}
                   {c.issueDate ? ` · ${new Date(c.issueDate).getFullYear()}` : ""}
                 </p>
+                {c.description && (
+                  <p className="text-sm text-muted-foreground leading-relaxed" style={{ marginTop: "var(--espace-1)" }}>
+                    {c.description}
+                  </p>
+                )}
+                {c.credentialUrl && (
+                  <a
+                    href={c.credentialUrl}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    aria-label={`${t("certifications.viewCert")} — ${c.name}`}
+                    className="meta underline underline-offset-2"
+                    style={{ color: "var(--accent)", marginTop: "var(--espace-1)", display: "inline-block" }}
+                  >
+                    {t("certifications.viewCert")}
+                  </a>
+                )}
               </li>
             ))}
           </ul>

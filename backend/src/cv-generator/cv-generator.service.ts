@@ -4,7 +4,7 @@ import { PrismaService } from '../prisma/prisma.service';
 
 @Injectable()
 export class CvGeneratorService {
-  constructor(private readonly prisma: PrismaService) { }
+  constructor(private readonly prisma: PrismaService) {}
 
   async generatePdf(): Promise<Buffer> {
     const [personalInfo, experiences, skills, certifications] =
@@ -79,7 +79,7 @@ export class CvGeneratorService {
             .font('Helvetica-Bold')
             .text(`${exp.role}`, { continued: true })
             .font('Helvetica')
-            .text(`  -  ${exp.company}${period ? '  (' + period + ')' : ''}`);
+            .text(`  —  ${exp.company}${period ? '  (' + period + ')' : ''}`);
 
           if (exp.description) {
             doc.fontSize(10).font('Helvetica').text(exp.description, {
@@ -134,7 +134,7 @@ export class CvGeneratorService {
             .font('Helvetica-Bold')
             .text(cert.name, { continued: !!meta })
             .font('Helvetica')
-            .text(meta ? `  -  ${meta}` : '');
+            .text(meta ? `  —  ${meta}` : '');
 
           doc.moveDown(0.4);
         }

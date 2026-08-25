@@ -354,29 +354,6 @@ html {
   }
 }
 
-/* Scroll animations */
-.scroll-hidden {
-  opacity: 0;
-  transform: translateY(30px);
-}
-
-.scroll-visible {
-  opacity: 1;
-  transform: translateY(0);
-  transition: opacity 0.6s ease-out, transform 0.6s ease-out;
-}
-
-@media (prefers-reduced-motion: reduce) {
-  .scroll-hidden {
-    opacity: 1;
-    transform: none;
-  }
-
-  .scroll-visible {
-    transition: none !important;
-  }
-}
-
 /* ---------------------------------------------------------------
    Echelle typographique
    Ratio par defaut 1.250. Surcharge par le reglage `typeScale`,
@@ -506,22 +483,6 @@ html {
     transition:
       opacity var(--duree) var(--courbe),
       transform var(--duree) var(--courbe);
-  }
-
-  /* Le titre eclaire, superpose au titre en retrait. */
-  .titre-double {
-    position: relative;
-    display: inline-block;
-  }
-  .titre-eclaire {
-    position: absolute;
-    inset: 0;
-    color: var(--texte);
-    pointer-events: none;
-    user-select: none;
-  }
-  .titre-retrait {
-    color: var(--bordure);
   }
 
   /* Zigzag : le bloc se deplace dans la grille, il ne s'etire jamais. */

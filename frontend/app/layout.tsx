@@ -109,7 +109,7 @@ export default async function RootLayout({
 
   return (
     <html
-      lang="fr"
+      lang={defaultLanguage}
       suppressHydrationWarning
       data-mouvement={respecterMouvementReduit ? undefined : "force"}
       style={dynamicStyle}

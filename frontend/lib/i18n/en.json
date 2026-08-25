@@ -2,7 +2,6 @@
   "nav.presentation": "Presentation.",
   "nav.skills": "Skills.",
   "nav.experience": "Experience.",
-  "nav.certifications": "Certifications.",
   "nav.projects": "Projects.",
   "nav.services": "Services.",
   "nav.about": "About.",
@@ -10,7 +9,6 @@
   "nav.contact": "Contact.",
   "nav.downloadCv": "Download CV",
 
-  "section.presentation": "Presentation",
   "section.skills": "Skills",
   "section.experience": "Experience",
   "section.certifications": "Certifications",

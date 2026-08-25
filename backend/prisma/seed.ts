@@ -9,10 +9,6 @@ async function main() {
   if (!existingSettings) {
     await prisma.siteSettings.create({
       data: {
-        bgColor: "#F0E68C",
-        textColor: "#000000",
-        fontSize: 16,
-        fontFamily: "Figtree",
         toastMessage: "Merci de visiter mon portfolio !",
         toastDelayMs: 180000,
         showPresentations: true,
@@ -20,10 +16,8 @@ async function main() {
         showExperiences: true,
         showCertifications: true,
         showProjects: true,
-        showServices: true,
         showAbout: true,
         showContact: true,
-        showTestimonials: true,
         allowTestimonialSubmission: true,
         defaultLanguage: "fr",
         availabilityStatus: "available",

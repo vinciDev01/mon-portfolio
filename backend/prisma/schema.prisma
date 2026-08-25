@@ -24,10 +24,10 @@ model SiteSettings {
   showExperiences    Boolean @default(true) @map("show_experiences")
   showCertifications Boolean @default(true) @map("show_certifications")
   showProjects       Boolean @default(true) @map("show_projects")
-  showServices       Boolean @default(true) @map("show_services")
+  showServices       Boolean @default(false) @map("show_services")
   showAbout          Boolean @default(true) @map("show_about")
   showContact        Boolean @default(true) @map("show_contact")
-  showTestimonials   Boolean @default(true) @map("show_testimonials")
+  showTestimonials   Boolean @default(false) @map("show_testimonials")
 
   allowTestimonialSubmission Boolean @default(true) @map("allow_testimonial_submission")
   defaultLanguage            String  @default("fr") @map("default_language")

@@ -6,8 +6,9 @@ import { useTranslation } from "@/lib/i18n/i18n-context";
 
 /**
  * Coquille commune a toutes les sections : place le bloc dans la grille selon
- * la parite de `index`, declare sa zone eclairable, et rend le titre en deux
- * couches — celle du dessus n'apparait que dans le faisceau.
+ * la parite de `index`, declare sa zone eclairable, et rend le titre en
+ * `var(--texte)`. Le contraste hors faisceau vient du scrim de la lampe
+ * (assombrissement de la page hors zone eclairee), pas d'un double titre.
  *
  * `page.tsx` est un composant serveur : il ne peut pas appeler `useTranslation`
  * (hook client). C'est donc `SectionShell`, deja "use client", qui recoit une
@@ -60,15 +61,11 @@ export function SectionShell({
         </p>
 
         <h2
-          className="titre-double"
-          style={{ marginBottom: "var(--espace-4)" }}
+          style={{ marginBottom: "var(--espace-4)", color: "var(--texte)" }}
           onMouseEnter={(e) => survolTitre(e.currentTarget)}
           onMouseLeave={relacher}
         >
-          <span className="titre-retrait">{titre}</span>
-          <span className="titre-eclaire" aria-hidden="true">
-            {titre}
-          </span>
+          {titre}
         </h2>
 
         {children}

@@ -22,17 +22,17 @@ export class UpdateSiteSettingsDto {
   @IsString()
   logoPath?: string;
 
-  @ApiPropertyOptional({ example: '#F0E68C' })
+  @ApiPropertyOptional({ example: '#131518' })
   @IsOptional()
   @IsString()
   bgColor?: string;
 
-  @ApiPropertyOptional({ example: '#000000' })
+  @ApiPropertyOptional({ example: '#E4E5E3' })
   @IsOptional()
   @IsString()
   textColor?: string;
 
-  @ApiPropertyOptional({ example: 16 })
+  @ApiPropertyOptional({ example: 17 })
   @IsOptional()
   @Type(() => Number)
   @IsInt()
@@ -40,7 +40,7 @@ export class UpdateSiteSettingsDto {
   @Max(32)
   fontSize?: number;
 
-  @ApiPropertyOptional({ example: 'Figtree' })
+  @ApiPropertyOptional({ example: 'IBM Plex Sans' })
   @IsOptional()
   @IsString()
   fontFamily?: string;

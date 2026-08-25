@@ -347,15 +347,24 @@ export default function SiteSettingsPage() {
               className="w-full"
             />
             {(() => {
+              // Texte secondaire de la palette (dates, metadonnees, numeros
+              // de section, pied de page) : voir frontend/lib/design/tokens.ts
+              const TEXTE_SECONDAIRE = "#8B8F8A";
               const taux = data.lampDimLevel / 100;
-              const texte = melanger(data.textColor, "#0D0F11", taux);
               const fond = melanger(data.bgColor, "#0D0F11", taux);
-              const ratio = ratioContraste(texte, fond);
-              const conforme = ratio >= 4.5;
+              const textePrincipal = melanger(data.textColor, "#0D0F11", taux);
+              const texteSecondaire = melanger(TEXTE_SECONDAIRE, "#0D0F11", taux);
+              const ratioPrincipal = ratioContraste(textePrincipal, fond);
+              const ratioSecondaire = ratioContraste(texteSecondaire, fond);
+              const ratioMinimum = Math.min(ratioPrincipal, ratioSecondaire);
+              const conforme = ratioMinimum >= 4.5;
               return (
                 <p className={`text-xs mt-1 ${conforme ? "text-muted-foreground" : "text-red-600"}`}>
-                  Contraste du texte hors faisceau : {ratio.toFixed(2)}:1 —{" "}
-                  {conforme ? "conforme AA" : "sous le seuil AA de 4.5:1"}
+                  Contraste hors faisceau — texte principal {ratioPrincipal.toFixed(2)}:1, texte
+                  secondaire {ratioSecondaire.toFixed(2)}:1 —{" "}
+                  {conforme
+                    ? "conforme AA"
+                    : `sous le seuil AA de 4.5:1 (pire cas ${ratioMinimum.toFixed(2)}:1)`}
                 </p>
               );
             })()}

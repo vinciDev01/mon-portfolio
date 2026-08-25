@@ -5,6 +5,7 @@ import { fetchSingleton, updateSingleton, uploadFile } from "@/lib/api";
 import { ImageUpload } from "@/components/image-upload";
 import { toast } from "sonner";
 import type { SiteSettingsDto } from "@portfolio/shared-types";
+import { ratioContraste, melanger } from "@/lib/contrast";
 
 export default function SiteSettingsPage() {
   const [data, setData] = useState<SiteSettingsDto | null>(null);
@@ -288,6 +289,221 @@ export default function SiteSettingsPage() {
             </p>
           </div>
         </div>
+
+        {/* --- Lampe d'atelier --- */}
+        <fieldset className="border border-border rounded-md p-4 space-y-4">
+          <legend className="text-sm font-semibold px-2">Lampe d&apos;atelier</legend>
+
+          <label className="flex items-center gap-3 text-sm">
+            <input
+              type="checkbox"
+              checked={data.lampEnabled}
+              onChange={(e) => setData({ ...data, lampEnabled: e.target.checked })}
+            />
+            Lampe activée sur le site
+          </label>
+
+          <label className="flex items-center gap-3 text-sm">
+            <input
+              type="checkbox"
+              checked={data.lampOnByDefault}
+              onChange={(e) => setData({ ...data, lampOnByDefault: e.target.checked })}
+            />
+            Allumée dès l&apos;arrivée du visiteur
+          </label>
+
+          <div>
+            <label className="block text-sm font-medium mb-1">
+              Ouverture du faisceau : {data.lampBeamAngle}°
+            </label>
+            <input
+              type="range" min={8} max={45}
+              value={data.lampBeamAngle}
+              onChange={(e) => setData({ ...data, lampBeamAngle: Number(e.target.value) })}
+              className="w-full"
+            />
+          </div>
+
+          <div>
+            <label className="block text-sm font-medium mb-1">
+              Intensité : {data.lampIntensity}%
+            </label>
+            <input
+              type="range" min={0} max={100}
+              value={data.lampIntensity}
+              onChange={(e) => setData({ ...data, lampIntensity: Number(e.target.value) })}
+              className="w-full"
+            />
+          </div>
+
+          <div>
+            <label className="block text-sm font-medium mb-1">
+              Assombrissement hors faisceau : {data.lampDimLevel}%
+            </label>
+            <input
+              type="range" min={0} max={65}
+              value={data.lampDimLevel}
+              onChange={(e) => setData({ ...data, lampDimLevel: Number(e.target.value) })}
+              className="w-full"
+            />
+            {(() => {
+              const taux = data.lampDimLevel / 100;
+              const texte = melanger(data.textColor, "#0D0F11", taux);
+              const fond = melanger(data.bgColor, "#0D0F11", taux);
+              const ratio = ratioContraste(texte, fond);
+              const conforme = ratio >= 4.5;
+              return (
+                <p className={`text-xs mt-1 ${conforme ? "text-muted-foreground" : "text-red-600"}`}>
+                  Contraste du texte hors faisceau : {ratio.toFixed(2)}:1 —{" "}
+                  {conforme ? "conforme AA" : "sous le seuil AA de 4.5:1"}
+                </p>
+              );
+            })()}
+          </div>
+        </fieldset>
+
+        {/* --- Rythme --- */}
+        <fieldset className="border border-border rounded-md p-4 space-y-4">
+          <legend className="text-sm font-semibold px-2">Rythme</legend>
+
+          <div>
+            <label className="block text-sm font-medium mb-1">Échelle typographique</label>
+            <select
+              value={data.typeScale}
+              onChange={(e) => setData({ ...data, typeScale: e.target.value as typeof data.typeScale })}
+              className="w-full px-3 py-2 border border-border rounded-md text-sm"
+            >
+              <option value="compact">Compacte (ratio 1.200)</option>
+              <option value="normal">Normale (ratio 1.250)</option>
+              <option value="airy">Aérée (ratio 1.333)</option>
+            </select>
+          </div>
+
+          <div>
+            <label className="block text-sm font-medium mb-1">
+              Interligne du corps : {data.lineHeight.toFixed(2)}
+            </label>
+            <input
+              type="range" min={1.3} max={2} step={0.05}
+              value={data.lineHeight}
+              onChange={(e) => setData({ ...data, lineHeight: Number(e.target.value) })}
+              className="w-full"
+            />
+          </div>
+
+          <div>
+            <label className="block text-sm font-medium mb-1">
+              Amplitude du zigzag : {data.zigzagAmplitude}%
+            </label>
+            <input
+              type="range" min={0} max={100}
+              value={data.zigzagAmplitude}
+              onChange={(e) => setData({ ...data, zigzagAmplitude: Number(e.target.value) })}
+              className="w-full"
+            />
+            <p className="text-xs text-muted-foreground mt-1">
+              0 = colonne unique centrée · 100 = décalage maximal
+            </p>
+          </div>
+
+          <div>
+            <label className="block text-sm font-medium mb-1">
+              Espace entre sections : {data.sectionSpacing} px
+            </label>
+            <input
+              type="range" min={64} max={240} step={8}
+              value={data.sectionSpacing}
+              onChange={(e) => setData({ ...data, sectionSpacing: Number(e.target.value) })}
+              className="w-full"
+            />
+          </div>
+        </fieldset>
+
+        {/* --- Mouvement --- */}
+        <fieldset className="border border-border rounded-md p-4 space-y-4">
+          <legend className="text-sm font-semibold px-2">Mouvement</legend>
+
+          <label className="flex items-center gap-3 text-sm">
+            <input
+              type="checkbox"
+              checked={data.animationsEnabled}
+              onChange={(e) => setData({ ...data, animationsEnabled: e.target.checked })}
+            />
+            Animations activées
+          </label>
+
+          <div>
+            <label className="block text-sm font-medium mb-1">
+              Vitesse globale : {data.animationSpeed.toFixed(2)}×
+            </label>
+            <input
+              type="range" min={0.5} max={2} step={0.05}
+              value={data.animationSpeed}
+              onChange={(e) => setData({ ...data, animationSpeed: Number(e.target.value) })}
+              className="w-full"
+            />
+          </div>
+
+          <label className="flex items-center gap-3 text-sm">
+            <input
+              type="checkbox"
+              checked={data.respectReducedMotion}
+              onChange={(e) => setData({ ...data, respectReducedMotion: e.target.checked })}
+            />
+            Respecter les préférences système de mouvement réduit
+          </label>
+        </fieldset>
+
+        {/* --- Accent --- */}
+        <fieldset className="border border-border rounded-md p-4 space-y-4">
+          <legend className="text-sm font-semibold px-2">Accent</legend>
+
+          <div className="grid grid-cols-2 gap-4">
+            <div>
+              <label className="block text-sm font-medium mb-1">Teinte : {data.accentHue}°</label>
+              <input
+                type="range" min={0} max={360}
+                value={data.accentHue}
+                onChange={(e) => setData({ ...data, accentHue: Number(e.target.value) })}
+                className="w-full"
+              />
+            </div>
+            <div>
+              <label className="block text-sm font-medium mb-1">
+                Saturation : {data.accentSaturation}%
+              </label>
+              <input
+                type="range" min={0} max={30}
+                value={data.accentSaturation}
+                onChange={(e) => setData({ ...data, accentSaturation: Number(e.target.value) })}
+                className="w-full"
+              />
+              <p className="text-xs text-muted-foreground mt-1">
+                Plafonnée à 30 : aucune couleur vive possible
+              </p>
+            </div>
+          </div>
+
+          <div className="flex items-center gap-3">
+            <span
+              className="h-8 w-16 rounded border border-border"
+              style={{ background: `hsl(${data.accentHue} ${data.accentSaturation}% 54%)` }}
+            />
+            <code className="text-xs text-muted-foreground">
+              hsl({data.accentHue} {data.accentSaturation}% 54%)
+            </code>
+          </div>
+        </fieldset>
+
+        {/* --- Visibilité de la section Stats --- */}
+        <label className="flex items-center gap-3 text-sm">
+          <input
+            type="checkbox"
+            checked={data.showStats}
+            onChange={(e) => setData({ ...data, showStats: e.target.checked })}
+          />
+          Afficher la section Statistiques
+        </label>
 
         <button
           type="submit"

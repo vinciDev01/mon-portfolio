@@ -54,6 +54,17 @@ describe("pasRessort", () => {
     expect(etat.valeur).toBeCloseTo(1, 10);
     expect(etat.vitesse).toBeCloseTo(0, 10);
   });
+
+  it("met a jour la vitesse avant la position (integration semi-implicite)", () => {
+    // Depuis l'immobilite, un schema explicite laisserait la position inchangee
+    // au premier pas (x1 = x0 + v0*dt avec v0 = 0). Le schema semi-implicite
+    // utilise la vitesse fraichement calculee et deplace donc des le premier pas,
+    // de exactement acceleration0 * dt^2 puisque v1 = acceleration0 * dt.
+    const apresUnPas = pasRessort({ valeur: 0, vitesse: 0 }, 1, OMEGA, ZETA, DT);
+    expect(apresUnPas.valeur).toBeGreaterThan(0);
+    const accelerationInitiale = OMEGA * OMEGA * 1;
+    expect(apresUnPas.valeur).toBeCloseTo(accelerationInitiale * DT * DT, 10);
+  });
 });
 
 describe("estImmobile", () => {

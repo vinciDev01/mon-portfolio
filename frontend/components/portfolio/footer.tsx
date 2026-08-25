@@ -18,6 +18,7 @@ export function Footer({ personalInfo }: FooterProps) {
       <div className="max-w-7xl mx-auto flex flex-col sm:flex-row items-center justify-between gap-4">
         <div
           className="flex items-center gap-4"
+          data-lampe-marge=""
           onMouseEnter={survolMarge}
           onMouseLeave={relacher}
         >

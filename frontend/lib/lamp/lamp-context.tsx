@@ -96,9 +96,15 @@ export function LampProvider({
     choisir();
     window.addEventListener("scroll", choisir, { passive: true });
     window.addEventListener("resize", choisir);
+    // Reveil dedie (voir EVENEMENT_REVEIL_LAMPE) : quand `relacher` remet
+    // `cibleRef` a null en quittant une zone de survol, ce recalcul retrouve
+    // la section la plus proche du centre de l'ecran, sans attendre un
+    // veritable defilement.
+    window.addEventListener(EVENEMENT_REVEIL_LAMPE, choisir);
     return () => {
       window.removeEventListener("scroll", choisir);
       window.removeEventListener("resize", choisir);
+      window.removeEventListener(EVENEMENT_REVEIL_LAMPE, choisir);
     };
   }, [reglages.activee]);
 
@@ -106,13 +112,28 @@ export function LampProvider({
   // En navigation au clavier, le faisceau doit suivre le focus. Sans cela, la
   // lampe eclaire une section pendant que le focus est ailleurs, et le mode
   // devient inutilisable au Tab.
+  //
+  // Cas particulier : les liens de la marge (`data-lampe-marge`) doivent
+  // produire, au clavier, exactement la meme reponse qu'au survol souris
+  // (`survolMarge`) — le bras glisse, la tete ne pivote jamais vers eux.
+  // Sans ce test, ce meme focus retargetterait `cibleRef` comme n'importe
+  // quel autre element et ferait pivoter la tete, contredisant la souris.
   useEffect(() => {
     if (!reglages.activee) return;
+    let dansMarge = false;
     const surFocus = (e: FocusEvent) => {
       const el = e.target as HTMLElement | null;
-      if (el && typeof el.getBoundingClientRect === "function") {
-        cibleRef.current = el;
+      if (!el || typeof el.getBoundingClientRect !== "function") return;
+      if (el.closest("[data-lampe-marge]")) {
+        dansMarge = true;
+        biaisRef.current = { ...BIAIS_NEUTRE, brasX: 6 };
+        return;
       }
+      if (dansMarge) {
+        dansMarge = false;
+        biaisRef.current = { ...BIAIS_NEUTRE };
+      }
+      cibleRef.current = el;
     };
     document.addEventListener("focusin", surFocus);
     return () => document.removeEventListener("focusin", surFocus);
@@ -195,8 +216,20 @@ export function useBiaisLampe() {
       },
       /** Le bras glisse, la tete ne tourne pas. */
       survolMarge: () => appliquer({ brasX: 6 }),
-      /** Retour au neutre. */
-      relacher: () => appliquer({}),
+      /**
+       * Retour au neutre : le biais redevient nul ET la cible de precision
+       * posee par `survolTitre`/`survolCta` est relachee. Sans ce second
+       * point, le faisceau restait verrouille sur le dernier titre ou
+       * bouton survole jusqu'au prochain defilement — la lampe cessait de
+       * suivre la lecture. En remettant `cibleRef` a null, `cible()` dans le
+       * moteur retombe immediatement sur le centre de l'ecran (voir son
+       * garde-fou), puis l'effet "Cible visible", reveille par le meme
+       * evenement, retrouve la section la plus proche du centre.
+       */
+      relacher: () => {
+        cibleRef.current = null;
+        appliquer({});
+      },
     }),
     [appliquer, cibleRef],
   );

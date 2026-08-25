@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useRef, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { useBiaisLampe } from "@/lib/lamp/lamp-context";
 import { useTranslation } from "@/lib/i18n/i18n-context";
@@ -18,6 +18,21 @@ export function ContactSection() {
   const [status, setStatus] = useState<"idle" | "loading" | "success" | "error">("idle");
   const { t } = useTranslation();
   const { survolCta, relacher } = useBiaisLampe();
+
+  // Le CTA repond a la fois au survol souris et au focus clavier. Un simple
+  // compteur (ref, jamais setState : pas de re-rendu sur un survol) evite
+  // que quitter l'une des deux interactions ne relache la lampe alors que
+  // l'autre est toujours active — ex. tabuler sur le bouton puis bouger la
+  // souris ailleurs sans le quitter au clavier.
+  const raisonsActivesCta = useRef(0);
+  const entrerCta = (el: HTMLElement) => {
+    raisonsActivesCta.current += 1;
+    survolCta(el);
+  };
+  const sortirCta = () => {
+    raisonsActivesCta.current = Math.max(0, raisonsActivesCta.current - 1);
+    if (raisonsActivesCta.current === 0) relacher();
+  };
 
   const handleChange = (
     e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>,
@@ -93,8 +108,10 @@ export function ContactSection() {
               type="submit"
               disabled={status === "loading"}
               className="w-full"
-              onMouseEnter={(e) => survolCta(e.currentTarget)}
-              onMouseLeave={relacher}
+              onMouseEnter={(e) => entrerCta(e.currentTarget)}
+              onMouseLeave={sortirCta}
+              onFocus={(e) => entrerCta(e.currentTarget)}
+              onBlur={sortirCta}
             >
               {status === "loading" ? t("contact.sending") : t("contact.send")}
             </Button>

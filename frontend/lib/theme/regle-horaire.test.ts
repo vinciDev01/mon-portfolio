@@ -81,4 +81,23 @@ describe("scriptInitial", () => {
   it("retombe sur le sombre si quoi que ce soit echoue", () => {
     expect(scriptInitial("auto")).toContain('classList.add("sombre")');
   });
+
+  it("n emet jamais </script quelle que soit l entree, y compris malveillante", () => {
+    const entrees: string[] = [
+      "auto",
+      "clair",
+      "sombre",
+      // Entrees volontairement malveillantes : le type Strategie ne les
+      // autorise pas, mais rien en base ne les empeche d'y arriver malgre
+      // tout (colonne Prisma en String libre). scriptInitial doit rester
+      // sure meme forcee avec ces valeurs.
+      "</script><script>alert(1)</script>",
+      "</SCRIPT><img src=x onerror=alert(1)>",
+      "<//script>",
+    ];
+    for (const entree of entrees) {
+      const src = scriptInitial(entree as never);
+      expect(src.toLowerCase()).not.toContain("</script");
+    }
+  });
 });

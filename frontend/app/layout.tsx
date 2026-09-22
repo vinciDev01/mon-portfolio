@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import { IBM_Plex_Sans, IBM_Plex_Mono } from "next/font/google";
+import Script from "next/script";
 
 import "./globals.css";
 import { ThemeProvider } from "@/lib/theme/theme-context";
@@ -74,7 +75,8 @@ export default async function RootLayout({
     const settings = await getSiteSettings();
     defaultLanguage = settings.defaultLanguage || "fr";
     respecterMouvementReduit = settings.respectReducedMotion;
-    strategie = (settings.themeParDefaut ?? "auto") as Strategie;
+    const brut = settings.themeParDefaut;
+    strategie = brut === "clair" || brut === "sombre" ? brut : "auto";
 
     const styleVars: Record<string, string> = {};
     if (settings.fontSize) {
@@ -115,7 +117,11 @@ export default async function RootLayout({
       )}
     >
       <head>
-        <script dangerouslySetInnerHTML={{ __html: scriptInitial(strategie) }} />
+        <Script
+          id="theme-initial"
+          strategy="beforeInteractive"
+          dangerouslySetInnerHTML={{ __html: scriptInitial(strategie) }}
+        />
         {googleFontUrl && (
           <>
             <link rel="preconnect" href="https://fonts.googleapis.com" />

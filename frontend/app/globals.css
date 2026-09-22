@@ -34,20 +34,14 @@
   --radius-4xl: calc(var(--radius) * 2.6);
 }
 
-/* Thème clair — ampoule allumée. Source : frontend/lib/design/tokens.ts */
+/*
+ * Thème sombre — ampoule éteinte. Aussi le repli sur :root : sans
+ * JavaScript, la classe .clair/.sombre n'est jamais posée sur <html> (elle
+ * ne l'est que par le script initial), donc :root doit porter la meme
+ * identite que le repli d'erreur du script et de themeSelonHeure — le
+ * sombre. Source : frontend/lib/design/tokens.ts
+ */
 :root,
-.clair {
-  --fond: #f6f1e8;
-  --surface: #fcf8f1;
-  --bordure: #dcd1bf;
-  --bordure-signifiante: #948263;
-  --texte-secondaire: #5e564a;
-  --texte: #1f2320;
-  --accent: #456040;
-  --ombre-teinte: 28deg 42% 30%;
-}
-
-/* Thème sombre — ampoule éteinte. */
 .sombre {
   --fond: #131518;
   --surface: #1a1d21;
@@ -57,6 +51,22 @@
   --texte: #e4e5e3;
   --accent: #7e9b76;
   --ombre-teinte: 214deg 12% 4%;
+}
+
+/*
+ * Thème clair — ampoule allumée. Déclaré après le bloc :root/.sombre afin
+ * de l'emporter à spécificité égale (.clair et :root partagent la même
+ * spécificité ; c'est l'ordre des règles qui tranche).
+ */
+.clair {
+  --fond: #f6f1e8;
+  --surface: #fcf8f1;
+  --bordure: #dcd1bf;
+  --bordure-signifiante: #948263;
+  --texte-secondaire: #5e564a;
+  --texte: #1f2320;
+  --accent: #456040;
+  --ombre-teinte: 28deg 42% 30%;
 }
 
 /* Mapping shadcn, commun aux deux themes. */

@@ -70,45 +70,6 @@ export default function SiteSettingsPage() {
 
         <div className="grid grid-cols-2 gap-4">
           <div>
-            <label className="block text-sm font-medium mb-1">Couleur de fond</label>
-            <div className="flex items-center gap-2">
-              <input
-                type="color"
-                value={data.bgColor}
-                onChange={(e) => setData({ ...data, bgColor: e.target.value })}
-                className="h-10 w-14 rounded border border-border cursor-pointer"
-              />
-              <input
-                type="text"
-                value={data.bgColor}
-                onChange={(e) => setData({ ...data, bgColor: e.target.value })}
-                className="flex-1 px-3 py-2 border border-border rounded-md text-sm"
-              />
-            </div>
-            <p className="text-xs text-muted-foreground mt-1">Format hexadécimal (ex: #131518)</p>
-          </div>
-          <div>
-            <label className="block text-sm font-medium mb-1">Couleur du texte</label>
-            <div className="flex items-center gap-2">
-              <input
-                type="color"
-                value={data.textColor}
-                onChange={(e) => setData({ ...data, textColor: e.target.value })}
-                className="h-10 w-14 rounded border border-border cursor-pointer"
-              />
-              <input
-                type="text"
-                value={data.textColor}
-                onChange={(e) => setData({ ...data, textColor: e.target.value })}
-                className="flex-1 px-3 py-2 border border-border rounded-md text-sm"
-              />
-            </div>
-            <p className="text-xs text-muted-foreground mt-1">Format hexadécimal (ex: #E4E5E3)</p>
-          </div>
-        </div>
-
-        <div className="grid grid-cols-2 gap-4">
-          <div>
             <label className="block text-sm font-medium mb-1">Taille de police (px)</label>
             <input
               type="number"
@@ -455,47 +416,6 @@ export default function SiteSettingsPage() {
             />
             Respecter les préférences système de mouvement réduit
           </label>
-        </fieldset>
-
-        {/* --- Accent --- */}
-        <fieldset className="border border-border rounded-md p-4 space-y-4">
-          <legend className="text-sm font-semibold px-2">Accent</legend>
-
-          <div className="grid grid-cols-2 gap-4">
-            <div>
-              <label className="block text-sm font-medium mb-1">Teinte : {data.accentHue}°</label>
-              <input
-                type="range" min={0} max={360}
-                value={data.accentHue}
-                onChange={(e) => setData({ ...data, accentHue: Number(e.target.value) })}
-                className="w-full"
-              />
-            </div>
-            <div>
-              <label className="block text-sm font-medium mb-1">
-                Saturation : {data.accentSaturation}%
-              </label>
-              <input
-                type="range" min={0} max={30}
-                value={data.accentSaturation}
-                onChange={(e) => setData({ ...data, accentSaturation: Number(e.target.value) })}
-                className="w-full"
-              />
-              <p className="text-xs text-muted-foreground mt-1">
-                Plafonnée à 30 : aucune couleur vive possible
-              </p>
-            </div>
-          </div>
-
-          <div className="flex items-center gap-3">
-            <span
-              className="h-8 w-16 rounded border border-border"
-              style={{ background: `hsl(${data.accentHue} ${data.accentSaturation}% 54%)` }}
-            />
-            <code className="text-xs text-muted-foreground">
-              hsl({data.accentHue} {data.accentSaturation}% 54%)
-            </code>
-          </div>
         </fieldset>
 
         {/* --- Visibilité de la section Stats --- */}

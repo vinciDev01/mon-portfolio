@@ -63,8 +63,8 @@
 :root,
 .clair,
 .sombre {
-  --background: var(--portfolio-bg, var(--fond));
-  --foreground: var(--portfolio-text, var(--texte));
+  --background: var(--fond);
+  --foreground: var(--texte);
   --card: var(--surface);
   --card-foreground: var(--texte);
   --popover: var(--surface);

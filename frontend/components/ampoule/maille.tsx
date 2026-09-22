@@ -140,6 +140,8 @@ export function Maille({ id }: { id: string }) {
 
   const idProfil = "profil";
   const idFiltre = "brins";
+  const idDegradeDroite = "bande-degrade-droite";
+  const idDegradeGauche = "bande-degrade-gauche";
 
   return (
     <g id={id} filter={filtreActif ? `url(#${idFiltre})` : undefined}>
@@ -161,6 +163,34 @@ export function Maille({ id }: { id: string }) {
             yChannelSelector="G"
           />
         </filter>
+        {/* Degrade des bandes pleines (annexe 2.1) : 0,55 cote interieur a
+            1,0 au bord, pour raccorder la bande aux derniers brins
+            individuels sans arete franche. Ce n'est pas l'assombrissement
+            du dome (qui vient de la densite des meridiens) : le degrade ne
+            fait que fondre une substitution, ses abscisses se deduisent de
+            `limiteFusion(pas)`, jamais codees en dur. */}
+        <linearGradient
+          id={idDegradeDroite}
+          gradientUnits="userSpaceOnUse"
+          x1={CENTRE_X + limite}
+          y1={APEX_Y}
+          x2={CENTRE_X + R}
+          y2={APEX_Y}
+        >
+          <stop offset="0%" stopColor={COULEUR_BANDE} stopOpacity={0.55} />
+          <stop offset="100%" stopColor={COULEUR_BANDE} stopOpacity={1} />
+        </linearGradient>
+        <linearGradient
+          id={idDegradeGauche}
+          gradientUnits="userSpaceOnUse"
+          x1={CENTRE_X - limite}
+          y1={APEX_Y}
+          x2={CENTRE_X - R}
+          y2={APEX_Y}
+        >
+          <stop offset="0%" stopColor={COULEUR_BANDE} stopOpacity={0.55} />
+          <stop offset="100%" stopColor={COULEUR_BANDE} stopOpacity={1} />
+        </linearGradient>
       </defs>
 
       {/* Interstice : voile de fond visible entre les brins. Opacite plate,
@@ -189,8 +219,14 @@ export function Maille({ id }: { id: string }) {
           quand leur largeur reste au-dessus de l'epaisseur de brin. */}
       {bandeVisible && (
         <>
-          <path d={cheminBande(CENTRE_X + limite, CENTRE_X + R)} fill={COULEUR_BANDE} />
-          <path d={cheminBande(CENTRE_X - limite, CENTRE_X - R)} fill={COULEUR_BANDE} />
+          <path
+            d={cheminBande(CENTRE_X + limite, CENTRE_X + R)}
+            fill={`url(#${idDegradeDroite})`}
+          />
+          <path
+            d={cheminBande(CENTRE_X - limite, CENTRE_X - R)}
+            fill={`url(#${idDegradeGauche})`}
+          />
         </>
       )}
 

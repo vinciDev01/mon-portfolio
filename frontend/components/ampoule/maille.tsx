@@ -138,10 +138,15 @@ export function Maille({ id }: { id: string }) {
   const cerclesVisibles = cercles(nombreCercles).filter((c) => c.rx > RAYON_CALOTTE);
   const dernierIndice = nombreCercles;
 
-  const idProfil = "profil";
-  const idFiltre = "brins";
-  const idDegradeDroite = "bande-degrade-droite";
-  const idDegradeGauche = "bande-degrade-gauche";
+  // Tous les identifiants de <defs> derivent de `id`, comme le <g>
+  // ci-dessous : une seconde instance sur la page (la tache 13 en montera
+  // une, pour le commutateur) ne doit jamais partager ces identifiants,
+  // sinon le navigateur ne retient que le premier jeu et l'ecretage comme
+  // les degrades cessent de fonctionner en silence sur le second.
+  const idProfil = `profil-${id}`;
+  const idFiltre = `brins-${id}`;
+  const idDegradeDroite = `bande-degrade-droite-${id}`;
+  const idDegradeGauche = `bande-degrade-gauche-${id}`;
 
   return (
     <g id={id} filter={filtreActif ? `url(#${idFiltre})` : undefined}>

@@ -52,8 +52,19 @@ const [LISERE_FIN_X, LISERE_FIN_Y] = PROFIL_GAUCHE_LISERE[PROFIL_GAUCHE_LISERE.l
  * maille -> occlusion ecretee -> lisere. La douille et l'ampoule passent
  * sous le tressage : elles ne sont visibles que par transparence (le voile
  * d'interstice a 0,38 les attenue deja) et par l'ouverture basse.
+ *
+ * `id` nomme tous les identifiants de `<defs>` de cette instance (et ceux
+ * que `Maille` derive a son tour). Une valeur par defaut convient tant
+ * qu'une seule instance est montee ; des que la tache 13 en monte une
+ * seconde (le commutateur), deux jeux de `<defs>` partageant les memes
+ * identifiants se marcheraient dessus en silence — aucun test ni typecheck
+ * ne le detecte, seul le rendu HTML le revele.
  */
-export function Ampoule() {
+export function Ampoule({ id = "ampoule-eteinte" }: { id?: string } = {}) {
+  const idContourDome = `contour-dome-${id}`;
+  const idOcclusion = `occlusion-bord-${id}`;
+  const idLisere = `lisere-incidence-${id}`;
+
   return (
     <svg
       className="ampoule"
@@ -62,15 +73,15 @@ export function Ampoule() {
       focusable="false"
     >
       <defs>
-        <clipPath id="contour-dome">
+        <clipPath id={idContourDome}>
           <path d={SILHOUETTE_FERMEE} />
         </clipPath>
-        <linearGradient id="occlusion-bord" x1="0" y1="0" x2="0" y2="1">
+        <linearGradient id={idOcclusion} x1="0" y1="0" x2="0" y2="1">
           <stop offset="0%" stopColor="#0B0D0F" stopOpacity={0} />
           <stop offset="100%" stopColor="#0B0D0F" stopOpacity={0.55} />
         </linearGradient>
         <linearGradient
-          id="lisere-incidence"
+          id={idLisere}
           gradientUnits="userSpaceOnUse"
           x1={LISERE_DEBUT_X}
           y1={LISERE_DEBUT_Y}
@@ -85,9 +96,18 @@ export function Ampoule() {
       <path d={FIL} stroke={COULEUR_FIL} strokeWidth={1.5} strokeLinecap="round" fill="none" />
 
       {/* Arc d'interieur visible : demi-ellipse superieure du bord, le fond
-          de la cavite entrevue par l'ouverture basse. */}
+          de la cavite entrevue par l'ouverture basse. ATTENTION au
+          sweep-flag (l'avant-dernier chiffre de la commande A) : ces deux
+          points (4,256) et (172,256) admettent DEUX moities d'ellipse aux
+          coordonnees identiques, seul ce drapeau les distingue. sweep=1
+          fait croitre theta de 180 a 360 deg et passe par le haut, milieu
+          (88, 244) — a l'interieur de la coupole, comme l'exige l'annexe
+          §1.4. sweep=0 ferait decroitre theta et passerait par le bas,
+          milieu (88, 268) : 12 px sous le bord du dome, hors de l'objet et
+          non ecrete. Ne pas rebasculer ce drapeau sans revalider sur le
+          HTML rendu, pas seulement sur la lecture du chemin. */}
       <path
-        d={`M 4 ${BORD_Y} A 84 12 0 0 0 172 ${BORD_Y} Z`}
+        d={`M 4 ${BORD_Y} A 84 12 0 0 1 172 ${BORD_Y} Z`}
         fill={COULEUR_INTERIEUR}
         fillOpacity={0.88}
       />
@@ -147,7 +167,7 @@ export function Ampoule() {
         strokeLinecap="round"
       />
 
-      <Maille id="ampoule-eteinte" />
+      <Maille id={id} />
 
       {/* Occlusion sous le bord : ecretee au contour du dome, qui est plus
           etroit que 84 a cette hauteur. */}
@@ -156,13 +176,13 @@ export function Ampoule() {
         y={226}
         width={168}
         height={30}
-        fill="url(#occlusion-bord)"
-        clipPath="url(#contour-dome)"
+        fill={`url(#${idOcclusion})`}
+        clipPath={`url(#${idContourDome})`}
       />
 
       {/* Lisere d'incidence haut-gauche : suit le profil reel de y=178 a
           y=212, degrade d'opacite 0,22 -> 0 sur ce parcours. */}
-      <path d={CHEMIN_LISERE} fill="none" stroke="url(#lisere-incidence)" strokeWidth={1} />
+      <path d={CHEMIN_LISERE} fill="none" stroke={`url(#${idLisere})`} strokeWidth={1} />
     </svg>
   );
 }

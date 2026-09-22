@@ -6,8 +6,10 @@ import {
   useContext,
   useEffect,
   useMemo,
+  useRef,
   useState,
 } from "react";
+import { basculerAnimation, creerAnimation, DUREE_ALLUMAGE } from "@/lib/ampoule/animation";
 import { CLE_STOCKAGE, themeSelonHeure, type Strategie, type Theme } from "./regle-horaire";
 
 type ValeurContexte = {
@@ -43,6 +45,36 @@ export function ThemeProvider({
     setTheme(themeCourant(strategie));
   }, [strategie]);
 
+  /**
+   * L'unique objet `Animation` qui pilote `--lampe-t` (lib/ampoule/
+   * animation.ts) pour toute la duree de vie du fournisseur. Cree une
+   * seule fois, cible sur `document.documentElement` : `body::before`
+   * (L5, le halo de fond) n'est pas un descendant de `.ampoule`, il ne
+   * suivrait donc pas une animation posee sur cet element (addendum du
+   * controleur, tache 10, point A).
+   */
+  const animationRef = useRef<Animation | null>(null);
+
+  useEffect(() => {
+    const animation = creerAnimation(document.documentElement);
+    // Positionne l'etat initial sans mise en scene : le script en ligne
+    // (script-initial.ts) a deja pose la bonne classe avant le premier
+    // trace, et le repli CSS de :root/.clair applique deja la bonne
+    // valeur statique. On aligne seulement l'objet Animation dessus,
+    // pour que le premier clic reparte de la bonne position au lieu de
+    // rejouer tout l'allumage depuis 0.
+    animation.currentTime = theme === "clair" ? DUREE_ALLUMAGE : 0;
+    animationRef.current = animation;
+    return () => {
+      animation.cancel();
+      animationRef.current = null;
+    };
+    // Volontairement [] : on ne veut creer/positionner cet objet qu'une
+    // fois au montage, jamais a chaque changement de `theme` — c'est
+    // `basculer()` ci-dessous qui fait ensuite evoluer sa position.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
   const basculer = useCallback(() => {
     setTheme((actuel) => {
       const suivant: Theme = actuel === "clair" ? "sombre" : "clair";
@@ -50,6 +82,9 @@ export function ThemeProvider({
       e.classList.remove("clair", "sombre");
       e.classList.add(suivant);
       e.style.colorScheme = suivant === "clair" ? "light" : "dark";
+      if (animationRef.current) {
+        basculerAnimation(animationRef.current, suivant === "clair");
+      }
       try {
         localStorage.setItem(CLE_STOCKAGE, suivant);
       } catch {

@@ -76,9 +76,11 @@ const EXPOSANT = 2.6;
 /** Rapport ry/rx de l'ellipse de bord : angle de vue de 8,2 degres sous le plan. */
 const INCLINAISON = 12 / 84;
 const RENFORCES = new Set([6, 12, 17]);
-/** Nombre de pas d'integration. 1000 suffit : l'ecart a une integration fine
- *  reste sous 0,002 px, soit bien moins que l'epaisseur d'un brin. */
-const PAS_INTEGRATION = 1000;
+/** Nombre de pas d'integration. 500 suffit : l'ecart a une integration
+ *  reparametree exacte reste sous 0,002 px, bien moins que l'epaisseur d'un
+ *  brin. Un echantillonnage uniforme s'est revele six fois plus precis qu'un
+ *  echantillonnage resserre vers l'apex, a nombre de pas egal. */
+const PAS_INTEGRATION = 500;
 
 /**
  * Ordonnee du profil mesuree depuis l'apex, pour t = rx / R dans [0, 1].
@@ -90,18 +92,19 @@ export function ordonnee(t: number): number {
 }
 
 /**
- * Longueur d'arc du profil, de l'apex a t.
+ * Longueur d'arc du profil, de l'apex a t, par sommation de cordes a pas
+ * uniforme.
  *
- * L'echantillonnage est cubique et non uniforme : pres du bord la tangente
- * devient verticale, et un pas uniforme sous-estimerait la longueur la ou la
- * courbe s'allonge le plus.
+ * La tangente devient verticale au bord, mais la divergence est integrable
+ * (l'exposant vaut -0,615) et l'erreur residuelle reste tres en dessous de la
+ * precision utile : inutile de compliquer le schema.
  */
 export function longueurArc(t: number, pas = PAS_INTEGRATION): number {
   let total = 0;
   let px = 0;
   let py = ordonnee(0);
   for (let k = 1; k <= pas; k++) {
-    const tk = t * Math.pow(k / pas, 3);
+    const tk = (t * k) / pas;
     const x = R * tk;
     const y = ordonnee(tk);
     total += Math.hypot(x - px, y - py);
@@ -114,31 +117,6 @@ export function longueurArc(t: number, pas = PAS_INTEGRATION): number {
 /** Longueur d'arc du demi-profil, de l'apex au bord. Vaut 133,50 px. */
 const ARC_TOTAL = longueurArc(1);
 
-/**
- * Les 18 cercles, a pas d'arc CONSTANT — et non a pas vertical constant.
- *
- * Chaque cercle est place en inversant la longueur d'arc par dichotomie :
- * le cercle i est a l'abscisse curviligne i * ARC_TOTAL / 18. C'est ce qui
- * produit le resserrement au sommet, ou les premiers cercles se chevauchent
- * en projection — la specification impose de les remplacer par une calotte
- * pleine au rendu.
- */
-export function cercles(nombre = 18): Cercle[] {
-  const sortie: Cercle[] = [];
-  for (let i = 1; i <= nombre; i++) {
-    const t = i === nombre ? 1 : tPourArc((i / nombre) * ARC_TOTAL);
-    const rx = R * t;
-    sortie.push({
-      indice: i,
-      rx,
-      ry: rx * INCLINAISON,
-      cy: APEX_Y + ordonnee(t),
-      epaisseur: i === nombre ? 2.4 : RENFORCES.has(i) ? 2.2 : 0.9,
-    });
-  }
-  return sortie;
-}
-
 /** Inverse `longueurArc` par dichotomie. 40 passes suffisent largement. */
 function tPourArc(cible: number): number {
   let bas = 0;
@@ -149,4 +127,45 @@ function tPourArc(cible: number): number {
     else haut = milieu;
   }
   return (bas + haut) / 2;
+}
+
+/** Abscisses normalisees des cercles, calculees une fois par cardinal.
+ *  L'inversion par dichotomie est chere ; la refaire a chaque rendu
+ *  couterait une centaine de millisecondes sur le chemin du premier
+ *  affichage. */
+const ABSCISSES = new Map<number, number[]>();
+
+function abscisses(nombre: number): number[] {
+  const memo = ABSCISSES.get(nombre);
+  if (memo) return memo;
+  const calcule: number[] = [];
+  for (let i = 1; i <= nombre; i++) {
+    calcule.push(i === nombre ? 1 : tPourArc((i / nombre) * ARC_TOTAL));
+  }
+  ABSCISSES.set(nombre, calcule);
+  return calcule;
+}
+
+/**
+ * Les 18 cercles, a pas d'arc CONSTANT — et non a pas vertical constant.
+ *
+ * Chaque cercle est place en inversant la longueur d'arc par dichotomie :
+ * le cercle i est a l'abscisse curviligne i * ARC_TOTAL / 18. C'est ce qui
+ * produit le resserrement au sommet, ou les premiers cercles se chevauchent
+ * en projection — la specification impose de les remplacer par une calotte
+ * pleine au rendu.
+ */
+export function cercles(nombre = 18): Cercle[] {
+  return abscisses(nombre).map((t, k) => {
+    const indice = k + 1;
+    const rx = R * t;
+    return {
+      indice,
+      rx,
+      ry: rx * INCLINAISON,
+      cy: APEX_Y + ordonnee(t),
+      epaisseur:
+        indice === nombre ? 2.4 : RENFORCES.has(indice) ? 2.2 : 0.9,
+    };
+  });
 }

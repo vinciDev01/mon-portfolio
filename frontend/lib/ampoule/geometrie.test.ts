@@ -163,4 +163,13 @@ describe("cercles", () => {
       expect(Number.isFinite(c.rx) && Number.isFinite(c.ry) && Number.isFinite(c.cy)).toBe(true);
     }
   });
+
+  it("rend des objets neufs a chaque appel malgre la memoisation", () => {
+    const a = cercles();
+    const b = cercles();
+    expect(a).not.toBe(b);
+    expect(a[0]).not.toBe(b[0]);
+    a[0].rx = -1;
+    expect(cercles()[0].rx).toBeCloseTo(7.416, 2);
+  });
 });

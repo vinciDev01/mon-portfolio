@@ -3,16 +3,18 @@
 @import "shadcn/tailwind.css";
 
 /*
- * Enregistrement des sept variables de la transition d'incandescence
- * (tache 10, ronde de correction 1 — task-10-fix-1.md). Remplace
- * l'ancienne variable unique `--lampe-t` (tache 8/9) : une seule variable
- * parcourue a rebours par un objet `Animation` ne peut produire, pour
- * l'extinction, que le miroir exact de l'ordre d'apparition de
- * l'allumage — or l'annexe §5.2 demande un ordre de disparition qui n'est
- * PAS ce miroir (le faisceau s'eteint en premier, pas en troisieme).
- * `lib/ampoule/animation.ts` anime desormais ces sept variables ensemble,
- * dans le meme et unique objet `Animation` (la reentrance tient a un seul
- * objet, pas a une seule variable).
+ * Enregistrement des huit variables de la transition d'incandescence
+ * (tache 10 ; ronde de correction 1 pour les sept premieres —
+ * task-10-fix-1.md —, `--t-brins` ajoutee en ronde de correction 2 —
+ * task-10-fix-2.md). Remplace l'ancienne variable unique `--lampe-t`
+ * (tache 8/9) : une seule variable parcourue a rebours par un objet
+ * `Animation` ne peut produire, pour l'extinction, que le miroir exact de
+ * l'ordre d'apparition de l'allumage — or l'annexe §5.2 demande un ordre
+ * de disparition qui n'est PAS ce miroir (le faisceau s'eteint en
+ * premier, pas en troisieme). `lib/ampoule/animation.ts` anime
+ * desormais ces huit variables ensemble, dans le meme et unique objet
+ * `Animation` (la reentrance tient a un seul objet, pas a une seule
+ * variable).
  *
  * Deliberement hors de tout @layer : @property n'a d'effet que declare
  * ainsi. `inherits: true` : les couches de lumiere et `body::before` (qui
@@ -45,6 +47,21 @@
   inherits: true;
 }
 @property --t-page {
+  syntax: "<number>";
+  initial-value: 0;
+  inherits: true;
+}
+/*
+ * Ronde de correction 2 : pilote le degrade de `stroke` des meridiens
+ * (« brins chauds »/« brins refroidis », annexe §5.1/§5.2), sur ses
+ * PROPRES fenetres — 180 -> 620 ms a l'allumage, 80 -> 480 ms a
+ * l'extinction — distinctes de celles de `--t-filament`. Animee et
+ * testee dans lib/ampoule/animation.ts ; PAS encore consommee ici en
+ * CSS/SVG, `maille.tsx` (ou` les meridiens sont dessines) n'etant pas
+ * autorise par cette ronde — voir le rapport de tache pour cette
+ * reserve, explicitement laissee ouverte plutot que traitee en silence.
+ */
+@property --t-brins {
   syntax: "<number>";
   initial-value: 0;
   inherits: true;
@@ -108,17 +125,19 @@
   --texte: #e4e5e3;
   --accent: #7e9b76;
   --ombre-teinte: 214deg 12% 4%;
-  /* Repli sans JavaScript (tache 10, ronde de correction 1) : etat
-     "eteint" des sept variables de la transition, lisible depuis la
-     racine pour que toutes les couches (dans `.ampoule` et sur
-     `body::before`, qui n'est PAS un descendant de `.ampoule`) s'en
-     derivent. Une animation posee sur `document.documentElement` par
-     `lib/ampoule/animation.ts` surclasse ces valeurs des qu'elle existe. */
+  /* Repli sans JavaScript (tache 10, ronde de correction 1 ; --t-brins
+     ajoutee en ronde 2) : etat "eteint" des huit variables de la
+     transition, lisible depuis la racine pour que toutes les couches
+     (dans `.ampoule` et sur `body::before`, qui n'est PAS un descendant
+     de `.ampoule`) s'en derivent. Une animation posee sur
+     `document.documentElement` par `lib/ampoule/animation.ts` surclasse
+     ces valeurs des qu'elle existe. */
   --t-filament: 0;
   --t-lueur: 0;
   --t-faisceau: 0;
   --t-halo: 0;
   --t-moucheture: 0;
+  --t-brins: 0;
   --t-page: 0;
   --filament-couleur: #3a3128;
 }
@@ -137,7 +156,7 @@
   --texte: #1f2320;
   --accent: #456040;
   --ombre-teinte: 28deg 42% 30%;
-  /* Etat "allume" des sept variables — valeurs finales des tables de
+  /* Etat "allume" des huit variables — valeurs finales des tables de
      l'annexe §5.1 (offset 1) / §5.2 (offset 0), pas simplement 1 partout :
      la lueur plafonne a 0,92 et la moucheture a 0,55. */
   --t-filament: 1;
@@ -145,6 +164,7 @@
   --t-faisceau: 1;
   --t-halo: 1;
   --t-moucheture: 0.55;
+  --t-brins: 1;
   --t-page: 1;
   --filament-couleur: #fffdf6;
 }
@@ -768,9 +788,22 @@ html {
    * directement dans le JSX (couches-lumiere.tsx) : la rampe chromatique
    * de l'annexe (oklab via @property <color>, jamais sRGB) s'applique
    * donc a la couleur peinte, pas seulement a l'opacite du groupe.
+   *
+   * Ronde de correction 2, point 5 : le groupe NE PORTE PLUS d'opacite
+   * brute. `opacity: var(--t-filament)` sur `.couche-filament` clampait
+   * silencieusement le pic de depassement a 1,08 (annexe §5.1) a 1, sans
+   * effet visuel. Chaque sous-couche multiplie desormais SA PROPRE
+   * opacite de regime (annexe §3.1) par `--t-filament`, directement dans
+   * le JSX : `fillOpacity="calc(var(--t-filament, 0) * 0.42)"` pour le
+   * globe eclaire, `strokeOpacity="calc(var(--t-filament, 0) * 0.95)"`
+   * pour la boucle, `var(--t-filament, 0)` seule pour le coeur et le halo
+   * serre (regime 1,00, le clampage y persiste sans remede). Cette regle
+   * reste ici, VIDE de propriete d'opacite, pour que le selecteur
+   * `.couche-filament .halo-serre` ci-dessous continue de fonctionner
+   * (il en depend comme ancetre) et pour documenter ce changement a
+   * l'endroit ou un lecteur futur s'attendrait a trouver l'opacite.
    */
   .couche-filament {
-    opacity: var(--t-filament, 0);
   }
 
   .couche-filament .halo-serre {

@@ -142,11 +142,41 @@ describe("basculerAnimation, aucune bascule de jeu en pleine transition (ronde d
   });
 });
 
+/**
+ * Fusionne toutes les entrees de `jeu` qui partagent l'offset donne en un
+ * seul objet propriete -> valeur. Necessaire depuis la ronde de
+ * correction 2 : un offset partage par plusieurs proprietes aux courbes
+ * DIFFERENTES est scinde en plusieurs objets de keyframe consecutifs (la
+ * WAAPI n'autorise qu'un seul `easing` par objet) — un offset donne n'est
+ * donc plus forcement porte par une seule entree du tableau.
+ */
+function valeursAOffset(jeu: Keyframe[], offset: number): Record<string, unknown> {
+  const fusion: Record<string, unknown> = {};
+  for (const image of jeu) {
+    if (Number(image.offset) !== offset) continue;
+    for (const [cle, valeur] of Object.entries(image)) {
+      if (cle === "offset" || cle === "easing") continue;
+      fusion[cle] = valeur;
+    }
+  }
+  return fusion;
+}
+
+const VARIABLES_NUMERIQUES = [
+  "--t-filament",
+  "--t-lueur",
+  "--t-faisceau",
+  "--t-halo",
+  "--t-moucheture",
+  "--t-brins",
+  "--t-page",
+] as const;
+
 describe("IMAGES_ALLUMAGE / IMAGES_EXTINCTION, offsets (ronde de correction 1, test 3)", () => {
-  it("sont strictement croissants sur l ensemble du tableau (exigence de la WAAPI)", () => {
+  it("sont non decroissants sur l ensemble du tableau (exigence de la WAAPI, ronde de correction 2 : des offsets EGAUX sont admis quand les courbes divergent)", () => {
     for (const jeu of [IMAGES_ALLUMAGE, IMAGES_EXTINCTION]) {
       for (let i = 1; i < jeu.length; i++) {
-        expect(Number(jeu[i].offset)).toBeGreaterThan(Number(jeu[i - 1].offset));
+        expect(Number(jeu[i].offset)).toBeGreaterThanOrEqual(Number(jeu[i - 1].offset));
       }
     }
   });
@@ -163,33 +193,143 @@ describe("IMAGES_ALLUMAGE / IMAGES_EXTINCTION, offsets (ronde de correction 1, t
     }
   });
 
-  it("definissent les sept variables des le premier et le dernier offset", () => {
-    const variables = [
-      "--t-filament",
-      "--t-lueur",
-      "--t-faisceau",
-      "--t-halo",
-      "--t-moucheture",
-      "--t-page",
-      "--filament-couleur",
-    ];
+  it("definissent les huit variables au dernier offset (le premier n a pas encore de couleur, elle demarre a 40/60 ms)", () => {
+    const variables = [...VARIABLES_NUMERIQUES, "--filament-couleur"];
     for (const jeu of [IMAGES_ALLUMAGE, IMAGES_EXTINCTION]) {
+      const fin = valeursAOffset(jeu, 1);
       for (const v of variables) {
-        expect(jeu[0]).toHaveProperty(v);
-        expect(jeu[jeu.length - 1]).toHaveProperty(v);
+        expect(fin).toHaveProperty(v);
       }
     }
   });
 
-  it("se rejoignent aux deux bornes : fin de l un = debut de l autre", () => {
-    const fin = IMAGES_ALLUMAGE[IMAGES_ALLUMAGE.length - 1];
-    const debutExtinction = IMAGES_EXTINCTION[0];
-    const finExtinction = IMAGES_EXTINCTION[IMAGES_EXTINCTION.length - 1];
-    const debutAllumage = IMAGES_ALLUMAGE[0];
-    for (const v of ["--t-filament", "--t-lueur", "--t-faisceau", "--t-halo", "--t-moucheture", "--filament-couleur"]) {
-      expect(fin[v]).toBe(debutExtinction[v]);
+  it("se rejoignent aux deux bornes : fin de l un = debut de l autre, une fois les offsets partages fusionnes", () => {
+    const finAllumage = valeursAOffset(IMAGES_ALLUMAGE, 1);
+    const debutExtinction = valeursAOffset(IMAGES_EXTINCTION, 0);
+    const finExtinction = valeursAOffset(IMAGES_EXTINCTION, 1);
+    const debutAllumage = valeursAOffset(IMAGES_ALLUMAGE, 0);
+    for (const v of [...VARIABLES_NUMERIQUES, "--filament-couleur"]) {
+      expect(finAllumage[v]).toBe(debutExtinction[v]);
+    }
+    // Au tout premier offset de l'allumage, --filament-couleur n'existe
+    // pas encore (elle demarre a 40 ms) : on ne compare que les sept
+    // variables numeriques a cette borne-la.
+    for (const v of VARIABLES_NUMERIQUES) {
       expect(finExtinction[v]).toBe(debutAllumage[v]);
     }
+  });
+});
+
+describe("courbes d acceleration (ronde de correction 2, test 1)", () => {
+  it("porte l easing de chaque phase de l annexe, chaine exacte, au bon offset", () => {
+    const attendus: Array<[Keyframe[], number, string, string]> = [
+      [IMAGES_ALLUMAGE, 0.0444, "--t-filament", "cubic-bezier(0.33, 0, 0.67, 0.35)"],
+      [IMAGES_ALLUMAGE, 0.1444, "--t-filament", "cubic-bezier(0.22, 1, 0.36, 1)"],
+      [IMAGES_ALLUMAGE, 0.1444, "--t-lueur", "cubic-bezier(0.22, 1, 0.36, 1)"],
+      [IMAGES_ALLUMAGE, 0.4222, "--t-filament", "cubic-bezier(0.34, 1.40, 0.64, 1)"],
+      [IMAGES_ALLUMAGE, 0.5, "--t-filament", "cubic-bezier(0.34, 1.40, 0.64, 1)"],
+      [IMAGES_ALLUMAGE, 0.2889, "--t-faisceau", "cubic-bezier(0.33, 1, 0.68, 1)"],
+      [IMAGES_ALLUMAGE, 0.3556, "--t-halo", "cubic-bezier(0.25, 1, 0.5, 1)"],
+      [IMAGES_ALLUMAGE, 0.4444, "--t-moucheture", "cubic-bezier(0.25, 1, 0.5, 1)"],
+      [IMAGES_ALLUMAGE, 0.2, "--t-brins", "ease-out"],
+      [IMAGES_ALLUMAGE, 0.2444, "--t-page", "cubic-bezier(0.4, 0, 0.2, 1)"],
+      [IMAGES_EXTINCTION, 0, "--t-filament", "cubic-bezier(0.4, 0, 1, 1)"],
+      [IMAGES_EXTINCTION, 0, "--t-faisceau", "cubic-bezier(0.5, 0, 0.9, 0.4)"],
+      [IMAGES_EXTINCTION, 0, "--t-halo", "cubic-bezier(0.5, 0, 0.9, 0.4)"],
+      [IMAGES_EXTINCTION, 0, "--t-moucheture", "cubic-bezier(0.5, 0, 0.9, 0.4)"],
+      [IMAGES_EXTINCTION, 0.0545, "--t-lueur", "cubic-bezier(0.45, 0, 0.7, 0.3)"],
+      [IMAGES_EXTINCTION, 0.0545, "--t-page", "cubic-bezier(0.4, 0, 0.2, 1)"],
+      [IMAGES_EXTINCTION, 0.0727, "--t-brins", "ease-in-out"],
+      [IMAGES_EXTINCTION, 0.0818, "--t-filament", "cubic-bezier(0.37, 0, 0.63, 1)"],
+      [IMAGES_EXTINCTION, 0.1818, "--t-filament", "cubic-bezier(0.37, 0, 0.63, 1)"],
+      [IMAGES_EXTINCTION, 0.3091, "--t-filament", "cubic-bezier(0.37, 0, 0.63, 1)"],
+      [IMAGES_EXTINCTION, 0.5091, "--t-filament", "cubic-bezier(0.4, 0, 0.85, 1)"],
+    ];
+    for (const [jeu, offset, propriete, courbe] of attendus) {
+      const image = jeu.find((k) => Number(k.offset) === offset && propriete in k);
+      expect(image, `aucune entree pour ${propriete} a l offset ${offset}`).toBeDefined();
+      expect(image?.easing).toBe(courbe);
+    }
+  });
+
+  it("ne pose aucun easing sur les arrets de la rampe chromatique (annexe : aucune courbe specifiee)", () => {
+    for (const jeu of [IMAGES_ALLUMAGE, IMAGES_EXTINCTION]) {
+      const entreesCouleur = jeu.filter((k) => "--filament-couleur" in k);
+      for (const image of entreesCouleur) {
+        expect(image.easing).toBeUndefined();
+      }
+    }
+  });
+});
+
+describe("rampes chromatiques a six arrets (ronde de correction 2, test 2)", () => {
+  it("l allumage passe par les six couleurs de l annexe, dans l ordre, aux bons offsets (la 7e entree, a l offset 1, repete le plateau final)", () => {
+    const attendu: Array<[number, string]> = [
+      [0.0444, "#3A3128"],
+      [0.1444, "#A8431A"],
+      [0.2222, "#E07A28"],
+      [0.3333, "#FFC169"],
+      [0.4667, "#FFF3D6"],
+      [0.5778, "#FFFDF6"],
+      [1, "#FFFDF6"],
+    ];
+    const trouves = IMAGES_ALLUMAGE.filter((k) => "--filament-couleur" in k).map(
+      (k) => [Number(k.offset), k["--filament-couleur"]] as [number, string],
+    );
+    expect(trouves).toEqual(attendu);
+    // Six COULEURS distinctes (la septieme entree n est qu un plateau qui
+    // repete la sixieme) : c'est ce que compte l'annexe.
+    expect(new Set(trouves.map(([, c]) => c)).size).toBe(6);
+  });
+
+  it("l extinction passe par les six couleurs de refroidissement de l annexe, dans l ordre, aux bons offsets", () => {
+    const attendu: Array<[number, string]> = [
+      [0, "#FFFDF6"],
+      [0.0818, "#FFE3A8"],
+      [0.1818, "#FFB768"],
+      [0.3091, "#E0631E"],
+      [0.5091, "#7A2408"],
+      [1, "#3A3128"],
+    ];
+    const trouves = IMAGES_EXTINCTION.filter((k) => "--filament-couleur" in k).map(
+      (k) => [Number(k.offset), k["--filament-couleur"]] as [number, string],
+    );
+    expect(trouves).toEqual(attendu);
+  });
+});
+
+describe("--t-brins, huitieme variable (ronde de correction 2, test 3)", () => {
+  it("existe dans les deux jeux", () => {
+    for (const jeu of [IMAGES_ALLUMAGE, IMAGES_EXTINCTION]) {
+      expect(jeu.some((k) => "--t-brins" in k)).toBe(true);
+    }
+  });
+
+  it("a sa propre fenetre a l allumage (180 -> 620 ms), distincte de celle du filament (40 -> 520 ms)", () => {
+    const brins = IMAGES_ALLUMAGE.filter((k) => "--t-brins" in k).map((k) => Number(k.offset));
+    expect(brins).toEqual([0, 0.2, 0.6889, 1]);
+    const filament = IMAGES_ALLUMAGE.filter((k) => "--t-filament" in k).map((k) => Number(k.offset));
+    expect(brins).not.toEqual(filament);
+  });
+
+  it("a sa propre fenetre a l extinction (80 -> 480 ms), distincte de celle du filament", () => {
+    const brins = IMAGES_EXTINCTION.filter((k) => "--t-brins" in k).map((k) => Number(k.offset));
+    expect(brins).toEqual([0, 0.0727, 0.4364, 1]);
+    const filament = IMAGES_EXTINCTION.filter((k) => "--t-filament" in k).map((k) => Number(k.offset));
+    expect(brins).not.toEqual(filament);
+  });
+});
+
+describe("pic de depassement du filament (ronde de correction 2, test 4)", () => {
+  it("vaut exactement 1.08 a l offset 0.5 du jeu d allumage", () => {
+    const image = IMAGES_ALLUMAGE.find((k) => Number(k.offset) === 0.5);
+    expect(image?.["--t-filament"]).toBe(1.08);
+  });
+
+  it("n apparait nulle part dans le jeu d extinction", () => {
+    const valeurs = IMAGES_EXTINCTION.filter((k) => "--t-filament" in k).map((k) => k["--t-filament"]);
+    expect(valeurs).not.toContain(1.08);
+    expect(Math.max(...(valeurs as number[]))).toBeLessThanOrEqual(1);
   });
 });
 

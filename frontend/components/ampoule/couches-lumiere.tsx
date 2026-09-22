@@ -124,8 +124,23 @@ export function CoucheLueur() {
   );
 }
 
-/** L1 — filament, par-dessus la maille. Quatre sous-couches, du plus large
- *  au plus concentre : globe eclaire, halo serre, boucle, coeur. */
+/**
+ * L1 — filament, par-dessus la maille. Quatre sous-couches, du plus large
+ * au plus concentre : globe eclaire, halo serre, boucle, coeur.
+ *
+ * Tache 10, ronde de correction 2, point 5 : chaque sous-couche multiplie
+ * sa PROPRE opacite de regime (annexe §3.1 : coeur 1,00 · boucle 0,95 ·
+ * halo serre 1,00 · globe eclaire 0,42) par `--t-filament`, plutot que le
+ * groupe `.couche-filament` ne porte une opacite brute (globals.css).
+ * Raison : `opacity` en CSS clampe silencieusement toute valeur au-dela
+ * de 1, donc le pic de depassement a 1,08 (annexe §5.1, « Depassement »)
+ * n'a aucun effet visuel si `--t-filament` alimente directement un seul
+ * `opacity` de groupe a regime 1. En multipliant par 0,42 (globe) ou 0,95
+ * (boucle), le pic redevient observable : le globe monte reellement a
+ * 0,4536 avant de redescendre a 0,42. Sur le coeur et le halo serre, dont
+ * le regime vaut deja 1, le clampage a 1 persiste — sans remede, annonce
+ * comme tel par le controleur.
+ */
 export function CoucheFilament() {
   const id = useId();
   const idHalo = `filament-halo-${id}`;
@@ -160,26 +175,32 @@ export function CoucheFilament() {
         </filter>
       </defs>
 
-      {/* Globe eclaire : le plus large, le plus doux — peint en premier. */}
+      {/* Globe eclaire : le plus large, le plus doux — peint en premier.
+          Regime 0,42 (annexe §3.1) multiplie par --t-filament (ronde de
+          correction 2, point 5) : c'est cette sous-couche qui rend le
+          depassement visible, 0,42 * 1,08 = 0,4536 au pic. */}
       <circle
         cx={CENTRE_X}
         cy={232}
         r={21}
         fill="#FFE6B0"
-        fillOpacity={0.42}
+        fillOpacity="calc(var(--t-filament, 0) * 0.42)"
         filter={`url(#${idFlouGlobe})`}
       />
 
       {/* Halo serre : seule sous-couche de L1 en mix-blend-mode: screen
           (addendum du controleur, point C — avec L2, cela fait deux
           couches melees sur les quatre autorisees ; il en reste deux pour
-          la tache 9, qui ajoute L4/L5/L6). */}
+          la tache 9, qui ajoute L4/L5/L6). Regime 1,00 (annexe §3.1) :
+          `var(--t-filament)` seule, le clampage du depassement a 1
+          persiste ici sans remede (ronde de correction 2, point 5). */}
       <circle
         cx={CENTRE_X}
         cy={233}
         r={20}
         className="halo-serre"
         fill={`url(#${idHalo})`}
+        fillOpacity="var(--t-filament, 0)"
         filter={`url(#${idFlouHalo})`}
       />
 
@@ -187,10 +208,10 @@ export function CoucheFilament() {
           de correction 1) : la rampe chromatique de l'annexe §5.1/§5.2
           (oklab, jamais sRGB — @property `--filament-couleur` en
           `syntax: "<color>"`, globals.css) anime cette couleur au fil de
-          la transition, du froid `#3A3128` au chaud `#FFFDF6` a
-          l'allumage, avec une rampe de refroidissement distincte a
-          l'extinction (`#FFFDF6` -> `#FFB768` -> `#E0631E` -> `#7A2408`
-          -> `#3A3128`) — les deux rampes ne sont pas symetriques. */}
+          la transition, sur SIX arrets par sens (ronde de correction 2,
+          point 2) — plus les trois du premier jet. Regime d'opacite 0,95
+          (annexe §3.1) multiplie par --t-filament (ronde de correction 2,
+          point 5). */}
       <ellipse
         cx={CENTRE_X}
         cy={233}
@@ -199,19 +220,22 @@ export function CoucheFilament() {
         fill="none"
         stroke="var(--filament-couleur, #FFF3D6)"
         strokeWidth={1.4}
-        strokeOpacity={0.95}
+        strokeOpacity="calc(var(--t-filament, 0) * 0.95)"
         filter={`url(#${idFlouBoucle})`}
       />
 
       {/* Coeur, la sous-couche la plus concentree — tout au-dessus.
-          `fill` lit `var(--filament-couleur)`, meme rampe que la
-          boucle ci-dessus. */}
+          `fill` lit `var(--filament-couleur)`, meme rampe que la boucle
+          ci-dessus. Regime d'opacite 1,00 (annexe §3.1) : `opacity`
+          egale `var(--t-filament)` seule ; le clampage du depassement a 1
+          persiste ici sans remede (ronde de correction 2, point 5). */}
       <ellipse
         cx={CENTRE_X}
         cy={233}
         rx={2.2}
         ry={1.4}
         fill="var(--filament-couleur, #FFFDF6)"
+        opacity="var(--t-filament, 0)"
         filter={`url(#${idFlouCoeur})`}
       />
     </g>

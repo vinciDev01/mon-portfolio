@@ -183,26 +183,35 @@ export function CoucheFilament() {
         filter={`url(#${idFlouHalo})`}
       />
 
-      {/* Boucle */}
+      {/* Boucle. `stroke` lit `var(--filament-couleur)` (tache 10, ronde
+          de correction 1) : la rampe chromatique de l'annexe §5.1/§5.2
+          (oklab, jamais sRGB — @property `--filament-couleur` en
+          `syntax: "<color>"`, globals.css) anime cette couleur au fil de
+          la transition, du froid `#3A3128` au chaud `#FFFDF6` a
+          l'allumage, avec une rampe de refroidissement distincte a
+          l'extinction (`#FFFDF6` -> `#FFB768` -> `#E0631E` -> `#7A2408`
+          -> `#3A3128`) — les deux rampes ne sont pas symetriques. */}
       <ellipse
         cx={CENTRE_X}
         cy={233}
         rx={6}
         ry={3.5}
         fill="none"
-        stroke="#FFF3D6"
+        stroke="var(--filament-couleur, #FFF3D6)"
         strokeWidth={1.4}
         strokeOpacity={0.95}
         filter={`url(#${idFlouBoucle})`}
       />
 
-      {/* Coeur, la sous-couche la plus concentree — tout au-dessus. */}
+      {/* Coeur, la sous-couche la plus concentree — tout au-dessus.
+          `fill` lit `var(--filament-couleur)`, meme rampe que la
+          boucle ci-dessus. */}
       <ellipse
         cx={CENTRE_X}
         cy={233}
         rx={2.2}
         ry={1.4}
-        fill="#FFFDF6"
+        fill="var(--filament-couleur, #FFFDF6)"
         filter={`url(#${idFlouCoeur})`}
       />
     </g>

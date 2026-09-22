@@ -290,6 +290,34 @@ export default function SiteSettingsPage() {
           </div>
         </div>
 
+        {/* --- Ampoule et theme --- */}
+        <fieldset className="border border-border rounded-md p-4 space-y-4">
+          <legend className="text-sm font-semibold px-2">Ampoule et thème</legend>
+          <div>
+            <label className="block text-sm font-medium mb-1">
+              Thème à la première visite
+            </label>
+            <select
+              value={data.themeParDefaut}
+              onChange={(e) =>
+                setData({ ...data, themeParDefaut: e.target.value as typeof data.themeParDefaut })
+              }
+              className="w-full px-3 py-2 border border-border rounded-md text-sm"
+            >
+              <option value="auto">Selon l&apos;heure du visiteur</option>
+              <option value="clair">Toujours clair</option>
+              <option value="sombre">Toujours sombre</option>
+            </select>
+            <p className="text-xs text-muted-foreground mt-1">
+              En mode automatique, l&apos;ampoule est <strong>éteinte de 7 h à 19 h</strong>
+              {" "}(thème sombre) et <strong>allumée le reste du temps</strong> (thème clair).
+              Cette règle suit la logique de l&apos;objet — on allume une lampe le soir —
+              et inverse donc la convention habituelle. Dès qu&apos;un visiteur clique
+              l&apos;ampoule, son choix est mémorisé et cette règle ne s&apos;applique plus à lui.
+            </p>
+          </div>
+        </fieldset>
+
         {/* --- CV genere --- */}
 <fieldset className="border border-border rounded-md p-4 space-y-4">
   <legend className="text-sm font-semibold px-2">CV téléchargeable</legend>

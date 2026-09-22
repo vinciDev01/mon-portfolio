@@ -68,3 +68,19 @@ describe('cvFontFamily', () => {
     expect(await erreursSur('cvFontFamily', 'comic')).toContain('cvFontFamily');
   });
 });
+
+describe('themeParDefaut', () => {
+  it('accepte les trois strategies prevues', async () => {
+    for (const s of ['auto', 'clair', 'sombre']) {
+      expect(await erreursSur('themeParDefaut', s)).toEqual([]);
+    }
+  });
+
+  it('refuse une strategie inconnue', async () => {
+    expect(await erreursSur('themeParDefaut', 'auto-nuit')).toContain('themeParDefaut');
+  });
+
+  it('refuse une valeur vide', async () => {
+    expect(await erreursSur('themeParDefaut', '')).toContain('themeParDefaut');
+  });
+});

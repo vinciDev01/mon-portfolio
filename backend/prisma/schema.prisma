@@ -40,6 +40,15 @@ model SiteSettings {
   seoImagePath        String? @map("seo_image_path")
   notificationEmail   String? @map("notification_email")
 
+  /**
+   * Theme applique a un visiteur sans preference enregistree.
+   * « auto » applique la regle horaire : sombre de 07h00 a 18h59,
+   * clair de 19h00 a 06h59. Cette regle inverse volontairement la
+   * convention courante : elle suit la logique de l'objet, on allume
+   * une lampe le soir.
+   */
+  themeParDefaut    String  @default("auto") @map("theme_par_defaut")
+
   // Visibilité manquante : StatsSection était rendue sans condition
   showStats         Boolean @default(true)  @map("show_stats")
 

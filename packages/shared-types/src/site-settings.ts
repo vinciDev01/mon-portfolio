@@ -27,6 +27,7 @@ export interface SiteSettingsDto {
   seoDescription: string | null;
   seoImagePath: string | null;
   notificationEmail: string | null;
+  themeParDefaut: "auto" | "clair" | "sombre";
   showStats: boolean;
   typeScale: "compact" | "normal" | "airy";
   lineHeight: number;

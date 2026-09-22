@@ -152,6 +152,11 @@ export class UpdateSiteSettingsDto {
   @IsString()
   notificationEmail?: string;
 
+  @ApiPropertyOptional({ example: 'auto' })
+  @IsOptional()
+  @IsIn(['auto', 'clair', 'sombre'])
+  themeParDefaut?: string;
+
   // --- Visibilite ---
 
   @ApiPropertyOptional()

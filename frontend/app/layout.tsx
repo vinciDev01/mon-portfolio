@@ -1,6 +1,5 @@
 import type { Metadata } from "next";
 import { IBM_Plex_Sans, IBM_Plex_Mono } from "next/font/google";
-import Script from "next/script";
 
 import "./globals.css";
 import { ThemeProvider } from "@/lib/theme/theme-context";
@@ -117,11 +116,7 @@ export default async function RootLayout({
       )}
     >
       <head>
-        <Script
-          id="theme-initial"
-          strategy="beforeInteractive"
-          dangerouslySetInnerHTML={{ __html: scriptInitial(strategie) }}
-        />
+        <script dangerouslySetInnerHTML={{ __html: scriptInitial(strategie) }} />
         {googleFontUrl && (
           <>
             <link rel="preconnect" href="https://fonts.googleapis.com" />

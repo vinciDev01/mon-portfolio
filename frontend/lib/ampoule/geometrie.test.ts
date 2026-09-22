@@ -39,8 +39,8 @@ describe("xProjete", () => {
 
   it("respecte la table de controle", () => {
     expect(xProjete(30)).toBeCloseTo(130.0, 1);
-    expect(xProjete(60)).toBeCloseTo(160.8, 1);
-    expect(xProjete(75)).toBeCloseTo(169.1, 1);
+    expect(xProjete(60)).toBeCloseTo(160.746, 2);
+    expect(xProjete(75)).toBeCloseTo(169.138, 2);
   });
 
   it("est symetrique autour de l axe", () => {

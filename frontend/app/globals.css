@@ -2,6 +2,20 @@
 @import "tw-animate-css";
 @import "shadcn/tailwind.css";
 
+/*
+ * Enregistrement de --lampe-t (tache 8, addendum du controleur, point A).
+ * Sans cet enregistrement, --lampe-t n'est pas interpolable : la tache 10
+ * obtiendrait un basculement abrupt a mi-parcours au lieu d'un fondu.
+ * Deliberement hors de tout @layer : @property n'a d'effet que déclaré
+ * ainsi. `inherits: true` est necessaire, les couches de lumiere lisent la
+ * variable posee sur .ampoule, pas sur elles-memes.
+ */
+@property --lampe-t {
+  syntax: "<number>";
+  initial-value: 0;
+  inherits: true;
+}
+
 @custom-variant dark (&:is(.sombre *));
 
 @theme inline {
@@ -523,6 +537,49 @@ html {
     pointer-events: none;
     transform: scale(var(--ampoule-echelle, 1));
     transform-origin: 100% 0;
+
+    /* Etat de la lampe : 0 eteinte, 1 allumee (tache 8, etape 3). Pose en
+       dur par theme pour l'instant ; la tache 10 animera cette meme
+       variable via la Web Animations API — @property ci-dessus, hors de
+       tout @layer, est ce qui rend cette animation interpolable. */
+    --lampe-t: 0;
+  }
+
+  .clair .ampoule {
+    --lampe-t: 1;
+  }
+
+  /*
+   * Groupe isole (tache 8, addendum du controleur, point B) : seules L2 la
+   * lueur du tressage, la maille et L1 le filament vivent ici (ampoule.tsx,
+   * `.lampe-isolee`). `isolation: isolate` confine leur
+   * `mix-blend-mode: screen` a l'interieur du groupe pour qu'il n'eclaircisse
+   * pas le fond de la page a travers le SVG. NE PAS poser cette isolation
+   * sur `.ampoule` en entier : la tache 9 ajoute L4 le faisceau, L5 le halo
+   * de fond et L6 la moucheture, dont le blend doit precisement atteindre la
+   * page. N'elargis pas ce selecteur pour les y inclure.
+   */
+  .lampe-isolee {
+    isolation: isolate;
+  }
+
+  /* L2 — lueur a travers le tressage, peinte sous la maille. */
+  .couche-lueur {
+    --lueur-opacite: var(--lampe-t);
+    opacity: var(--lueur-opacite);
+    mix-blend-mode: screen;
+  }
+
+  /* L1 — filament, peint par-dessus la maille. Seule sa sous-couche « halo
+     serre » est en mix-blend-mode: screen (regle suivante) ; le coeur, la
+     boucle et le globe eclaire restent en fusion normale. */
+  .couche-filament {
+    --filament-opacite: var(--lampe-t);
+    opacity: var(--filament-opacite);
+  }
+
+  .couche-filament .halo-serre {
+    mix-blend-mode: screen;
   }
 
   @media (max-width: 1439px) {

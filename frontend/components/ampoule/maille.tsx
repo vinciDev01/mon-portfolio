@@ -147,6 +147,7 @@ export function Maille({ id }: { id: string }) {
   const idFiltre = `brins-${id}`;
   const idDegradeDroite = `bande-degrade-droite-${id}`;
   const idDegradeGauche = `bande-degrade-gauche-${id}`;
+  const idDegradeVertical = `brins-vertical-${id}`;
 
   return (
     <g id={id} filter={filtreActif ? `url(#${idFiltre})` : undefined}>
@@ -196,6 +197,48 @@ export function Maille({ id }: { id: string }) {
           <stop offset="0%" stopColor={COULEUR_BANDE} stopOpacity={0.55} />
           <stop offset="100%" stopColor={COULEUR_BANDE} stopOpacity={1} />
         </linearGradient>
+        {/* Brins retro-eclaires (tache 8, annexe §3.2 L2) : degrade
+            vertical du stroke des meridiens, de l'apex au bord. Chaque
+            stop melange, via color-mix() pilote par --lampe-t (posee sur
+            .ampoule, heritee jusqu'ici), la couleur eteinte plate et la
+            teinte chaude de la table de la specification. A --lampe-t: 0
+            les quatre stops convergent vers COULEUR_MERIDIEN : le rendu
+            est alors visuellement identique a un stroke plat, donc
+            strictement conforme a l'etat eteint (annexe §4.2) sans
+            condition JS ni doublon de trace. */}
+        <linearGradient
+          id={idDegradeVertical}
+          gradientUnits="userSpaceOnUse"
+          x1={CENTRE_X}
+          y1={APEX_Y}
+          x2={CENTRE_X}
+          y2={BORD_Y}
+        >
+          <stop
+            offset="0%"
+            style={{
+              stopColor: `color-mix(in oklab, ${COULEUR_MERIDIEN}, #8A6B45 calc(var(--lampe-t, 0) * 100%))`,
+            }}
+          />
+          <stop
+            offset="41.03%"
+            style={{
+              stopColor: `color-mix(in oklab, ${COULEUR_MERIDIEN}, #B08A57 calc(var(--lampe-t, 0) * 100%))`,
+            }}
+          />
+          <stop
+            offset="70.51%"
+            style={{
+              stopColor: `color-mix(in oklab, ${COULEUR_MERIDIEN}, #D6A96B calc(var(--lampe-t, 0) * 100%))`,
+            }}
+          />
+          <stop
+            offset="100%"
+            style={{
+              stopColor: `color-mix(in oklab, ${COULEUR_MERIDIEN}, #9C7A4E calc(var(--lampe-t, 0) * 100%))`,
+            }}
+          />
+        </linearGradient>
       </defs>
 
       {/* Interstice : voile de fond visible entre les brins. Opacite plate,
@@ -213,7 +256,7 @@ export function Maille({ id }: { id: string }) {
           key={m.theta}
           href={`#${idProfil}`}
           transform={`translate(${CENTRE_X},0) scale(${m.echelle},1) translate(${-CENTRE_X},0)`}
-          stroke={COULEUR_MERIDIEN}
+          stroke={`url(#${idDegradeVertical})`}
           strokeOpacity={0.82}
           strokeWidth={epaisseurBrin}
           fill="none"

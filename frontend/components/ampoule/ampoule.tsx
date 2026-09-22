@@ -1,5 +1,6 @@
 import { BORD_Y, CENTRE_X } from "@/lib/ampoule/geometrie";
 import { LUMIERE } from "@/lib/design/tokens";
+import { CoucheFilament, CoucheLueur } from "./couches-lumiere";
 import { Maille, SILHOUETTE_FERMEE } from "./maille";
 
 /**
@@ -167,7 +168,23 @@ export function Ampoule({ id = "ampoule-eteinte" }: { id?: string } = {}) {
         strokeLinecap="round"
       />
 
-      <Maille id={id} />
+      {/* Groupe isole (addendum du controleur, tache 8, point B) : seules
+          ces trois couches — L2 la lueur du tressage, la maille, L1 le
+          filament — vivent dans un contexte d'empilement isole.
+          `isolation: isolate` (globals.css, `.lampe-isolee`) confine leur
+          `mix-blend-mode: screen` a l'interieur du groupe, pour qu'il
+          n'eclaircisse pas le fond de la page a travers le SVG. NE PAS
+          poser cette isolation sur `.ampoule` en entier : la tache 9 ajoute
+          L4 le faisceau, L5 le halo de fond et L6 la moucheture AVANT ce
+          groupe (ordre impose : L5 -> L6 -> L4 -> L2 -> maille -> L1), et
+          leur role est justement d'eclairer la page au-dela de l'objet —
+          les isoler les neutraliserait. Ne pas elargir ce groupe pour les
+          y inclure. */}
+      <g className="lampe-isolee">
+        <CoucheLueur />
+        <Maille id={id} />
+        <CoucheFilament />
+      </g>
 
       {/* Occlusion sous le bord : ecretee au contour du dome, qui est plus
           etroit que 84 a cette hauteur. */}

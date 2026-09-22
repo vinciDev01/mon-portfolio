@@ -10,6 +10,7 @@ import {
   PAS_ANGULAIRE_DEG,
   R,
   cercles,
+  idSymboleMaille,
   limiteFusion,
   meridiens,
   ordonnee,
@@ -148,9 +149,10 @@ export function Maille({ id }: { id: string }) {
   const idDegradeDroite = `bande-degrade-droite-${id}`;
   const idDegradeGauche = `bande-degrade-gauche-${id}`;
   const idDegradeVertical = `brins-vertical-${id}`;
+  const idSymbole = idSymboleMaille(id);
 
   return (
-    <g id={id} filter={filtreActif ? `url(#${idFiltre})` : undefined}>
+    <>
       <defs>
         <path id={idProfil} d={PROFIL_DROIT} />
         <filter id={idFiltre} x="-4%" y="-4%" width="108%" height="108%">
@@ -239,70 +241,92 @@ export function Maille({ id }: { id: string }) {
             }}
           />
         </linearGradient>
+
+        {/* Rasterisation unique de la maille filtree (voir `idSymboleMaille`
+            plus haut) : `overflow: visible` desamorce le viewport imbrique
+            qu'un `<symbol>` etablirait sinon par defaut — sans ca, le
+            navigateur ecreterait la maille a sa boite englobante native.
+            Le filtre `feTurbulence`/`feDisplacementMap` ci-dessus n'est
+            applique qu'ici, une seule fois ; les deux `<use>` qui suivent
+            (le rendu du dome plus bas, et L6 la moucheture dans
+            couches-lumiere.tsx) instancient ce resultat deja calcule, ils
+            ne relancent jamais le filtre. */}
+        <symbol id={idSymbole} style={{ overflow: "visible" }}>
+          <g filter={filtreActif ? `url(#${idFiltre})` : undefined}>
+            {/* Interstice : voile de fond visible entre les brins. Opacite
+                plate, jamais un degrade — c'est la densite du tressage
+                par-dessus qui assombrit les bords, pas cette couche. */}
+            <path
+              d={SILHOUETTE_FERMEE}
+              fill={COULEUR_INTERIEUR}
+              fillOpacity={opaciteInterstice}
+            />
+
+            {/* Calotte pleine : remplace C1 a C4, qui se chevauchent au
+                sommet. */}
+            <ellipse cx={CENTRE_X} cy={180.1} rx={30} ry={4.3} fill={COULEUR_CALOTTE} />
+
+            {/* Meridiens non fusionnes : chacun est le meme demi-profil,
+                mis a l'echelle par le sinus de son angle (negatif => reflet
+                a gauche). */}
+            {meridiensAffiches.map((m) => (
+              <use
+                key={m.theta}
+                href={`#${idProfil}`}
+                transform={`translate(${CENTRE_X},0) scale(${m.echelle},1) translate(${-CENTRE_X},0)`}
+                stroke={`url(#${idDegradeVertical})`}
+                strokeOpacity={0.82}
+                strokeWidth={epaisseurBrin}
+                fill="none"
+              />
+            ))}
+
+            {/* Bandes pleines : remplacent les meridiens fusionnes,
+                uniquement quand leur largeur reste au-dessus de l'epaisseur
+                de brin. */}
+            {bandeVisible && (
+              <>
+                <path
+                  d={cheminBande(CENTRE_X + limite, CENTRE_X + R)}
+                  fill={`url(#${idDegradeDroite})`}
+                />
+                <path
+                  d={cheminBande(CENTRE_X - limite, CENTRE_X - R)}
+                  fill={`url(#${idDegradeGauche})`}
+                />
+              </>
+            )}
+
+            {/* Cercles dont le rx depasse celui de la calotte : en-deca, ils
+                se chevauchent et sont deja couverts par la calotte. */}
+            {cerclesVisibles.map((c) => {
+              const estOurlet = c.indice === dernierIndice;
+              const estRenforce = !estOurlet && c.epaisseur > 1.5;
+              const couleur = estOurlet
+                ? COULEUR_OURLET
+                : estRenforce
+                  ? COULEUR_CERCLE_RENFORCE
+                  : COULEUR_CERCLE_COURANT;
+              const opacite = estOurlet ? 1 : estRenforce ? 0.9 : 0.72;
+              return (
+                <ellipse
+                  key={c.indice}
+                  cx={CENTRE_X}
+                  cy={c.cy}
+                  rx={c.rx}
+                  ry={c.ry}
+                  fill="none"
+                  stroke={couleur}
+                  strokeOpacity={opacite}
+                  strokeWidth={c.epaisseur}
+                />
+              );
+            })}
+          </g>
+        </symbol>
       </defs>
 
-      {/* Interstice : voile de fond visible entre les brins. Opacite plate,
-          jamais un degrade — c'est la densite du tressage par-dessus qui
-          assombrit les bords, pas cette couche. */}
-      <path d={SILHOUETTE_FERMEE} fill={COULEUR_INTERIEUR} fillOpacity={opaciteInterstice} />
-
-      {/* Calotte pleine : remplace C1 a C4, qui se chevauchent au sommet. */}
-      <ellipse cx={CENTRE_X} cy={180.1} rx={30} ry={4.3} fill={COULEUR_CALOTTE} />
-
-      {/* Meridiens non fusionnes : chacun est le meme demi-profil, mis a
-          l'echelle par le sinus de son angle (negatif => reflet a gauche). */}
-      {meridiensAffiches.map((m) => (
-        <use
-          key={m.theta}
-          href={`#${idProfil}`}
-          transform={`translate(${CENTRE_X},0) scale(${m.echelle},1) translate(${-CENTRE_X},0)`}
-          stroke={`url(#${idDegradeVertical})`}
-          strokeOpacity={0.82}
-          strokeWidth={epaisseurBrin}
-          fill="none"
-        />
-      ))}
-
-      {/* Bandes pleines : remplacent les meridiens fusionnes, uniquement
-          quand leur largeur reste au-dessus de l'epaisseur de brin. */}
-      {bandeVisible && (
-        <>
-          <path
-            d={cheminBande(CENTRE_X + limite, CENTRE_X + R)}
-            fill={`url(#${idDegradeDroite})`}
-          />
-          <path
-            d={cheminBande(CENTRE_X - limite, CENTRE_X - R)}
-            fill={`url(#${idDegradeGauche})`}
-          />
-        </>
-      )}
-
-      {/* Cercles dont le rx depasse celui de la calotte : en-deca, ils se
-          chevauchent et sont deja couverts par la calotte. */}
-      {cerclesVisibles.map((c) => {
-        const estOurlet = c.indice === dernierIndice;
-        const estRenforce = !estOurlet && c.epaisseur > 1.5;
-        const couleur = estOurlet
-          ? COULEUR_OURLET
-          : estRenforce
-            ? COULEUR_CERCLE_RENFORCE
-            : COULEUR_CERCLE_COURANT;
-        const opacite = estOurlet ? 1 : estRenforce ? 0.9 : 0.72;
-        return (
-          <ellipse
-            key={c.indice}
-            cx={CENTRE_X}
-            cy={c.cy}
-            rx={c.rx}
-            ry={c.ry}
-            fill="none"
-            stroke={couleur}
-            strokeOpacity={opacite}
-            strokeWidth={c.epaisseur}
-          />
-        );
-      })}
-    </g>
+      <use id={id} href={`#${idSymbole}`} />
+    </>
   );
 }

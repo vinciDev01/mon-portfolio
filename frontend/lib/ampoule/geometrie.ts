@@ -22,6 +22,23 @@ export const EPAISSEUR_BRIN = 1.2;
 export const PAS_ANGULAIRE_DEG = 5;
 
 /**
+ * Identifiant du `<symbol>` qui rasterise la maille filtree (annexe §2.3,
+ * `feTurbulence` + `feDisplacementMap`) une seule fois — `maille.tsx`
+ * l'utilise pour son propre rendu (le dome visible), `couches-lumiere.tsx`
+ * le reutilise pour L6 la moucheture (tache 9) via un second `<use>` :
+ * jamais un second filtre, qui doublerait le cout du premier rendu (annexe
+ * §8.1). Vit ici plutot que dans `maille.tsx` : ce dernier porte
+ * `"use client"`, et un export de fonction « plate » d'un module client ne
+ * peut pas etre appele depuis un composant serveur (`Ampoule` et
+ * `couches-lumiere.tsx` n'en portent pas) — seuls des composants JSX
+ * peuvent traverser cette frontiere. `geometrie.ts` n'a pas cette
+ * contrainte.
+ */
+export function idSymboleMaille(id: string): string {
+  return `maille-symbole-${id}`;
+}
+
+/**
  * En dessous de deux epaisseurs de brin, deux meridiens voisins se recouvrent :
  * les dessiner separement produit du moire et du crenelage. Au-dela, la
  * specification impose une bande pleine.

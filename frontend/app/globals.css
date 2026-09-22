@@ -65,6 +65,13 @@
   --texte: #e4e5e3;
   --accent: #7e9b76;
   --ombre-teinte: 214deg 12% 4%;
+  /* Repris ici (et non seulement sous `.ampoule`, voir plus bas) parce que
+     L5 (tache 9) vit sur `body::before` : un pseudo-element du `<body>`,
+     qui n'est PAS un descendant de `.ampoule` (son frere dans page.tsx) et
+     n'heriterait donc jamais de la valeur posee la-bas. `--lampe-t` doit
+     etre lisible depuis la racine pour que toutes les couches lointaines
+     (L4, L5, L6) s'en derivent, comme l'exige la tache. */
+  --lampe-t: 0;
 }
 
 /*
@@ -81,6 +88,7 @@
   --texte: #1f2320;
   --accent: #456040;
   --ombre-teinte: 28deg 42% 30%;
+  --lampe-t: 1;
 }
 
 /* Mapping shadcn, commun aux deux themes. */
@@ -448,6 +456,68 @@ html {
     font-variation-settings: "opsz" 12;
   }
 
+  /*
+   * L5 — halo de fond (annexe §3.4, tache 9). `body::before` plutot qu'une
+   * forme SVG floutee : un `radial-gradient` coute ~0,3 ms contre plusieurs
+   * ms pour un flou de forme de cette taille (annexe §8.1).
+   *
+   * Addendum du controleur, point B : les « deux passes » du §3.4
+   * (soft-light, puis une seconde passe screen a 40 % de l'opacite) ne
+   * doivent former qu'UNE seule couche de composition — sans quoi le
+   * plafond de couches melangees se compterait deux fois pour L5 seule.
+   * Implementation : deux `radial-gradient` empiles dans le meme
+   * `background-image` (le second est le premier avec chaque opacite de
+   * arret multipliee par 0,40), fondus entre eux par
+   * `background-blend-mode: soft-light, screen`. Le seul `mix-blend-mode`
+   * de l'element, celui qui l'articule au reste de la page, reprend la
+   * valeur que l'annexe §6.2 donne pour cette meme nappe : `soft-light`.
+   *
+   * Les arrets sont recopies de la table de l'annexe au caractere pres
+   * (addendum, point A : la table fait foi, pas la loi quadratique
+   * `I(d) = 0,30 (1 - d/540)²` qu'elle ne reproduit pas exactement).
+   *
+   * Ni `z-index` ni position explicite au-dela de `inset: 0` : `.ampoule`
+   * est deja a z-index 60 et l'entete est `position: sticky` a z-index 50
+   * (voir header.tsx), donc `body::before` (position fixed, z-index auto)
+   * se peint naturellement derriere les deux sans configuration
+   * supplementaire.
+   */
+  body::before {
+    content: "";
+    position: fixed;
+    inset: 0;
+    pointer-events: none;
+    background-image:
+      radial-gradient(
+        540px 620px at calc(100% - 136px) 250px,
+        hsl(34 88% 72% / 0.3) 0%,
+        hsl(32 80% 66% / 0.19) 26%,
+        hsl(30 70% 58% / 0.08) 55%,
+        hsl(28 62% 50% / 0.025) 80%,
+        hsl(28 60% 46% / 0) 100%
+      ),
+      radial-gradient(
+        540px 620px at calc(100% - 136px) 250px,
+        hsl(34 88% 72% / 0.12) 0%,
+        hsl(32 80% 66% / 0.076) 26%,
+        hsl(30 70% 58% / 0.032) 55%,
+        hsl(28 62% 50% / 0.01) 80%,
+        hsl(28 60% 46% / 0) 100%
+      );
+    background-blend-mode: soft-light, screen;
+    mix-blend-mode: soft-light;
+    opacity: var(--lampe-t, 0);
+  }
+
+  /* Etape 5 : sous 360 px, les couches lointaines sont desactivees — a
+     cette echelle (--ampoule-echelle 0,44) l'objet lui-meme prime sur son
+     ambiance. */
+  @media (max-width: 359px) {
+    body::before {
+      display: none;
+    }
+  }
+
   h1,
   h2,
   h3 {
@@ -541,7 +611,17 @@ html {
     /* Etat de la lampe : 0 eteinte, 1 allumee (tache 8, etape 3). Pose en
        dur par theme pour l'instant ; la tache 10 animera cette meme
        variable via la Web Animations API — @property ci-dessus, hors de
-       tout @layer, est ce qui rend cette animation interpolable. */
+       tout @layer, est ce qui rend cette animation interpolable.
+       Redondant avec `--lampe-t` pose sur `:root`/`.sombre`/`.clair`
+       (tache 9, plus haut dans ce fichier) tant que la valeur reste
+       identique ; conserve ici pour que `Maille`, `CoucheLueur` et
+       `CoucheFilament` gardent un ancetre local explicite. ATTENTION pour
+       la tache 10 : si l'animation WAAPI cible directement `.ampoule` (cet
+       element), L5 sur `body::before` — qui n'est PAS un descendant de
+       `.ampoule` — ne suivra pas ses valeurs intermediaires, seulement le
+       repli theme pose sur `:root`. Il faudra alors soit animer
+       `--lampe-t` plus haut dans l'arbre (`:root` ou `body`), soit
+       dupliquer l'anime sur les deux emplacements. */
     --lampe-t: 0;
   }
 
@@ -581,6 +661,38 @@ html {
   .couche-filament .halo-serre {
     mix-blend-mode: screen;
   }
+
+  /* L4 — faisceau (tache 9). Hors de `.lampe-isolee` : son `screen` doit
+     atteindre la page, pas seulement l'interieur du SVG. */
+  .couche-faisceau {
+    --faisceau-opacite: var(--lampe-t);
+    opacity: var(--faisceau-opacite);
+    mix-blend-mode: screen;
+  }
+
+  /* L6 — moucheture (tache 9). 0,55 est l'opacite globale du groupe
+     (annexe §3.5), multipliee par `--lampe-t` comme les autres couches ;
+     a la difference de L2/L1, ce plafond n'est pas deja incorpore aux
+     arrets de degrade puisque L6 n'en a pas (c'est un `<use>` filtre, pas
+     un degrade). */
+  .couche-moucheture {
+    --moucheture-opacite: calc(var(--lampe-t) * 0.55);
+    opacity: var(--moucheture-opacite);
+    mix-blend-mode: overlay;
+  }
+
+  /*
+   * Addendum du controleur, point C (tache 9) : la portee du faisceau doit
+   * tomber a 200 px (au lieu de 304) entre 600 et 899 px de large. Aucune
+   * regle dediee ici : L4 vit a l'interieur du meme `<svg class="ampoule">`
+   * que tout le reste de l'objet, deja mis a l'echelle par
+   * `transform: scale(var(--ampoule-echelle))` ci-dessous — 0,66 a cette
+   * largeur. 304 * 0,66 = 200,6 px, soit exactement la valeur de l'annexe
+   * §1.6 (comme les « dome = 138 px » et « dome = 84 px » des autres
+   * lignes de la meme table, qui sont elles aussi de simples produits de
+   * l'echelle et non des overrides separes). Ajouter une regle ici
+   * doublerait la reduction au lieu de la reproduire.
+   */
 
   @media (max-width: 1439px) {
     :root {

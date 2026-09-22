@@ -2,7 +2,7 @@
 @import "tw-animate-css";
 @import "shadcn/tailwind.css";
 
-@custom-variant dark (&:is(.dark *));
+@custom-variant dark (&:is(.sombre *));
 
 @theme inline {
   --font-heading: var(--font-sans);
@@ -34,20 +34,35 @@
   --radius-4xl: calc(var(--radius) * 2.6);
 }
 
-/* Identite sombre. Source de verite : frontend/lib/design/tokens.ts */
+/* Thème clair — ampoule allumée. Source : frontend/lib/design/tokens.ts */
 :root,
-.dark {
-  /* Jetons bruts */
+.clair {
+  --fond: #f6f1e8;
+  --surface: #fcf8f1;
+  --bordure: #dcd1bf;
+  --bordure-signifiante: #948263;
+  --texte-secondaire: #5e564a;
+  --texte: #1f2320;
+  --accent: #456040;
+  --ombre-teinte: 28deg 42% 30%;
+}
+
+/* Thème sombre — ampoule éteinte. */
+.sombre {
   --fond: #131518;
   --surface: #1a1d21;
   --bordure: #22262b;
-  --texte-secondaire: #8b8f8a;
+  --bordure-signifiante: #707780;
+  --texte-secondaire: #9aa096;
   --texte: #e4e5e3;
   --accent: #7e9b76;
-  --ombre: #0d0f11;
-  --lumiere: #f2efe6;
+  --ombre-teinte: 214deg 12% 4%;
+}
 
-  /* Mapping shadcn : conserve pour les composants existants */
+/* Mapping shadcn, commun aux deux themes. */
+:root,
+.clair,
+.sombre {
   --background: var(--portfolio-bg, var(--fond));
   --foreground: var(--portfolio-text, var(--texte));
   --card: var(--surface);
@@ -63,7 +78,7 @@
   --accent-foreground: var(--fond);
   --destructive: oklch(0.577 0.245 27.325);
   --border: var(--bordure);
-  --input: var(--bordure);
+  --input: var(--bordure-signifiante);
   --ring: var(--accent);
   --radius: 0.25rem;
 }
@@ -153,12 +168,12 @@ html {
 }
 
 /* Dark mode adjustments */
-.dark .animated-card::before,
-.dark .animated-card::after {
+.sombre .animated-card::before,
+.sombre .animated-card::after {
   border-color: oklch(1 0 0 / 0.08);
 }
 
-.dark .animated-card:hover {
+.sombre .animated-card:hover {
   box-shadow:
     0 16px 40px -8px oklch(0 0 0 / 0.35),
     0 6px 16px -4px oklch(0 0 0 / 0.2);

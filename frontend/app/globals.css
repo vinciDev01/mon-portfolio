@@ -387,6 +387,10 @@ html {
 :root {
   --ratio: 1.25;
   --corps: var(--portfolio-font-size, 17px);
+
+  /* Literata porte une hauteur d'x de 0,507 em, tres proche des 0,516 de
+     l'ancienne police : l'echelle de ratio 1,250 sur base 17 px est
+     conservee telle quelle. Seul l'interligne du corps change. */
   --interligne: var(--portfolio-line-height, 1.6);
 
   --meta: calc(var(--corps) / var(--ratio));
@@ -427,6 +431,14 @@ html {
     font-size: var(--corps);
     line-height: var(--interligne);
     font-variant-numeric: tabular-nums;
+    font-variation-settings: "opsz" 12;
+  }
+
+  h1,
+  h2,
+  h3 {
+    font-variation-settings: "opsz" 48;
+    font-weight: 600;
   }
 
   h1 {

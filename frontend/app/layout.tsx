@@ -1,5 +1,5 @@
 import type { Metadata } from "next";
-import { IBM_Plex_Sans, IBM_Plex_Mono } from "next/font/google";
+import { Literata, IBM_Plex_Mono } from "next/font/google";
 
 import "./globals.css";
 import { ThemeProvider } from "@/lib/theme/theme-context";
@@ -10,19 +10,31 @@ import { cn } from "@/lib/utils";
 import { getSiteSettings } from "@/lib/api";
 import { ECHELLE_TYPO } from "@/lib/design/tokens";
 
-const plexSans = IBM_Plex_Sans({
-  subsets: ["latin"],
-  weight: ["300", "400", "500", "600"],
+/**
+ * Literata porte le texte. Son axe optique remplace une seconde famille :
+ * les titres en `opsz 48` ont des empattements plus francs et un contraste
+ * plus marque que le corps en `opsz 12`, ce qui donne la hierarchie sans
+ * charger une police de plus.
+ *
+ * Aucun tableau `weight` : on laisse Next.js servir la police VARIABLE.
+ * Specifier des graisses explicites force des instances statiques, ce qui
+ * multipliait les fichiers dans la version precedente du site.
+ */
+const literata = Literata({
+  subsets: ["latin", "latin-ext"],
+  axes: ["opsz"],
+  display: "swap",
   variable: "--font-sans",
 });
 
 const plexMono = IBM_Plex_Mono({
   subsets: ["latin"],
   weight: ["400", "500"],
+  display: "swap",
   variable: "--font-mono",
 });
 
-const POLICE_PAR_DEFAUT = "IBM Plex Sans";
+const POLICE_PAR_DEFAUT = "Literata";
 const API_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:4000";
 
 export async function generateMetadata(): Promise<Metadata> {
@@ -112,7 +124,7 @@ export default async function RootLayout({
       className={cn(
         "antialiased",
         plexMono.variable,
-        plexSans.variable,
+        literata.variable,
       )}
     >
       <head>

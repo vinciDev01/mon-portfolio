@@ -14,7 +14,7 @@ model SiteSettings {
   bgColor     String   @default("#131518") @map("bg_color")
   textColor   String   @default("#E4E5E3") @map("text_color")
   fontSize    Int      @default(17) @map("font_size")
-  fontFamily  String   @default("IBM Plex Sans") @map("font_family")
+  fontFamily  String   @default("Literata") @map("font_family")
   toastMessage String? @map("toast_message")
   toastDelayMs Int     @default(180000) @map("toast_delay_ms")
   cvFilePath  String?  @map("cv_file_path")

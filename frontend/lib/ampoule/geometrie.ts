@@ -31,8 +31,22 @@ export const SEUIL_FUSION_PX = 2 * EPAISSEUR_BRIN;
 const rad = (deg: number) => (deg * Math.PI) / 180;
 
 /** Pas de projection entre deux meridiens voisins, a l'angle donne. */
-export function pasLocal(thetaDeg: number): number {
-  return R * rad(PAS_ANGULAIRE_DEG) * Math.cos(rad(thetaDeg));
+export function pasLocal(
+  thetaDeg: number,
+  pasDeg: number = PAS_ANGULAIRE_DEG,
+): number {
+  return R * rad(pasDeg) * Math.cos(rad(thetaDeg));
+}
+
+/**
+ * Demi-largeur au-dela de laquelle deux meridiens voisins se recouvrent, pour
+ * un pas angulaire donne. C'est de la que se deduisent les bandes pleines :
+ * elles couvrent exactement la zone ou les brins ne sont plus separables.
+ */
+export function limiteFusion(pasDeg: number = PAS_ANGULAIRE_DEG): number {
+  const cosinus = SEUIL_FUSION_PX / (R * rad(pasDeg));
+  if (cosinus >= 1) return 0;
+  return R * Math.sin(Math.acos(cosinus));
 }
 
 /** Abscisse projetee d'un meridien. */
@@ -57,7 +71,7 @@ export function meridiens(pasDeg: number = PAS_ANGULAIRE_DEG): Meridien[] {
       theta: t,
       x: xProjete(t),
       echelle: Math.sin(rad(t)),
-      fusionne: Math.abs(pasLocal(t)) < SEUIL_FUSION_PX,
+      fusionne: Math.abs(pasLocal(t, pasDeg)) < SEUIL_FUSION_PX,
     });
   }
   return sortie;

@@ -511,4 +511,47 @@ html {
       margin-inline-start: calc(var(--portfolio-zigzag, 0.5) * (100% - 66ch));
     }
   }
+
+  /* -----------------------------------------------------------
+     Ampoule suspendue : echelle responsive, sur la grille de 8 px.
+     ----------------------------------------------------------- */
+  .ampoule {
+    position: fixed;
+    top: 0;
+    right: var(--ampoule-droite, 48px);
+    z-index: 60;
+    pointer-events: none;
+    transform: scale(var(--ampoule-echelle, 1));
+    transform-origin: 100% 0;
+  }
+
+  @media (max-width: 1439px) {
+    :root {
+      --ampoule-droite: 40px;
+    }
+  }
+  @media (max-width: 1199px) {
+    :root {
+      --ampoule-echelle: 0.82;
+      --ampoule-droite: 32px;
+    }
+  }
+  @media (max-width: 899px) {
+    :root {
+      --ampoule-echelle: 0.66;
+      --ampoule-droite: 24px;
+    }
+  }
+  @media (max-width: 599px) {
+    :root {
+      --ampoule-echelle: 0.5;
+      --ampoule-droite: 16px;
+    }
+  }
+  @media (max-width: 359px) {
+    :root {
+      --ampoule-echelle: 0.44;
+      --ampoule-droite: 12px;
+    }
+  }
 }

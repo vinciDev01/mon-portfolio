@@ -1,4 +1,5 @@
 import { getPortfolioData } from "@/lib/api";
+import { Ampoule } from "@/components/ampoule/ampoule";
 import { Header } from "@/components/portfolio/header";
 import { Footer } from "@/components/portfolio/footer";
 import { SectionShell } from "@/components/portfolio/section-shell";
@@ -28,6 +29,7 @@ export default async function Page() {
 
   return (
     <>
+      <Ampoule />
       <main className="min-h-screen">
         <SectionToastObserver />
         <Header siteSettings={s} personalInfo={data.personalInfo} />

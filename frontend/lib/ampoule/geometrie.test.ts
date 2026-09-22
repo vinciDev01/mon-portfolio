@@ -7,6 +7,7 @@ import {
   R,
   SEUIL_FUSION_PX,
   cercles,
+  limiteFusion,
   longueurArc,
   meridiens,
   ordonnee,
@@ -92,6 +93,18 @@ describe("meridiens", () => {
 
   it("garde le seuil de fusion egal au double de l epaisseur de brin", () => {
     expect(SEUIL_FUSION_PX).toBeCloseTo(2 * EPAISSEUR_BRIN, 6);
+  });
+
+  it("calcule la fusion avec son propre pas et non celui par defaut", () => {
+    const fusionnes = (pas?: number) =>
+      meridiens(pas).filter((m) => m.fusionne).map((m) => m.theta);
+    expect(fusionnes()).toEqual([-90, -85, -80, -75, 75, 80, 85, 90]);
+    expect(fusionnes(10)).toEqual([-90, 90]);
+  });
+
+  it("situe la limite de fusion selon le pas angulaire", () => {
+    expect(limiteFusion(5)).toBeCloseTo(79.37, 2);
+    expect(limiteFusion(10)).toBeCloseTo(82.87, 2);
   });
 });
 

@@ -14,9 +14,6 @@ import { MaintenancePage } from "@/components/portfolio/maintenance-page";
 import { StatsSection } from "@/components/portfolio/stats-section";
 import { ServicesSection } from "@/components/portfolio/services-section";
 import { TestimonialsSection } from "@/components/portfolio/testimonials-section";
-import { LampProvider } from "@/lib/lamp/lamp-context";
-import { LampStage } from "@/components/lamp/lamp-stage";
-import { LampSwitch } from "@/components/lamp/lamp-switch";
 
 export default async function Page() {
   const data = await getPortfolioData();
@@ -30,16 +27,7 @@ export default async function Page() {
   const rang = () => ++n;
 
   return (
-    <LampProvider
-      reglages={{
-        activee: s.lampEnabled,
-        allumeeParDefaut: s.lampOnByDefault,
-        ouverture: s.lampBeamAngle,
-        intensite: s.lampIntensity,
-        assombrissement: s.lampDimLevel,
-      }}
-    >
-      <LampSwitch />
+    <>
       <main className="min-h-screen">
         <SectionToastObserver />
         <Header siteSettings={s} personalInfo={data.personalInfo} />
@@ -108,8 +96,6 @@ export default async function Page() {
         <Footer personalInfo={data.personalInfo} />
         <ToastNotification message={s.toastMessage} delayMs={s.toastDelayMs} />
       </main>
-
-      <LampStage />
-    </LampProvider>
+    </>
   );
 }

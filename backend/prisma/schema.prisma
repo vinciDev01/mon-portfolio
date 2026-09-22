@@ -40,13 +40,6 @@ model SiteSettings {
   seoImagePath        String? @map("seo_image_path")
   notificationEmail   String? @map("notification_email")
 
-  // Lampe d'atelier
-  lampEnabled       Boolean @default(true)  @map("lamp_enabled")
-  lampOnByDefault   Boolean @default(false) @map("lamp_on_by_default")
-  lampBeamAngle     Int     @default(28)    @map("lamp_beam_angle")
-  lampIntensity     Int     @default(70)    @map("lamp_intensity")
-  lampDimLevel      Int     @default(40)    @map("lamp_dim_level")
-
   // Visibilité manquante : StatsSection était rendue sans condition
   showStats         Boolean @default(true)  @map("show_stats")
 

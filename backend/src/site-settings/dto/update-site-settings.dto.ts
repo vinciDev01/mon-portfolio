@@ -152,42 +152,6 @@ export class UpdateSiteSettingsDto {
   @IsString()
   notificationEmail?: string;
 
-  // --- Lampe d'atelier ---
-
-  @ApiPropertyOptional()
-  @IsOptional()
-  @IsBoolean()
-  lampEnabled?: boolean;
-
-  @ApiPropertyOptional()
-  @IsOptional()
-  @IsBoolean()
-  lampOnByDefault?: boolean;
-
-  @ApiPropertyOptional({ example: 28, description: 'Ouverture totale du faisceau en degres' })
-  @IsOptional()
-  @Type(() => Number)
-  @IsInt()
-  @Min(8)
-  @Max(45)
-  lampBeamAngle?: number;
-
-  @ApiPropertyOptional({ example: 70 })
-  @IsOptional()
-  @Type(() => Number)
-  @IsInt()
-  @Min(0)
-  @Max(100)
-  lampIntensity?: number;
-
-  @ApiPropertyOptional({ example: 40, description: 'Au-dela de 40, le contraste hors faisceau passe sous le seuil AA' })
-  @IsOptional()
-  @Type(() => Number)
-  @IsInt()
-  @Min(0)
-  @Max(65)
-  lampDimLevel?: number;
-
   // --- Visibilite ---
 
   @ApiPropertyOptional()

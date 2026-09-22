@@ -1,14 +1,11 @@
 "use client";
 
-import { useBeamTarget, useBiaisLampe } from "@/lib/lamp/lamp-context";
 import { useReveal } from "@/lib/use-reveal";
 import { useTranslation } from "@/lib/i18n/i18n-context";
 
 /**
  * Coquille commune a toutes les sections : place le bloc dans la grille selon
- * la parite de `index`, declare sa zone eclairable, et rend le titre en
- * `var(--texte)`. Le contraste hors faisceau vient du scrim de la lampe
- * (assombrissement de la page hors zone eclairee), pas d'un double titre.
+ * la parite de `index` et rend le titre en `var(--texte)`.
  *
  * `page.tsx` est un composant serveur : il ne peut pas appeler `useTranslation`
  * (hook client). C'est donc `SectionShell`, deja "use client", qui recoit une
@@ -33,9 +30,7 @@ export function SectionShell({
   index: number;
   children: React.ReactNode;
 }) {
-  const cible = useBeamTarget();
   const reveal = useReveal();
-  const { survolTitre, relacher } = useBiaisLampe();
   const { t } = useTranslation();
   const titre = t(cleTitre);
   const aGauche = index % 2 === 1;
@@ -43,20 +38,14 @@ export function SectionShell({
   return (
     <section
       id={id}
-      className="grid grid-cols-12 pl-8 lg:pl-16"
+      className="grid grid-cols-12 px-8 lg:px-16"
       style={{
         paddingTop: "var(--espace-section)",
         paddingBottom: 0,
-        // Style inline, et non une classe : les utilitaires Tailwind vivent
-        // dans @layer utilities et l'emporteraient sur une regle en couche.
-        paddingRight: "var(--marge-droite-lampe)",
       }}
     >
       <div
-        ref={(el) => {
-          cible(el);
-          reveal(el);
-        }}
+        ref={(el) => reveal(el)}
         className="col-span-12 mesure zigzag"
         // L'amplitude vient du reglage `zigzagAmplitude`, normalise entre 0 et 1
         // par app/layout.tsx. A 0 les deux cotes se confondent : colonne unique.
@@ -66,11 +55,7 @@ export function SectionShell({
           {String(index).padStart(2, "0")}
         </p>
 
-        <h2
-          style={{ marginBottom: "var(--espace-4)" }}
-          onMouseEnter={(e) => survolTitre(e.currentTarget)}
-          onMouseLeave={relacher}
-        >
+        <h2 style={{ marginBottom: "var(--espace-4)" }}>
           {titre}
         </h2>
 

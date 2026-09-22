@@ -5,7 +5,6 @@ import { fetchSingleton, updateSingleton, uploadFile } from "@/lib/api";
 import { ImageUpload } from "@/components/image-upload";
 import { toast } from "sonner";
 import type { SiteSettingsDto } from "@portfolio/shared-types";
-import { ratioContraste, melanger } from "@/lib/contrast";
 import { TelechargementCv } from "@/components/telechargement-cv";
 
 export default function SiteSettingsPage() {
@@ -290,87 +289,6 @@ export default function SiteSettingsPage() {
             </p>
           </div>
         </div>
-
-        {/* --- Lampe d'atelier --- */}
-        <fieldset className="border border-border rounded-md p-4 space-y-4">
-          <legend className="text-sm font-semibold px-2">Lampe d&apos;atelier</legend>
-
-          <label className="flex items-center gap-3 text-sm">
-            <input
-              type="checkbox"
-              checked={data.lampEnabled}
-              onChange={(e) => setData({ ...data, lampEnabled: e.target.checked })}
-            />
-            Lampe activée sur le site
-          </label>
-
-          <label className="flex items-center gap-3 text-sm">
-            <input
-              type="checkbox"
-              checked={data.lampOnByDefault}
-              onChange={(e) => setData({ ...data, lampOnByDefault: e.target.checked })}
-            />
-            Allumée dès l&apos;arrivée du visiteur
-          </label>
-
-          <div>
-            <label className="block text-sm font-medium mb-1">
-              Ouverture du faisceau : {data.lampBeamAngle}°
-            </label>
-            <input
-              type="range" min={8} max={45}
-              value={data.lampBeamAngle}
-              onChange={(e) => setData({ ...data, lampBeamAngle: Number(e.target.value) })}
-              className="w-full"
-            />
-          </div>
-
-          <div>
-            <label className="block text-sm font-medium mb-1">
-              Intensité : {data.lampIntensity}%
-            </label>
-            <input
-              type="range" min={0} max={100}
-              value={data.lampIntensity}
-              onChange={(e) => setData({ ...data, lampIntensity: Number(e.target.value) })}
-              className="w-full"
-            />
-          </div>
-
-          <div>
-            <label className="block text-sm font-medium mb-1">
-              Assombrissement hors faisceau : {data.lampDimLevel}%
-            </label>
-            <input
-              type="range" min={0} max={65}
-              value={data.lampDimLevel}
-              onChange={(e) => setData({ ...data, lampDimLevel: Number(e.target.value) })}
-              className="w-full"
-            />
-            {(() => {
-              // Texte secondaire de la palette (dates, metadonnees, numeros
-              // de section, pied de page) : voir frontend/lib/design/tokens.ts
-              const TEXTE_SECONDAIRE = "#8B8F8A";
-              const taux = data.lampDimLevel / 100;
-              const fond = melanger(data.bgColor, "#0D0F11", taux);
-              const textePrincipal = melanger(data.textColor, "#0D0F11", taux);
-              const texteSecondaire = melanger(TEXTE_SECONDAIRE, "#0D0F11", taux);
-              const ratioPrincipal = ratioContraste(textePrincipal, fond);
-              const ratioSecondaire = ratioContraste(texteSecondaire, fond);
-              const ratioMinimum = Math.min(ratioPrincipal, ratioSecondaire);
-              const conforme = ratioMinimum >= 4.5;
-              return (
-                <p className={`text-xs mt-1 ${conforme ? "text-muted-foreground" : "text-red-600"}`}>
-                  Contraste hors faisceau — texte principal {ratioPrincipal.toFixed(2)}:1, texte
-                  secondaire {ratioSecondaire.toFixed(2)}:1 —{" "}
-                  {conforme
-                    ? "conforme AA"
-                    : `sous le seuil AA de 4.5:1 (pire cas ${ratioMinimum.toFixed(2)}:1)`}
-                </p>
-              );
-            })()}
-          </div>
-        </fieldset>
 
         {/* --- CV genere --- */}
 <fieldset className="border border-border rounded-md p-4 space-y-4">

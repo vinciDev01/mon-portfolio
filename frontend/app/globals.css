@@ -373,14 +373,6 @@ html {
       var(--ratio)
   );
 
-  /*
-     Marge droite reservee a la lampe. Son emprise horizontale vaut RAIL
-     (140 px dans use-lamp-engine.ts) ; on garde 160 px pour que le bloc de
-     droite du zigzag ne passe jamais sous la tete. Sous 900 px la lampe
-     n'occupe plus la marge, on revient a la respiration normale.
-  */
-  --marge-droite-lampe: 32px;
-
   /* Rythme vertical, grille de 8 px */
   --espace-1: 8px;
   --espace-2: 16px;
@@ -392,12 +384,6 @@ html {
   /* Mouvement */
   --duree: calc(400ms * var(--portfolio-animation-speed, 1));
   --courbe: cubic-bezier(0.22, 1, 0.36, 1);
-}
-
-@media (min-width: 900px) {
-  :root {
-    --marge-droite-lampe: 160px;
-  }
 }
 
 /* Le mobile applique les deux tiers de l'espace inter-sections. */
@@ -475,28 +461,6 @@ html {
     :root:not([data-mouvement="force"]) .reveal-visible {
       transition: none;
     }
-  }
-
-  /* -----------------------------------------------------------
-     Couche lumineuse. Inerte : ne recoit jamais d'evenement.
-     ----------------------------------------------------------- */
-  .beam-layer {
-    position: fixed;
-    inset: 0;
-    width: 100%;
-    height: 100%;
-    pointer-events: none;
-    z-index: 40;
-  }
-
-  /* Reponses immediates au survol (titre, CTA, marge) : ce sont des
-     micro-interactions, pas des mouvements de masse, donc une transition
-     CSS plutot que le ressort du moteur. */
-  .beam-layer polygon,
-  .lampe-bras {
-    transition:
-      opacity var(--duree) var(--courbe),
-      transform var(--duree) var(--courbe);
   }
 
   /* Zigzag : le bloc se deplace dans la grille, il ne s'etire jamais. */

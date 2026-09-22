@@ -14,6 +14,34 @@ import { SILHOUETTE_FERMEE } from "./maille";
 const CHEMIN_FAISCEAU = `M 4 ${BORD_Y} A 84 12 0 0 0 172 ${BORD_Y} L 238 560 L -62 560 Z`;
 
 /**
+ * Masque de penombre de L4 (ronde de correction 2) : PAS le contour ferme
+ * du cone, mais ses seuls flancs, prolonges au-dela du champ visible en
+ * haut comme en bas. L'annexe §3.3 ne demande une penombre que « de chaque
+ * cote » — or l'arc superieur du cone (`A 84 12 0 0 0`) plonge de y = 256 a
+ * ses extremites jusqu'a y = 268 en son centre, ou la tangente est quasi
+ * horizontale : flouter ce contour ferme y produisait une transition
+ * VERTICALE d'environ 18 px, en plus du flou de forme de 26 px deja voulu,
+ * et le faisceau s'estompait a sa naissance sous l'abat-jour — son point
+ * le plus visible.
+ *
+ * Les flancs gardent leur position exacte (penombre laterale de 18 px
+ * inchangee) ; seules les transitions haute et basse sortent du champ. Le
+ * flou porte sur 3 sigma = 21 px (sigma = 7, voir plus bas) : il faut donc
+ * partir au moins 21 px au-dessus de y = 268, soit y <= 247 ; y = 235 est
+ * pris pour la marge. Flanc gauche de pente `dx/dy = -66/304 = -0,21711`
+ * (passe par (4 ; 256) et (-62 ; 560)), flanc droit symetrique par
+ * x = 88 :
+ *
+ *     y = 235  ->  flanc gauche x =   8,56   flanc droit x = 167,44
+ *     y = 620  ->  flanc gauche x = -75,03   flanc droit x = 251,03
+ *
+ * Le `<path>` du REMPLISSAGE continue d'utiliser `CHEMIN_FAISCEAU` sans
+ * changement : c'est lui qui donne la forme, arc superieur compris. Seul
+ * le contenu du `<mask>` change.
+ */
+const CHEMIN_MASQUE_FAISCEAU = "M 8.56 235 L 167.44 235 L 251.03 620 L -75.03 620 Z";
+
+/**
  * Les six couches de lumiere de l'annexe (§3), du plus proche de la source
  * au plus lointain : L2 la lueur a travers le tressage, L1 le filament
  * (taches 7/8), puis L4 le faisceau, L5 le halo de fond et L6 la moucheture
@@ -205,20 +233,20 @@ export function CoucheFilament() {
  * en pixels fait foi ici (a la difference des tables de couleur, ou ce sont
  * les valeurs tabulees qui priment) : c'est une grandeur geometrique
  * explicite, pas une couleur dont le referentiel de pourcentage serait
- * ambigu. Le masque est donc le contour du cone lui-meme (`CHEMIN_FAISCEAU`,
- * le MEME chemin que le remplissage), rempli en blanc puis floute : un bord
- * net floute par une gaussienne d'ecart-type s donne une transition 10 %-90 %
- * de 2,563 s ; pour 18 px, s = 18 / 2,563 = 7,02, arrondi a 7 — d'ou
- * `2,563 * 7 = 17,94 px`, les 18 px demandes a 0,06 px pres.
+ * ambigu. Le masque est fait des FLANCS du cone, prolonges au-dela du champ
+ * (`CHEMIN_MASQUE_FAISCEAU`, distinct de `CHEMIN_FAISCEAU` — voir sa
+ * documentation, ronde de correction 2), rempli en blanc puis floute : un
+ * bord net floute par une gaussienne d'ecart-type s donne une transition
+ * 10 %-90 % de 2,563 s ; pour 18 px, s = 18 / 2,563 = 7,02, arrondi a 7 —
+ * d'ou `2,563 * 7 = 17,94 px`, les 18 px demandes a 0,06 px pres.
  *
  * La region elargie du `<mask>` (bien au-dela de la boite englobante
- * stricte du cone, 300 x 304) reste necessaire, mais pour une seule raison
- * maintenant : ne pas rogner la trainee du flou de FORME de 26 px
- * (ci-dessous), qui etale la geometrie source d'environ 78 px (3 sigma).
- * Avant cette correction, le meme rectangle portait aussi le degrade de
- * penombre — les deux roles se contrariaient, et la penombre ne mordait
- * jamais sur le cone (ses arrets tombaient a x = -94,4 et x = 270,4 sur un
- * cone qui ne va que de x = -62 a x = 238).
+ * stricte du cone, 300 x 304) reste necessaire pour deux raisons
+ * desormais : ne pas rogner la trainee du flou de FORME de 26 px
+ * (ci-dessous, qui etale la geometrie source d'environ 78 px / 3 sigma), et
+ * contenir le chemin de masque prolonge (y de 235 a 620) plus ses propres
+ * 21 px de flou (3 sigma a 7 px) — x de -96 a 272, y de 214 a 641, ce qui
+ * tient dans `x=-152 y=166 width=480 height=484`.
  *
  * Flou 26 px : c'est le seul flou reel de forme de tout l'effet (les
  * autres flous du fichier sont des flous de detail, celui-ci flou une
@@ -253,10 +281,10 @@ export function CoucheFaisceau() {
           <feGaussianBlur stdDeviation={7} />
         </filter>
         {/* Region de masque elargie : marge pour la trainee du flou de
-            forme de 26 px ci-dessous, seul role de ce rectangle desormais
+            forme de 26 px ci-dessous ET pour le chemin de masque prolonge
             (voir le commentaire de tete). */}
         <mask id={idMasque} maskUnits="userSpaceOnUse" x={-152} y={166} width={480} height={484}>
-          <path d={CHEMIN_FAISCEAU} fill="#fff" filter={`url(#${idFlouMasque})`} />
+          <path d={CHEMIN_MASQUE_FAISCEAU} fill="#fff" filter={`url(#${idFlouMasque})`} />
         </mask>
         <filter id={idFlou} x="-30%" y="-30%" width="160%" height="160%">
           <feGaussianBlur stdDeviation={26} />

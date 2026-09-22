@@ -799,7 +799,56 @@ export { themeSelonHeure };
 export type { Theme, Strategie };
 ```
 
-- [ ] **Étape 8 : Brancher dans `layout.tsx` et retirer `next-themes`**
+- [ ] **Étape 8 : Neutraliser les surcharges de couleur injectées sur `<html>`**
+
+**Sans cette étape, le commutateur ne changera rien.** `layout.tsx` injecte
+aujourd'hui, en style inline sur `<html>`, trois variables qui court-circuitent
+les palettes :
+
+| Variable injectée | Conséquence |
+|---|---|
+| `--portfolio-bg` | `--background: var(--portfolio-bg, var(--fond))` ne voit jamais le repli : le fond reste figé quelle que soit la classe de thème |
+| `--portfolio-text` | idem pour `--foreground` |
+| `--accent` | **collision directe de nom**, injectée sans aucune garde : le jeton d'accent des deux palettes n'est jamais lu |
+
+Un style inline sur `<html>` l'emporte sur toute règle de feuille de style
+visant le même élément. Les palettes de la tâche 2 sont donc inertes sur ces
+trois jetons.
+
+**Correctif.**
+
+Dans `frontend/app/layout.tsx`, supprimer les trois affectations de `styleVars` :
+celles de `--portfolio-bg`, `--portfolio-text` et `--accent`. Conserver les
+autres (`--portfolio-font-size`, `--ratio`, `--portfolio-line-height`,
+`--portfolio-section-spacing`, `--portfolio-zigzag`,
+`--portfolio-animation-speed`) : elles ne touchent pas aux couleurs.
+
+Dans `frontend/app/globals.css`, ramener le mapping sur les jetons de thème :
+
+```css
+  --background: var(--fond);
+  --foreground: var(--texte);
+```
+
+**Ce que cela retire au propriétaire du site.** Quatre réglages du backoffice
+cessent d'agir : couleur de fond, couleur du texte, teinte et saturation de
+l'accent. C'est délibéré. Les deux palettes sont désormais fixes et leurs
+contrastes sont garantis par dix-huit tests ; laisser une couleur arbitraire
+les surcharger romprait ces garanties en silence, ce qu'aucun test ne
+détecterait.
+
+Retirer ces quatre contrôles de `backoffice/app/site-settings/page.tsx` plutôt
+que de les laisser en place sans effet : un réglage mort qu'on peut encore
+déplacer est pire qu'un réglage absent. Les colonnes correspondantes restent
+en base, simplement plus lues.
+
+```bash
+grep -n "bgColor\|textColor\|accentHue\|accentSaturation" backoffice/app/site-settings/page.tsx
+```
+
+Attendu après correction : aucune occurrence.
+
+- [ ] **Étape 9 : Brancher dans `layout.tsx` et retirer `next-themes`**
 
 Remplacer l'import et l'usage de l'ancien fournisseur :
 
@@ -843,22 +892,24 @@ grep -rn "next-themes\|ThemeHotkey" frontend/ --include=*.tsx --include=*.ts --i
 
 Attendu : aucun résultat.
 
-- [ ] **Étape 9 : Vérifier**
+- [ ] **Étape 10 : Vérifier**
 
 ```bash
 npm run test -w frontend
 npm run typecheck -w frontend
 curl -s http://localhost:3000 | grep -o 'class="[^"]*\(clair\|sombre\)[^"]*"' | head -2
+# Les surcharges de couleur ne doivent plus figurer sur <html>
+curl -s http://localhost:3000 | grep -o 'style="[^"]*"' | head -1
 curl -s http://localhost:3000 | grep -c 'getHours' | xargs echo "script initial present:"
 ```
 
 Attendu : les tests au vert, et le script présent dans le HTML servi.
 
-- [ ] **Étape 10 : Commit**
+- [ ] **Étape 11 : Commit**
 
 ```bash
 git add -A
-git commit -m "feat(theme): regle horaire, script initial sans clignotement, next-themes retire"
+git commit -m "feat(theme): regle horaire, script initial, surcharges de couleur neutralisees"
 ```
 
 ---

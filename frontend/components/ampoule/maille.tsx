@@ -122,9 +122,6 @@ export function Maille({ id }: { id: string }) {
   const epaisseurBrin = degrade ? EPAISSEUR_BRIN_DEGRADEE : EPAISSEUR_BRIN;
   const opaciteInterstice = degrade ? OPACITE_INTERSTICE_DEGRADEE : OPACITE_INTERSTICE_PLEINE;
   const filtreActif = !degrade;
-  // Meme facteur applique aux cercles, pour que tout le tressage epaississe
-  // ensemble sous 600 px, pas seulement les meridiens.
-  const facteurEpaisseur = epaisseurBrin / EPAISSEUR_BRIN;
 
   const limite = limiteFusion(pasDeg);
   const largeurBande = R - limite;
@@ -218,7 +215,7 @@ export function Maille({ id }: { id: string }) {
             fill="none"
             stroke={couleur}
             strokeOpacity={opacite}
-            strokeWidth={c.epaisseur * facteurEpaisseur}
+            strokeWidth={c.epaisseur}
           />
         );
       })}

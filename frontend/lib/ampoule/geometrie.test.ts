@@ -1,11 +1,15 @@
 import { describe, it, expect } from "vitest";
 import {
+  APEX_Y,
   CENTRE_X,
   EPAISSEUR_BRIN,
+  H,
   R,
   SEUIL_FUSION_PX,
   cercles,
+  longueurArc,
   meridiens,
+  ordonnee,
   pasLocal,
   xProjete,
 } from "./geometrie";
@@ -103,8 +107,35 @@ describe("cercles", () => {
     expect(dernier.cy).toBeCloseTo(256, 1);
   });
 
-  it("garde un pas d arc constant de 7,42 px", () => {
-    expect(133.5 / 18).toBeCloseTo(7.42, 2);
+  it("retrouve la longueur d arc du demi-profil", () => {
+    expect(longueurArc(1)).toBeCloseTo(133.5, 1);
+  });
+
+  it("place chaque cercle a pas d arc constant", () => {
+    const pas = longueurArc(1) / 18;
+    cercles().forEach((c, k) => {
+      expect(longueurArc(c.rx / R)).toBeCloseTo((k + 1) * pas, 1);
+    });
+  });
+
+  it("garde tous ses cercles sur la superellipse de Lame", () => {
+    for (const c of cercles()) {
+      const gauche =
+        Math.pow(c.rx / R, 2.6) + Math.pow(1 - (c.cy - APEX_Y) / H, 2.6);
+      expect(gauche).toBeCloseTo(1, 3);
+    }
+  });
+
+  it("respecte la table de controle des cotes", () => {
+    const c = cercles();
+    expect(c[0].rx).toBeCloseTo(7.416, 2);
+    expect(c[0].cy).toBeCloseTo(178.055, 2);
+    expect(c[5].rx).toBeCloseTo(43.856, 2);
+    expect(c[5].cy).toBeCloseTo(183.887, 2);
+    expect(c[11].rx).toBeCloseTo(76.414, 2);
+    expect(c[11].cy).toBeCloseTo(212.573, 2);
+    expect(c[17].rx).toBeCloseTo(84, 6);
+    expect(c[17].cy).toBeCloseTo(256, 6);
   });
 
   it("elargit strictement chaque cercle vers le bas", () => {

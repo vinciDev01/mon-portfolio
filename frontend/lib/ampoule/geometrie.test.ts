@@ -167,6 +167,13 @@ describe("cercles", () => {
     expect(c[0].epaisseur).toBeCloseTo(0.9, 2);
   });
 
+  it("place les nervures aux memes fractions quel que soit le cardinal", () => {
+    const renforces = (n: number) =>
+      cercles(n).filter((c) => c.epaisseur === 2.2).map((c) => c.indice);
+    expect(renforces(18)).toEqual([6, 12, 17]);
+    expect(renforces(11)).toEqual([4, 7, 10]);
+  });
+
   it("donne a l ourlet sa sur-epaisseur", () => {
     expect(cercles()[17].epaisseur).toBeCloseTo(2.4, 2);
   });

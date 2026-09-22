@@ -89,7 +89,21 @@ export type Cercle = {
 const EXPOSANT = 2.6;
 /** Rapport ry/rx de l'ellipse de bord : angle de vue de 8,2 degres sous le plan. */
 const INCLINAISON = 12 / 84;
-const RENFORCES = new Set([6, 12, 17]);
+
+/**
+ * Nervures de structure : aux tiers du parcours, plus celle qui precede
+ * l'ourlet. Exprimees en fraction d'arc et non en indices figes, sinon elles
+ * se deplacent des que le cardinal change — a 11 cercles, l'ancien indice 6
+ * tombait au milieu du dome au lieu du premier tiers.
+ */
+function estRenforce(indice: number, nombre: number): boolean {
+  return (
+    indice === Math.round(nombre / 3) ||
+    indice === Math.round((2 * nombre) / 3) ||
+    indice === nombre - 1
+  );
+}
+
 /** Nombre de pas d'integration. 500 suffit : l'ecart a une integration
  *  reparametree exacte reste sous 0,002 px, bien moins que l'epaisseur d'un
  *  brin. Un echantillonnage uniforme s'est revele six fois plus precis qu'un
@@ -179,7 +193,7 @@ export function cercles(nombre = 18): Cercle[] {
       ry: rx * INCLINAISON,
       cy: APEX_Y + ordonnee(t),
       epaisseur:
-        indice === nombre ? 2.4 : RENFORCES.has(indice) ? 2.2 : 0.9,
+        indice === nombre ? 2.4 : estRenforce(indice, nombre) ? 2.2 : 0.9,
     };
   });
 }

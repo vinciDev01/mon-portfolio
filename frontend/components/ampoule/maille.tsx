@@ -28,12 +28,13 @@ const PROFIL_DROIT =
   "C 170.53 223.61, 172.00 228.80, 172.00 256.00";
 
 /**
- * Silhouette fermee du dome, pour le voile de fond (l'interstice). C'est
+ * Silhouette fermee du dome, pour le voile de fond (l'interstice) et pour
+ * l'ecretage de l'occlusion sous le bord (`Ampoule`, qui l'importe). C'est
  * exactement PROFIL_DROIT, reflechi autour de x = 88 (x' = 176 - x) et
  * parcouru en sens inverse pour refermer le contour — jamais redessine a la
  * main, seulement reflechi et inverse.
  */
-const SILHOUETTE_FERMEE =
+export const SILHOUETTE_FERMEE =
   "M 88 178 C 117.40 178.00, 122.77 179.32, 137.29 186.17 " +
   "C 148.72 191.57, 157.39 199.62, 163.20 210.24 " +
   "C 170.53 223.61, 172.00 228.80, 172.00 256.00 " +
@@ -140,10 +141,6 @@ export function Maille({ id }: { id: string }) {
   const cerclesVisibles = cercles(nombreCercles).filter((c) => c.rx > RAYON_CALOTTE);
   const dernierIndice = nombreCercles;
 
-  // L'arc d'interieur visible reprend la geometrie du cercle juste avant
-  // l'ourlet : un apercu de la cavite, legerement en retrait du bord.
-  const arcBase = cerclesVisibles[cerclesVisibles.length - 2];
-
   const idProfil = "profil";
   const idFiltre = "brins";
 
@@ -225,18 +222,6 @@ export function Maille({ id }: { id: string }) {
           />
         );
       })}
-
-      {/* Arc d'interieur visible : apercu de la cavite, juste en retrait de
-          l'ourlet. */}
-      {arcBase && (
-        <path
-          d={`M ${(CENTRE_X - arcBase.rx).toFixed(2)} ${arcBase.cy.toFixed(2)} A ${arcBase.rx.toFixed(2)} ${arcBase.ry.toFixed(2)} 0 0 1 ${(CENTRE_X + arcBase.rx).toFixed(2)} ${arcBase.cy.toFixed(2)}`}
-          fill="none"
-          stroke={COULEUR_INTERIEUR}
-          strokeOpacity={0.88}
-          strokeWidth={1}
-        />
-      )}
     </g>
   );
 }

@@ -795,6 +795,36 @@ html {
   }
 
   /*
+   * Interrupteur (tache 13). Hors de `.ampoule` : non transforme, donc zone
+   * de clic reelle d'au moins 44 x 44 px quelle que soit l'echelle (annexe
+   * §1.6). Pas d'`isolation` : la lumiere est derriere le contenu, l'anneau
+   * repose sur le fond compose (accent >= 5,96:1).
+   */
+  .ampoule-interrupteur {
+    position: fixed;
+    /* Centre du dome, en pixels reels : le conteneur de l'objet est ancre a
+       `right: var(--ampoule-droite)` et mis a l'echelle depuis son coin
+       superieur droit, donc le centre du dome tombe a 88 unites du bord
+       droit, soit 88 x echelle en pixels. */
+    top: calc(217px * var(--ampoule-echelle, 1));
+    right: calc(var(--ampoule-droite, 48px) + 88px * var(--ampoule-echelle, 1));
+    transform: translate(50%, -50%);
+    /* Suit le dome tant qu'il est plus grand que 44 px, puis plancher a 44 px. */
+    width: max(44px, calc(168px * var(--ampoule-echelle, 1)));
+    height: max(44px, calc(78px * var(--ampoule-echelle, 1)));
+    pointer-events: auto;
+    z-index: 61;
+    background: none;
+    border: 0;
+    padding: 0;
+    cursor: pointer;
+  }
+  .ampoule-interrupteur:focus-visible {
+    outline: 2px solid var(--accent);
+    outline-offset: 3px;
+  }
+
+  /*
    * Groupe isole (tache 8, addendum du controleur, point B) : seules L2 la
    * lueur du tressage, la maille et L1 le filament vivent ici (ampoule.tsx,
    * `.lampe-isolee`). `isolation: isolate` confine leur

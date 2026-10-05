@@ -1,5 +1,6 @@
 import { BORD_Y, CENTRE_X } from "@/lib/ampoule/geometrie";
 import { LUMIERE } from "@/lib/design/tokens";
+import { Interrupteur } from "./interrupteur";
 import { CoucheFaisceau, CoucheFilament, CoucheLueur, CoucheMoucheture } from "./couches-lumiere";
 import { Maille, SILHOUETTE_FERMEE } from "./maille";
 
@@ -235,6 +236,10 @@ export function Ampoule({ id = "ampoule-eteinte" }: { id?: string } = {}) {
           y=212, degrade d'opacite 0,22 -> 0 sur ce parcours. */}
       <path d={CHEMIN_LISERE} fill="none" stroke={`url(#${idLisere})`} strokeWidth={1} />
     </svg>
+    {/* Quatrieme frere, hors de `.ampoule` : non mis a l'echelle, il garde
+        une zone de clic d'au moins 44 x 44 px (globals.css). Place apres
+        les SVG mais avant <main> dans le DOM : atteint en premier au clavier. */}
+    <Interrupteur />
     </>
   );
 }

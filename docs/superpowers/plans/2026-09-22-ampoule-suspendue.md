@@ -6,6 +6,11 @@
 
 **Architecture:** L'objet est un SVG unique en `position: fixed`, dont le tressage est construit géométriquement — 37 méridiens réutilisés par `<use>` et 18 ellipses à pas d'arc constant — de sorte que l'assombrissement des bords émerge de la densité de la trame au lieu d'être simulé. Six couches de lumière s'empilent sous et sur la maille, pilotées par une variable unique `--lampe-t` animée par la Web Animations API. Le thème est posé sur `<html>` par un script exécuté avant le premier tracé, qui lit la préférence enregistrée puis retombe sur une règle horaire.
 
+> **Écarts assumés en cours d'exécution** — consignés au registre avec leur motif :
+> 1. La variable unique `--lampe-t` a été remplacée par une variable par couche (`--t-filament`, `--t-lueur`, `--t-faisceau`, `--t-halo`, `--t-moucheture`, `--t-brins`, `--t-page`, plus `--filament-couleur`). Une seule variable parcourue à rebours ne peut produire que le miroir de l'allumage, alors que §5.2 exige une extinction qui n'en est pas le miroir — le faisceau doit partir le premier.
+> 2. Le faisceau et la moucheture ne sont pas dans le SVG de l'objet mais dans deux conteneurs en `z-index: -1`, derrière le contenu. Au-dessus du texte, leur `screen` faisait tomber le texte secondaire de 6,42:1 à 3,15:1 contre un seuil WCAG de 4,5.
+> 3. Les trois couches de lumière de page sont plafonnées par `--lumiere-plafond: 0.75` : leur superposition dépassait sinon le garde-fou de ±0,04 sur la luminance du fond, à +0,0438.
+
 **Tech Stack:** Next.js 16 (App Router) · React 19 · Tailwind v4 · SVG + filtres · Web Animations API · NestJS 11 + Prisma · Vitest · Jest
 
 **Spec:** `docs/superpowers/specs/2026-09-22-ampoule-suspendue-design.md`

@@ -788,7 +788,14 @@ html {
    * de 60. L'objet, lui, reste a 60 parce que son fil traverse l'en-tete
    * collant (z-index 50).
    */
-  .ampoule-lumiere {
+  /* Specificite volontairement doublee : a specificite egale, cette regle ne
+     l'emporterait sur `.ampoule { z-index: 60 }` que parce qu'elle vient
+     apres. Un reordonnancement du fichier remettrait alors le faisceau et la
+     moucheture AU-DESSUS du contenu, ou leur `screen` ecrase le contraste du
+     texte — mesure a la tache 11 : texte secondaire 6,42:1 tombant a 3,15:1
+     contre un seuil de 4,5. Le doublement rend la regle independante de
+     l'ordre. */
+  .ampoule.ampoule-lumiere {
     z-index: -1;
   }
 

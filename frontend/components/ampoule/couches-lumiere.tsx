@@ -70,8 +70,8 @@ const CHEMIN_MASQUE_FAISCEAU = "M 8.56 235 L 167.44 235 L 251.03 620 L -75.03 62
  * L'opacite de chaque couche est portee par sa propre variable CSS
  * (`--lueur-opacite`, `--filament-opacite`, `--faisceau-opacite`,
  * `--moucheture-opacite` dans globals.css), toutes deriveees de
- * `--lampe-t` pour l'instant a l'identique — la tache 10 leur donnera des
- * courbes et des delais distincts. A `--lampe-t: 0` (theme sombre), toutes
+ * `--t-*` de la couche, animees par la tache 10 avec courbes et delais
+ * distincts. A 0 (theme sombre), toutes
  * les couches sont invisibles : la « braise residuelle nulle » de l'annexe
  * §4.4.
  */
@@ -294,7 +294,7 @@ export function CoucheFaisceau() {
   const idFlou = `faisceau-flou-${id}`;
 
   return (
-    <g className="couche-faisceau">
+    <g>
       <defs>
         <linearGradient
           id={idDegrade}
@@ -434,7 +434,7 @@ export function CoucheMoucheture({ idMaille }: { idMaille: string }) {
   const transformationProjection = "skewY(4) translate(88,250) scale(2.35) translate(-88,-250)";
 
   return (
-    <g className="couche-moucheture" mask={`url(#${idMasqueChute})`}>
+    <g mask={`url(#${idMasqueChute})`}>
       <defs>
         <filter id={idRecolorNet} x="-20%" y="-20%" width="140%" height="140%">
           {primitivesRecolorationMaille()}

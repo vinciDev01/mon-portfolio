@@ -2,7 +2,7 @@
  * Pilotage de la transition d'incandescence.
  *
  * Ronde de correction 1 (task-10-fix-1.md) : abandon d'une variable
- * unique `--lampe-t` (derivee par couche via des rampes CSS bornees) au
+ * unique de pilotage (derivee par couche via des rampes CSS bornees) au
  * profit d'une variable CSS par couche, toutes animees ENSEMBLE par le
  * meme et unique objet `Animation` — la reentrance (annexe §5.3) tient a
  * un seul objet, pas a une seule variable. Deux jeux d'images-cles

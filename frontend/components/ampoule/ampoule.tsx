@@ -67,6 +67,41 @@ export function Ampoule({ id = "ampoule-eteinte" }: { id?: string } = {}) {
   const idLisere = `lisere-incidence-${id}`;
 
   return (
+    <>
+    {/* L6 la moucheture puis L4 le faisceau (tache 11, ronde de correction
+        1) : chacun dans son SVG, car un `position: fixed` forme un contexte
+        d'empilement ISOLE : un `mix-blend-mode` pose sur un enfant ne
+        fusionnerait qu'avec le contenu de ce SVG, jamais avec la page. Les
+        classes `couche-moucheture` / `couche-faisceau` (opacite et fusion,
+        globals.css) sont donc portees par l'element `<svg>` lui-meme. Ils
+        sont derriere le contenu de la page
+        (`.ampoule-lumiere`, z-index -1, globals.css). Un `screen` ou un
+        `overlay` pose au-dessus du texte eclaircit le texte ET son fond et
+        comprime leur contraste ; derriere, la lumiere ne modifie que le
+        fond. Meme `viewBox` et meme classe `.ampoule` que l'objet ci-dessous
+        (donc meme assise : fixed, top 0, right, scale, origin 100% 0) : le
+        faisceau doit sortir exactement du bord de l'abat-jour. L5 le halo
+        est `body::before`, egalement a z-index -1 ; l'ordre de peinture
+        L5 -> L6 -> L4 est l'ordre de l'arbre. La moucheture reference par
+        `<use href>` le `<symbol>` de la maille, defini dans le SVG de
+        l'objet : la resolution se fait sur le document entier. Aucun second
+        `feTurbulence`. */}
+    <svg
+      className="ampoule ampoule-lumiere couche-moucheture"
+      viewBox="0 0 176 560"
+      aria-hidden="true"
+      focusable="false"
+    >
+      <CoucheMoucheture idMaille={id} />
+    </svg>
+    <svg
+      className="ampoule ampoule-lumiere couche-faisceau"
+      viewBox="0 0 176 560"
+      aria-hidden="true"
+      focusable="false"
+    >
+      <CoucheFaisceau />
+    </svg>
     <svg
       className="ampoule"
       viewBox="0 0 176 560"
@@ -168,28 +203,17 @@ export function Ampoule({ id = "ampoule-eteinte" }: { id?: string } = {}) {
         strokeLinecap="round"
       />
 
-      {/* L6 la moucheture puis L4 le faisceau (tache 9) : EN DEHORS du
-          groupe isole ci-dessous, a dessein. L5 le halo de fond n'a pas de
-          noeud ici : c'est un `radial-gradient` sur `body::before`
-          (globals.css), peint derriere tout le SVG par l'ordre de
-          peinture naturel de la page (aucun `z-index` explicite ne lui
-          est necessaire, `.ampoule` etant deja a z-index 60). Ordre de
-          peinture complet impose par l'annexe §3 : L5 -> L6 -> L4 ->
-          [groupe isole : L2 -> maille -> L1]. */}
-      <CoucheMoucheture idMaille={id} />
-      <CoucheFaisceau />
-
       {/* Groupe isole (addendum du controleur, tache 8, point B) : seules
           ces trois couches — L2 la lueur du tressage, la maille, L1 le
           filament — vivent dans un contexte d'empilement isole.
           `isolation: isolate` (globals.css, `.lampe-isolee`) confine leur
           `mix-blend-mode: screen` a l'interieur du groupe, pour qu'il
           n'eclaircisse pas le fond de la page a travers le SVG. NE PAS
-          poser cette isolation sur `.ampoule` en entier : L4 le faisceau,
-          L5 le halo de fond et L6 la moucheture (ci-dessus et dans
-          globals.css) doivent au contraire eclairer la page au-dela de
-          l'objet — les isoler les neutraliserait. Ne pas elargir ce
-          groupe pour les y inclure. */}
+          poser cette isolation sur le SVG de la lumiere : L4 le faisceau,
+          L5 le halo de fond et L6 la moucheture (SVG `.ampoule-lumiere`
+          ci-dessus et globals.css) doivent au contraire eclairer la page
+          au-dela de l'objet — les isoler les neutraliserait. Ne pas
+          elargir ce groupe pour les y inclure. */}
       <g className="lampe-isolee">
         <CoucheLueur />
         <Maille id={id} />
@@ -211,5 +235,6 @@ export function Ampoule({ id = "ampoule-eteinte" }: { id?: string } = {}) {
           y=212, degrade d'opacite 0,22 -> 0 sur ce parcours. */}
       <path d={CHEMIN_LISERE} fill="none" stroke={`url(#${idLisere})`} strokeWidth={1} />
     </svg>
+    </>
   );
 }

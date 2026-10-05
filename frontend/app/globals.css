@@ -6,7 +6,7 @@
  * Enregistrement des huit variables de la transition d'incandescence
  * (tache 10 ; ronde de correction 1 pour les sept premieres —
  * task-10-fix-1.md —, `--t-brins` ajoutee en ronde de correction 2 —
- * task-10-fix-2.md). Remplace l'ancienne variable unique `--lampe-t`
+ * task-10-fix-2.md). Remplace une ancienne variable unique de pilotage
  * (tache 8/9) : une seule variable parcourue a rebours par un objet
  * `Animation` ne peut produire, pour l'extinction, que le miroir exact de
  * l'ordre d'apparition de l'allumage — or l'annexe §5.2 demande un ordre
@@ -600,11 +600,13 @@ html {
    * (addendum, point A : la table fait foi, pas la loi quadratique
    * `I(d) = 0,30 (1 - d/540)²` qu'elle ne reproduit pas exactement).
    *
-   * Ni `z-index` ni position explicite au-dela de `inset: 0` : `.ampoule`
-   * est deja a z-index 60 et l'entete est `position: sticky` a z-index 50
-   * (voir header.tsx), donc `body::before` (position fixed, z-index auto)
-   * se peint naturellement derriere les deux sans configuration
-   * supplementaire.
+   * `z-index: -1` (tache 11, ronde de correction 1) : la nappe se peint
+   * derriere le contenu de la page, comme `.ampoule-lumiere` (faisceau et
+   * moucheture), pour ne jamais fusionner avec le texte. A egalite de
+   * z-index l'ordre de l'arbre decide : `body::before` (L5) precede le SVG
+   * de la lumiere (L6 puis L4). Le fond du corps se propage au canevas
+   * (`html` n'a pas de fond propre), donc rien ne masque cette couche.
+   * Son opacite est multipliee par `--lumiere-plafond`.
    */
   body::before {
     content: "";
@@ -635,7 +637,8 @@ html {
        la temporalite (fenetre + ordre exact de l'annexe §5.1/§5.2) vient
        desormais des offsets du jeu d'images-cles charge, dans
        lib/ampoule/animation.ts. */
-    opacity: var(--t-halo, 0);
+    opacity: calc(var(--t-halo, 0) * var(--lumiere-plafond));
+    z-index: -1;
   }
 
   /* Etape 5 : sous 360 px, les couches lointaines sont desactivees — a
@@ -728,6 +731,20 @@ html {
   /* -----------------------------------------------------------
      Ampoule suspendue : echelle responsive, sur la grille de 8 px.
      ----------------------------------------------------------- */
+  /*
+   * Plafond commun des trois couches de lumiere qui eclairent le fond
+   * (halo L5, moucheture L6, faisceau L4). Superposees presque exactement
+   * (halo centre en calc(100% - 136px) / 250 px, bouche du faisceau et
+   * centre de projection au meme point), elles donnaient +0,0438 de
+   * luminance au fond clair pour un garde-fou de 0,040 (annexe §7). Le
+   * facteur 0,75 conserve leur equilibre relatif et ramene l'ecart a
+   * +0,0345. UN seul reglage ; verifie par `lib/design/composition.test.ts`,
+   * qui le lit ici.
+   */
+  :root {
+    --lumiere-plafond: 0.75;
+  }
+
   .ampoule {
     position: fixed;
     top: 0;
@@ -763,6 +780,16 @@ html {
    */
   .lampe-isolee {
     isolation: isolate;
+  }
+
+  /*
+   * SVG de la lumiere (L6 + L4), cale sur `.ampoule` (meme classe, donc
+   * meme assise geometrique) mais DERRIERE le contenu : z-index -1 au lieu
+   * de 60. L'objet, lui, reste a 60 parce que son fil traverse l'en-tete
+   * collant (z-index 50).
+   */
+  .ampoule-lumiere {
+    z-index: -1;
   }
 
   /*
@@ -818,7 +845,7 @@ html {
      desormais sa propre variable et ses propres offsets d'extinction,
      independants de l'ordre d'apparition de l'allumage. */
   .couche-faisceau {
-    opacity: var(--t-faisceau, 0);
+    opacity: calc(var(--t-faisceau, 0) * var(--lumiere-plafond));
     mix-blend-mode: screen;
   }
 
@@ -826,7 +853,7 @@ html {
      offsets du jeu d'images-cles portent deja le plafond de 0,55
      (annexe §3.5) : plus de multiplication separee par calc(). */
   .couche-moucheture {
-    opacity: var(--t-moucheture, 0);
+    opacity: calc(var(--t-moucheture, 0) * var(--lumiere-plafond));
     mix-blend-mode: overlay;
   }
 

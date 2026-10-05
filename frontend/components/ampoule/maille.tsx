@@ -203,7 +203,7 @@ export function Maille({ id }: { id: string }) {
             vertical du stroke des meridiens, de l'apex au bord. Chaque
             stop melange, via color-mix() pilote par --t-brins (posee
             sur la racine, heritee jusqu'ici ; ronde de correction 3 de la
-            tache 10 : remplace --lampe-t, disparue, et ses fenetres
+            tache 10 : remplace l'ancienne variable unique, disparue, et ses fenetres
             propres 180-620 ms / 80-480 ms de l'annexe §5), la couleur
             eteinte plate et la teinte chaude de la table de la
             specification. A --t-brins: 0 les quatre stops convergent

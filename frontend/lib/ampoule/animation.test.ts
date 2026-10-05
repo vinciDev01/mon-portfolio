@@ -60,11 +60,38 @@ describe("basculerAnimation, bug 1 de la ronde de correction 1 (cadence perdue p
     expect(anim.effect.updateTiming).not.toHaveBeenCalled();
   });
 
-  it("garde la cadence 1 quand l allumage est declenche a mi-extinction", () => {
-    const anim = animationFactice(450, -DUREE_ALLUMAGE / DUREE_EXTINCTION, DUREE_EXTINCTION);
+  /*
+   * PREMISSE A RESPECTER : au repos, le code reel charge TOUJOURS la
+   * cadence 1 (voir basculerAnimation, branche "auRepos"). Un double
+   * « jeu d'extinction + cadence negative » est un etat que le code ne
+   * produit jamais ; l'ancien test en fabriquait un et masquait ainsi le
+   * defaut ou la cadence ignorait le jeu charge. Les quatre cas ci-dessous
+   * sont les seuls reellement atteignables en pleine transition.
+   */
+  it("jeu d extinction, cadence 1, position 500, demande allume : recule a -1100/900", () => {
+    const anim = animationFactice(500, 1, DUREE_EXTINCTION);
+    basculerAnimation(anim, true);
+    expect(anim.playbackRate).toBeCloseTo(-DUREE_EXTINCTION / DUREE_ALLUMAGE, 6);
+    expect(anim.play).toHaveBeenCalledTimes(1);
+    expect(anim.effect.setKeyframes).not.toHaveBeenCalled();
+  });
+
+  it("jeu d extinction, cadence 1, position 500, demande eteint : cadence 1, aucune inversion", () => {
+    const anim = animationFactice(500, 1, DUREE_EXTINCTION);
+    basculerAnimation(anim, false);
+    expect(anim.playbackRate).toBe(1);
+  });
+
+  it("jeu d allumage, cadence 1, position 400, demande eteint : recule a -900/1100", () => {
+    const anim = animationFactice(400, 1, DUREE_ALLUMAGE);
+    basculerAnimation(anim, false);
+    expect(anim.playbackRate).toBeCloseTo(-DUREE_ALLUMAGE / DUREE_EXTINCTION, 6);
+  });
+
+  it("jeu d allumage, cadence 1, position 400, demande allume : cadence 1", () => {
+    const anim = animationFactice(400, 1, DUREE_ALLUMAGE);
     basculerAnimation(anim, true);
     expect(anim.playbackRate).toBe(1);
-    expect(anim.play).toHaveBeenCalledTimes(1);
   });
 });
 
@@ -193,7 +220,7 @@ describe("IMAGES_ALLUMAGE / IMAGES_EXTINCTION, offsets (ronde de correction 1, t
     }
   });
 
-  it("definissent les huit variables au dernier offset (le premier n a pas encore de couleur, elle demarre a 40/60 ms)", () => {
+  it("definissent les huit variables au dernier offset", () => {
     const variables = [...VARIABLES_NUMERIQUES, "--filament-couleur"];
     for (const jeu of [IMAGES_ALLUMAGE, IMAGES_EXTINCTION]) {
       const fin = valeursAOffset(jeu, 1);
@@ -211,10 +238,7 @@ describe("IMAGES_ALLUMAGE / IMAGES_EXTINCTION, offsets (ronde de correction 1, t
     for (const v of [...VARIABLES_NUMERIQUES, "--filament-couleur"]) {
       expect(finAllumage[v]).toBe(debutExtinction[v]);
     }
-    // Au tout premier offset de l'allumage, --filament-couleur n'existe
-    // pas encore (elle demarre a 40 ms) : on ne compare que les sept
-    // variables numeriques a cette borne-la.
-    for (const v of VARIABLES_NUMERIQUES) {
+    for (const v of [...VARIABLES_NUMERIQUES, "--filament-couleur"]) {
       expect(finExtinction[v]).toBe(debutAllumage[v]);
     }
   });
@@ -263,8 +287,9 @@ describe("courbes d acceleration (ronde de correction 2, test 1)", () => {
 });
 
 describe("rampes chromatiques a six arrets (ronde de correction 2, test 2)", () => {
-  it("l allumage passe par les six couleurs de l annexe, dans l ordre, aux bons offsets (la 7e entree, a l offset 1, repete le plateau final)", () => {
+  it("l allumage passe par les six couleurs de l annexe, dans l ordre, aux bons offsets (entrees supplementaires : arret initial a 0 et plateau final a 1)", () => {
     const attendu: Array<[number, string]> = [
+      [0, "#3A3128"], // arret initial, ajoute en ronde 3 (evite l interpolation depuis la valeur sous-jacente)
       [0.0444, "#3A3128"],
       [0.1444, "#A8431A"],
       [0.2222, "#E07A28"],
@@ -368,12 +393,11 @@ describe("basculerAnimation, reentrance", () => {
     expect(anim.effect.getTiming().duration).toBe(DUREE_EXTINCTION);
     expect(anim.currentTime).toBe(0);
 
-    // 5) en pleine extinction -> re-demande d'extinction (deja en cours
-    //    dans le meme sens) : aucun changement de cadence necessaire au
-    //    sens strict, mais l'appel reste sans danger.
+    // 5) en pleine extinction (jeu d'extinction, avancer mene a l'eteint)
+    //    -> re-demande d'extinction : la cadence reste 1.
     anim.currentTime = 400;
     basculerAnimation(anim, false);
-    expect(anim.playbackRate).toBeCloseTo(-DUREE_ALLUMAGE / DUREE_EXTINCTION, 6);
+    expect(anim.playbackRate).toBe(1);
 
     expect(anim.play).toHaveBeenCalledTimes(5);
   });

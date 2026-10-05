@@ -46,7 +46,9 @@ export function ThemeProvider({
   }, [strategie]);
 
   /**
-   * L'unique objet `Animation` qui pilote `--lampe-t` (lib/ampoule/
+   * L'unique objet `Animation` qui pilote les huit variables
+   * `--t-filament`, `--t-lueur`, `--t-faisceau`, `--t-halo`,
+   * `--t-moucheture`, `--t-brins`, `--t-page` et `--filament-couleur` (lib/ampoule/
    * animation.ts) pour toute la duree de vie du fournisseur. Cree une
    * seule fois, cible sur `document.documentElement` : `body::before`
    * (L5, le halo de fond) n'est pas un descendant de `.ampoule`, il ne
@@ -71,28 +73,39 @@ export function ThemeProvider({
     };
     // Volontairement [] : on ne veut creer/positionner cet objet qu'une
     // fois au montage, jamais a chaque changement de `theme` — c'est
-    // `basculer()` ci-dessous qui fait ensuite evoluer sa position.
+    // l'effet sur `theme` ci-dessous qui fait ensuite evoluer sa position.
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
+  // Effets de bord de la bascule (classe sur <html>, stockage, animation),
+  // dans un effet dependant de `theme` et non dans l'updater de `setTheme` :
+  // React rejoue les updaters en StrictMode, ce qui dupliquerait les
+  // effets. Le garde-fou de `basculerAnimation` rend l'appel idempotent.
+  // Le premier passage est saute : le script initial a deja pose la classe
+  // et l'objet Animation est positionne au montage.
+  const premierPassage = useRef(true);
+  useEffect(() => {
+    if (premierPassage.current) {
+      premierPassage.current = false;
+      return;
+    }
+    const e = document.documentElement;
+    e.classList.remove("clair", "sombre");
+    e.classList.add(theme);
+    e.style.colorScheme = theme === "clair" ? "light" : "dark";
+    if (animationRef.current) {
+      basculerAnimation(animationRef.current, theme === "clair");
+    }
+    try {
+      localStorage.setItem(CLE_STOCKAGE, theme);
+    } catch {
+      // Navigation privee ou stockage refuse : le choix ne survit pas au
+      // rechargement, mais la bascule fonctionne pour la session.
+    }
+  }, [theme]);
+
   const basculer = useCallback(() => {
-    setTheme((actuel) => {
-      const suivant: Theme = actuel === "clair" ? "sombre" : "clair";
-      const e = document.documentElement;
-      e.classList.remove("clair", "sombre");
-      e.classList.add(suivant);
-      e.style.colorScheme = suivant === "clair" ? "light" : "dark";
-      if (animationRef.current) {
-        basculerAnimation(animationRef.current, suivant === "clair");
-      }
-      try {
-        localStorage.setItem(CLE_STOCKAGE, suivant);
-      } catch {
-        // Navigation privee ou stockage refuse : le choix ne survit pas au
-        // rechargement, mais la bascule fonctionne pour la session.
-      }
-      return suivant;
-    });
+    setTheme((actuel) => (actuel === "clair" ? "sombre" : "clair"));
   }, []);
 
   const valeur = useMemo<ValeurContexte>(

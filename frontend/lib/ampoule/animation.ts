@@ -49,13 +49,12 @@ export const DUREE_ALLUMAGE = 900;
  *  refroidit plus lentement qu'il ne chauffe. */
 export const DUREE_EXTINCTION = 1100;
 
-/**
- * Cadence a appliquer pour qu'une extinction jouee sur un jeu
- * d'images-cles de duree de base `DUREE_ALLUMAGE` (cas d'un changement
- * de sens en pleine transition, voir `basculerAnimation`) dure malgre
- * tout `DUREE_EXTINCTION`.
- */
-const CADENCE_EXTINCTION = -DUREE_ALLUMAGE / DUREE_EXTINCTION;
+/** Annule un allumage en cours : on recule dans IMAGES_ALLUMAGE (duree 900)
+ *  en y passant les 1100 ms d'une extinction. */
+const CADENCE_ANNULE_ALLUMAGE = -DUREE_ALLUMAGE / DUREE_EXTINCTION;
+/** Annule une extinction en cours : on recule dans IMAGES_EXTINCTION
+ *  (duree 1100) en y passant les 900 ms d'un allumage. */
+const CADENCE_ANNULE_EXTINCTION = -DUREE_EXTINCTION / DUREE_ALLUMAGE;
 
 /*
  * Les courbes de l'annexe, nommees par phase (task-10-fix-2.md). Plusieurs
@@ -94,6 +93,7 @@ export const IMAGES_ALLUMAGE: Keyframe[] = [
     "--t-moucheture": 0,
     "--t-brins": 0,
     "--t-page": 0,
+    "--filament-couleur": "#3A3128", // arret initial : sans lui, la WAAPI interpole depuis la valeur sous-jacente (#FFFDF6 sous .clair)
   },
   { offset: 0.0444, "--t-filament": 0, easing: EASE_PRECHAUFFAGE }, // 40 ms : fin de l'inertie, debut du prechauffage
   { offset: 0.0444, "--filament-couleur": "#3A3128" }, // 40 ms : premier arret de la rampe chromatique
@@ -226,6 +226,19 @@ function chargerJeu(animation: Animation, images: Keyframe[], duree: number): vo
   effet?.updateTiming({ duration: duree });
 }
 
+/** Duree de l'effet actuellement charge. */
+function dureeChargee(animation: Animation): number {
+  const effet = animation.effect as KeyframeEffect | null;
+  const timing = effet?.getTiming();
+  return typeof timing?.duration === "number" ? timing.duration : DUREE_ALLUMAGE;
+}
+
+/** Vrai si le jeu charge est IMAGES_ALLUMAGE (900) ; les deux durees
+ *  etant distinctes, elle identifie le jeu sans drapeau separe. */
+function jeuChargeEstAllumage(animation: Animation): boolean {
+  return dureeChargee(animation) !== DUREE_EXTINCTION;
+}
+
 /**
  * Etat de repos de `animation` : vrai quand `currentTime` est exactement
  * sur une des deux bornes du jeu actuellement charge (ou que l'animation
@@ -246,15 +259,13 @@ function etatDeRepos(animation: Animation): { auRepos: boolean; allume: boolean 
     return { auRepos: true, allume: false };
   }
 
-  const effet = animation.effect as KeyframeEffect | null;
-  const timing = effet?.getTiming();
-  const duree = typeof timing?.duration === "number" ? timing.duration : DUREE_ALLUMAGE;
+  const duree = dureeChargee(animation);
 
   if (position > 0 && position < duree) {
     return { auRepos: false, allume: false };
   }
 
-  const jeuAllumage = duree !== DUREE_EXTINCTION;
+  const jeuAllumage = jeuChargeEstAllumage(animation);
   const auDebut = position <= 0;
   return { auRepos: true, allume: jeuAllumage ? !auDebut : auDebut };
 }
@@ -307,7 +318,15 @@ export function basculerAnimation(animation: Animation, versAllume: boolean): vo
     return;
   }
 
-  // En pleine transition : ne bascule NI le jeu NI la duree.
-  animation.playbackRate = versAllume ? 1 : CADENCE_EXTINCTION;
+  // En pleine transition : ne bascule NI le jeu NI la duree. Mais le SENS
+  // depend du jeu charge : avancer mene a l'allume dans IMAGES_ALLUMAGE, a
+  // l'eteint dans IMAGES_EXTINCTION.
+  animation.playbackRate = jeuChargeEstAllumage(animation)
+    ? versAllume
+      ? 1
+      : CADENCE_ANNULE_ALLUMAGE
+    : versAllume
+      ? CADENCE_ANNULE_EXTINCTION
+      : 1;
   animation.play();
 }

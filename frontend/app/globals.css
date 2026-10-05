@@ -345,10 +345,20 @@ html {
   opacity: 0.2;
 }
 
-/* Dark mode adjustments */
-.sombre .animated-card::before,
-.sombre .animated-card::after {
-  border-color: oklch(1 0 0 / 0.08);
+/* Liseré décoratif des cartes empilées.
+   Dérivé de `--t-page` et non de la classe de thème : la classe bascule dès
+   le clic, alors que la palette attend 220 ms à l'allumage et 460 ms à
+   l'extinction. Une règle conditionnée par la classe afficherait donc son
+   liseré de thème sombre sur une pièce encore claire pendant 460 ms. C'était
+   la dernière dépendance d'apparence à la classe : celle-ci ne gouverne plus
+   que le repli sans JavaScript et `color-scheme`. */
+.animated-card::before,
+.animated-card::after {
+  border-color: color-mix(
+    in oklch,
+    oklch(1 0 0 / 0.08),
+    var(--bordure) calc(var(--t-page, 0) * 100%)
+  );
 }
 
 /*

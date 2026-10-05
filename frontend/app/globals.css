@@ -79,6 +79,12 @@
 @custom-variant dark (&:is(.sombre *));
 
 @theme inline {
+  /* Les utilitaires shadow-* de Tailwind suivent les jetons d'ombre. */
+  --shadow-sm: var(--ombre-proche);
+  --shadow-md: var(--ombre-moyenne);
+  --shadow-lg: var(--ombre-lointaine);
+  --shadow-xl: var(--ombre-lointaine);
+  --shadow-2xl: var(--ombre-lointaine);
   --font-heading: var(--font-sans);
   --font-sans: var(--font-sans);
   --color-ring: var(--ring);
@@ -115,23 +121,17 @@
  * identite que le repli d'erreur du script et de themeSelonHeure — le
  * sombre. Source : frontend/lib/design/tokens.ts
  */
+/*
+ * Etat de repli des huit variables de la transition, lisible depuis la
+ * racine pour que toutes les couches (dans `.ampoule` et sur
+ * `body::before`, qui n'est PAS un descendant de `.ampoule`) s'en
+ * derivent. Ici le sombre, identite du repli sans JavaScript (script
+ * initial, themeSelonHeure) : `--t-page: 0`. Une animation posee sur
+ * `document.documentElement` par `lib/ampoule/animation.ts` surclasse ces
+ * valeurs des qu'elle existe.
+ */
 :root,
 .sombre {
-  --fond: #131518;
-  --surface: #1a1d21;
-  --bordure: #22262b;
-  --bordure-signifiante: #707780;
-  --texte-secondaire: #9aa096;
-  --texte: #e4e5e3;
-  --accent: #7e9b76;
-  --ombre-teinte: 214deg 12% 4%;
-  /* Repli sans JavaScript (tache 10, ronde de correction 1 ; --t-brins
-     ajoutee en ronde 2) : etat "eteint" des huit variables de la
-     transition, lisible depuis la racine pour que toutes les couches
-     (dans `.ampoule` et sur `body::before`, qui n'est PAS un descendant
-     de `.ampoule`) s'en derivent. Une animation posee sur
-     `document.documentElement` par `lib/ampoule/animation.ts` surclasse
-     ces valeurs des qu'elle existe. */
   --t-filament: 0;
   --t-lueur: 0;
   --t-faisceau: 0;
@@ -143,22 +143,13 @@
 }
 
 /*
- * Thème clair — ampoule allumée. Déclaré après le bloc :root/.sombre afin
- * de l'emporter à spécificité égale (.clair et :root partagent la même
- * spécificité ; c'est l'ordre des règles qui tranche).
+ * Ampoule allumee : etat "allume" des huit variables — valeurs finales
+ * des tables de l'annexe §5.1 (offset 1) / §5.2 (offset 0), pas
+ * simplement 1 partout : la lueur plafonne a 0,92 et la moucheture a
+ * 0,55. C'est la SEULE chose que porte la classe : les jetons de palette
+ * ci-dessous n'en dependent plus, ils derivent tous de `--t-page`.
  */
 .clair {
-  --fond: #f6f1e8;
-  --surface: #fcf8f1;
-  --bordure: #dcd1bf;
-  --bordure-signifiante: #948263;
-  --texte-secondaire: #5e564a;
-  --texte: #1f2320;
-  --accent: #456040;
-  --ombre-teinte: 28deg 42% 30%;
-  /* Etat "allume" des huit variables — valeurs finales des tables de
-     l'annexe §5.1 (offset 1) / §5.2 (offset 0), pas simplement 1 partout :
-     la lueur plafonne a 0,92 et la moucheture a 0,55. */
   --t-filament: 1;
   --t-lueur: 0.92;
   --t-faisceau: 1;
@@ -170,20 +161,76 @@
 }
 
 /*
- * Les deux bornes de la palette de page, exposees SIMULTANEMENT sur
- * :root, independamment de la classe .clair/.sombre active sur <html> —
- * a la difference de --fond/--texte ci-dessus, qui ne portent que la
- * valeur du theme COURANT. Necessaire au fondu `body` pilote par
- * --t-page (@layer base, plus bas) : `color-mix()` doit lire les deux
- * couleurs a la fois pour les interpoler. Doivent rester synchronisees
- * avec les hex de :root/.sombre et .clair ci-dessus, et avec
- * frontend/lib/design/tokens.ts (PALETTE_SOMBRE/PALETTE_CLAIRE).
+ * Palette : TOUS les jetons derivent de `--t-page` (addendum de la
+ * tache 12). `--t-page` est un PALIER (0 puis 1 en une image, voir
+ * lib/ampoule/animation.ts), pas une rampe : texte, fond, surface,
+ * bordures, accent et ombres basculent donc au meme instant, et le
+ * contraste est correct a chaque image. Un fondu croise d'une palette
+ * inversee passerait par le gris (creux a 1,10:1).
+ *
+ * Chaque jeton existe en paire `-sombre` / `-clair` ; NE JAMAIS definir
+ * un de ces jetons sous `.clair` ou `.sombre` : une declaration posee sur
+ * l'element l'emporterait sur la valeur derivee (teste dans
+ * lib/design/ombres.test.ts). Source des hex :
+ * frontend/lib/design/tokens.ts (PALETTE_SOMBRE / PALETTE_CLAIRE).
  */
 :root {
   --fond-sombre: #131518;
   --fond-clair: #f6f1e8;
+  --surface-sombre: #1a1d21;
+  --surface-clair: #fcf8f1;
+  --bordure-sombre: #22262b;
+  --bordure-clair: #dcd1bf;
+  --bordure-signifiante-sombre: #707780;
+  --bordure-signifiante-clair: #948263;
+  --texte-secondaire-sombre: #9aa096;
+  --texte-secondaire-clair: #5e564a;
   --texte-sombre: #e4e5e3;
   --texte-clair: #1f2320;
+  --accent-sombre: #7e9b76;
+  --accent-clair: #456040;
+  /* Couleur d'ombre : sombre = quasi noir bleute, neutre ; clair = brun
+     chaud (28deg, 42 %), la teinte de la lumiere de l'ampoule. */
+  --ombre-teinte-sombre: hsl(214deg 12% 4%);
+  --ombre-teinte-clair: hsl(28deg 42% 30%);
+
+  --fond: color-mix(in oklch, var(--fond-sombre), var(--fond-clair) calc(var(--t-page) * 100%));
+  --surface: color-mix(in oklch, var(--surface-sombre), var(--surface-clair) calc(var(--t-page) * 100%));
+  --bordure: color-mix(in oklch, var(--bordure-sombre), var(--bordure-clair) calc(var(--t-page) * 100%));
+  --bordure-signifiante: color-mix(
+    in oklch,
+    var(--bordure-signifiante-sombre),
+    var(--bordure-signifiante-clair) calc(var(--t-page) * 100%)
+  );
+  --texte-secondaire: color-mix(
+    in oklch,
+    var(--texte-secondaire-sombre),
+    var(--texte-secondaire-clair) calc(var(--t-page) * 100%)
+  );
+  --texte: color-mix(in oklch, var(--texte-sombre), var(--texte-clair) calc(var(--t-page) * 100%));
+  --accent: color-mix(in oklch, var(--accent-sombre), var(--accent-clair) calc(var(--t-page) * 100%));
+  --ombre-teinte: color-mix(
+    in oklch,
+    var(--ombre-teinte-sombre),
+    var(--ombre-teinte-clair) calc(var(--t-page) * 100%)
+  );
+
+  /*
+   * Les trois ombres : un seul jeu de formules, dont les decalages et
+   * l'opacite se calculent sur `--t-page`. Sombre (0) : neutres et
+   * centrees, eclairage diffus. Clair (1) : decalees vers le bas-gauche
+   * (la lampe est en haut a droite), teintees. `--t-page` etant un
+   * palier, le resultat est l'un des deux jeux, sans etat intermediaire.
+   */
+  --ombre-proche:
+    calc(-1px * var(--t-page)) calc(1px + 1px * var(--t-page)) calc(2px + 1px * var(--t-page))
+    color-mix(in oklch, var(--ombre-teinte) calc((0.4 - 0.22 * var(--t-page)) * 100%), transparent);
+  --ombre-moyenne:
+    calc(-2px * var(--t-page)) calc(4px + 2px * var(--t-page)) calc(10px + 2px * var(--t-page))
+    color-mix(in oklch, var(--ombre-teinte) calc((0.35 - 0.2 * var(--t-page)) * 100%), transparent);
+  --ombre-lointaine:
+    calc(-4px * var(--t-page)) calc(10px + 4px * var(--t-page)) calc(24px + 4px * var(--t-page))
+    color-mix(in oklch, var(--ombre-teinte) calc((0.3 - 0.18 * var(--t-page)) * 100%), transparent);
 }
 
 /* Mapping shadcn, commun aux deux themes. */
@@ -219,35 +266,12 @@
     font-family: var(--portfolio-font-family, var(--font-sans));
     font-size: var(--portfolio-font-size, inherit);
     /*
-     * Ligne « Page » de la tache 10 (annexe §5.1/§5.2, ronde de
-     * correction 1) : la palette change de sombre a claire (et retour)
-     * sur un fondu dont les DEUX durees exactes de l'annexe sont
-     * atteignables — 220 -> 580 ms (360 ms) a l'allumage, 60 -> 460 ms
-     * (400 ms) a l'extinction — parce que `--t-page` (0..1) est
-     * desormais animee par le meme objet `Animation` que les six autres
-     * couches, avec ses propres offsets par jeu (voir IMAGES_ALLUMAGE /
-     * IMAGES_EXTINCTION dans lib/ampoule/animation.ts). Ancienne version
-     * (premiere passe de la tache 10) : un `transition:` CSS a duree
-     * unique (380 ms, compromis) sur `background-color`/`color` — devenu
-     * inutile et incorrect des lors que --t-page porte lui-meme la
-     * temporalite exacte.
-     *
-     * `--fond-sombre`/`--fond-clair`/`--texte-sombre`/`--texte-clair`
-     * (juste au-dessus de ce bloc `@layer base`, dans le mapping shadcn)
-     * exposent les DEUX palettes simultanement, independamment de la
-     * classe .clair/.sombre active sur <html> — necessaire ici puisque
-     * `color-mix()` doit lire les deux bornes en meme temps pour les
-     * interpoler selon --t-page. Le reste du site continue de lire
-     * `var(--fond)`/`var(--texte)` (bascule instantanee avec la classe,
-     * comme avant) : seule la couleur PEINTE par `body` beneficie du
-     * fondu, conformement a la ligne « Page » de l'annexe.
+     * Fond et texte lisent les jetons derives de `--t-page` (palier) :
+     * ils changent au meme instant que toute la palette (voir le bloc
+     * « Palette » plus haut).
      */
-    background-color: color-mix(
-      in oklch,
-      var(--fond-sombre),
-      var(--fond-clair) calc(var(--t-page, 0) * 100%)
-    );
-    color: color-mix(in oklch, var(--texte-sombre), var(--texte-clair) calc(var(--t-page, 0) * 100%));
+    background-color: var(--fond);
+    color: var(--texte);
   }
 }
 
@@ -308,9 +332,7 @@ html {
 /* Hover: main card lifts, stacked layers fan out */
 .animated-card:hover {
   transform: translateY(-3px);
-  box-shadow:
-    0 12px 32px -8px oklch(0 0 0 / 0.12),
-    0 4px 12px -4px oklch(0 0 0 / 0.06);
+  box-shadow: var(--ombre-lointaine), var(--ombre-moyenne);
 }
 
 .animated-card:hover::before {
@@ -327,12 +349,6 @@ html {
 .sombre .animated-card::before,
 .sombre .animated-card::after {
   border-color: oklch(1 0 0 / 0.08);
-}
-
-.sombre .animated-card:hover {
-  box-shadow:
-    0 16px 40px -8px oklch(0 0 0 / 0.35),
-    0 6px 16px -4px oklch(0 0 0 / 0.2);
 }
 
 /*
@@ -383,8 +399,8 @@ html {
   background: var(--card);
   border: 1px solid var(--border);
   box-shadow:
-    0 12px 40px -8px oklch(0 0 0 / 0.16),
-    0 4px 12px -4px oklch(0 0 0 / 0.08),
+    var(--ombre-lointaine),
+    var(--ombre-moyenne),
     inset 0 1px 0 oklch(1 0 0 / 0.06);
   pointer-events: none;
   backdrop-filter: blur(16px) saturate(1.2);

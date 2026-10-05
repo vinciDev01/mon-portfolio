@@ -68,8 +68,11 @@ const EASE_DEPASSEMENT = "cubic-bezier(0.34, 1.40, 0.64, 1)";
 const EASE_REMPLISSAGE = "cubic-bezier(0.33, 1, 0.68, 1)";
 /** Rayonnement (halo) ET texture (moucheture) partagent cette courbe. */
 const EASE_RAYONNEMENT_TEXTURE = "cubic-bezier(0.25, 1, 0.5, 1)";
-/** Identique dans les deux sens (annexe §5.1 et §5.2). */
-const EASE_PAGE = "cubic-bezier(0.4, 0, 0.2, 1)";
+/** `--t-page` est un PALIER, pas une rampe (addendum de la tache 12) :
+ *  `steps(1, end)` maintient la valeur de depart jusqu'a la fin du
+ *  segment, puis saute. Une rampe ferait passer la palette par le gris,
+ *  texte et fond croisant a 1,10:1. */
+const EASE_PALIER = "steps(1, end)";
 const EASE_COUPURE = "cubic-bezier(0.4, 0, 1, 1)";
 const EASE_ROUGEOIEMENT = "cubic-bezier(0.37, 0, 0.63, 1)";
 const EASE_BRAISE = "cubic-bezier(0.4, 0, 0.85, 1)";
@@ -84,6 +87,7 @@ const EASE_DEPART_EXTINCTION = "cubic-bezier(0.5, 0, 0.9, 0.4)";
  * fichier pour la regle de fusion/scission des offsets partages.
  */
 export const IMAGES_ALLUMAGE: Keyframe[] = [
+  { offset: 0, "--t-page": 0, easing: EASE_PALIER }, // 0 ms : la page reste sombre jusqu'a 220 ms
   {
     offset: 0, // 0 ms : tout eteint, inertie
     "--t-filament": 0,
@@ -92,7 +96,6 @@ export const IMAGES_ALLUMAGE: Keyframe[] = [
     "--t-halo": 0,
     "--t-moucheture": 0,
     "--t-brins": 0,
-    "--t-page": 0,
     "--filament-couleur": "#3A3128", // arret initial : sans lui, la WAAPI interpole depuis la valeur sous-jacente (#FFFDF6 sous .clair)
   },
   { offset: 0.0444, "--t-filament": 0, easing: EASE_PRECHAUFFAGE }, // 40 ms : fin de l'inertie, debut du prechauffage
@@ -101,7 +104,7 @@ export const IMAGES_ALLUMAGE: Keyframe[] = [
   { offset: 0.1444, "--filament-couleur": "#A8431A" }, // 130 ms
   { offset: 0.2, "--t-brins": 0, easing: "ease-out" }, // 180 ms : debut du rechauffement des brins
   { offset: 0.2222, "--filament-couleur": "#E07A28" }, // 200 ms
-  { offset: 0.2444, "--t-page": 0, easing: EASE_PAGE }, // 220 ms : debut du fondu de page
+  { offset: 0.2444, "--t-page": 1 }, // 220 ms : la piece s'eclaire d'un coup (palier)
   { offset: 0.2889, "--t-faisceau": 0, easing: EASE_REMPLISSAGE }, // 260 ms : debut du remplissage du faisceau
   { offset: 0.3333, "--filament-couleur": "#FFC169" }, // 300 ms
   { offset: 0.3556, "--t-halo": 0, easing: EASE_RAYONNEMENT_TEXTURE }, // 320 ms : debut du rayonnement
@@ -111,7 +114,6 @@ export const IMAGES_ALLUMAGE: Keyframe[] = [
   { offset: 0.5, "--t-filament": 1.08, easing: EASE_DEPASSEMENT }, // 450 ms : pic du depassement
   { offset: 0.5778, "--t-filament": 1, "--filament-couleur": "#FFFDF6" }, // 520 ms : fin du depassement, dernier arret de couleur
   { offset: 0.6222, "--t-faisceau": 1 }, // 560 ms : faisceau plein
-  { offset: 0.6444, "--t-page": 1 }, // 580 ms : page pleinement claire
   { offset: 0.6889, "--t-brins": 1 }, // 620 ms : brins pleinement chauds
   { offset: 0.7778, "--t-halo": 1 }, // 700 ms : halo plein
   { offset: 0.8667, "--t-moucheture": 0.55 }, // 780 ms : moucheture pleine
@@ -145,9 +147,9 @@ export const IMAGES_EXTINCTION: Keyframe[] = [
     "--t-moucheture": 0.55,
     easing: EASE_DEPART_EXTINCTION,
   },
-  { offset: 0, "--t-lueur": 0.92, "--t-brins": 1, "--t-page": 1, "--filament-couleur": "#FFFDF6" }, // 0 ms
+  { offset: 0, "--t-page": 1, easing: EASE_PALIER }, // 0 ms : la page reste claire jusqu'a 460 ms
+  { offset: 0, "--t-lueur": 0.92, "--t-brins": 1, "--filament-couleur": "#FFFDF6" }, // 0 ms
   { offset: 0.0545, "--t-lueur": 0.92, easing: EASE_LUEUR_EXTINCTION }, // 60 ms : fin du plateau initial de la lueur
-  { offset: 0.0545, "--t-page": 1, easing: EASE_PAGE }, // 60 ms : fin du plateau initial de la page
   { offset: 0.0727, "--t-brins": 1, easing: "ease-in-out" }, // 80 ms : debut du refroidissement des brins
   { offset: 0.0818, "--t-filament": 0.42, easing: EASE_ROUGEOIEMENT }, // 90 ms : chute a 0,42
   { offset: 0.0818, "--filament-couleur": "#FFE3A8" }, // 90 ms
@@ -157,7 +159,7 @@ export const IMAGES_EXTINCTION: Keyframe[] = [
   { offset: 0.3091, "--t-filament": 0.17, easing: EASE_ROUGEOIEMENT }, // 340 ms : 0,17
   { offset: 0.3091, "--t-halo": 0, "--t-moucheture": 0, "--filament-couleur": "#E0631E" }, // 340 ms
   { offset: 0.3818, "--t-lueur": 0 }, // 420 ms : lueur eteinte
-  { offset: 0.4182, "--t-page": 0 }, // 460 ms : page pleinement sombre
+  { offset: 0.4182, "--t-page": 0 }, // 460 ms : la piece s'assombrit d'un coup (palier)
   { offset: 0.4364, "--t-brins": 0 }, // 480 ms : brins refroidis
   { offset: 0.5091, "--t-filament": 0.07, easing: EASE_BRAISE }, // 560 ms : 0,07, debut de la braise
   { offset: 0.5091, "--filament-couleur": "#7A2408" }, // 560 ms

@@ -38,12 +38,10 @@ export function ThemeProvider({
   strategie: Strategie;
   children: React.ReactNode;
 }) {
+  // L'initialiseur lit la classe deja posee par le script initial : a
+  // l'hydratation il est reevalue et retrouve la meme classe, aucun effet
+  // d'alignement n'est donc necessaire.
   const [theme, setTheme] = useState<Theme>(() => themeCourant(strategie));
-
-  // Aligne l'etat React sur ce que le script initial a reellement pose.
-  useEffect(() => {
-    setTheme(themeCourant(strategie));
-  }, [strategie]);
 
   /**
    * L'unique objet `Animation` qui pilote les huit variables

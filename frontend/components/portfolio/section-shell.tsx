@@ -38,6 +38,7 @@ export function SectionShell({
   return (
     <section
       id={id}
+      data-rang={index}
       className="grid grid-cols-12 px-8 lg:px-16"
       style={{
         paddingTop: "var(--espace-section)",

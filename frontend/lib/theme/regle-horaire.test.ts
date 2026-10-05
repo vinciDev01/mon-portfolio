@@ -1,5 +1,5 @@
 import { describe, it, expect } from "vitest";
-import { themeSelonHeure } from "./regle-horaire";
+import { CLE_STOCKAGE, themeSelonHeure, type Strategie } from "./regle-horaire";
 import { scriptInitial } from "./script-initial";
 
 describe("themeSelonHeure, strategie auto", () => {
@@ -61,17 +61,64 @@ describe("themeSelonHeure, entrees aberrantes", () => {
 });
 
 describe("scriptInitial", () => {
-  it("applique la meme regle horaire que la fonction, heure par heure", () => {
-    // Le script ne peut pas importer de module : il duplique la regle.
-    // Ce test verifie que les deux ne divergeront pas en silence.
-    const src = scriptInitial("auto");
-    const seuils = src.match(/h>=(\d+)&&h<(\d+)/);
-    expect(seuils).not.toBeNull();
-    const [, debut, fin] = seuils!;
-    for (let h = 0; h < 24; h++) {
-      const duScript = h >= Number(debut) && h < Number(fin) ? "sombre" : "clair";
-      expect(duScript).toBe(themeSelonHeure(h, "auto"));
+  /**
+   * Execute le script REELLEMENT emis dans un faux `document` /
+   * `localStorage` / `Date`, et rend la classe qu'il a posee sur <html>.
+   */
+  function classePosee(strategie: Strategie, heure: number, stocke: string | null): string[] {
+    const classes: string[] = [];
+    const faux = {
+      documentElement: {
+        classList: {
+          remove: (...n: string[]) => {
+            for (const x of n) {
+              const i = classes.indexOf(x);
+              if (i >= 0) classes.splice(i, 1);
+            }
+          },
+          add: (n: string) => classes.push(n),
+        },
+        style: {} as Record<string, string>,
+      },
+    };
+    const stockage = { getItem: (k: string) => (k === CLE_STOCKAGE ? stocke : null) };
+    class FausseDate {
+      getHours() {
+        return heure;
+      }
     }
+    new Function("document", "localStorage", "Date", scriptInitial(strategie))(
+      faux,
+      stockage,
+      FausseDate,
+    );
+    return classes;
+  }
+
+  it("applique la meme regle horaire que la fonction, heure par heure", () => {
+    // Le script ne peut pas importer de module : il duplique la regle. On
+    // l'EVALUE (sans rien recoder du sens) et on compare la classe posee.
+    for (let h = 0; h < 24; h++) {
+      expect(classePosee("auto", h, null)).toEqual([themeSelonHeure(h, "auto")]);
+    }
+  });
+
+  it("applique les strategies explicites, a toute heure", () => {
+    for (const h of [0, 7, 12, 19, 23]) {
+      expect(classePosee("clair", h, null)).toEqual(["clair"]);
+      expect(classePosee("sombre", h, null)).toEqual(["sombre"]);
+    }
+  });
+
+  it("precedence : localStorage > strategie > horaire", () => {
+    // localStorage l'emporte sur la strategie et sur l'heure.
+    expect(classePosee("sombre", 2, "clair")).toEqual(["clair"]);
+    expect(classePosee("clair", 12, "sombre")).toEqual(["sombre"]);
+    expect(classePosee("auto", 12, "clair")).toEqual(["clair"]);
+    // Valeur stockee aberrante : ignoree, la strategie reprend la main.
+    expect(classePosee("clair", 12, "n'importe quoi")).toEqual(["clair"]);
+    // La strategie explicite l'emporte sur l'heure.
+    expect(classePosee("sombre", 2, null)).toEqual(["sombre"]);
   });
 
   it("inscrit la strategie explicite telle quelle", () => {

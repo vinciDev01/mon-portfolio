@@ -138,6 +138,9 @@ describe("recensement des ombres", () => {
           for (const t of termes) {
             if (t === "none" || /^var\(--ombre-(proche|moyenne|lointaine)\)$/.test(t)) continue;
             if (/^inset\b/.test(t)) continue;
+            // Halo de separation de l'anneau de focus (annexe lumiere §8.5) :
+            // un anneau plein, sans flou, de la couleur du fond — pas une ombre.
+            if (/^0 0 0 \d+px var\(--fond\)$/.test(t)) continue;
             fautes.push(`${f} box-shadow: ${t}`);
           }
         }

@@ -44,10 +44,13 @@ const [LISERE_DEBUT_X, LISERE_DEBUT_Y] = PROFIL_GAUCHE_LISERE[0];
 const [LISERE_FIN_X, LISERE_FIN_Y] = PROFIL_GAUCHE_LISERE[PROFIL_GAUCHE_LISERE.length - 1];
 
 /**
- * L'objet suspendu, a l'etat eteint uniquement. Le theme n'est pas encore
- * consomme ici : il commandera plus tard l'allumage, mais l'ampoule doit
- * deja vivre a l'interieur du fournisseur de theme pour que cette bascule
- * n'ait, le moment venu, aucun arbre a reorganiser.
+ * L'objet suspendu et ses couches de lumiere : trois `<svg>` freres (deux
+ * couches de lumiere de page derriere le contenu, puis l'objet) et
+ * l'interrupteur. Les six couches de lumiere (lueur, filament, faisceau,
+ * halo de fond, moucheture) lisent les variables `--t-*` pilotees par le
+ * fournisseur de theme ; l'objet vit a l'interieur de ce fournisseur.
+ * Les couleurs de l'objet ci-dessous sont celles de l'etat eteint : c'est
+ * l'allumage, par les couches de lumiere, qui les reveille.
  *
  * Ordre de dessin (annexe) : fil -> arc d'interieur -> douille -> ampoule
  * (col, tiges, globe, contour, filament, coeur, reflet speculaire) ->
@@ -235,6 +238,11 @@ export function Ampoule({ id = "ampoule-eteinte" }: { id?: string } = {}) {
       {/* Lisere d'incidence haut-gauche : suit le profil reel de y=178 a
           y=212, degrade d'opacite 0,22 -> 0 sur ce parcours. */}
       <path d={CHEMIN_LISERE} fill="none" stroke={`url(#${idLisere})`} strokeWidth={1} />
+
+      {/* Pictogramme de contraste force (annexe §8.4) : le contour du dome
+          seul, masque partout ailleurs (`display: none`) et trace en
+          `CanvasText` sous `forced-colors: active` (globals.css). */}
+      <path className="contour-dome-pictogramme" d={SILHOUETTE_FERMEE} fill="none" strokeWidth={1.5} />
     </svg>
     {/* Quatrieme frere, hors de `.ampoule` : non mis a l'echelle, il garde
         une zone de clic d'au moins 44 x 44 px (globals.css). Place apres

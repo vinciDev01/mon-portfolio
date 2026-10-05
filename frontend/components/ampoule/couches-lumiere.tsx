@@ -67,11 +67,11 @@ const CHEMIN_MASQUE_FAISCEAU = "M 8.56 235 L 167.44 235 L 251.03 620 L -75.03 62
  * etre appele depuis un composant serveur) garantit que les deux cotes
  * calculent le meme identifiant sans jamais l'ecrire en dur.
  *
- * L'opacite de chaque couche est portee par sa propre variable CSS
- * (`--lueur-opacite`, `--filament-opacite`, `--faisceau-opacite`,
- * `--moucheture-opacite` dans globals.css), toutes deriveees de
- * `--t-*` de la couche, animees par la tache 10 avec courbes et delais
- * distincts. A 0 (theme sombre), toutes
+ * L'opacite de chaque couche lit sa propre variable de transition
+ * (`--t-lueur`, `--t-filament`, `--t-faisceau`, `--t-moucheture`, declarees
+ * par `@property` dans globals.css), animees ENSEMBLE par l'unique objet
+ * `Animation` de `lib/ampoule/animation.ts`, avec courbes et delais
+ * distincts par variable. A 0 (theme sombre), toutes
  * les couches sont invisibles : la « braise residuelle nulle » de l'annexe
  * §4.4.
  */
@@ -291,7 +291,6 @@ export function CoucheFaisceau() {
   const idDegrade = `faisceau-degrade-${id}`;
   const idFlouMasque = `faisceau-flou-masque-${id}`;
   const idMasque = `faisceau-masque-${id}`;
-  const idFlou = `faisceau-flou-${id}`;
 
   return (
     <g>
@@ -319,15 +318,12 @@ export function CoucheFaisceau() {
         <mask id={idMasque} maskUnits="userSpaceOnUse" x={-152} y={166} width={480} height={484}>
           <path d={CHEMIN_MASQUE_FAISCEAU} fill="#fff" filter={`url(#${idFlouMasque})`} />
         </mask>
-        <filter id={idFlou} x="-30%" y="-30%" width="160%" height="160%">
-          <feGaussianBlur stdDeviation={26} />
-        </filter>
       </defs>
       <path
         d={CHEMIN_FAISCEAU}
         fill={`url(#${idDegrade})`}
         mask={`url(#${idMasque})`}
-        filter={`url(#${idFlou})`}
+        className="faisceau-forme"
       />
     </g>
   );

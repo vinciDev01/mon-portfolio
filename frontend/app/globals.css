@@ -56,10 +56,9 @@
  * (« brins chauds »/« brins refroidis », annexe §5.1/§5.2), sur ses
  * PROPRES fenetres — 180 -> 620 ms a l'allumage, 80 -> 480 ms a
  * l'extinction — distinctes de celles de `--t-filament`. Animee et
- * testee dans lib/ampoule/animation.ts ; PAS encore consommee ici en
- * CSS/SVG, `maille.tsx` (ou` les meridiens sont dessines) n'etant pas
- * autorise par cette ronde — voir le rapport de tache pour cette
- * reserve, explicitement laissee ouverte plutot que traitee en silence.
+ * testee dans lib/ampoule/animation.ts ; consommee par quatre arrets de
+ * degrade `color-mix()` dans `components/ampoule/maille.tsx` (les
+ * bandes et les meridiens). NE PAS la supprimer.
  */
 @property --t-brins {
   syntax: "<number>";
@@ -272,6 +271,14 @@
      */
     background-color: var(--fond);
     color: var(--texte);
+    /*
+     * Graisse du corps (annexe typographique §5) : 400 en clair, 380 en
+     * sombre, ou le texte clair sur fond sombre s'epaissit optiquement.
+     * Derivee de `--t-page` (palier) et non de la classe de theme : elle
+     * bascule donc au meme instant que la palette. L'axe `wght` de
+     * Literata est continu ; ne jamais descendre sous 350 en sombre.
+     */
+    font-weight: calc(380 + 20 * var(--t-page, 0));
   }
 }
 
@@ -779,10 +786,20 @@ html {
     pointer-events: none;
     transform: scale(var(--ampoule-echelle, 1));
     transform-origin: 100% 0;
+    /* La boite est normative (annexe §0) : toute la geometrie du plan suppose
+       1 unite de viewBox = 1 px, et seule cette paire l'etablit — c'est elle
+       qui rend vraie l'arithmetique en pixels de `.ampoule-interrupteur`.
+       `overflow: visible` est indispensable : la feuille de style des
+       navigateurs ecrete un <svg> en ligne a sa boite, et les deux couches de
+       lumiere de page en sortent largement (faisceau x de -62 a 238,
+       moucheture x de -109 a 285). */
+    width: 176px;
+    height: 560px;
+    overflow: visible;
 
     /* Etat de la lampe (tache 8, etape 3 ; anime tache 10). Aucune des
-       sept variables (--t-filament, --t-lueur, --t-faisceau, --t-halo,
-       --t-moucheture, --t-page, --filament-couleur) n'est declaree ici :
+       huit variables (--t-filament, --t-lueur, --t-faisceau, --t-halo,
+       --t-moucheture, --t-brins, --t-page, --filament-couleur) n'est declaree ici :
        `body::before` (L5) n'est PAS un descendant de `.ampoule`, donc
        l'objet `Animation` de `lib/ampoule/animation.ts` cible
        `document.documentElement`, pas cet element. Une declaration
@@ -822,6 +839,9 @@ html {
   .ampoule-interrupteur:focus-visible {
     outline: 2px solid var(--accent);
     outline-offset: 3px;
+    border-radius: 6px;
+    /* Halo de separation (annexe §8.5) : double anneau, lisible sur tout fond. */
+    box-shadow: 0 0 0 5px var(--fond);
   }
 
   /*
@@ -887,11 +907,11 @@ html {
    * le JSX : `fillOpacity="calc(var(--t-filament, 0) * 0.42)"` pour le
    * globe eclaire, `strokeOpacity="calc(var(--t-filament, 0) * 0.95)"`
    * pour la boucle, `var(--t-filament, 0)` seule pour le coeur et le halo
-   * serre (regime 1,00, le clampage y persiste sans remede). Cette regle
-   * reste ici, VIDE de propriete d'opacite, pour que le selecteur
-   * `.couche-filament .halo-serre` ci-dessous continue de fonctionner
-   * (il en depend comme ancetre) et pour documenter ce changement a
-   * l'endroit ou un lecteur futur s'attendrait a trouver l'opacite.
+   * serre (regime 1,00, le clampage y persiste sans remede). Ce bloc est
+   * VIDE a dessein : simple ancre documentaire, laissee a l'endroit ou un
+   * lecteur futur s'attendrait a trouver l'opacite. Il n'est PAS requis
+   * par le selecteur `.couche-filament .halo-serre` ci-dessous : un
+   * selecteur descendant n'exige aucune regle sur son ancetre.
    */
   .couche-filament {
   }
@@ -910,6 +930,14 @@ html {
   .couche-faisceau {
     opacity: calc(var(--t-faisceau, 0) * var(--lumiere-plafond));
     mix-blend-mode: screen;
+  }
+
+  /* Flou de forme du faisceau (annexe §3.3 : 26 px ; §8.1 : 14 px sous
+     600 px de large). Un `stdDeviation` SVG ne lit pas de variable CSS : le
+     flou passe donc par la propriete `filter`, dont `blur(r)` est la meme
+     gaussienne d'ecart-type r. */
+  .faisceau-forme {
+    filter: blur(var(--faisceau-flou, 26px));
   }
 
   /* L6 — moucheture (tache 9). Lit directement --t-moucheture, dont les
@@ -954,6 +982,8 @@ html {
     :root {
       --ampoule-echelle: 0.5;
       --ampoule-droite: 16px;
+      /* Annexe §8.1, mitigation 5 : flou du faisceau ramene a 14 px. */
+      --faisceau-flou: 14px;
     }
   }
   @media (max-width: 359px) {
@@ -962,4 +992,80 @@ html {
       --ampoule-droite: 12px;
     }
   }
+}
+
+/*
+   CONTENU DIFFERE - Annexe lumiere §8.1, mitigation 4
+   `content-visibility: auto` sur les sections 4 a 6 (rang porte par
+   `data-rang`, section-shell.tsx) : leurs pseudo-elements de nappe ne sont
+   peints qu'a l'approche. `contain-intrinsic-size` (non fixe par la
+   specification) evite le saut de defilement ; `auto` retient la taille
+   reelle une fois la section rendue.
+   */
+section[data-rang="4"],
+section[data-rang="5"],
+section[data-rang="6"] {
+  content-visibility: auto;
+  contain-intrinsic-size: auto 600px;
+}
+
+/*
+   CONTRASTE ACCRU - Annexe lumiere §8.3
+   Aucune regle ne depend de la classe de theme : les jetons sont
+   redefinis sur `:root`, la ou ils sont deja declares en paires.
+   */
+@media (prefers-contrast: more) {
+  :root {
+    /* Bordures : systematiquement les variantes signifiantes du §7. */
+    --bordure-sombre: var(--bordure-signifiante-sombre);
+    --bordure-clair: var(--bordure-signifiante-clair);
+    /* Texte secondaire clair : #5E564A -> #4A4338 (8,68:1). */
+    --texte-secondaire-clair: #4a4338;
+    /* Brin de rotin eteint : #6E6355 -> #8C8172 (4,79:1). */
+    --brin-eteint: #8c8172;
+  }
+
+  /* Nappe chaude (L5) et moucheture (L6) : opacite 0. */
+  body::before,
+  .couche-moucheture {
+    opacity: 0;
+  }
+}
+
+/*
+   COULEURS FORCEES - Annexe lumiere §8.4
+   Les couches L1 a L6 sont masquees ; le bouton reste rendu en
+   ButtonFace / ButtonText avec un contour de 2 px ; la maille est reduite
+   a son contour de dome seul, trace en CanvasText.
+   */
+@media (forced-colors: active) {
+  .couche-lueur,
+  .couche-filament,
+  .couche-faisceau,
+  .couche-moucheture,
+  body::before {
+    forced-color-adjust: none;
+    opacity: 0;
+  }
+
+  .ampoule-interrupteur {
+    background-color: ButtonFace;
+    color: ButtonText;
+    border: 2px solid ButtonText;
+  }
+
+  .maille-rendue {
+    display: none;
+  }
+
+  .contour-dome-pictogramme {
+    display: inline;
+    forced-color-adjust: none;
+    stroke: CanvasText;
+  }
+}
+
+/* Hors contraste force, le contour de dome du pictogramme n'existe pas. */
+.contour-dome-pictogramme {
+  display: none;
 }

@@ -24,8 +24,8 @@
  * 4. Une huitieme variable, `--t-brins`, pour le degrade de `stroke` des
  *    meridiens — fenetres distinctes de celles du filament (180->620 ms
  *    a l'allumage, 80->480 ms a l'extinction). Animee et testee ici ;
- *    PAS encore consommee en CSS/SVG, `maille.tsx` n'etant pas autorise
- *    par cette ronde (voir le rapport de tache pour cette reserve).
+ *    consommee par quatre arrets de degrade `color-mix()` dans
+ *    `components/ampoule/maille.tsx` (le degrade de `stroke` des meridiens).
  *
  * Point delicat, propre aux tableaux FUSIONNES ci-dessous : la Web
  * Animations API n'autorise qu'UN SEUL `easing` par objet de keyframe,
@@ -253,7 +253,7 @@ function jeuChargeEstAllumage(animation: Animation): boolean {
  * quel jeu est en place, plutot que de maintenir un drapeau separe qui
  * pourrait diverger de l'etat reel de l'objet `Animation`.
  */
-function etatDeRepos(animation: Animation): { auRepos: boolean; allume: boolean } {
+export function etatDeRepos(animation: Animation): { auRepos: boolean; allume: boolean } {
   const position = Number(animation.currentTime ?? NaN);
   if (!Number.isFinite(position)) {
     // Jamais positionnee : repli sur l'etat eteint, coherent avec la
@@ -304,7 +304,10 @@ export function basculerAnimation(animation: Animation, versAllume: boolean): vo
     animation.pause();
     chargerJeu(animation, images, duree);
     animation.playbackRate = 1;
-    animation.currentTime = versAllume ? duree : 0;
+    // Chaque jeu se termine sur l'etat demande : la borne d'arrivee est
+    // toujours `duree`, dans les deux sens (l'offset 0 de IMAGES_EXTINCTION
+    // est l'etat ALLUME).
+    animation.currentTime = duree;
     return;
   }
 

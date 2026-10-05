@@ -15,14 +15,17 @@ export function Interrupteur() {
   return (
     <button
       type="button"
+      role="switch"
+      aria-checked={allumee}
+      aria-label="Éclairage de la page"
       onClick={basculer}
-      aria-pressed={allumee}
       className="ampoule-interrupteur"
     >
-      <span className="sr-only">
-        {allumee
-          ? "Éteindre la lampe et passer au thème sombre"
-          : "Allumer la lampe et passer au thème clair"}
+      {/* Libelle d'etat, annonce au changement (annexe §8.5). Son texte
+          depend de l'etat reel du theme, que le serveur ignore : divergence
+          legitime avec le rendu serveur, donc `suppressHydrationWarning`. */}
+      <span className="sr-only" aria-live="polite" suppressHydrationWarning>
+        {allumee ? "Allumé — thème clair" : "Éteint — thème sombre"}
       </span>
     </button>
   );

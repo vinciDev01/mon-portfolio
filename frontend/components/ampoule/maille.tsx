@@ -222,25 +222,25 @@ export function Maille({ id }: { id: string }) {
           <stop
             offset="0%"
             style={{
-              stopColor: `color-mix(in oklab, ${COULEUR_MERIDIEN}, #8A6B45 calc(var(--t-brins, 0) * 100%))`,
+              stopColor: `color-mix(in oklab, var(--brin-eteint, ${COULEUR_MERIDIEN}), #8A6B45 calc(var(--t-brins, 0) * 100%))`,
             }}
           />
           <stop
             offset="41.03%"
             style={{
-              stopColor: `color-mix(in oklab, ${COULEUR_MERIDIEN}, #B08A57 calc(var(--t-brins, 0) * 100%))`,
+              stopColor: `color-mix(in oklab, var(--brin-eteint, ${COULEUR_MERIDIEN}), #B08A57 calc(var(--t-brins, 0) * 100%))`,
             }}
           />
           <stop
             offset="70.51%"
             style={{
-              stopColor: `color-mix(in oklab, ${COULEUR_MERIDIEN}, #D6A96B calc(var(--t-brins, 0) * 100%))`,
+              stopColor: `color-mix(in oklab, var(--brin-eteint, ${COULEUR_MERIDIEN}), #D6A96B calc(var(--t-brins, 0) * 100%))`,
             }}
           />
           <stop
             offset="100%"
             style={{
-              stopColor: `color-mix(in oklab, ${COULEUR_MERIDIEN}, #9C7A4E calc(var(--t-brins, 0) * 100%))`,
+              stopColor: `color-mix(in oklab, var(--brin-eteint, ${COULEUR_MERIDIEN}), #9C7A4E calc(var(--t-brins, 0) * 100%))`,
             }}
           />
         </linearGradient>
@@ -329,7 +329,7 @@ export function Maille({ id }: { id: string }) {
         </symbol>
       </defs>
 
-      <use id={id} href={`#${idSymbole}`} />
+      <use id={id} className="maille-rendue" href={`#${idSymbole}`} />
     </>
   );
 }

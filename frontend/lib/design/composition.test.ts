@@ -287,7 +287,11 @@ describe("valeurs de reference, theme clair", () => {
 describe("architecture des couches", () => {
   it("le SVG de la lumiere est derriere le contenu, l'objet reste a 60", () => {
     const css = lire("app/globals.css");
-    expect(css).toMatch(/\.ampoule-lumiere\s*\{\s*z-index:\s*-1;/);
+    // Selecteur DOUBLE exige : a specificite egale, `.ampoule-lumiere` seul ne
+    // l'emporterait sur `.ampoule { z-index: 60 }` que par l'ordre du fichier ;
+    // un reordonnancement remettrait la lumiere au-dessus du texte (texte
+    // secondaire 6,42:1 -> 3,15:1).
+    expect(css).toMatch(/\.ampoule\.ampoule-lumiere\s*\{\s*z-index:\s*-1;/);
     expect(css).toMatch(/\.ampoule\s*\{[^}]*z-index:\s*60;/);
     expect(css).toMatch(/body::before\s*\{[^}]*z-index:\s*-1;/);
   });

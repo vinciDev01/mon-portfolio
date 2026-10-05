@@ -6,6 +6,7 @@ import {
   IMAGES_EXTINCTION,
   basculerAnimation,
   creerAnimation,
+  etatDeRepos,
   mouvementReduit,
 } from "./animation";
 
@@ -449,29 +450,31 @@ describe("basculerAnimation, sous mouvement reduit", () => {
     vi.unstubAllGlobals();
   });
 
-  it("pose l etat final sans jouer, vers l allumage, jeu et duree corrects", () => {
-    vi.stubGlobal("window", { matchMedia: () => ({ matches: true }) });
-    vi.stubGlobal("document", { documentElement: { dataset: {} } });
-    const anim = animationFactice(300, -1, DUREE_EXTINCTION);
-    basculerAnimation(anim, true);
-    expect(anim.pause).toHaveBeenCalledTimes(1);
-    expect(anim.effect.setKeyframes).toHaveBeenCalledExactlyOnceWith(IMAGES_ALLUMAGE);
-    expect(anim.effect.updateTiming).toHaveBeenCalledExactlyOnceWith({ duration: DUREE_ALLUMAGE });
-    expect(anim.currentTime).toBe(DUREE_ALLUMAGE);
-    expect(anim.play).not.toHaveBeenCalled();
-  });
-
-  it("pose l etat final sans jouer, vers l extinction, jeu et duree corrects", () => {
-    vi.stubGlobal("window", { matchMedia: () => ({ matches: true }) });
-    vi.stubGlobal("document", { documentElement: { dataset: {} } });
-    const anim = animationFactice(300, 1, DUREE_ALLUMAGE);
-    basculerAnimation(anim, false);
-    expect(anim.pause).toHaveBeenCalledTimes(1);
-    expect(anim.effect.setKeyframes).toHaveBeenCalledExactlyOnceWith(IMAGES_EXTINCTION);
-    expect(anim.effect.updateTiming).toHaveBeenCalledExactlyOnceWith({ duration: DUREE_EXTINCTION });
-    expect(anim.currentTime).toBe(0);
-    expect(anim.play).not.toHaveBeenCalled();
-  });
+  it.each([true, false])(
+    "apres la bascule (versAllume = %s), l etat de repos est celui demande, sans jouer, jeu et duree corrects",
+    (versAllume) => {
+      vi.stubGlobal("window", { matchMedia: () => ({ matches: true }) });
+      vi.stubGlobal("document", { documentElement: { dataset: {} } });
+      // Depart depuis l'etat oppose, en pleine transition, jeu oppose charge.
+      const anim = versAllume
+        ? animationFactice(300, -1, DUREE_EXTINCTION)
+        : animationFactice(300, 1, DUREE_ALLUMAGE);
+      basculerAnimation(anim, versAllume);
+      expect(anim.pause).toHaveBeenCalledTimes(1);
+      expect(anim.play).not.toHaveBeenCalled();
+      expect(anim.effect.setKeyframes).toHaveBeenCalledExactlyOnceWith(
+        versAllume ? IMAGES_ALLUMAGE : IMAGES_EXTINCTION,
+      );
+      expect(anim.effect.updateTiming).toHaveBeenCalledExactlyOnceWith({
+        duration: versAllume ? DUREE_ALLUMAGE : DUREE_EXTINCTION,
+      });
+      // Comportement, et non valeur epinglee : les deux jeux ont une
+      // semantique opposee, seul `etatDeRepos` sait la lire.
+      const repos = etatDeRepos(anim);
+      expect(repos.auRepos).toBe(true);
+      expect(repos.allume).toBe(versAllume);
+    },
+  );
 
   it("rejoue normalement quand data-mouvement force le mouvement, meme preference active", () => {
     vi.stubGlobal("window", { matchMedia: () => ({ matches: true }) });

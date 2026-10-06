@@ -77,6 +77,22 @@ describe("mitigations de performance (annexe §8.1)", () => {
     expect(palier).toMatch(/--faisceau-flou:\s*14px;/);
     expect(lire("components/ampoule/couches-lumiere.tsx")).not.toContain("stdDeviation={26}");
   });
+  it("le flou porte sur le <path> masque lui-meme, et non sur un groupe englobant", () => {
+    // L'ordre de rendu SVG est : filtre, PUIS masque. Tant que `.faisceau-forme`
+    // est sur le <path> qui porte `mask=`, le flou de forme s'applique avant la
+    // penombre laterale de 18 px, comme a l'origine ou le filtre etait un
+    // attribut SVG. Deplacer la classe sur un <g> ou sur le <svg> inverserait
+    // l'ordre : la penombre serait refloutee, et l'effet se perdrait sans
+    // qu'aucun autre test ne bronche.
+    const src = lire("components/ampoule/couches-lumiere.tsx");
+    const i = src.indexOf('className="faisceau-forme"');
+    expect(i, "classe faisceau-forme introuvable").toBeGreaterThan(-1);
+    const ouverture = src.lastIndexOf("<", i);
+    const element = src.slice(ouverture, src.indexOf("/>", i) + 2);
+    expect(element.startsWith("<path"), `porte par ${element.slice(0, 24)}…`).toBe(true);
+    expect(element).toMatch(/mask=\{/);
+  });
+
   it("content-visibility: auto sur les sections 4 a 6", () => {
     const m = css.match(/(section\[data-rang="4"\],\s*section\[data-rang="5"\],\s*section\[data-rang="6"\])\s*\{([^}]*)\}/);
     expect(m).not.toBeNull();

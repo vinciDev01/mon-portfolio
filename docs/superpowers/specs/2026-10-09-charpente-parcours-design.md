@@ -135,8 +135,18 @@ visiteur qui redimensionne le verra ; un visiteur normal, jamais.
 Un `<nav>` en `position: fixed`, bord gauche, pleine hauteur, portant une liste
 ordonnee. Il porte un nom accessible explicite et non un simple role.
 
-De haut en bas : le drapeau de disponibilite, puis les sections dans l'ordre du
-parcours, puis le CV, la langue et le blog au pied.
+De haut en bas : l'identite, le drapeau de disponibilite, les sections dans
+l'ordre du parcours, puis le CV, la langue et le blog au pied.
+
+**L'identite en tete de mat.** L'en-tete collant portait aussi le logo du site et
+le nom du proprietaire, et leur disparition les laisserait sans place. Ils
+passent donc au sommet de la colonne, au-dessus du drapeau : le mat porte
+l'identite, puis le pavillon. Le logo garde ses 36 px et son lien vers la racine.
+
+Sous 1024 px, la colonne tombe a 72 px puis a 40 px, et le nom n'a plus la place
+d'etre lu. Seul le logo subsiste, et le nom reste accessible comme nom du lien.
+Si aucun logo n'est renseigne, les initiales le remplacent, dans le meme cadre
+que le medaillon de la section 8 afin que les deux se repondent.
 
 ### 5.2 Suivi de position
 

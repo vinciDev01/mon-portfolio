@@ -72,6 +72,26 @@ commence a `colonne + gouttiere`. A 72 px et en dessous elle est une bande
 superposee, et la gouttiere gauche du contenu est portee a `colonne + 16 px` pour
 que le texte ne passe jamais dessous.
 
+**Ce qui tient dans 40 px.** La largeur utile y vaut 31 px, padding de 4 px de
+chaque cote et bordure de 1 px deduits. Le padding tombe donc a 4 px sous 600 px,
+et le logo d'identite a 24 px. Elargir la colonne a 56 px etait l'autre voie,
+mais elle ferait tomber la mesure a 320 px de 28 a 27 caracteres, sous le
+plancher de la section 4.2 : a cette taille, c'est la colonne qui cede, pas le
+texte.
+
+**Taille des cibles.** Chaque entree interactive de la colonne mesure au moins
+**24 x 24 px**, seuil de la regle WCAG 2.5.8, le repere de 7 px restant centre
+dedans. Sous 1024 px les noms sont masques et l'entree se reduirait sinon au
+repere seul. Le seuil de 44 px que la spec de l'ampoule impose a son commutateur
+ne s'applique pas ici : neuf entrees a 44 px donneraient une liste de 400 px de
+haut avant meme les commandes du pied.
+
+**Le panneau du selecteur de langue echappe au rognage.** Le `<nav>` porte
+`overflow-y: auto`, ce qui en fait un conteneur de defilement rognant aussi
+l'horizontale : un panneau de 144 px y serait coupe a trois paliers sur quatre.
+Il est donc en `position: fixed`, ancre a `inset-inline-start: var(--colonne)` et
+ouvert vers le haut, le selecteur vivant au pied.
+
 Gouttieres : 64 px au-dela de 1024 px, 32 px de 360 a 1023 px, **16 px sous
 360 px**. Les deux premieres sont heritees de `section-shell.tsx` ; la
 troisieme est ajoutee par cette spec, pour la raison donnee a la section 4.2.

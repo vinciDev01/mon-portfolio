@@ -730,6 +730,11 @@ html {
     gap: var(--espace-3);
     padding: var(--espace-3) var(--espace-2);
     overflow-y: auto;
+    /* `overflow-y: auto` force deja `overflow-x` a `auto` : sans cette ligne
+       le moindre depassement ferait defiler la colonne lateralement au lieu
+       de se replier. Explicite donc ce qui doit arriver au palier le plus
+       etroit, ou la largeur utile tombe a 31 px (spec section 4.1). */
+    overflow-x: hidden;
     background: var(--fond);
     border-inline-end: 1px solid var(--bordure);
   }
@@ -766,10 +771,18 @@ html {
     padding: 0;
   }
 
+  /* Sous 1024 px les noms sont masques et l'entree se reduirait a son repere
+     de 7 px. La regle WCAG 2.5.8 veut 24 x 24 px : le repere reste centre
+     dans cette boite. Le seuil de 44 px que l'annexe lumiere impose a son
+     commutateur ne s'applique pas ici, neuf entrees a 44 px donnant une
+     liste de 400 px de haut avant meme les commandes du pied
+     (spec section 4.1, « Taille des cibles »). */
   .entree-parcours {
     display: flex;
     align-items: center;
     gap: var(--espace-1);
+    min-width: 24px;
+    min-height: 24px;
     color: var(--texte-secondaire);
   }
 
@@ -835,6 +848,57 @@ html {
       clip-path: inset(50%);
       white-space: nowrap;
     }
+
+    /* Le nom parti, le repere ou le pictogramme reste seul : il se centre
+       dans la cible de 24 px plutot que de se coller a son bord. */
+    .entree-parcours {
+      justify-content: center;
+    }
+  }
+
+  /* Palier le plus etroit, spec section 4.1 « Ce qui tient dans 40 px ».
+     La colonne garde ses 40 px et c'est son contenu qui cede : avec le
+     `box-sizing: border-box` du preflight, un padding de var(--espace-2),
+     soit 16 px, et la bordure de 1 px ne laissaient que
+     40 - 32 - 1 = 7 px utiles, ou ni le logo de 36 px ni un pictogramme de
+     16 px ne tiennent. Le padding tombe a 4 px et l'identite a 24 px, ce
+     qui porte la largeur utile a 40 - 8 - 1 = 31 px. Elargir la colonne a
+     56 px etait l'autre voie, ecartee : elle ferait tomber la mesure a
+     320 px sous le plancher de 28 caracteres de la section 4.2. */
+  @media (max-width: 599px) {
+    .colonne-passage {
+      padding-inline: 4px;
+      align-items: center;
+    }
+
+    .identite-mat,
+    .entrees-parcours,
+    .pied-colonne {
+      align-items: center;
+    }
+
+    .identite-logo,
+    .identite-initiales {
+      width: 24px;
+      height: 24px;
+    }
+  }
+
+  /* Le panneau du selecteur de langue echappe au rognage de la colonne.
+     `.colonne-passage` porte `overflow-y: auto`, ce qui en fait un conteneur
+     de defilement rognant aussi l'horizontale : un panneau de 144 px y etait
+     coupe a trois paliers sur quatre, de 23 px visibles a 40 px de colonne a
+     1 px rogne a 160 px. En `position: fixed` il n'est plus rogne par cet
+     ancetre, aucun ancetre ne portant de `transform`, de `filter`, de
+     `perspective`, de `backdrop-filter`, de `will-change` ni de `contain`
+     qui en ferait son bloc conteneur. Ancre apres la colonne et ouvert vers
+     le haut, le selecteur vivant au pied (spec section 4.1). */
+  .panneau-langue {
+    position: fixed;
+    inset-inline-start: var(--colonne);
+    inset-block-end: var(--espace-3);
+    width: var(--panneau-langue);
+    z-index: 56;
   }
 
   /* Mesure de lecture : 66 caracteres, l'optimum de Bringhurst. */
@@ -1165,6 +1229,10 @@ html {
   --colonne: 40px;
   --gouttiere: 16px;
   --contenu-gauche: calc(var(--colonne) + 16px);
+  /* Largeur du panneau de langue, lue par le test de degagement lateral :
+     ancre a `--colonne`, il doit tenir dans la fenetre la plus etroite de
+     chaque palier. */
+  --panneau-langue: 144px;
 }
 
 @media (min-width: 360px) {

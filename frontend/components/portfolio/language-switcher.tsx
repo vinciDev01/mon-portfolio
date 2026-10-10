@@ -17,7 +17,7 @@ const PICTO_LANGUE =
   "M 8 2 c 2.8 3.2 2.8 8.8 0 12 c -2.8 -3.2 -2.8 -8.8 0 -12";
 
 export function LanguageSwitcher() {
-  const { locale, setLocale } = useTranslation();
+  const { locale, setLocale, t } = useTranslation();
   const [open, setOpen] = useState(false);
   const ref = useRef<HTMLDivElement>(null);
 
@@ -35,10 +35,13 @@ export function LanguageSwitcher() {
 
   return (
     <div ref={ref} className="relative">
+      {/* WCAG 2.5.3 : le nom accessible contient le texte visible, soit le code
+          court. Le libelle vient de `t()` et non d'une chaine anglaise en dur,
+          le site etant trilingue. */}
       <button
         onClick={() => setOpen(!open)}
         className="entree-parcours cursor-pointer"
-        aria-label={`Language : ${current!.label}`}
+        aria-label={`${t("parcours.langue")} : ${current!.short}`}
         aria-expanded={open}
       >
         <svg
@@ -53,7 +56,7 @@ export function LanguageSwitcher() {
       </button>
 
       {open && (
-        <div className="absolute left-0 top-full mt-1 w-36 rounded-lg border border-border bg-card shadow-lg overflow-hidden z-50 animate-in fade-in slide-in-from-top-2 duration-200">
+        <div className="panneau-langue rounded-lg border border-border bg-card shadow-lg overflow-hidden animate-in fade-in slide-in-from-top-2 duration-200">
           {languages.map((lang) => (
             <button
               key={lang.code}

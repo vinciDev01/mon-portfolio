@@ -73,7 +73,10 @@ describe("forced-colors: active (annexe §8.4)", () => {
 describe("mitigations de performance (annexe §8.1)", () => {
   it("flou du faisceau : 26 px, ramene a 14 px sous 600 px, par variable CSS", () => {
     expect(css).toMatch(/\.faisceau-forme\s*\{\s*filter:\s*blur\(var\(--faisceau-flou,\s*26px\)\);/);
-    const palier = bloc(/@media \(max-width: 599px\)\s*\{/);
+    // Le `:root` est nomme dans l'en-tete : la colonne de passage pose elle
+    // aussi un palier a 599 px, et viser le premier `@media` seul tombait sur
+    // le sien.
+    const palier = bloc(/@media \(max-width: 599px\)\s*\{\s*:root\s*\{/);
     expect(palier).toMatch(/--faisceau-flou:\s*14px;/);
     expect(lire("components/ampoule/couches-lumiere.tsx")).not.toContain("stdDeviation={26}");
   });

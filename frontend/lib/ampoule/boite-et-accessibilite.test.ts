@@ -67,17 +67,34 @@ describe("forced-colors: active (annexe §8.4)", () => {
     expect(lire("components/ampoule/ampoule.tsx")).toContain('className="contour-dome-pictogramme"');
     expect(lire("components/ampoule/maille.tsx")).toContain('className="maille-rendue"');
   });
-  it("rend la main sur le drapeau : texte et tissu gardent leur paire verifiee", () => {
-    // `color` est force, le `fill` SVG ne l'est pas : sans cela le libelle
-    // passe en CanvasText sur un tissu qui garde son accent, illisible.
-    const r = bloc(/\.drapeau-toile,\s*\.drapeau-guidon,\s*\.drapeau-texte\s*\{/, corps);
-    expect(r).toMatch(/forced-color-adjust:\s*none;/);
+  /** Corps de la derniere regle de `corps` dont le selecteur contient `sel`,
+   *  quel que soit le groupement ou l'ordre des selecteurs voisins. */
+  const regleAvec = (sel: string) => {
+    const re = /([^{}]+)\{([^{}]*)\}/g;
+    const sansCommentaires = corps.replace(/\/\*[\s\S]*?\*\//g, "");
+    const trouvees = [...sansCommentaires.matchAll(re)].filter((m) =>
+      m[1]!.split(",").some((x) => x.trim() === sel),
+    );
+    expect(trouvees.length, `aucune regle pour ${sel}`).toBeGreaterThan(0);
+    return trouvees.map((m) => m[2]!).join("\n");
+  };
+  it("force la propriete non forcee du drapeau : fill Highlight, texte HighlightText", () => {
+    // `color` est force, le `fill` SVG ne l'est pas. La paire Highlight /
+    // HighlightText est celle que le mode garantit lisible.
+    for (const sel of [".drapeau-toile path", ".drapeau-guidon path"]) {
+      expect(regleAvec(sel), sel).toMatch(/fill:\s*Highlight\s*;/);
+    }
+    expect(regleAvec(".drapeau-texte")).toMatch(/color:\s*HighlightText\s*;/);
   });
-  it("garde un indicateur de position : le repere courant passe en Highlight", () => {
-    const r = bloc(/\.entree-parcours\[aria-current="true"\]\s*\.entree-repere\s*\{/, corps);
-    expect(r).toMatch(/forced-color-adjust:\s*none;/);
-    expect(r).toMatch(/background:\s*Highlight;/);
-    expect(r).toMatch(/border-color:\s*Highlight;/);
+  it("ne sort pas le drapeau du mode force : l'accent de l'auteur n'y revient pas", () => {
+    for (const sel of [".drapeau-toile path", ".drapeau-guidon path", ".drapeau-texte"]) {
+      expect(regleAvec(sel), sel).not.toMatch(/forced-color-adjust/);
+    }
+  });
+  it("garde un indicateur de position : le repere courant plein, en CanvasText", () => {
+    const r = regleAvec('.entree-parcours[aria-current="true"] .entree-repere');
+    expect(r).toMatch(/background:\s*CanvasText\s*;/);
+    expect(r).toMatch(/border-color:\s*CanvasText\s*;/);
   });
   it("ne depend d'aucune classe de theme", () => expect(corps).not.toMatch(/\.clair|\.sombre/));
 });

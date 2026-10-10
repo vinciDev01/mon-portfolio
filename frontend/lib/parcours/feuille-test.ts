@@ -207,3 +207,25 @@ export function proprietes(corps: string): Record<string, string> {
   }
   return out;
 }
+
+/**
+ * La table des contenus de `app/page.tsx` : un identifiant de section, et la
+ * cle de titre que sa coquille recoit. C'est l'autorite sur l'ordre et sur les
+ * cles de titre ; les tests la lisent au lieu de la recopier.
+ */
+export function tableDesContenus(): Array<{ id: string; cleTitre: string | null; texte: string }> {
+  const page = lire("app/page.tsx");
+  const debut = page.indexOf("const enfants");
+  const fin = page.indexOf("\n  };", debut);
+  if (debut === -1 || fin === -1) throw new Error("table des contenus introuvable dans page.tsx");
+  const corps = page.slice(debut, fin);
+  const entrees = [...corps.matchAll(/^ {4}(?:"([a-z-]+)"|([a-z]+)):/gm)];
+  return entrees.map((m, i) => {
+    const texte = corps.slice(m.index!, entrees[i + 1]?.index ?? corps.length);
+    return {
+      id: (m[1] ?? m[2])!,
+      cleTitre: /cleTitre="([^"]+)"/.exec(texte)?.[1] ?? null,
+      texte,
+    };
+  });
+}

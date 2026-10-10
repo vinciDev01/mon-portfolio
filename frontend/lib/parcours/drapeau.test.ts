@@ -2,6 +2,7 @@ import { readFileSync } from "node:fs";
 import path from "node:path";
 import { describe, it, expect } from "vitest";
 import { PALETTE_CLAIRE, PALETTE_SOMBRE } from "@/lib/design/tokens";
+import { tableDesContenus } from "./feuille-test";
 
 const RACINE = path.resolve(import.meta.dirname, "../..");
 const lire = (rel: string) => readFileSync(path.join(RACINE, rel), "utf8");
@@ -128,13 +129,17 @@ describe("drapeau au mat (spec section 7)", () => {
     expect(repli!).toMatch(/\.drapeau-texte\s*\{[^}]*display:\s*none/);
   });
 
-  it("reporte le message en tete de main, hors de toute section conditionnelle", () => {
+  it("reporte le message dans le contenu de l ouverture, qui est inconditionnelle", () => {
     const page = lire("app/page.tsx");
-    const i = page.indexOf("<LigneDisponibilite");
-    expect(i).toBeGreaterThan(page.indexOf("<main"));
-    expect(i).toBeLessThan(page.indexOf("<SectionShell"));
-    // Aucune condition d'affichage de section ne l'enveloppe.
-    expect(page.slice(page.indexOf("<main"), i)).not.toMatch(/show[A-Z]\w+\s*&&/);
+    const ouverture = tableDesContenus().find((e) => e.id === "ouverture")!;
+    const i = ouverture.texte.indexOf("<LigneDisponibilite");
+    expect(i, "la ligne n'est pas dans l'entree ouverture").toBeGreaterThan(-1);
+    // Aucune condition d'affichage ne l'enveloppe : elle survit aux reglages.
+    expect(ouverture.texte.slice(0, i)).not.toMatch(/show[A-Z]\w+\s*&&/);
+    // Et elle n'est plus un enfant de <main> place au-dessus des sections, qui
+    // prendrait de la hauteur a des sections calibrees sur celle de la fenetre.
+    const horsTable = page.slice(0, page.indexOf("const enfants")) + page.slice(page.indexOf("return (", page.indexOf("const enfants")));
+    expect(horsTable).not.toContain("<LigneDisponibilite");
     expect(lire("components/portfolio/presentation-section.tsx"))
       .not.toContain("LigneDisponibilite");
   });

@@ -1,7 +1,7 @@
 import { describe, it, expect } from "vitest";
 import { sectionsActives } from "./sections";
 import type { SiteSettingsDto } from "@portfolio/shared-types";
-import { bloc, corpsDepuis, css, lire, PALIERS, px, racine, valeur } from "./feuille-test";
+import { bloc, corpsDepuis, css, lire, PALIERS, px, racine, tableDesContenus, valeur } from "./feuille-test";
 
 /** Reglages ou tout est actif, pour partir d'une base connue. */
 function tousActifs(): SiteSettingsDto {
@@ -21,12 +21,12 @@ describe("entrees de la colonne", () => {
     ]);
   });
 
-  it("suit exactement l ordre de rendu de page.tsx", () => {
+  it("suit exactement l ordre de la table des contenus de page.tsx", () => {
     // Deux listes qui decrivent le meme parcours finissent par diverger. La
-    // page fait autorite : ce test lit son ordre reel plutot que de le
+    // page fait autorite : ce test lit l'ordre reel de sa table des contenus
+    // (les `id=` sont desormais poses par le conteneur) plutot que de le
     // recopier, donc il echoue si l'une des deux bouge sans l'autre.
-    const page = lire("app/page.tsx");
-    const ordrePage = [...page.matchAll(/id="([a-z-]+)"/g)].map((m) => m[1]);
+    const ordrePage = tableDesContenus().map((e) => e.id);
     const ordreColonne = sectionsActives(tousActifs()).map((e) => e.id);
     expect(ordreColonne).toEqual(ordrePage);
   });

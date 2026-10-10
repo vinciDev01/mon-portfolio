@@ -127,7 +127,6 @@ describe("mitigations de performance (annexe §8.1)", () => {
 
   it("content-visibility a ete retire : display none le supplante (transition.test.ts le garde)", () => {
     expect(css).not.toMatch(/content-visibility:\s*auto/);
-    expect(lire("components/portfolio/section-shell.tsx")).toContain("data-rang={index}");
   });
 });
 

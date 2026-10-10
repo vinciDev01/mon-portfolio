@@ -1,6 +1,5 @@
 "use client";
 
-import { useReveal } from "@/lib/use-reveal";
 import { useTranslation } from "@/lib/i18n/i18n-context";
 
 /**
@@ -20,25 +19,21 @@ import { useTranslation } from "@/lib/i18n/i18n-context";
  * composants clients traduits du site.
  */
 export function SectionShell({
-  id,
   cleTitre,
   index,
   children,
 }: {
-  id: string;
   cleTitre: string;
   index: number;
   children: React.ReactNode;
 }) {
-  const reveal = useReveal();
   const { t } = useTranslation();
   const titre = t(cleTitre);
   const aGauche = index % 2 === 1;
 
   return (
     <section
-      id={id}
-      data-rang={index}
+      tabIndex={-1}
       className="grid grid-cols-12 gouttiere-parcours"
       style={{
         paddingTop: "var(--espace-section)",
@@ -46,7 +41,6 @@ export function SectionShell({
       }}
     >
       <div
-        ref={(el) => reveal(el)}
         className="col-span-12 bloc-parcours"
         // L'amplitude vient du reglage `zigzagAmplitude`, normalise entre 0 et 1
         // par app/layout.tsx. A 0 les deux cotes se confondent : colonne unique.

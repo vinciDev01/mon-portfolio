@@ -8,6 +8,7 @@ import type { PersonalInfoDto } from "@portfolio/shared-types";
 import { Medaillon } from "../../components/parcours/medaillon";
 import { PresentationSection } from "../../components/portfolio/presentation-section";
 import { initialesDe } from "./identite";
+import { tableDesContenus } from "./feuille-test";
 import { I18nProvider } from "../i18n/i18n-context";
 
 const RACINE = path.resolve(import.meta.dirname, "../..");
@@ -92,28 +93,42 @@ describe("medaillon (spec section 8)", () => {
   });
 });
 
-describe("section d ouverture sans presentation", () => {
-  const rendreSection = (p: Partial<PersonalInfoDto>) =>
+describe("section d ouverture : le portrait ne depend pas des presentations", () => {
+  const rendreCartes = (presentations: unknown[]) =>
     renderToStaticMarkup(
       createElement(
         I18nProvider as ComponentType<{ defaultLocale: string }>,
         { defaultLocale: "fr" },
-        createElement(PresentationSection, { presentations: [], infos: infos(p) }),
+        createElement(PresentationSection, { presentations: presentations as never }),
       ),
     );
 
-  it("rend le medaillon quand la liste est vide et qu un avatarPath existe", () => {
-    const html = rendreSection({ avatarPath: "http://hote.test/uploads/personal/u.webp" });
-    expect(html).toMatch(/<img\s[^>]*class="medaillon"/);
+  it("les cartes sont seules : liste vide, rien n'est rendu", () => {
+    expect(rendreCartes([])).toBe("");
   });
 
-  it("rend les initiales quand la liste est vide et qu il n y a pas de photo", () => {
-    expect(rendreSection({})).toContain("medaillon-repli");
+  it("les cartes ne rendent jamais le portrait", () => {
+    const html = rendreCartes([{ id: "1", title: "Titre", subtitle: null, description: null }]);
+    expect(html).toContain("Titre");
+    expect(html).not.toContain("medaillon");
   });
 
-  it("ne rend rien sans presentation, sans photo et sans initiales", () => {
-    expect(rendreSection({ name: "", surname: "" })).toBe("");
-    expect(rendreSection({ name: " ", surname: " " })).toBe("");
+  it("le portrait est rendu par l ouverture, hors de toute condition de reglage", () => {
+    const ouverture = tableDesContenus().find((e) => e.id === "ouverture")!;
+    const i = ouverture.texte.indexOf("<Medaillon");
+    expect(i, "<Medaillon> absent de l'ouverture").toBeGreaterThan(-1);
+    expect(ouverture.texte.slice(0, i)).not.toMatch(/show[A-Z]\w+/);
+    // showPresentations ne conditionne que les cartes, qui viennent apres.
+    const cartes = ouverture.texte.indexOf("<PresentationSection");
+    expect(cartes).toBeGreaterThan(i);
+    expect(ouverture.texte.slice(0, cartes)).toMatch(/showPresentations\s*&&/);
+  });
+
+  it("le medaillon rend la photo ou les initiales sans presentation", () => {
+    expect(rendre({ avatarPath: "http://hote.test/uploads/personal/u.webp" }))
+      .toMatch(/<img\s[^>]*class="medaillon"/);
+    expect(rendre({})).toContain("medaillon-repli");
+    expect(rendre({ name: "", surname: "" })).toBe("");
   });
 });
 

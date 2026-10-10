@@ -3,6 +3,7 @@ import path from "node:path";
 import { describe, it, expect } from "vitest";
 import type { SiteSettingsDto } from "@portfolio/shared-types";
 import { SECTIONS, PICTOS, sectionsActives } from "./sections";
+import { tableDesContenus } from "./feuille-test";
 
 const RACINE = path.resolve(import.meta.dirname, "../..");
 const lire = (rel: string) => readFileSync(path.join(RACINE, rel), "utf8");
@@ -59,10 +60,10 @@ describe("la liste des sections (spec section 2.2)", () => {
     ).toEqual(["ouverture"]);
   });
 
-  it("l ordre suit celui de page.tsx, qui fait autorite", () => {
-    const page = lire("app/page.tsx");
-    const rendus = [...page.matchAll(/id="([a-z-]+)"/g)].map((m) => m[1]);
-    expect(rendus).toEqual(SECTIONS.map((s) => s.id));
+  it("l ordre suit celui de la table des contenus de page.tsx, qui fait autorite", () => {
+    // Les `id="..."` ont quitte page.tsx : le conteneur les pose. La table des
+    // contenus porte les memes identifiants comme cles.
+    expect(tableDesContenus().map((e) => e.id)).toEqual(SECTIONS.map((s) => s.id));
   });
 });
 
@@ -109,13 +110,15 @@ describe("source unique : aucune autre declaration (spec section 7.1)", () => {
   });
 
   // Les cles de titre de page.tsx divergeaient de celles de la colonne
-  // (section.* contre nav.*) : c'est le defaut d'origine.
-  // TODO tache 5 : page.tsx migre vers nav.*, et cette tache doit reactiver
-  // ce test en retirant `.skip`.
-  it.skip("page.tsx passe a SectionShell les cles que SECTIONS declare", () => {
-    const page = lire("app/page.tsx");
-    const cles = [...page.matchAll(/cleTitre="([^"]+)"/g)].map((m) => m[1]);
-    expect(cles).toEqual(SECTIONS.map((s) => s.cleTitre));
+  // (section.* contre nav.*) : c'est le defaut d'origine. Verifie par
+  // identifiant, pas seulement en sequence : permuter deux titres echouerait.
+  it("page.tsx passe a SectionShell les cles que SECTIONS declare", () => {
+    const table = tableDesContenus();
+    expect(table.length).toBe(SECTIONS.length);
+    for (const s of SECTIONS) {
+      const entree = table.find((e) => e.id === s.id);
+      expect(entree?.cleTitre, s.id).toBe(s.cleTitre);
+    }
   });
 
   it("l ancien module est bien supprime", () => {

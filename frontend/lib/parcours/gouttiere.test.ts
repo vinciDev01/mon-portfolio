@@ -1,5 +1,5 @@
 import { describe, it, expect } from "vitest";
-import { bloc, contenuGaucheA, lire, PALIERS, variableA } from "./feuille-test";
+import { bloc, contenuGaucheA, lire, PALIERS, tableDesContenus, variableA } from "./feuille-test";
 
 /* Le defaut : trois elements vivent hors de `SectionShell` et ne recevaient
    donc jamais la gouttiere gauche qui reserve la colonne de passage, opaque et
@@ -127,10 +127,15 @@ describe("les elements hors de SectionShell", () => {
     expect(m![1]).not.toContain("inset-x-0");
   });
 
-  it("la ligne de disponibilite garde sa marge et sa gouttiere", () => {
+  it("la ligne de disponibilite garde sa marge, et sa gouttiere vient de la coquille", () => {
     expect(bloc(/\.ligne-disponibilite\s*\{/)).toMatch(/margin-block-end/);
+    // Elle vit dans le contenu de l'ouverture, donc dans une SectionShell qui
+    // porte deja la gouttiere : la porter aussi doublerait le retrait.
     expect(lire("components/parcours/drapeau-disponibilite.tsx")).toMatch(
-      /className="ligne-disponibilite gouttiere-parcours"/,
+      /className="ligne-disponibilite"/,
     );
+    const ouverture = tableDesContenus().find((e) => e.id === "ouverture")!;
+    expect(ouverture.texte).toContain("<SectionShell");
+    expect(ouverture.texte).toContain("<LigneDisponibilite");
   });
 });

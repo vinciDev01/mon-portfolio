@@ -7,7 +7,7 @@ import { getFileUrl } from "@/lib/api";
 import { useTranslation } from "@/lib/i18n/i18n-context";
 import { sectionsActives } from "@/lib/parcours/sections";
 import { initialesDe } from "@/lib/parcours/identite";
-import { useSectionCourante } from "@/lib/parcours/section-courante";
+import { useSectionActive } from "@/components/parcours/parcours-pagine";
 import { DrapeauDisponibilite } from "@/components/parcours/drapeau-disponibilite";
 import { LanguageSwitcher } from "@/components/portfolio/language-switcher";
 
@@ -48,7 +48,7 @@ export function ColonnePassage({
 }) {
   const { t } = useTranslation();
   const entrees = sectionsActives(reglages);
-  const courante = useSectionCourante(entrees.map((e) => e.id));
+  const idActif = useSectionActive();
   const logo = getFileUrl(reglages.logoPath);
   const nomComplet = `${infos.name} ${infos.surname}`.trim();
   const initiales = initialesDe(infos);
@@ -76,7 +76,7 @@ export function ColonnePassage({
               <a
                 href={`#${e.id}`}
                 className="entree-parcours"
-                aria-current={courante === e.id ? "true" : undefined}
+                aria-current={idActif === e.id ? "true" : undefined}
               >
                 <span className="entree-repere" aria-hidden="true" />
                 <span className="entree-nom">{t(e.cleTitre)}</span>

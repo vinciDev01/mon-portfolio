@@ -52,23 +52,30 @@ export function SectionToastObserver() {
       }, 2000);
     }
 
-    const observer = new IntersectionObserver(
-      (entries) => {
-        for (const entry of entries) {
-          if (entry.isIntersecting) {
-            const id = entry.target.id;
-            if (id && id !== lastSectionRef.current) {
-              lastSectionRef.current = id;
-              showToast(id);
-            }
-          }
-        }
-      },
-      { threshold: 0.3 },
-    );
+    // Avec la pagination, aucune section ne defile dans la fenetre : celle qui
+    // compte est celle que le conteneur marque `data-active`. On observe donc
+    // cet attribut et non l'intersection, qui verrait toutes les sections
+    // superposees comme visibles.
+    const annoncer = (el: Element) => {
+      const id = el.getAttribute("id");
+      if (id && id !== lastSectionRef.current) {
+        lastSectionRef.current = id;
+        showToast(id);
+      }
+    };
+    const actives = () =>
+      document.querySelectorAll('.parcours-pagine > [data-active="true"]');
 
-    const sections = document.querySelectorAll("section[id]");
-    sections.forEach((section) => observer.observe(section));
+    const observer = new MutationObserver(() => actives().forEach(annoncer));
+    const zone = document.querySelector(".parcours-pagine");
+    if (zone) {
+      observer.observe(zone, {
+        attributes: true,
+        attributeFilter: ["data-active"],
+        subtree: true,
+      });
+    }
+    actives().forEach(annoncer);
 
     return () => {
       observer.disconnect();

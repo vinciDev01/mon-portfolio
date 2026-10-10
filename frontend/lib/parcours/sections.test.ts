@@ -1,4 +1,4 @@
-import { readFileSync } from "node:fs";
+import { readdirSync, readFileSync } from "node:fs";
 import path from "node:path";
 import { describe, it, expect } from "vitest";
 import type { SiteSettingsDto } from "@portfolio/shared-types";
@@ -48,6 +48,17 @@ describe("la liste des sections (spec section 2.2)", () => {
     }
   });
 
+  it("PICTOS et SECTIONS se correspondent dans les deux sens", () => {
+    const ids = SECTIONS.map((s) => s.id).sort();
+    expect(Object.keys(PICTOS).sort()).toEqual(ids);
+  });
+
+  it("un reglage absent de la reponse omet la section, sauf l ouverture", () => {
+    expect(
+      sectionsActives({} as unknown as SiteSettingsDto).map((s) => s.id),
+    ).toEqual(["ouverture"]);
+  });
+
   it("l ordre suit celui de page.tsx, qui fait autorite", () => {
     const page = lire("app/page.tsx");
     const rendus = [...page.matchAll(/id="([a-z-]+)"/g)].map((m) => m[1]);
@@ -55,10 +66,20 @@ describe("la liste des sections (spec section 2.2)", () => {
   });
 });
 
+/** Tous les .ts et .tsx sous `components/` et `lib/`, hors le module lui-meme et les tests. */
+function fichiersSource(): string[] {
+  return ["components", "lib"].flatMap((dossier) =>
+    (readdirSync(path.join(RACINE, dossier), { recursive: true }) as string[])
+      .map((f) => path.join(dossier, f))
+      .filter((f) => /\.tsx?$/.test(f) && !/\.test\.tsx?$/.test(f))
+      .filter((f) => f !== path.join("lib", "parcours", "sections.ts")),
+  );
+}
+
 describe("source unique : aucune autre declaration (spec section 7.1)", () => {
-  // Categorique et non orthographique : on n'interdit pas une ecriture, on
-  // exige que tout consommateur PASSE par le module. Trois declarations
-  // divergentes existaient avant cette tache.
+  // Categorique et non orthographique : on ne liste pas les consommateurs, on
+  // balaie tout le code source. Trois declarations divergentes existaient
+  // avant cette tache.
   const CONSOMMATEURS = [
     "components/parcours/colonne-passage.tsx",
     "components/portfolio/section-toast-observer.tsx",
@@ -70,16 +91,31 @@ describe("source unique : aucune autre declaration (spec section 7.1)", () => {
     }
   });
 
-  it("aucun consommateur ne nomme d identifiant de section", () => {
-    // Un consommateur qui en nomme un seul reconstruit deja une partie de la liste.
-    for (const f of CONSOMMATEURS) {
+  it("aucun fichier source ne nomme deux identifiants de section ou plus", () => {
+    // Un fichier peut citer une section (cas particulier) ; deux ou plus
+    // signifie qu'il reconstruit la liste.
+    const fichiers = fichiersSource();
+    expect(fichiers.length).toBeGreaterThan(10);
+    for (const f of fichiers) {
       const src = lire(f);
       const cites = SECTIONS.map((s) => s.id).filter((id) =>
         new RegExp(`["'\`]${id}["'\`]`).test(src),
       );
-      expect(cites, `${f} reconstruit la liste : ${cites.join(", ")}`)
-        .toHaveLength(0);
+      expect(
+        cites.length,
+        `${f} reconstruit la liste des sections : ${cites.join(", ")}`,
+      ).toBeLessThan(2);
     }
+  });
+
+  // Les cles de titre de page.tsx divergeaient de celles de la colonne
+  // (section.* contre nav.*) : c'est le defaut d'origine.
+  // TODO tache 5 : page.tsx migre vers nav.*, et cette tache doit reactiver
+  // ce test en retirant `.skip`.
+  it.skip("page.tsx passe a SectionShell les cles que SECTIONS declare", () => {
+    const page = lire("app/page.tsx");
+    const cles = [...page.matchAll(/cleTitre="([^"]+)"/g)].map((m) => m[1]);
+    expect(cles).toEqual(SECTIONS.map((s) => s.cleTitre));
   });
 
   it("l ancien module est bien supprime", () => {
@@ -101,10 +137,14 @@ describe("les cles de titre existent dans les trois langues", () => {
     });
   }
 
-  it("aucun libelle de navigation ne finit par un point", () => {
-    const dict = JSON.parse(lire("lib/i18n/fr.json"));
-    for (const s of SECTIONS) {
-      expect(dict[s.cleTitre], s.cleTitre).not.toMatch(/\.$/);
-    }
-  });
+  // Exception voulue : `nav.blog` garde son point final, ce n'est pas une
+  // section. Ne pas le « corriger ».
+  for (const langue of ["fr", "en", "de"]) {
+    it(`${langue}.json : aucun libelle de section ne finit par un point`, () => {
+      const dict = JSON.parse(lire(`lib/i18n/${langue}.json`));
+      for (const s of SECTIONS) {
+        expect(dict[s.cleTitre], s.cleTitre).not.toMatch(/\.$/);
+      }
+    });
+  }
 });

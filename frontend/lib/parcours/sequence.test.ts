@@ -1,0 +1,129 @@
+import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
+import { readFileSync } from "node:fs";
+import path from "node:path";
+import {
+  analyserDuree,
+  creerSequenceur,
+  SORTIE_REPLI_MS,
+  VERROU_APRES_MS,
+} from "./sequence";
+
+describe("analyserDuree", () => {
+  it.each([
+    ["0.18s", 180],
+    ["180ms", 180],
+    ["0s", 0],
+    ["0.18s, 0.22s", 180],
+    ["calc(400ms * 1)", 400],
+    ["calc(400ms * 0.5)", 200],
+  ])("lit %s comme %d ms", (v, ms) => {
+    expect(analyserDuree(v)).toBeCloseTo(ms);
+  });
+
+  it("rend null, et non zero, quand rien n'est lisible", () => {
+    expect(analyserDuree("")).toBeNull();
+    expect(analyserDuree("auto")).toBeNull();
+    expect(analyserDuree("calc(400ms * var(--x))")).toBeNull();
+  });
+
+  it("garde un repli egal a 45 % de la duree nominale", () => {
+    expect(SORTIE_REPLI_MS).toBe(400 * 0.45);
+  });
+});
+
+/** Un journal ordonne des trois etats, pour verifier la SEQUENCE et non la
+ *  presence de mots : c'est ce que le fondu croise violerait. */
+function monter(duree = 180) {
+  const journal: string[] = [];
+  let attente = duree;
+  const s = creerSequenceur({
+    dureeSortie: () => attente,
+    desactiver: () => journal.push("aucune"),
+    activer: (c) => journal.push(`active:${c}`),
+    surDeverrouillage: () => journal.push("deverrouille"),
+  });
+  return { s, journal, regler: (ms: number) => (attente = ms) };
+}
+
+describe("creerSequenceur : trois etats", () => {
+  beforeEach(() => vi.useFakeTimers());
+  afterEach(() => vi.useRealTimers());
+
+  it("desactive tout, attend la sortie, puis seulement active la cible", () => {
+    const { s, journal } = monter(180);
+    s.aller(3);
+    expect(journal).toEqual(["aucune"]);
+    vi.advanceTimersByTime(179);
+    expect(journal).toEqual(["aucune"]);
+    vi.advanceTimersByTime(1);
+    expect(journal).toEqual(["aucune", "active:3"]);
+  });
+
+  it("ne laisse jamais deux sections actives : la cible n'est activee qu'apres l'etat vide", () => {
+    const { s, journal } = monter(180);
+    s.aller(1);
+    vi.runAllTimers();
+    expect(journal.indexOf("aucune")).toBeLessThan(journal.indexOf("active:1"));
+  });
+
+  it("verrouille pendant la sortie et VERROU_APRES_MS apres l'activation", () => {
+    const { s, journal } = monter(180);
+    expect(s.aller(1)).toBe(true);
+    expect(s.aller(2)).toBe(false);
+    vi.advanceTimersByTime(180);
+    expect(s.verrouille).toBe(true);
+    expect(s.aller(2)).toBe(false);
+    vi.advanceTimersByTime(VERROU_APRES_MS - 1);
+    expect(s.verrouille).toBe(true);
+    vi.advanceTimersByTime(1);
+    expect(s.verrouille).toBe(false);
+    expect(journal).toEqual(["aucune", "active:1", "deverrouille"]);
+    expect(s.aller(2)).toBe(true);
+  });
+
+  it("relit la duree a chaque changement (reglage de vitesse du backoffice)", () => {
+    const { s, journal, regler } = monter(180);
+    s.aller(1);
+    vi.runAllTimers();
+    regler(360);
+    s.aller(2);
+    vi.advanceTimersByTime(359);
+    expect(journal).not.toContain("active:2");
+    vi.advanceTimersByTime(1);
+    expect(journal).toContain("active:2");
+  });
+
+  it("mouvement reduit : une attente nulle rend le changement immediat, sans branche", () => {
+    const { s, journal } = monter(0);
+    s.aller(1);
+    vi.advanceTimersByTime(0);
+    expect(journal).toEqual(["aucune", "active:1"]);
+  });
+
+  it("annuler leve le verrou et abandonne l'activation en attente", () => {
+    const { s, journal } = monter(180);
+    s.aller(1);
+    s.annuler();
+    vi.runAllTimers();
+    expect(journal).toEqual(["aucune"]);
+    expect(s.verrouille).toBe(false);
+  });
+});
+
+describe("parcours-pagine.tsx : ce que le composant ne doit pas faire", () => {
+  const source = readFileSync(
+    path.resolve(import.meta.dirname, "../../components/parcours/parcours-pagine.tsx"),
+    "utf8",
+  ).replace(/\/\*[\s\S]*?\*\//g, "").replace(/\/\/.*$/gm, "");
+
+  it("passe par le sequenceur : aucun changement d'index hors de `activer`", () => {
+    // Un appel direct a setActif(cible) hors du sequenceur ferait un fondu croise.
+    const appels = [...source.matchAll(/setActif\(([^)]*)\)/g)].map((m) => m[1]);
+    expect(appels.filter((a) => a === "null")).toHaveLength(1);
+    expect(source).toContain("creerSequenceur(");
+  });
+
+  it("n'introduit aucun mouvement propre", () => {
+    expect(source).not.toMatch(/transform|translate|animate|\.animate\(|requestAnimationFrame/);
+  });
+});

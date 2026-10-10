@@ -10,7 +10,6 @@ import {
   limiteFusion,
   longueurArc,
   meridiens,
-  ordonnee,
   pasLocal,
   xProjete,
 } from "./geometrie";

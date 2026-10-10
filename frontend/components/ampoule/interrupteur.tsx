@@ -25,7 +25,7 @@ export function Interrupteur() {
           depend de l'etat reel du theme, que le serveur ignore : divergence
           legitime avec le rendu serveur, donc `suppressHydrationWarning`. */}
       <span className="sr-only" aria-live="polite" suppressHydrationWarning>
-        {allumee ? "Allumé — thème clair" : "Éteint — thème sombre"}
+        {allumee ? "Allumé, thème clair" : "Éteint, thème sombre"}
       </span>
     </button>
   );

@@ -121,8 +121,8 @@ describe("interrupteur (annexe §8.5)", () => {
   });
   it("annonce l'etat par un span aria-live=polite, hors hydratation", () => {
     expect(src).toMatch(/<span className="sr-only" aria-live="polite" suppressHydrationWarning>/);
-    expect(src).toContain("Allumé — thème clair");
-    expect(src).toContain("Éteint — thème sombre");
+    expect(src).toContain("Allumé, thème clair");
+    expect(src).toContain("Éteint, thème sombre");
   });
   it("porte un anneau de focus double", () => {
     const f = bloc(/\.ampoule-interrupteur:focus-visible\s*\{/);

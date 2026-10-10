@@ -272,7 +272,7 @@ export default function SiteSettingsPage() {
             <p className="text-xs text-muted-foreground mt-1">
               En mode automatique, l&apos;ampoule est <strong>éteinte de 7 h à 19 h</strong>
               {" "}(thème sombre) et <strong>allumée le reste du temps</strong> (thème clair).
-              Cette règle suit la logique de l&apos;objet — on allume une lampe le soir —
+              Cette règle suit la logique de l&apos;objet, car on allume une lampe le soir,
               et inverse donc la convention habituelle. Dès qu&apos;un visiteur clique
               l&apos;ampoule, son choix est mémorisé et cette règle ne s&apos;applique plus à lui.
             </p>

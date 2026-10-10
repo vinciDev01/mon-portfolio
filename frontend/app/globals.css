@@ -4,12 +4,12 @@
 
 /*
  * Enregistrement des huit variables de la transition d'incandescence
- * (tache 10 ; ronde de correction 1 pour les sept premieres —
- * task-10-fix-1.md —, `--t-brins` ajoutee en ronde de correction 2 —
+ * (tache 10 ; ronde de correction 1 pour les sept premieres, voir
+ * task-10-fix-1.md, puis `--t-brins` ajoutee en ronde de correction 2, voir
  * task-10-fix-2.md). Remplace une ancienne variable unique de pilotage
  * (tache 8/9) : une seule variable parcourue a rebours par un objet
  * `Animation` ne peut produire, pour l'extinction, que le miroir exact de
- * l'ordre d'apparition de l'allumage — or l'annexe §5.2 demande un ordre
+ * l'ordre d'apparition de l'allumage, or l'annexe §5.2 demande un ordre
  * de disparition qui n'est PAS ce miroir (le faisceau s'eteint en
  * premier, pas en troisieme). `lib/ampoule/animation.ts` anime
  * desormais ces huit variables ensemble, dans le meme et unique objet
@@ -54,8 +54,8 @@
 /*
  * Ronde de correction 2 : pilote le degrade de `stroke` des meridiens
  * (« brins chauds »/« brins refroidis », annexe §5.1/§5.2), sur ses
- * PROPRES fenetres — 180 -> 620 ms a l'allumage, 80 -> 480 ms a
- * l'extinction — distinctes de celles de `--t-filament`. Animee et
+ * PROPRES fenetres, 180 -> 620 ms a l'allumage, 80 -> 480 ms a
+ * l'extinction, distinctes de celles de `--t-filament`. Animee et
  * testee dans lib/ampoule/animation.ts ; consommee par quatre arrets de
  * degrade `color-mix()` dans `components/ampoule/maille.tsx` (les
  * bandes et les meridiens). NE PAS la supprimer.
@@ -67,8 +67,8 @@
 }
 /* Rampe chromatique du filament (annexe §5.1/§5.2) : une propriete
    personnalisee enregistree en <color> s'interpole en oklab lorsqu'elle
-   est animee par la Web Animations API ou une transition CSS — jamais en
-   sRGB — ce que l'annexe impose explicitement pour cette rampe. */
+   est animee par la Web Animations API ou une transition CSS, jamais en
+   sRGB, ce que l'annexe impose explicitement pour cette rampe. */
 @property --filament-couleur {
   syntax: "<color>";
   initial-value: #3a3128;
@@ -114,10 +114,10 @@
 }
 
 /*
- * Thème sombre — ampoule éteinte. Aussi le repli sur :root : sans
+ * Thème sombre, ampoule éteinte. Aussi le repli sur :root : sans
  * JavaScript, la classe .clair/.sombre n'est jamais posée sur <html> (elle
  * ne l'est que par le script initial), donc :root doit porter la meme
- * identite que le repli d'erreur du script et de themeSelonHeure — le
+ * identite que le repli d'erreur du script et de themeSelonHeure, le
  * sombre. Source : frontend/lib/design/tokens.ts
  */
 /*
@@ -142,7 +142,7 @@
 }
 
 /*
- * Ampoule allumee : etat "allume" des huit variables — valeurs finales
+ * Ampoule allumee : etat "allume" des huit variables, valeurs finales
  * des tables de l'annexe §5.1 (offset 1) / §5.2 (offset 0), pas
  * simplement 1 partout : la lueur plafonne a 0,92 et la moucheture a
  * 0,55. C'est la SEULE chose que porte la classe : les jetons de palette
@@ -624,13 +624,13 @@ html {
   }
 
   /*
-   * L5 — halo de fond (annexe §3.4, tache 9). `body::before` plutot qu'une
+   * L5, halo de fond (annexe §3.4, tache 9). `body::before` plutot qu'une
    * forme SVG floutee : un `radial-gradient` coute ~0,3 ms contre plusieurs
    * ms pour un flou de forme de cette taille (annexe §8.1).
    *
    * Addendum du controleur, point B : les « deux passes » du §3.4
    * (soft-light, puis une seconde passe screen a 40 % de l'opacite) ne
-   * doivent former qu'UNE seule couche de composition — sans quoi le
+   * doivent former qu'UNE seule couche de composition, sans quoi le
    * plafond de couches melangees se compterait deux fois pour L5 seule.
    * Implementation : deux `radial-gradient` empiles dans le meme
    * `background-image` (le second est le premier avec chaque opacite de
@@ -684,7 +684,7 @@ html {
     z-index: -1;
   }
 
-  /* Etape 5 : sous 360 px, les couches lointaines sont desactivees — a
+  /* Etape 5 : sous 360 px, les couches lointaines sont desactivees, a
      cette echelle (--ampoule-echelle 0,44) l'objet lui-meme prime sur son
      ambiance. */
   @media (max-width: 359px) {
@@ -1010,7 +1010,7 @@ html {
     transform: scale(var(--ampoule-echelle, 1));
     transform-origin: 100% 0;
     /* La boite est normative (annexe §0) : toute la geometrie du plan suppose
-       1 unite de viewBox = 1 px, et seule cette paire l'etablit — c'est elle
+       1 unite de viewBox = 1 px, et seule cette paire l'etablit, c'est elle
        qui rend vraie l'arithmetique en pixels de `.ampoule-interrupteur`.
        `overflow: visible` est indispensable : la feuille de style des
        navigateurs ecrete un <svg> en ligne a sa boite, et les deux couches de
@@ -1030,8 +1030,8 @@ html {
        heritee, meme face a une animation posee plus haut dans l'arbre :
        une regle locale ici figerait les couches du SVG independamment de
        L4/L5/L6. Les couches heritent de `:root`/`.sombre`/`.clair`
-       ci-dessus comme tout le reste de la page — le repli correct sans
-       JavaScript — et l'animation le surclasse des qu'elle existe. */
+       ci-dessus comme tout le reste de la page, le repli correct sans
+       JavaScript, et l'animation le surclasse des qu'elle existe. */
   }
 
   /*
@@ -1091,7 +1091,7 @@ html {
      l'emporterait sur `.ampoule { z-index: 60 }` que parce qu'elle vient
      apres. Un reordonnancement du fichier remettrait alors le faisceau et la
      moucheture AU-DESSUS du contenu, ou leur `screen` ecrase le contraste du
-     texte — mesure a la tache 11 : texte secondaire 6,42:1 tombant a 3,15:1
+     texte, mesure a la tache 11 : texte secondaire 6,42:1 tombant a 3,15:1
      contre un seuil de 4,5. Le doublement rend la regle independante de
      l'ordre. */
   .ampoule.ampoule-lumiere {
@@ -1099,11 +1099,11 @@ html {
   }
 
   /*
-   * L2 — lueur a travers le tressage, peinte sous la maille. Lit
+   * L2, lueur a travers le tressage, peinte sous la maille. Lit
    * directement --t-lueur (tache 10, ronde de correction 1) : la
    * temporalite (annexe §5.1/§5.2) vient des offsets du jeu
    * d'images-cles charge par lib/ampoule/animation.ts, plus aucune
-   * derivation par calc()/clamp() depuis une variable unique — c'est ce
+   * derivation par calc()/clamp() depuis une variable unique, c'est ce
    * qui permet a l'extinction de suivre sa PROPRE table, distincte du
    * miroir de l'allumage (le faisceau ci-dessous s'eteint en premier,
    * jamais en troisieme).
@@ -1114,7 +1114,7 @@ html {
   }
 
   /*
-   * L1 — filament, peint par-dessus la maille. Seule sa sous-couche « halo
+   * L1, filament, peint par-dessus la maille. Seule sa sous-couche « halo
    * serre » est en mix-blend-mode: screen (regle suivante) ; le coeur, la
    * boucle et le globe eclaire restent en fusion normale. Le `fill` du
    * coeur et le `stroke` de la boucle lisent `var(--filament-couleur)`
@@ -1143,7 +1143,7 @@ html {
     mix-blend-mode: screen;
   }
 
-  /* L4 — faisceau (tache 9). Hors de `.lampe-isolee` : son `screen` doit
+  /* L4, faisceau (tache 9). Hors de `.lampe-isolee` : son `screen` doit
      atteindre la page, pas seulement l'interieur du SVG. Lit
      directement --t-faisceau (tache 10, ronde de correction 1) : c'est
      cette couche qui doit s'eteindre EN PREMIER (annexe §5.2, « le
@@ -1163,7 +1163,7 @@ html {
     filter: blur(var(--faisceau-flou, 26px));
   }
 
-  /* L6 — moucheture (tache 9). Lit directement --t-moucheture, dont les
+  /* L6, moucheture (tache 9). Lit directement --t-moucheture, dont les
      offsets du jeu d'images-cles portent deja le plafond de 0,55
      (annexe §3.5) : plus de multiplication separee par calc(). */
   .couche-moucheture {
@@ -1176,7 +1176,7 @@ html {
    * tomber a 200 px (au lieu de 304) entre 600 et 899 px de large. Aucune
    * regle dediee ici : L4 vit a l'interieur du meme `<svg class="ampoule">`
    * que tout le reste de l'objet, deja mis a l'echelle par
-   * `transform: scale(var(--ampoule-echelle))` ci-dessous — 0,66 a cette
+   * `transform: scale(var(--ampoule-echelle))` ci-dessous, 0,66 a cette
    * largeur. 304 * 0,66 = 200,6 px, soit exactement la valeur de l'annexe
    * §1.6 (comme les « dome = 138 px » et « dome = 84 px » des autres
    * lignes de la meme table, qui sont elles aussi de simples produits de

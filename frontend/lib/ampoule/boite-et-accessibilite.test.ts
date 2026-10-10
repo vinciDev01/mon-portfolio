@@ -67,6 +67,18 @@ describe("forced-colors: active (annexe §8.4)", () => {
     expect(lire("components/ampoule/ampoule.tsx")).toContain('className="contour-dome-pictogramme"');
     expect(lire("components/ampoule/maille.tsx")).toContain('className="maille-rendue"');
   });
+  it("rend la main sur le drapeau : texte et tissu gardent leur paire verifiee", () => {
+    // `color` est force, le `fill` SVG ne l'est pas : sans cela le libelle
+    // passe en CanvasText sur un tissu qui garde son accent, illisible.
+    const r = bloc(/\.drapeau-toile,\s*\.drapeau-guidon,\s*\.drapeau-texte\s*\{/, corps);
+    expect(r).toMatch(/forced-color-adjust:\s*none;/);
+  });
+  it("garde un indicateur de position : le repere courant passe en Highlight", () => {
+    const r = bloc(/\.entree-parcours\[aria-current="true"\]\s*\.entree-repere\s*\{/, corps);
+    expect(r).toMatch(/forced-color-adjust:\s*none;/);
+    expect(r).toMatch(/background:\s*Highlight;/);
+    expect(r).toMatch(/border-color:\s*Highlight;/);
+  });
   it("ne depend d'aucune classe de theme", () => expect(corps).not.toMatch(/\.clair|\.sombre/));
 });
 

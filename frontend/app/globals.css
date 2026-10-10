@@ -726,6 +726,7 @@ html {
     border: 1px solid var(--bordure-signifiante);
     border-radius: 4px;
     background: var(--surface);
+    overflow: hidden;
     object-fit: cover;
     margin-block-end: var(--espace-2);
   }
@@ -1474,6 +1475,31 @@ section[data-rang="6"] {
     display: inline;
     forced-color-adjust: none;
     stroke: CanvasText;
+  }
+
+  /* La colonne de passage suit les memes regles que l'ampoule (spec 5.5).
+
+     Le drapeau : le libelle est du `color`, donc FORCE a CanvasText, alors
+     que le `fill` du <path> est un attribut de presentation SVG que le mode
+     ne force pas. Le tissu garderait son accent et le texte passerait a
+     environ 1,9:1 en sombre, 2,5:1 en clair. On rend la main sur les trois
+     pieces, pour que la paire texte et tissu reste celle dont le contraste
+     a ete verifie. */
+  .drapeau-toile,
+  .drapeau-guidon,
+  .drapeau-texte {
+    forced-color-adjust: none;
+  }
+
+  /* Le repere de la section courante : hors contraste force, le point plein
+     se distingue du point creux par la forme et non par la seule couleur
+     (WCAG 1.4.1). Le mode force `background-color` et `color` : plein et creux
+     deviendraient identiques et plus rien n'indiquerait la position. On
+     reprend la main sur le repere courant seul, en couleur systeme. */
+  .entree-parcours[aria-current="true"] .entree-repere {
+    forced-color-adjust: none;
+    background: Highlight;
+    border-color: Highlight;
   }
 }
 

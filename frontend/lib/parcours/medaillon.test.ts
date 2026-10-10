@@ -37,6 +37,8 @@ describe("medaillon (spec section 8)", () => {
     expect(m![1]).toMatch(/height:\s*88px/);
     expect(m![1]).toContain("var(--bordure-signifiante)");
     expect(m![1]).toMatch(/border-radius:\s*4px/);
+    // Spec section 9, point 4 : width, height ET overflow, lus dans la feuille.
+    expect(m![1]).toMatch(/overflow:\s*hidden/);
   });
 
   it("n a ni ombre, ni degrade, ni filtre", () => {

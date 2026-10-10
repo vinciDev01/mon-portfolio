@@ -19,9 +19,21 @@ import { useTranslation } from "@/lib/i18n/i18n-context";
  * Aucun mouvement propre : il herite de l'entree de bloc, qui est l'un des deux
  * mouvements autorises.
  */
+export function initialesDe(infos: PersonalInfoDto): string {
+  return `${infos.name?.trim()[0] ?? ""}${infos.surname?.trim()[0] ?? ""}`.toUpperCase();
+}
+
+/** Vrai quand le medaillon a quelque chose a montrer : photo ou initiales. */
+export function aUnPortrait(infos: PersonalInfoDto): boolean {
+  return Boolean(infos.avatarPath) || initialesDe(infos) !== "";
+}
+
 export function Medaillon({ infos }: { infos: PersonalInfoDto }) {
   const { t } = useTranslation();
-  const initiales = `${infos.name?.[0] ?? ""}${infos.surname?.[0] ?? ""}`.toUpperCase();
+  const initiales = initialesDe(infos);
+
+  // Ni photo ni initiales : rien a montrer, jamais de carre vide.
+  if (!aUnPortrait(infos)) return null;
 
   if (!infos.avatarPath) {
     return (

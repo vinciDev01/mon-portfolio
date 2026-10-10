@@ -1,7 +1,7 @@
 "use client";
 
 import type { PersonalInfoDto, PresentationDto } from "@portfolio/shared-types";
-import { Medaillon } from "@/components/parcours/medaillon";
+import { Medaillon, aUnPortrait } from "@/components/parcours/medaillon";
 
 interface PresentationSectionProps {
   presentations: PresentationDto[];
@@ -29,7 +29,10 @@ function PresentationCard({ item, index }: { item: PresentationDto; index: numbe
 }
 
 export function PresentationSection({ presentations, infos }: PresentationSectionProps) {
-  if (!presentations.length) return null;
+  // Deux cas distincts : showPresentations a faux cache l'ouverture
+  // deliberement (page.tsx n'appelle alors pas ce composant) ; une liste vide
+  // avec la section active ne doit pas replier le portrait avec elle.
+  if (!presentations.length && !aUnPortrait(infos)) return null;
 
   return (
     <>

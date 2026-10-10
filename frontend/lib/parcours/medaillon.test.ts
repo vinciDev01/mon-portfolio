@@ -6,6 +6,7 @@ import { renderToStaticMarkup } from "react-dom/server";
 import { nomVariante } from "@portfolio/shared-types";
 import type { PersonalInfoDto } from "@portfolio/shared-types";
 import { Medaillon } from "../../components/parcours/medaillon";
+import { PresentationSection } from "../../components/portfolio/presentation-section";
 import { I18nProvider } from "../i18n/i18n-context";
 
 const RACINE = path.resolve(import.meta.dirname, "../..");
@@ -89,5 +90,30 @@ describe("medaillon (spec section 8)", () => {
   it("n introduit ni tiret cadratin ni emoji", () => {
     expect(src).not.toContain("—");
     expect([...src].some((c) => c.codePointAt(0)! > 0x2500)).toBe(false);
+  });
+});
+
+describe("section d ouverture sans presentation", () => {
+  const rendreSection = (p: Partial<PersonalInfoDto>) =>
+    renderToStaticMarkup(
+      createElement(
+        I18nProvider as ComponentType<{ defaultLocale: string }>,
+        { defaultLocale: "fr" },
+        createElement(PresentationSection, { presentations: [], infos: infos(p) }),
+      ),
+    );
+
+  it("rend le medaillon quand la liste est vide et qu un avatarPath existe", () => {
+    const html = rendreSection({ avatarPath: "http://hote.test/uploads/personal/u.webp" });
+    expect(html).toMatch(/<img\s[^>]*class="medaillon"/);
+  });
+
+  it("rend les initiales quand la liste est vide et qu il n y a pas de photo", () => {
+    expect(rendreSection({})).toContain("medaillon-repli");
+  });
+
+  it("ne rend rien sans presentation, sans photo et sans initiales", () => {
+    expect(rendreSection({ name: "", surname: "" })).toBe("");
+    expect(rendreSection({ name: " ", surname: " " })).toBe("");
   });
 });

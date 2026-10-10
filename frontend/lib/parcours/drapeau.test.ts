@@ -53,7 +53,12 @@ describe("drapeau au mat (spec section 7)", () => {
   it("porte une queue d aronde et un galbe, pas un rectangle", () => {
     // Deux pointes au bord libre, et des courbes sur les bords haut et bas.
     expect(src).toContain("CHEMIN_DRAPEAU");
-    expect(src).toMatch(/[CQ]\s/);
+    const chemin = /const CHEMIN_DRAPEAU =([\s\S]*?);/.exec(src);
+    expect(chemin, "CHEMIN_DRAPEAU introuvable").not.toBeNull();
+    expect(chemin![1]).toMatch(/\bC\s/); // galbe des bords haut et bas
+    expect(chemin![1]).toContain("L 200 14"); // premiere pointe
+    expect(chemin![1]).toContain("L 200 42"); // seconde pointe
+    expect(chemin![1]).toContain("L 176 28"); // encoche entre les pointes
   });
 
   it("ne porte aucune animation : le vent est dans le trace", () => {
@@ -68,7 +73,13 @@ describe("drapeau au mat (spec section 7)", () => {
   });
 
   it("n emploie aucune couleur d alerte", () => {
-    expect(src).not.toMatch(/red|orange|#f0|#e4001|destructive/i);
+    // Contextes de couleur uniquement : « centered » ou « colored » ne comptent pas.
+    const couleurs = [
+      ...sansCommentaires.matchAll(/(?:fill|stroke|color|background)[=:]\s*[{"']*([^;}\n]*)/gi),
+    ].map((m) => m[1]).join(" ");
+    expect(couleurs).not.toMatch(/\b(red|orange|crimson|tomato)\b|#f0|#e4001|destructive/i);
+    expect(css.match(/\.drapeau-[a-z]+\s*\{[^}]*\}/g)?.join(" ") ?? "")
+      .not.toMatch(/\b(red|orange|crimson|tomato)\b|destructive/i);
   });
 
   // Review Focus 2 : un libelle de disponibilite tres long.
@@ -77,6 +88,34 @@ describe("drapeau au mat (spec section 7)", () => {
     expect(m, "regle .drapeau-texte introuvable").not.toBeNull();
     expect(m![1]).toMatch(/-webkit-line-clamp:\s*2/);
     expect(src).toMatch(/aria-label=\{libelleComplet\}/);
+  });
+
+  it("n expose qu un seul nom accessible : le guidon est masque de base", () => {
+    const m = /\.drapeau-guidon\s*\{([^}]*)\}/.exec(css);
+    expect(m, "regle de base .drapeau-guidon introuvable").not.toBeNull();
+    expect(m![1]).toMatch(/display:\s*none/);
+  });
+
+  it("a une boite fluide : aucune largeur fixe en pixels, un max-width", () => {
+    const toile = /\.drapeau-disponibilite\s*\{([^}]*)\}/.exec(css)![1];
+    expect(toile).not.toMatch(/width:\s*\d+px/);
+    const mat = /\.mat-disponibilite\s*\{([^}]*)\}/.exec(css)![1];
+    const max = /max-width:\s*(\d+)px/.exec(mat);
+    expect(max, "max-width absent de .mat-disponibilite").not.toBeNull();
+    // Largeur utile au premier palier ou le drapeau s'affiche (1024 px) :
+    // colonne lue dans la feuille, moins 2 x 16 de padding et 1 de bordure.
+    // Si elle est inferieure a la boite, la largeur ne peut pas etre fixe.
+    const palier = blocs(/@media \(min-width: 1024px\)\s*\{/, css)
+      .map((b) => /--colonne:\s*(\d+)px/.exec(b)).find(Boolean);
+    expect(palier, "palier de 1024 px introuvable").toBeTruthy();
+    const utile = Number(palier![1]) - 2 * 16 - 1;
+    if (utile < Number(max![1])) {
+      expect(toile).not.toMatch(/(?<!max-)width:\s*\d+px/);
+    }
+    expect(src).toContain('preserveAspectRatio="none"');
+    const texte = /\.drapeau-texte\s*\{([^}]*)\}/.exec(css)![1];
+    expect(texte).toMatch(/position:\s*relative/);
+    expect(texte).toMatch(/overflow-wrap:\s*anywhere/);
   });
 
   it("se replie en guidon sans texte sous 1024 px", () => {
@@ -89,9 +128,15 @@ describe("drapeau au mat (spec section 7)", () => {
     expect(repli!).toMatch(/\.drapeau-texte\s*\{[^}]*display:\s*none/);
   });
 
-  it("reporte le message dans l ouverture quand le drapeau n a plus de texte", () => {
-    const ouverture = lire("components/portfolio/presentation-section.tsx");
-    expect(ouverture).toContain("LigneDisponibilite");
+  it("reporte le message en tete de main, hors de toute section conditionnelle", () => {
+    const page = lire("app/page.tsx");
+    const i = page.indexOf("<LigneDisponibilite");
+    expect(i).toBeGreaterThan(page.indexOf("<main"));
+    expect(i).toBeLessThan(page.indexOf("<SectionShell"));
+    // Aucune condition d'affichage de section ne l'enveloppe.
+    expect(page.slice(page.indexOf("<main"), i)).not.toMatch(/show[A-Z]\w+\s*&&/);
+    expect(lire("components/portfolio/presentation-section.tsx"))
+      .not.toContain("LigneDisponibilite");
   });
 
   it("l ancien badge a bien ete depose", () => {

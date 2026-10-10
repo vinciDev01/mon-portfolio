@@ -34,13 +34,13 @@ function couleurFond(etat: string): string {
   return etat === "available" ? "var(--accent)" : "var(--texte-secondaire)";
 }
 
-/** Le libelle saisi au backoffice, sinon le texte de l'etat. */
+/** Le libelle saisi au backoffice (une chaine vide n'en est pas un), sinon le texte de l'etat. */
 function libelleAffiche(
   t: (cle: string) => string,
   etat: string,
   libelle: string | null,
 ): string {
-  return libelle ?? t(CLES_ETAT[etat] ?? "availability.unavailable");
+  return libelle?.trim() || t(CLES_ETAT[etat] ?? "availability.unavailable");
 }
 
 export function DrapeauDisponibilite({
@@ -59,6 +59,7 @@ export function DrapeauDisponibilite({
       <svg
         className="drapeau-disponibilite drapeau-toile"
         viewBox="0 0 200 56"
+        preserveAspectRatio="none"
         role="img"
         aria-label={libelleComplet}
         focusable="false"

@@ -10,6 +10,7 @@ import { ProjectsSection } from "@/components/portfolio/projects-section";
 import { AboutSection } from "@/components/portfolio/about-section";
 import { ContactSection } from "@/components/portfolio/contact-section";
 import { ToastNotification } from "@/components/portfolio/toast-notification";
+import { LigneDisponibilite } from "@/components/parcours/drapeau-disponibilite";
 import { SectionToastObserver } from "@/components/portfolio/section-toast-observer";
 import { MaintenancePage } from "@/components/portfolio/maintenance-page";
 import { StatsSection } from "@/components/portfolio/stats-section";
@@ -34,13 +35,16 @@ export default async function Page() {
       <main className="min-h-screen">
         <SectionToastObserver />
 
+        {/* Sous 1024 px le drapeau n'a plus de texte : le message vit ici, hors
+            de toute condition de section, pour ne jamais disparaitre. */}
+        <LigneDisponibilite
+          etat={s.availabilityStatus}
+          libelle={s.availabilityLabel}
+        />
+
         {s.showPresentations && (
           <SectionShell id="ouverture" cleTitre="section.ouverture" index={rang()}>
-            <PresentationSection
-              presentations={data.presentations}
-              etatDisponibilite={s.availabilityStatus}
-              libelleDisponibilite={s.availabilityLabel}
-            />
+            <PresentationSection presentations={data.presentations} />
           </SectionShell>
         )}
 

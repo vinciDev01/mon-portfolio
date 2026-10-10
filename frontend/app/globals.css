@@ -1217,32 +1217,42 @@ html {
   }
 
   /* Le drapeau au mat, en tete de la colonne de passage. */
+  /* La boite est fluide : c'est le texte qui porte la hauteur, le tissu
+     s'etire derriere lui. Au palier de 160 px la colonne n'offre que 127 px
+     utiles, la largeur fixe de 200 px y etait rognee. */
   .mat-disponibilite {
     position: relative;
     display: block;
+    max-width: 200px;
+    min-height: 40px;
   }
 
   .drapeau-disponibilite {
     display: block;
-    width: 200px;
-    height: 56px;
+    width: 100%;
+    height: 100%;
     overflow: visible;
+  }
+
+  .drapeau-toile {
+    position: absolute;
+    inset: 0;
   }
 
   .drapeau-guidon { display: none; }
 
   /* Le libelle vient du backoffice et rien n'en borne la longueur : deux
      lignes au plus, puis troncature. Le libelle complet reste le nom
-     accessible du drapeau. */
+     accessible du drapeau. Les retraits suivent l'encoche de la queue
+     d'aronde, qui entre jusqu'a 12 % du bord libre. */
   .drapeau-texte {
-    position: absolute;
-    inset-block-start: 8px;
-    inset-inline-start: 12px;
-    width: 150px;
+    position: relative;
     display: -webkit-box;
     -webkit-box-orient: vertical;
     -webkit-line-clamp: 2;
     overflow: hidden;
+    overflow-wrap: anywhere;
+    padding: 8px 14% 8px 6%;
     color: var(--fond);
     font-size: 0.8125rem;
     line-height: 1.2;
@@ -1260,6 +1270,7 @@ html {
       display: block;
       width: 100%;
       max-width: 40px;
+      height: 56px;
     }
     .drapeau-texte { display: none; }
   }

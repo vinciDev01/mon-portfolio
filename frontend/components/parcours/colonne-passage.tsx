@@ -7,7 +7,26 @@ import { getFileUrl } from "@/lib/api";
 import { useTranslation } from "@/lib/i18n/i18n-context";
 import { entreesSections } from "@/lib/parcours/entrees-sections";
 import { LanguageSwitcher } from "@/components/portfolio/language-switcher";
-import { Button } from "@/components/ui/button";
+
+/** Pictogrammes des commandes du pied. Traits seuls, sur `currentColor`, pour
+ *  qu'ils suivent la palette des deux themes sans couleur propre. */
+const PICTO_CV =
+  "M 8 2.5 v 7.5 M 4.5 7 L 8 10.5 L 11.5 7 M 2.5 13.5 h 11";
+const PICTO_BLOG =
+  "M 3.5 2.5 h 9 v 11 h -9 z M 5.5 5.5 h 5 M 5.5 8 h 5 M 5.5 10.5 h 3";
+
+function Picto({ chemin }: { chemin: string }) {
+  return (
+    <svg
+      className="picto-commande"
+      viewBox="0 0 16 16"
+      aria-hidden="true"
+      focusable="false"
+    >
+      <path d={chemin} />
+    </svg>
+  );
+}
 
 /**
  * La colonne de passage : seul morceau de chrome du site depuis la depose de
@@ -59,15 +78,19 @@ export function ColonnePassage({
 
       <div className="pied-colonne">
         {reglages.showCvDownload && (
-          <Button asChild size="sm">
-            <a href="/api/download-cv-word" download aria-label={t("nav.downloadCv")}>
-              <span className="entree-nom">{t("nav.downloadCv")}</span>
-            </a>
-          </Button>
+          <a
+            href="/api/download-cv-word"
+            download
+            className="entree-parcours"
+            aria-label={t("nav.downloadCv")}
+          >
+            <Picto chemin={PICTO_CV} />
+            <span className="entree-nom">{t("nav.downloadCv")}</span>
+          </a>
         )}
         <LanguageSwitcher />
         <Link href="/blog" className="entree-parcours" aria-label={t("nav.blog")}>
-          <span className="entree-repere" aria-hidden="true" />
+          <Picto chemin={PICTO_BLOG} />
           <span className="entree-nom">{t("nav.blog")}</span>
         </Link>
       </div>

@@ -81,6 +81,24 @@ describe("colonne de passage", () => {
     expect(src).toMatch(/aria-label=\{nomComplet\}/);
   });
 
+  it("distingue les commandes du pied des entrees de section", () => {
+    // Un repere signale une section du parcours. Le CV et le blog n'en sont
+    // pas : leur donner le meme point les confondrait avec les sections, et le
+    // suivi de position rendrait la confusion visible.
+    const pied = src.slice(src.indexOf("pied-colonne"));
+    expect(pied).not.toContain("entree-repere");
+    expect(pied).toContain("PICTO_CV");
+    expect(pied).toContain("PICTO_BLOG");
+  });
+
+  it("declare la boite de ses pictogrammes", () => {
+    const m = /\.picto-commande\s*\{([^}]*)\}/.exec(lire("app/globals.css"));
+    expect(m, "regle .picto-commande introuvable").not.toBeNull();
+    expect(m![1]).toMatch(/width:\s*16px/);
+    expect(m![1]).toMatch(/height:\s*16px/);
+    expect(m![1]).toMatch(/overflow:\s*visible/);
+  });
+
   it("ne cree aucun mouvement", () => {
     expect(src).not.toMatch(/transition|animate-|animation/);
   });

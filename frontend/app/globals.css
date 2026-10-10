@@ -1215,6 +1215,58 @@ html {
       --ampoule-droite: 12px;
     }
   }
+
+  /* Le drapeau au mat, en tete de la colonne de passage. */
+  .mat-disponibilite {
+    position: relative;
+    display: block;
+  }
+
+  .drapeau-disponibilite {
+    display: block;
+    width: 200px;
+    height: 56px;
+    overflow: visible;
+  }
+
+  .drapeau-guidon { display: none; }
+
+  /* Le libelle vient du backoffice et rien n'en borne la longueur : deux
+     lignes au plus, puis troncature. Le libelle complet reste le nom
+     accessible du drapeau. */
+  .drapeau-texte {
+    position: absolute;
+    inset-block-start: 8px;
+    inset-inline-start: 12px;
+    width: 150px;
+    display: -webkit-box;
+    -webkit-box-orient: vertical;
+    -webkit-line-clamp: 2;
+    overflow: hidden;
+    color: var(--fond);
+    font-size: 0.8125rem;
+    line-height: 1.2;
+  }
+
+  .ligne-disponibilite { margin-block-end: var(--espace-2); }
+
+  /* Sous 1024 px le drapeau se replie en guidon sans texte. Le guidon a son
+     propre viewBox : sous 600 px la colonne n'offre que 31 px utiles, il
+     rapetisse donc sans deformation plutot que d'etre rogne. L'element
+     masque l'est par display: none, il quitte l'arbre d'accessibilite. */
+  @media (max-width: 1023px) {
+    .drapeau-toile { display: none; }
+    .drapeau-guidon {
+      display: block;
+      width: 100%;
+      max-width: 40px;
+    }
+    .drapeau-texte { display: none; }
+  }
+
+  @media (min-width: 1024px) {
+    .ligne-disponibilite { display: none; }
+  }
 }
 
 /* -----------------------------------------------------------

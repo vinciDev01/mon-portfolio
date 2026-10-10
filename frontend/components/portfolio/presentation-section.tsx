@@ -1,9 +1,12 @@
 "use client";
 
 import type { PresentationDto } from "@portfolio/shared-types";
+import { LigneDisponibilite } from "@/components/parcours/drapeau-disponibilite";
 
 interface PresentationSectionProps {
   presentations: PresentationDto[];
+  etatDisponibilite?: string;
+  libelleDisponibilite?: string | null;
 }
 
 function PresentationCard({ item, index }: { item: PresentationDto; index: number }) {
@@ -26,11 +29,18 @@ function PresentationCard({ item, index }: { item: PresentationDto; index: numbe
   );
 }
 
-export function PresentationSection({ presentations }: PresentationSectionProps) {
+export function PresentationSection({
+  presentations,
+  etatDisponibilite,
+  libelleDisponibilite = null,
+}: PresentationSectionProps) {
   if (!presentations.length) return null;
 
   return (
     <>
+      {etatDisponibilite && (
+        <LigneDisponibilite etat={etatDisponibilite} libelle={libelleDisponibilite} />
+      )}
       {presentations.map((item, index) => (
         <PresentationCard key={item.id} item={item} index={index} />
       ))}

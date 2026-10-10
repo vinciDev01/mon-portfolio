@@ -7,6 +7,7 @@ import { getFileUrl } from "@/lib/api";
 import { useTranslation } from "@/lib/i18n/i18n-context";
 import { entreesSections } from "@/lib/parcours/entrees-sections";
 import { useSectionCourante } from "@/lib/parcours/section-courante";
+import { DrapeauDisponibilite } from "@/components/parcours/drapeau-disponibilite";
 import { LanguageSwitcher } from "@/components/portfolio/language-switcher";
 
 /** Pictogrammes des commandes du pied. Traits seuls, sur `currentColor`, pour
@@ -62,8 +63,10 @@ export function ColonnePassage({
         <span className="identite-nom">{nomComplet}</span>
       </Link>
 
-      {/* La tache 4 insere ici le drapeau de disponibilite, entre l'identite
-          et la liste des sections. */}
+      <DrapeauDisponibilite
+        etat={reglages.availabilityStatus}
+        libelle={reglages.availabilityLabel}
+      />
 
       {entrees.length > 0 && (
         <ol className="entrees-parcours">

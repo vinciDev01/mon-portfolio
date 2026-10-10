@@ -38,24 +38,22 @@ const SEUIL_TACTILE = 48;
 type Origine = "clic" | "clavier" | "molette" | "tactile" | "historique";
 
 /**
- * Duree de la sortie, lue sur la feuille et non recopiee : le reglage de
- * vitesse du backoffice reste maitre. On interroge un element sonde portant
- * `.section-paginee`, hors `data-active` : son `transition-delay` EST la
- * duree de sortie (45 % de `--duree`), et la regle de mouvement reduit le met
- * a zero. L'attente devient alors nulle sans aucune branche ici.
+ * Duree de la sortie, lue sur la feuille et non recopiee. On interroge un
+ * element sonde portant `.section-paginee`, hors `data-active` : sa
+ * `transition-duration` EFFECTIVE (premiere valeur, celle de l'opacite) suit
+ * le reglage de vitesse du backoffice, tombe a zero sous `prefers-reduced-motion`
+ * et honore `data-mouvement="force"`, puisque la feuille s'en charge. Ne PAS
+ * lire `--duree` : la feuille n'y touche pas en mouvement reduit, et l'attente
+ * laisserait le fond nu visible. Le repli ne sert que si la lecture echoue.
  */
 function lireDureeSortie(conteneur: HTMLElement): number {
   const sonde = document.createElement("div");
   sonde.className = "section-paginee";
   sonde.setAttribute("aria-hidden", "true");
   conteneur.appendChild(sonde);
-  const retard = analyserDuree(getComputedStyle(sonde).transitionDelay);
+  const duree = analyserDuree(getComputedStyle(sonde).transitionDuration);
   sonde.remove();
-  if (retard !== null) return retard;
-  const duree = analyserDuree(
-    getComputedStyle(document.documentElement).getPropertyValue("--duree"),
-  );
-  return duree !== null ? duree * 0.45 : SORTIE_REPLI_MS;
+  return duree ?? SORTIE_REPLI_MS;
 }
 
 function estSaisie(cible: EventTarget | null): boolean {
@@ -138,6 +136,9 @@ export function ParcoursPagine({
         const origine = enCours?.origine ?? "historique";
         enCours = null;
         indexRef.current = cible;
+        // Retour en haut : une section masquee garde sa position interne, et la
+        // rouvrir au milieu desorienterait. Choix assume, simple et previsible.
+        elements.current[cible]?.scrollTo({ top: 0 });
         if (origine === "clic" || origine === "clavier") focusApres.current = cible;
         setIndex(cible);
         setActif(cible);

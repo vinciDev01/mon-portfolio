@@ -39,6 +39,13 @@ describe("ParcoursPagine (spec sections 2 et 5)", () => {
     expect([...html.matchAll(/data-active="true"/g)]).toHaveLength(1);
   });
 
+  // Sans cette classe, `inset: 0` se resout contre la fenetre, en silence.
+  it("porte la classe parcours-pagine sur le conteneur reel, parent des sections", () => {
+    const html = rendre(["ouverture", "projets"]);
+    expect(html).toMatch(/<div class="parcours-pagine"[^>]*>\s*<div id="ouverture" class="section-paginee"/);
+    expect([...html.matchAll(/class="section-paginee"/g)]).toHaveLength(2);
+  });
+
   it("donne a chaque section tabindex -1, pour recevoir le focus", () => {
     const html = rendre(["ouverture", "projets"]);
     expect([...html.matchAll(/tabindex="-1"/g)]).toHaveLength(2);

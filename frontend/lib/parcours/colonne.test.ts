@@ -1,11 +1,7 @@
-import { readFileSync } from "node:fs";
-import path from "node:path";
 import { describe, it, expect } from "vitest";
 import { entreesSections } from "./entrees-sections";
 import type { SiteSettingsDto } from "@portfolio/shared-types";
-
-const RACINE = path.resolve(import.meta.dirname, "../..");
-const lire = (rel: string) => readFileSync(path.join(RACINE, rel), "utf8");
+import { bloc, corpsDepuis, css, lire, PALIERS, px, racine, valeur } from "./feuille-test";
 
 /** Reglages ou tout est actif, pour partir d'une base connue. */
 function tousActifs(): SiteSettingsDto {
@@ -138,58 +134,6 @@ describe("colonne de passage", () => {
    le calcul bouge avec lui.
    ------------------------------------------------------------------------- */
 
-const css = lire("app/globals.css");
-
-/** Corps a accolades equilibrees ouvert a l'indice de l'accolade `depart`. */
-function corpsDepuis(source: string, depart: number): string {
-  let profondeur = 0;
-  for (let i = depart; i < source.length; i++) {
-    if (source[i] === "{") profondeur++;
-    if (source[i] === "}" && --profondeur === 0) return source.slice(depart + 1, i);
-  }
-  throw new Error("bloc non ferme a l'indice " + depart);
-}
-
-/** Corps du premier bloc dont l'en-tete correspond. */
-function bloc(entete: RegExp, source = css): string {
-  const m = entete.exec(source);
-  expect(m, `bloc ${entete} introuvable`).not.toBeNull();
-  return corpsDepuis(source, m!.index + m![0].length - 1);
-}
-
-/** Derniere valeur declaree pour `prop` dans un corps de regle. */
-function valeur(corps: string, prop: string): string {
-  const tous = [...corps.matchAll(new RegExp(`(?:^|[;{\\n])\\s*${prop}:\\s*([^;}]+)`, "g"))];
-  expect(tous.length, `declaration ${prop} introuvable`).toBeGreaterThan(0);
-  return tous[tous.length - 1]![1]!.trim();
-}
-
-/** Pixels d'une valeur litterale. `var(...)` n'en est pas une, et donne NaN. */
-function px(v: string): number {
-  const m = /^(-?[\d.]+)px$/.exec(v.trim());
-  return m ? Number(m[1]) : Number.NaN;
-}
-
-/** Le `:root` qui pose le palier par defaut de la colonne. */
-const racine = (() => {
-  for (const m of css.matchAll(/:root\s*\{/g)) {
-    const corps = corpsDepuis(css, m.index + m[0].length - 1);
-    if (/--colonne:/.test(corps) && /--panneau-langue:/.test(corps)) return corps;
-  }
-  throw new Error(":root de la colonne introuvable");
-})();
-
-/** Les paliers de colonne, lus dans la feuille et non recopies. */
-const PALIERS: Array<{ min: number; colonne: number }> = (() => {
-  const out = [{ min: 0, colonne: px(valeur(racine, "--colonne")) }];
-  for (const m of css.matchAll(/@media \(min-width:\s*(\d+)px\)\s*\{/g)) {
-    const corps = corpsDepuis(css, m.index + m[0].length - 1);
-    const v = /--colonne:\s*([\d.]+px)/.exec(corps);
-    if (v) out.push({ min: Number(m[1]), colonne: px(v[1]!) });
-  }
-  return out.sort((a, b) => a.min - b.min);
-})();
-
 /** Seuil de la regle WCAG 2.5.8, et non un choix de cette implementation. */
 const CIBLE = 24;
 /** Boite du pictogramme des commandes du pied, declaree par la feuille. */
@@ -198,8 +142,11 @@ const PICTO = px(valeur(bloc(/\.picto-commande\s*\{/), "width"));
 const FENETRE_MIN = 320;
 
 const regleColonne = bloc(/\.colonne-passage\s*\{/);
-const blocEtroit = bloc(/@media \(max-width:\s*599px\)\s*\{/);
-const bloc1023 = bloc(/@media \(max-width:\s*1023px\)\s*\{/);
+// Qualifies par leur premiere regle : la feuille compte d'autres `@media` aux
+// memes bornes (l'ampoule pose le sien a 599 px, sur `:root`), et prendre le
+// premier venu tombait sur lui.
+const blocEtroit = bloc(/@media \(max-width:\s*599px\)\s*\{(?=\s*\.colonne-passage)/);
+const bloc1023 = bloc(/@media \(max-width:\s*1023px\)\s*\{(?=\s*\.identite-nom)/);
 
 describe("defaut 1 : la largeur utile du palier de 40 px", () => {
   const colonneEtroite = PALIERS[0]!.colonne;

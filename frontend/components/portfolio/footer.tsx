@@ -12,7 +12,7 @@ export function Footer({ personalInfo }: FooterProps) {
   const { t } = useTranslation();
 
   return (
-    <footer className="py-10 px-8 md:px-20 lg:px-40 xl:px-52 border-t border-border">
+    <footer className="py-10 gouttiere-parcours border-t border-border">
       <div className="max-w-7xl mx-auto flex flex-col sm:flex-row items-center justify-between gap-4">
         <div className="flex items-center gap-4">
           {personalInfo.githubUrl && (

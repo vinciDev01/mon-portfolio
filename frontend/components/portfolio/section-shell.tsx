@@ -15,7 +15,7 @@ import { useTranslation } from "@/lib/i18n/i18n-context";
  * `app/layout.tsx` et transmise via la prop `defaultLocale`), donc le premier
  * rendu client produit exactement le meme texte que le rendu serveur. Un
  * `useEffect` ne bascule vers la langue sauvegardee en `localStorage` qu'apres
- * le montage — une mise a jour d'etat normale, pas un ecart d'hydratation.
+ * le montage : une mise a jour d'etat normale, pas un ecart d'hydratation.
  * C'est le meme mecanisme que celui deja utilise par `Header` et les autres
  * composants clients traduits du site.
  */
@@ -39,7 +39,7 @@ export function SectionShell({
     <section
       id={id}
       data-rang={index}
-      className="grid grid-cols-12 section-parcours"
+      className="grid grid-cols-12 gouttiere-parcours"
       style={{
         paddingTop: "var(--espace-section)",
         paddingBottom: 0,

@@ -997,8 +997,10 @@ html {
     }
   }
 
-  /* La gouttiere gauche du contenu reserve la colonne de passage. */
-  .section-parcours {
+  /* La gouttiere du contenu : la gauche reserve la colonne de passage. Regle
+     unique, portee par toute boite du flux qui ne passe pas par
+     `SectionShell` (pied de page, ligne de disponibilite). */
+  .gouttiere-parcours {
     padding-inline-start: var(--contenu-gauche);
     padding-inline-end: var(--gouttiere);
   }
@@ -1277,6 +1279,8 @@ html {
     line-height: 1.2;
   }
 
+  /* La ligne porte aussi `.gouttiere-parcours` : sans elle le message
+     commencerait a x = 0, sous la colonne opaque. */
   .ligne-disponibilite { margin-block-end: var(--espace-2); }
 
   /* Sous 1024 px le drapeau se replie en guidon sans texte. Le guidon a son

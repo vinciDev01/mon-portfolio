@@ -84,7 +84,7 @@ export function DrapeauDisponibilite({
 
 /**
  * Sous 1024 px le drapeau devient un guidon sans texte : le message se reporte
- * ici, dans la section d'ouverture. L'information change de place, elle ne
+ * ici, en tete de `<main>`. L'information change de place, elle ne
  * disparait pas.
  */
 export function LigneDisponibilite({
@@ -96,7 +96,7 @@ export function LigneDisponibilite({
 }) {
   const { t } = useTranslation();
   return (
-    <p className="ligne-disponibilite">
+    <p className="ligne-disponibilite gouttiere-parcours">
       <span className="meta">{t("parcours.disponibilite")}</span>{" "}
       {libelleAffiche(t, etat, libelle)}
     </p>

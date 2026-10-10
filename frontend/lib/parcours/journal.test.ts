@@ -2,6 +2,10 @@ import { readFileSync } from "node:fs";
 import path from "node:path";
 import { describe, it, expect } from "vitest";
 import { dispositionJournal, ligneDate } from "./journal";
+import { createElement, type ComponentType } from "react";
+import { renderToStaticMarkup } from "react-dom/server";
+import { Article } from "../../components/parcours/journal-projets";
+import { I18nProvider } from "../i18n/i18n-context";
 import type { ProjectDto } from "@portfolio/shared-types";
 
 const RACINE = path.resolve(import.meta.dirname, "../..");
@@ -165,13 +169,11 @@ describe("journal des projets (spec section 6)", () => {
     for (const r of regles) expect(r).not.toMatch(motif);
   });
 
-  it("ne rend pas de lien de demonstration quand demoUrl est nul", () => {
-    expect(src).toMatch(/\{projet\.demoUrl\s*&&\s*\(/);
-  });
-
-  it("ouvre la demonstration avec rel noopener noreferrer", () => {
-    expect(src).toContain('rel="noopener noreferrer"');
-    expect(src).toContain('className="journal-lien"');
+  it("souligne le lien de facon statique (second signal)", () => {
+    const regles = blocs(/\.journal-lien\s*\{/, css);
+    expect(regles.length).toBeGreaterThan(0);
+    expect(regles[0]).toMatch(/text-decoration:\s*underline/);
+    expect(regles[0]).toMatch(/text-underline-offset:\s*2px/);
   });
 
   it("n introduit ni tiret cadratin ni emoji", () => {
@@ -180,5 +182,51 @@ describe("journal des projets (spec section 6)", () => {
       expect(t, f).not.toContain("—");
       expect([...t].some((c) => c.codePointAt(0)! > 0x2500), f).toBe(false);
     }
+  });
+});
+
+describe("lien de demonstration (rendu)", () => {
+  const rendre = (p: Partial<ProjectDto>) =>
+    renderToStaticMarkup(
+      createElement(
+        // `children` est requis par le type du fournisseur mais passe ici en
+        // argument de createElement, comme l'exige la regle react/no-children-prop.
+        I18nProvider as ComponentType<{ defaultLocale: string }>,
+        { defaultLocale: "fr" },
+        createElement(Article, { projet: projet(p), tete: false }),
+      ),
+    );
+
+  it("ne rend aucune balise a quand demoUrl est nul", () => {
+    expect(rendre({ demoUrl: null, description: "d" })).not.toMatch(/<a[\s>]/);
+  });
+
+  it("n'en rend pas non plus pour une chaine vide", () => {
+    expect(rendre({ demoUrl: "", description: "d" })).not.toMatch(/<a[\s>]/);
+  });
+
+  it("porte href, target et rel sur la meme balise", () => {
+    const html = rendre({ demoUrl: "https://exemple.test/demo", description: "d" });
+    const balise = /<a\s[^>]*>/.exec(html)?.[0];
+    expect(balise, "aucune balise a").toBeDefined();
+    expect(balise).toContain('href="https://exemple.test/demo"');
+    expect(balise).toContain('target="_blank"');
+    expect(balise).toContain('rel="noopener noreferrer"');
+    expect(balise).toContain('class="journal-lien"');
+    expect(html).toContain("Voir la démo");
+  });
+
+  it("ordonne description, lien, signature des technologies", () => {
+    const html = rendre({
+      demoUrl: "https://exemple.test/demo",
+      description: "DESCRIPTION",
+      technologies: [{ id: "1", label: "React", logoPath: null, sortOrder: 0 }],
+    });
+    const d = html.indexOf("DESCRIPTION");
+    const l = html.search(/<a[\s>]/);
+    const s = html.indexOf("journal-signature");
+    expect(d).toBeGreaterThan(-1);
+    expect(l).toBeGreaterThan(d);
+    expect(s).toBeGreaterThan(l);
   });
 });

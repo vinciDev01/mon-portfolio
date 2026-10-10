@@ -1295,6 +1295,10 @@ html {
 
   .journal-lien {
     color: var(--accent);
+    /* Second signal non chromatique (WCAG 1.4.1), statique : le preflight
+       pose `text-decoration: inherit` sur les liens. */
+    text-decoration: underline;
+    text-underline-offset: 2px;
   }
 
   .journal-image {

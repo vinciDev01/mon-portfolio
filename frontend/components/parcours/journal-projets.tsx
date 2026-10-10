@@ -17,7 +17,7 @@ import { dispositionJournal, ligneDate } from "@/lib/parcours/journal";
  * Le titre de section est deja rendu par SectionShell : le bandeau ne porte
  * que la ligne de date.
  */
-function Article({ projet, tete }: { projet: ProjectDto; tete: boolean }) {
+export function Article({ projet, tete }: { projet: ProjectDto; tete: boolean }) {
   const { t } = useTranslation();
   // Nul quand le projet de tete n'a pas de `photo1Path` : aucune place vide.
   const image = tete ? getFileUrl(projet.photo1Path) : null;

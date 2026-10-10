@@ -1317,6 +1317,29 @@ html {
     margin-block-end: var(--espace-3);
   }
 
+  /* Le projet de tete se distingue par son titre : il monte d'un cran et
+     passe au corps optique des titres. Sans photo la hierarchie tient encore,
+     le titre prend la place de l'image. */
+  .journal-titre {
+    font-size: var(--h3);
+    margin-block-end: var(--espace-1);
+  }
+
+  .journal-tete .journal-titre {
+    font-size: var(--h2);
+    font-variation-settings: "opsz" 48;
+    margin-block-end: var(--espace-2);
+  }
+
+  .journal-corps {
+    margin-block-end: var(--espace-2);
+  }
+
+  /* La ligne de date et la ligne de signature de chaque article. */
+  .journal-date {
+    margin-block-end: var(--espace-1);
+  }
+
   .journal-lien {
     color: var(--accent);
     /* Second signal non chromatique (WCAG 1.4.1), statique : le preflight

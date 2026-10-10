@@ -85,5 +85,6 @@
   "parcours.portrait": "Portrait de {nom}",
   "parcours.langue": "Langue",
   "journal.periode": "de {debut} à {fin}",
-  "journal.periodeUnique": "en {date}"
+  "journal.periodeUnique": "en {date}",
+  "journal.collaborateurs": "avec {noms}"
 }

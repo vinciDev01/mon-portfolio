@@ -4,7 +4,12 @@ import Image from "next/image";
 import type { ProjectDto } from "@portfolio/shared-types";
 import { getFileUrl } from "@/lib/api";
 import { useTranslation } from "@/lib/i18n/i18n-context";
-import { dispositionJournal, ligneDate } from "@/lib/parcours/journal";
+import {
+  dispositionJournal,
+  ligneCollaborateurs,
+  ligneDate,
+  ligneDateProjet,
+} from "@/lib/parcours/journal";
 
 /**
  * Les projets en une de presse : un bandeau date, un projet de tete avec son
@@ -18,7 +23,9 @@ import { dispositionJournal, ligneDate } from "@/lib/parcours/journal";
  * que la ligne de date.
  */
 export function Article({ projet, tete }: { projet: ProjectDto; tete: boolean }) {
-  const { t } = useTranslation();
+  const { t, locale } = useTranslation();
+  const dateProjet = ligneDateProjet(projet, locale, t);
+  const avec = ligneCollaborateurs(projet, locale, t);
   // Nul quand le projet de tete n'a pas de `photo1Path` : aucune place vide.
   const image = tete ? getFileUrl(projet.photo1Path) : null;
   return (
@@ -33,6 +40,7 @@ export function Article({ projet, tete }: { projet: ProjectDto; tete: boolean })
         />
       )}
       <h3 className="journal-titre">{projet.name}</h3>
+      {dateProjet && <p className="meta journal-date">{dateProjet}</p>}
       {projet.description && <p className="journal-corps">{projet.description}</p>}
       {projet.demoUrl && (
         <p>
@@ -51,6 +59,7 @@ export function Article({ projet, tete }: { projet: ProjectDto; tete: boolean })
           {projet.technologies.map((x) => x.label).join(" · ")}
         </p>
       )}
+      {avec && <p className="journal-signature">{avec}</p>}
     </article>
   );
 }

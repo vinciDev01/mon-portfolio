@@ -230,3 +230,84 @@ describe("lien de demonstration (rendu)", () => {
     expect(s).toBeGreaterThan(l);
   });
 });
+
+describe("hierarchie typographique du journal (spec section 6.1)", () => {
+  const css = lire("app/globals.css");
+  const src = lire("components/parcours/journal-projets.tsx");
+
+  it("chaque classe posee par le balisage existe dans la feuille", () => {
+    // Une classe morte dans le balisage fait croire a une mise en forme qui
+    // n'existe pas : c'est ce qui avait laisse la tete sans distinction.
+    for (const c of ["journal-tete", "journal-titre", "journal-corps", "journal-date"]) {
+      expect(src, c).toContain(c);
+    }
+    expect(css).toMatch(/\.journal-titre\s*\{/);
+    expect(css).toMatch(/\.journal-tete \.journal-titre\s*\{/);
+    expect(css).toMatch(/\.journal-corps\s*\{/);
+    expect(css).toMatch(/\.journal-date\s*\{/);
+  });
+
+  it("le titre du projet de tete monte d'un cran sur celui des articles", () => {
+    const tete = blocs(/\.journal-tete \.journal-titre\s*\{/, css)[0]!;
+    const suite = blocs(/\.journal-titre\s*\{/, css)[0]!;
+    const taille = (b: string) => /font-size:\s*([^;]+);/.exec(b)?.[1]?.trim();
+    expect(taille(tete), "taille du titre de tete").toBeDefined();
+    expect(taille(suite), "taille du titre courant").toBeDefined();
+    expect(taille(tete)).not.toBe(taille(suite));
+    expect(tete).toMatch(/font-variation-settings:\s*"opsz" 48/);
+  });
+});
+
+describe("date et signature de chaque article (spec section 6)", () => {
+  const rendre = (p: Partial<ProjectDto>, tete = false) =>
+    renderToStaticMarkup(
+      createElement(
+        I18nProvider as ComponentType<{ defaultLocale: string }>,
+        { defaultLocale: "fr" },
+        createElement(Article, { projet: projet(p), tete }),
+      ),
+    );
+  const collab = (id: string, firstName: string, lastName: string, sortOrder: number) => ({
+    id, firstName, lastName, sortOrder,
+    email: `${firstName.toLowerCase()}@exemple.test`,
+    linkedinUrl: `https://linkedin.test/${id}`,
+  });
+
+  it("chaque article porte sa propre date, en UTC et dans la langue courante", () => {
+    const html = rendre({ startDate: "2024-03-01", endDate: "2024-03-20" });
+    expect(html).toContain("en mars 2024");
+    expect(rendre({ startDate: "2020-01-01" })).toContain("janvier 2020");
+  });
+
+  it("omet la date quand le projet n'en a pas, et ne lit pas l'horloge", () => {
+    const html = rendre({});
+    expect(html).not.toContain("meta journal-date");
+    expect(html).not.toContain(String(new Date().getFullYear()));
+  });
+
+  it("les collaborateurs deviennent une signature : avec X et Y", () => {
+    const html = rendre({
+      collaborators: [collab("b", "Alan", "Turing", 1), collab("a", "Ada", "Lovelace", 0)],
+    });
+    expect(html).toContain("avec Ada Lovelace et Alan Turing");
+    expect(html).toMatch(/<p class="journal-signature">avec /);
+  });
+
+  it("ne remet ni courriel ni lien LinkedIn des collaborateurs", () => {
+    const html = rendre({ collaborators: [collab("a", "Ada", "Lovelace", 0)] });
+    expect(html).not.toContain("@exemple.test");
+    expect(html).not.toContain("linkedin");
+    expect(html).not.toMatch(/<a[\s>]/);
+  });
+
+  it("sans collaborateur, aucune signature de byline", () => {
+    expect(rendre({})).not.toContain("avec ");
+  });
+
+  it("la cle du byline existe, a plat, dans les trois dictionnaires", () => {
+    for (const d of ["fr", "en", "de"]) {
+      const dict = JSON.parse(lire(`lib/i18n/${d}.json`)) as Record<string, unknown>;
+      expect(dict["journal.collaborateurs"], d).toMatch(/\{noms\}/);
+    }
+  });
+});

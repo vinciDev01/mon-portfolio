@@ -39,6 +39,37 @@ export function ligneDate(
     : t("journal.periode", { debut, fin });
 }
 
+/**
+ * La ligne de date d'un seul article : meme chemin de formatage que celle du
+ * bandeau (UTC, langue courante), jamais l'horloge. Nulle sans date.
+ */
+export function ligneDateProjet(
+  projet: ProjectDto,
+  locale: string,
+  t: (cle: string, params?: Record<string, string>) => string,
+): string | null {
+  return ligneDate([projet], locale, t);
+}
+
+/**
+ * La signature de l'article : "avec X et Y". Seuls les noms reviennent ; ni le
+ * courriel ni le profil LinkedIn d'un collaborateur ne sont affiches. Nulle
+ * sans collaborateur.
+ */
+export function ligneCollaborateurs(
+  projet: ProjectDto,
+  locale: string,
+  t: (cle: string, params?: Record<string, string>) => string,
+): string | null {
+  const noms = [...projet.collaborators]
+    .sort((a, b) => a.sortOrder - b.sortOrder)
+    .map((c) => `${c.firstName} ${c.lastName}`.trim())
+    .filter((n) => n.length > 0);
+  if (noms.length === 0) return null;
+  const liste = new Intl.ListFormat(locale, { style: "long", type: "conjunction" });
+  return t("journal.collaborateurs", { noms: liste.format(noms) });
+}
+
 export type Disposition = { tete: ProjectDto; suite: ProjectDto[] } | null;
 
 /** Le projet de tete est le plus petit `sortOrder` ; l'entree n'est pas mutee. */

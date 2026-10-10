@@ -287,6 +287,16 @@ html {
   scroll-behavior: smooth;
 }
 
+/* La colonne de passage fait du defilement souple sa mecanique : il doit donc
+   pouvoir etre coupe. `data-mouvement="force"` laisse au proprietaire la
+   possibilite de passer outre la preference systeme depuis le backoffice, comme
+   la feuille l'honore deja pour les entrees de bloc. */
+@media (prefers-reduced-motion: reduce) {
+  html:not([data-mouvement="force"]) {
+    scroll-behavior: auto;
+  }
+}
+
 /*
    ANIMATED CARD - Stacked cards effect + hover lift
    */
@@ -749,16 +759,47 @@ html {
     }
   }
 
-  /* Zigzag : le bloc se deplace dans la grille, il ne s'etire jamais. */
-  .zigzag {
+  /* -----------------------------------------------------------
+     Le bloc d'une section du parcours.
+     L'objet ampoule est en `position: fixed` et occupe en permanence
+     la bande verticale 0 a 560 px : toutes les sections defilent
+     derriere elle, il n'existe aucune hauteur a l'abri. La mesure du
+     texte ET le decalage du zigzag sont donc bornes par ce qu'elle
+     laisse.
+     La formule part du bord DROIT du conteneur et non de `100vw` :
+     `100vw` inclut la barre de defilement, alors que l'ampoule, etant
+     fixe, est ancree sans elle. Mesure a l'appui dans la spec.
+     ----------------------------------------------------------- */
+  .bloc-parcours {
+    --ampoule-largeur: calc(172px * var(--ampoule-echelle, 1));
+    --degagement: calc(
+      100% + var(--gouttiere) - var(--ampoule-droite, 48px)
+      - var(--ampoule-largeur) - 16px
+    );
+    /* Le plancher de 41ch existe parce que sans lui la formule etrangle
+       la mesure a 21 caracteres a 360 px. Sous environ 520 px le
+       degagement ne peut plus etre tenu : le recouvrement est assume et
+       borne a 70 px. */
+    --mesure-courante: min(100%, max(41ch, min(66ch, var(--degagement))));
+    max-width: var(--mesure-courante);
     margin-inline-start: 0;
   }
 
   @media (min-width: 900px) {
-    .zigzag[data-cote="droite"] {
-      /* A amplitude 1, le bloc vient affleurer le bord droit de la grille. */
-      margin-inline-start: calc(var(--portfolio-zigzag, 0.5) * (100% - 66ch));
+    .bloc-parcours[data-cote="droite"] {
+      /* `--portfolio-zigzag` reste un reglage du backoffice : le decalage
+         est plafonne, jamais remplace. */
+      margin-inline-start: max(0px, min(
+        calc(var(--portfolio-zigzag, 0.5) * (100% - var(--mesure-courante))),
+        calc(var(--degagement) - var(--mesure-courante))
+      ));
     }
+  }
+
+  /* La gouttiere gauche du contenu reserve la colonne de passage. */
+  .section-parcours {
+    padding-inline-start: var(--contenu-gauche);
+    padding-inline-end: var(--gouttiere);
   }
 
   /* -----------------------------------------------------------
@@ -991,6 +1032,42 @@ html {
       --ampoule-echelle: 0.44;
       --ampoule-droite: 12px;
     }
+  }
+}
+
+/* -----------------------------------------------------------
+   Colonne de passage : quatre paliers, dictes par le calcul de
+   la spec section 4.1 et non choisis. Au-dela de 72 px la colonne
+   est une vraie colonne de mise en page et le contenu commence
+   apres elle ; a 72 px et en dessous elle est une bande superposee,
+   et la gouttiere gauche du contenu est portee a colonne + 16 px
+   pour que le texte ne passe jamais dessous.
+   ----------------------------------------------------------- */
+:root {
+  --colonne: 40px;
+  --gouttiere: 32px;
+  --contenu-gauche: calc(var(--colonne) + 16px);
+}
+
+@media (min-width: 600px) {
+  :root {
+    --colonne: 72px;
+    --contenu-gauche: calc(var(--colonne) + 16px);
+  }
+}
+
+@media (min-width: 1024px) {
+  :root {
+    --colonne: 160px;
+    --gouttiere: 64px;
+    --contenu-gauche: calc(var(--colonne) + var(--gouttiere));
+  }
+}
+
+@media (min-width: 1200px) {
+  :root {
+    --colonne: 240px;
+    --contenu-gauche: calc(var(--colonne) + var(--gouttiere));
   }
 }
 

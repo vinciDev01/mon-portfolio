@@ -39,7 +39,7 @@ export function SectionShell({
     <section
       id={id}
       data-rang={index}
-      className="grid grid-cols-12 px-8 lg:px-16"
+      className="grid grid-cols-12 section-parcours"
       style={{
         paddingTop: "var(--espace-section)",
         paddingBottom: 0,
@@ -47,7 +47,7 @@ export function SectionShell({
     >
       <div
         ref={(el) => reveal(el)}
-        className="col-span-12 mesure zigzag"
+        className="col-span-12 bloc-parcours"
         // L'amplitude vient du reglage `zigzagAmplitude`, normalise entre 0 et 1
         // par app/layout.tsx. A 0 les deux cotes se confondent : colonne unique.
         data-cote={aGauche ? "gauche" : "droite"}

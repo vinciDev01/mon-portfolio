@@ -929,10 +929,19 @@ html {
   }
 
   /* -----------------------------------------------------------
-     La transition entre sections : un fondu sequentiel sur le fond de la
-     page. La pagination n'existe que si le JavaScript l'a activee. Sans lui,
-     la page defile comme avant et les entrees de la colonne restent des
-     ancres. Toute regle ajoutee ici DOIT rester sous cet attribut, porte par
+     Les deux etats d'une section paginee, et rien de plus.
+     La feuille fournit un fondu de chaque etat : une section qui perd
+     `data-active` s'efface, une section qui le gagne parait. Elle ne
+     SEQUENCE rien. Un seul basculement d'attribut ferait partir la sortie et
+     l'entree ensemble, soit un fondu croise que le proprietaire a ecarte.
+     CONTRAT avec le composant : pour passer par le fond de la page, il doit
+     passer par un etat intermediaire ou AUCUNE section ne porte
+     `data-active`, attendre la duree de sortie, puis activer la cible.
+     Aucune regle ci-dessous ne suppose donc qu'une section est toujours
+     active.
+     La pagination n'existe que si le JavaScript l'a activee. Sans lui, la
+     page defile comme avant et les entrees de la colonne restent des ancres.
+     Toute regle ajoutee ici DOIT rester sous cet attribut, porte par
      l'element racine lui-meme (d'ou `html[...]` et non un descendant).
      ----------------------------------------------------------- */
   html[data-pagination="active"],
@@ -940,26 +949,43 @@ html {
     overflow: hidden;
   }
 
-  [data-pagination="active"] .section-paginee {
-    height: 100vh;
-    overflow-y: auto;
-    opacity: 0;
-    display: none;
-    transition: opacity calc(var(--duree) * 0.45) var(--courbe);
+  /* Le conteneur sert de repere aux sections, qui se superposent. */
+  [data-pagination="active"] .parcours-pagine {
+    position: relative;
+    height: 100dvh;
   }
 
-  /* La section active parait. Sortie et entree se partagent une seule
-     `--duree` : on pagine jusqu'a huit fois de suite, et deux fondus pleins
-     donneraient 800 ms par changement, ce qui devient poussif. */
+  [data-pagination="active"] .section-paginee {
+    position: absolute;
+    inset: 0;
+    overflow-y: auto;
+    opacity: 0;
+    visibility: hidden;
+    /* `visibility` est discrete : le retard, egal a la duree de sortie, la
+       fait basculer APRES le fondu, sans quoi la section serait retiree avant
+       d'avoir eu le temps de s'effacer. `visibility: hidden` retire aussi la
+       section de l'arbre d'accessibilite et de l'ordre de tabulation. */
+    transition:
+      opacity calc(var(--duree) * 0.45) var(--courbe),
+      visibility 0s linear calc(var(--duree) * 0.45);
+  }
+
+  /* Sortie et entree se partagent une seule `--duree` : on pagine jusqu'a
+     huit fois de suite, et deux fondus pleins donneraient 800 ms par
+     changement, ce qui devient poussif. A l'entree, aucun retard : la section
+     doit etre visible PENDANT son propre fondu. */
   [data-pagination="active"] .section-paginee[data-active="true"] {
-    display: block;
     opacity: 1;
-    transition: opacity calc(var(--duree) * 0.55) var(--courbe);
+    visibility: visible;
+    transition:
+      opacity calc(var(--duree) * 0.55) var(--courbe),
+      visibility 0s;
   }
 
   @media (prefers-reduced-motion: reduce) {
     :root:not([data-mouvement="force"])[data-pagination="active"] .section-paginee {
       transition-duration: 0s;
+      transition-delay: 0s;
     }
   }
 

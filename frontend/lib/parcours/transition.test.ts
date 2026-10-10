@@ -26,6 +26,40 @@ function blocs(entete: RegExp, source: string): string[] {
 const elements = (selecteur: string) =>
   selecteur.split(",").map((s) => s.trim()).filter(Boolean);
 
+/** Decoupe une liste a la virgule, hors parentheses. */
+function membres(valeur: string): string[] {
+  const out: string[] = [];
+  let profondeur = 0;
+  let courant = "";
+  for (const c of valeur) {
+    if (c === "(") profondeur++;
+    if (c === ")") profondeur--;
+    if (c === "," && profondeur === 0) {
+      out.push(courant.trim());
+      courant = "";
+    } else courant += c;
+  }
+  if (courant.trim()) out.push(courant.trim());
+  return out;
+}
+
+const norm = (v: string) => v.replace(/\s+/g, " ").trim();
+
+/** Les corps des regles dont le selecteur nomme `.section-paginee`. */
+const reglesSections = () =>
+  [...css.matchAll(/([^{}]*\.section-paginee[^{}]*)\{([^}]*)\}/g)].map((m) => ({
+    selecteur: norm(m[1]!),
+    corps: m[2]!,
+  }));
+
+/** La regle de base : sous l'attribut de pagination, sans `data-active`. */
+const base = () =>
+  reglesSections().find(
+    (r) => /\[data-pagination="active"\]/.test(r.selecteur) && !/data-active/.test(r.selecteur) && !r.selecteur.includes(":root"),
+  );
+const active = () =>
+  reglesSections().find((r) => /\[data-active="true"\]/.test(r.selecteur));
+
 describe("repli sans JavaScript (spec section 6)", () => {
   it("la feuille ne tue jamais le defilement sans condition", () => {
     // Categorique : TOUTE regle visant html ou body et portant
@@ -33,14 +67,22 @@ describe("repli sans JavaScript (spec section 6)", () => {
     // `[data-pagination="active"] html` exigerait un ancetre de la racine :
     // la regle ne s'appliquerait jamais, d'ou `html[...]` et non la simple
     // presence de la chaine.
-    const regles = [...css.matchAll(/([^{}]*\b(?:html|body)\b[^{}]*)\{([^}]*)\}/g)];
+    const regles = [
+      ...css.matchAll(/([^{}]*(?:\bhtml\b|\bbody\b|:root)[^{}]*)\{([^}]*)\}/g),
+    ];
     let verifiees = 0;
     for (const [, selecteur, corps] of regles) {
-      if (!/overflow(-y)?:\s*hidden/.test(corps!)) continue;
+      // Tout ce qui peut figer le document : l'une des trois proprietes de
+      // debordement, qu'elle vale hidden, clip, auto ou scroll, ou une hauteur.
+      const fige = /(?:^|[;\s])(?:overflow(?:-x|-y)?:\s*(?:hidden|clip|auto|scroll)|height:)/.test(corps!);
+      if (!fige) continue;
       for (const el of elements(selecteur!)) {
+        // Un `body::before` ou un `:root` pose des variables, pas une hauteur
+        // de document : seuls les elements racine ou corps eux-memes comptent.
+        if (!/^(?:html|body|:root)(?:\[[^\]]*\]|:not\([^)]*\))*$|^(?:html|:root)\S*\s+body$/.test(el)) continue;
         verifiees++;
         expect(el, `regle non conditionnee ou inapplicable : ${el}`)
-          .toMatch(/^html\[data-pagination="active"\](\s+body)?$/);
+          .toMatch(/^(?:html|:root)\[data-pagination="active"\](\s+body)?$/);
       }
     }
     expect(verifiees, "aucune regle ne coupe le defilement du document")
@@ -65,14 +107,25 @@ describe("repli sans JavaScript (spec section 6)", () => {
 });
 
 describe("la transition (spec section 2.5)", () => {
-  it("ne fait varier que l opacite, jamais une position", () => {
-    const regles = blocs(/\.section-paginee[^{]*\{/, css);
+  it("ne fait varier que l opacite et la visibilite, jamais une position", () => {
+    const regles = reglesSections();
     expect(regles.length, "aucune regle .section-paginee").toBeGreaterThan(0);
-    for (const r of regles) {
-      expect(r).not.toMatch(/transform|translate|scale\(/);
-      for (const m of r.matchAll(/transition:\s*([a-z-]+)/g)) {
-        expect(m[1], "la transition porte sur autre chose que l opacite")
-          .toBe("opacity");
+    for (const { selecteur, corps } of regles) {
+      expect(corps, selecteur).not.toMatch(/transform|translate|scale/);
+      // Raccourci : chaque membre de la liste, pas seulement le premier.
+      for (const m of corps.matchAll(/(?:^|[;\s])transition:\s*([^;]+);/g)) {
+        for (const membre of membres(m[1]!)) {
+          const prop = membre.split(/\s+/)[0]!;
+          expect(["opacity", "visibility"], `${selecteur} : ${membre}`).toContain(prop);
+          // La visibilite n'est pas un mouvement : elle ne dure jamais.
+          if (prop === "visibility") expect(membre).toMatch(/^visibility\s+0s\b/);
+        }
+      }
+      // Forme longue.
+      for (const m of corps.matchAll(/transition-property:\s*([^;]+);/g)) {
+        for (const prop of membres(m[1]!)) {
+          expect(["opacity", "visibility"], `${selecteur} : transition-property ${prop}`).toContain(prop);
+        }
       }
     }
   });
@@ -83,15 +136,71 @@ describe("la transition (spec section 2.5)", () => {
   });
 
   it("emploie la courbe du site et non une courbe propre", () => {
-    const regles = blocs(/\.section-paginee[^{]*\{/, css);
-    const avecTransition = regles.filter((r) => /transition:/.test(r));
+    const avecTransition = reglesSections().filter((r) => /transition:/.test(r.corps));
     expect(avecTransition.length).toBeGreaterThan(0);
-    for (const r of avecTransition) expect(r).toContain("var(--courbe)");
+    for (const r of avecTransition) {
+      const opacite = membres(/transition:\s*([^;]+);/.exec(r.corps)![1]!).find((m) => m.startsWith("opacity"))!;
+      expect(opacite, r.selecteur).toContain("var(--courbe)");
+      expect(r.corps).not.toMatch(/cubic-bezier|ease(?:-in|-out)?\b/);
+    }
   });
 
-  it("la section inactive quitte l arbre d accessibilite", () => {
-    const regles = blocs(/\.section-paginee[^{]*\{/, css).join("\n");
-    expect(regles).toMatch(/display:\s*none/);
+  it("la section inactive quitte l arbre d accessibilite sans display none", () => {
+    const b = base();
+    expect(b, "regle de base introuvable").toBeDefined();
+    expect(b!.corps).toMatch(/visibility:\s*hidden/);
+    // display: none couperait le fondu sortant : aucune regle ne l'emploie.
+    for (const r of reglesSections()) expect(r.corps, r.selecteur).not.toMatch(/display:\s*none/);
+  });
+
+  it("le retard de visibilite egale la duree de sortie, sinon la section est retiree avant son fondu", () => {
+    const b = base()!;
+    const liste = membres(/transition:\s*([^;]+);/.exec(b.corps)![1]!);
+    const opacite = liste.find((m) => m.startsWith("opacity"))!;
+    const visibilite = liste.find((m) => m.startsWith("visibility"));
+    expect(visibilite, "la visibilite doit etre transitionnee").toBeDefined();
+    const duree = /(calc\(var\(--duree\)\s*\*\s*[\d.]+\))/.exec(opacite)![1]!;
+    expect(norm(visibilite!), "retard different de la duree de sortie").toContain(norm(duree));
+    // Et a l'entree, aucun retard.
+    const entree = membres(/transition:\s*([^;]+);/.exec(active()!.corps)![1]!)
+      .find((m) => m.startsWith("visibility"))!;
+    expect(norm(entree)).toBe("visibility 0s");
+  });
+});
+
+describe("le contrat avec le composant (sequencement)", () => {
+  it("la feuille definit un etat ou aucune section n est active, et il est masque", () => {
+    const b = base();
+    expect(b, "la regle de base doit etre atteignable sans data-active").toBeDefined();
+    expect(b!.selecteur).not.toMatch(/data-active/);
+    expect(b!.corps).toMatch(/opacity:\s*0\b/);
+    expect(b!.corps).toMatch(/visibility:\s*hidden/);
+  });
+
+  it("aucune regle ne suppose qu une section est toujours active", () => {
+    for (const r of reglesSections()) {
+      const rend = /opacity:\s*1\b|visibility:\s*visible/.test(r.corps);
+      if (rend) {
+        expect(r.selecteur, `rend visible sans data-active : ${r.selecteur}`)
+          .toMatch(/\[data-active="true"\]/);
+      }
+      // Pas de :not(...) qui fasse de l'etat actif la regle et de l'inactif l'exception.
+      expect(r.selecteur, r.selecteur).not.toMatch(/:not\(\[data-active/);
+    }
+  });
+
+  it("le conteneur est le repere des sections superposees", () => {
+    const conteneur = [...css.matchAll(/([^{}]*\.parcours-pagine[^{}]*)\{([^}]*)\}/g)];
+    expect(conteneur.length).toBeGreaterThan(0);
+    expect(conteneur.map((m) => m[2]).join("\n")).toMatch(/position:\s*relative/);
+    expect(base()!.corps).toMatch(/position:\s*absolute/);
+    expect(base()!.corps).toMatch(/inset:\s*0/);
+  });
+
+  it("la hauteur suit la fenetre dynamique, pas 100vh", () => {
+    expect(css).not.toMatch(/\.(?:parcours-pagine|section-paginee)[^{]*\{[^}]*\b100vh\b/);
+    const conteneur = css.match(/\.parcours-pagine[^{]*\{([^}]*)\}/)![1]!;
+    expect(conteneur).toMatch(/height:\s*100dvh/);
   });
 });
 
@@ -103,6 +212,9 @@ describe("mouvement reduit (spec section 2.5)", () => {
       .toBeDefined();
     expect(corps!).toMatch(/\[data-mouvement="force"\]/);
     expect(corps!).toMatch(/transition-duration:\s*0s/);
+    // Sans cela le retard de visibilite survivrait et la section resterait
+    // visible pendant la duree de sortie d'un echange cense etre instantane.
+    expect(corps!).toMatch(/transition-delay:\s*0s/);
   });
 });
 

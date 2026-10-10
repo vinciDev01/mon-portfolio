@@ -1,7 +1,7 @@
 import { describe, it, expect } from "vitest";
 import {
   prochainIndex, estEnButee, creerAccumulateur, indexDepuisFragment,
-  SEUIL_MOLETTE, FENETRE_MOLETTE,
+  normaliserDelta, LIGNE_PX, SEUIL_MOLETTE, FENETRE_MOLETTE,
 } from "./pagination";
 
 describe("prochainIndex (spec section 2.3)", () => {
@@ -134,7 +134,16 @@ describe("accumulateur de molette (spec section 2.4)", () => {
     const h = horloge();
     const a = creerAccumulateur(h.lire);
     a.pousser(SEUIL_MOLETTE - 1);
-    expect(a.pousser(-1)).toBeNull();
+    // Sans la garde de signe, le cumul vaudrait -2 et rendrait null.
+    expect(a.pousser(-(SEUIL_MOLETTE + 1))).toBe(-1);
+  });
+
+  it("un delta nul ne reinitialise pas le cumul en cours", () => {
+    const h = horloge();
+    const a = creerAccumulateur(h.lire);
+    a.pousser(SEUIL_MOLETTE / 2 + 20);
+    expect(a.pousser(0)).toBeNull();
+    expect(a.pousser(10)).toBe(1);
   });
 
   // Point de vigilance 5 : une rafale de molette.
@@ -148,5 +157,30 @@ describe("accumulateur de molette (spec section 2.4)", () => {
     }
     // 30 crans de 10 px, seuil de 60 : cinq paginations, pas trente.
     expect(pages).toBe(5);
+  });
+});
+
+describe("normaliserDelta (deltaMode)", () => {
+  it("laisse les pixels tels quels (deltaMode 0)", () => {
+    expect(normaliserDelta(10, 0)).toBe(10);
+  });
+
+  it("convertit les lignes en pixels (deltaMode 1)", () => {
+    expect(normaliserDelta(3, 1)).toBe(3 * LIGNE_PX);
+  });
+
+  it("convertit les pages en pixels (deltaMode 2)", () => {
+    expect(normaliserDelta(2, 2)).toBe(2 * 800);
+    expect(normaliserDelta(2, 2, 600)).toBe(2 * 600);
+  });
+
+  it("retombe sur les pixels pour un mode inconnu", () => {
+    expect(normaliserDelta(5, 7)).toBe(5);
+  });
+
+  it("preserve le signe dans les trois modes", () => {
+    expect(normaliserDelta(-10, 0)).toBeLessThan(0);
+    expect(normaliserDelta(-3, 1)).toBeLessThan(0);
+    expect(normaliserDelta(-1, 2)).toBeLessThan(0);
   });
 });

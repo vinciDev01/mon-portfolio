@@ -61,6 +61,10 @@ export function creerAccumulateur(maintenant: () => number) {
 
   return {
     pousser(delta: number): Direction | null {
+      // Un evenement sans mouvement ne porte aucune information. Sans cette
+      // sortie, Math.sign(0) vaut 0 et la garde de direction effacerait le
+      // cumul en cours : ne pas retirer cette ligne.
+      if (delta === 0) return null;
       const t = maintenant();
       if (t - dernier > FENETRE_MOLETTE) cumul = 0;
       if (cumul !== 0 && Math.sign(delta) !== Math.sign(cumul)) cumul = 0;
@@ -76,4 +80,19 @@ export function creerAccumulateur(maintenant: () => number) {
       dernier = -Infinity;
     },
   };
+}
+
+/** Hauteur de ligne supposee, pour convertir un `deltaMode` en lignes. */
+export const LIGNE_PX = 16;
+
+/**
+ * `WheelEvent.deltaY` n'est pas toujours en pixels : `deltaMode` vaut 0 pour
+ * des pixels, 1 pour des lignes, 2 pour des pages. Firefox emet des lignes
+ * dans certaines configurations, et un seuil en pixels y resterait hors
+ * d'atteinte. On ramene donc tout en pixels avant d'accumuler.
+ */
+export function normaliserDelta(deltaY: number, deltaMode: number, hauteurPage = 800): number {
+  if (deltaMode === 1) return deltaY * LIGNE_PX;
+  if (deltaMode === 2) return deltaY * hauteurPage;
+  return deltaY;
 }

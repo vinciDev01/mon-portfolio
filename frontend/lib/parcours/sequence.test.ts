@@ -4,7 +4,6 @@ import path from "node:path";
 import {
   analyserDuree,
   creerSequenceur,
-  SORTIE_REPLI_MS,
   VERROU_APRES_MS,
 } from "./sequence";
 
@@ -14,8 +13,6 @@ describe("analyserDuree", () => {
     ["180ms", 180],
     ["0s", 0],
     ["0.18s, 0.22s", 180],
-    ["calc(400ms * 1)", 400],
-    ["calc(400ms * 0.5)", 200],
   ])("lit %s comme %d ms", (v, ms) => {
     expect(analyserDuree(v)).toBeCloseTo(ms);
   });
@@ -23,11 +20,7 @@ describe("analyserDuree", () => {
   it("rend null, et non zero, quand rien n'est lisible", () => {
     expect(analyserDuree("")).toBeNull();
     expect(analyserDuree("auto")).toBeNull();
-    expect(analyserDuree("calc(400ms * var(--x))")).toBeNull();
-  });
-
-  it("garde un repli egal a 45 % de la duree nominale", () => {
-    expect(SORTIE_REPLI_MS).toBe(400 * 0.45);
+    expect(analyserDuree("calc(400ms * 1)")).toBeNull();
   });
 });
 

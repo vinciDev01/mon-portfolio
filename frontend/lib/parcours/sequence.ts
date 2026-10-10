@@ -1,32 +1,21 @@
-/** Duree de sortie de repli, si ni le retard calcule ni `--duree` ne se lisent.
- *  C'est 45 % de la duree nominale de 400 ms. */
+/** Duree de sortie de repli, si la lecture de la transition echoue : 45 % de
+ *  la duree nominale de 400 ms. */
 export const SORTIE_REPLI_MS = 180;
 /** Le verrou survit a l'activation de la cible, pour absorber l'inertie d'un
  *  geste continu (spec section 2.4). */
 export const VERROU_APRES_MS = 80;
 
 /**
- * Lit une duree CSS en millisecondes. Accepte « 0.18s », « 180ms », une liste
- * (on garde le premier terme) et le produit simple « calc(400ms * 1) », seule
- * forme sous laquelle un navigateur rend une propriete personnalisee non
- * enregistree. Retourne `null` si rien n'est lisible : zero est une duree
+ * Lit une duree CSS en millisecondes, telle que `getComputedStyle` rend
+ * `transition-duration` : « 0.18s », « 180ms », ou une liste dont on garde le
+ * premier terme. Retourne `null` si rien n'est lisible : zero est une duree
  * valide (mouvement reduit), `null` ne l'est pas.
  */
 export function analyserDuree(valeur: string): number | null {
   const v = valeur.trim().split(",")[0]!.trim();
-  const unite = (s: string): number | null => {
-    const m = /^(-?\d*\.?\d+)(ms|s)$/.exec(s.trim());
-    if (!m) return null;
-    return parseFloat(m[1]!) * (m[2] === "s" ? 1000 : 1);
-  };
-  const produit = /^calc\(\s*(\S+)\s*\*\s*(\S+)\s*\)$/.exec(v);
-  if (produit) {
-    const a = unite(produit[1]!);
-    const facteur = Number(produit[2]);
-    if (a !== null && Number.isFinite(facteur)) return a * facteur;
-    return null;
-  }
-  return unite(v);
+  const m = /^(-?\d*\.?\d+)(ms|s)$/.exec(v);
+  if (!m) return null;
+  return parseFloat(m[1]!) * (m[2] === "s" ? 1000 : 1);
 }
 
 type Options = {

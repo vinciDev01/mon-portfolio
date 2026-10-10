@@ -1317,16 +1317,21 @@ html {
     margin-block-end: var(--espace-3);
   }
 
-  /* Le projet de tete se distingue par son titre : il monte d'un cran et
+  /* Le projet de tete se distingue par son titre : il monte d'un demi-cran et
      passe au corps optique des titres. Sans photo la hierarchie tient encore,
-     le titre prend la place de l'image. */
+     le titre prend la place de l'image.
+
+     Un demi-cran et non un cran entier : `--h2` est deja la taille du titre de
+     section, rendu par SectionShell juste au-dessus, et deux lignes de meme
+     corps empilees ne font plus de hierarchie. La valeur est le milieu de
+     `--h3` et `--h2`, donc batie sur l'echelle existante et non choisie. */
   .journal-titre {
     font-size: var(--h3);
     margin-block-end: var(--espace-1);
   }
 
   .journal-tete .journal-titre {
-    font-size: var(--h2);
+    font-size: calc((var(--h3) + var(--h2)) / 2);
     font-variation-settings: "opsz" 48;
     margin-block-end: var(--espace-2);
   }

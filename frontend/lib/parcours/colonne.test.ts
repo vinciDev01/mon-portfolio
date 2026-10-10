@@ -108,6 +108,11 @@ describe("colonne de passage", () => {
 
   it("ne cree aucun mouvement", () => {
     expect(src).not.toMatch(/transition|animate-|animation/);
+    // Le selecteur de langue : son panneau s'ouvre vers le haut, une entree par
+    // le haut le contredirait. Le site garde ses deux mouvements.
+    expect(lire("components/portfolio/language-switcher.tsx")).not.toMatch(
+      /transition|animate-in|slide-in|fade-in|duration-/,
+    );
   });
 
   it("l en-tete collant a bien ete depose", () => {

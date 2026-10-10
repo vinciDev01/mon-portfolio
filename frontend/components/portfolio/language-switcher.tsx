@@ -56,13 +56,13 @@ export function LanguageSwitcher() {
       </button>
 
       {open && (
-        <div className="panneau-langue rounded-lg border border-border bg-card shadow-lg overflow-hidden animate-in fade-in slide-in-from-top-2 duration-200">
+        <div className="panneau-langue rounded-lg border border-border bg-card shadow-lg overflow-hidden">
           {languages.map((lang) => (
             <button
               key={lang.code}
               onClick={() => { setLocale(lang.code); setOpen(false); }}
               className={cn(
-                "w-full flex items-center gap-2.5 px-3 py-2 text-sm transition-colors cursor-pointer",
+                "w-full flex items-center gap-2.5 px-3 py-2 text-sm cursor-pointer",
                 locale === lang.code
                   ? "bg-foreground/5 font-medium"
                   : "hover:bg-muted",

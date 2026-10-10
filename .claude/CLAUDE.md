@@ -57,6 +57,8 @@ my-portfolio/
 ### Shared Types (`packages/shared-types`)
 - Exported as `@portfolio/shared-types`. Key type: `PortfolioData` (aggregated response).
 - Raw TypeScript source (no build step), consumed directly via `"main": "./src/index.ts"`.
+- The package now carries a RUNTIME module, `variantes.ts` (medallion variant names), so it no longer erases at compile time.
+  Consumers must either import it as a value (the frontend transpiles it via `transpilePackages`) or keep to `import type`.
 
 ### Frontend Portfolio (Next.js)
 - Single page app. `app/page.tsx` is an async server component fetching `PortfolioData` from backend.

@@ -107,6 +107,19 @@ describe("ecrireVariantes", () => {
     }
   });
 
+  it("n'écrit rien quand les métadonnées sont illisibles", async () => {
+    // Côté nul : l'ancien plancher à 1 écrivait trois fichiers d'un pixel.
+    const proto = Object.getPrototypeOf(sharp()) as { metadata: () => Promise<unknown> };
+    const espion = jest.spyOn(proto, "metadata").mockResolvedValueOnce({});
+    try {
+      const noms = await ecrireVariantes(await source(200, 150), dossier, "abc.webp", "personal");
+      expect(noms).toEqual([]);
+      expect(fs.readdirSync(dossier)).toEqual([]);
+    } finally {
+      espion.mockRestore();
+    }
+  });
+
   it("n'écrit rien hors de la catégorie personal", async () => {
     expect(await ecrireVariantes(await source(200, 150), dossier, "abc.webp", "projects")).toEqual([]);
     expect(fs.readdirSync(dossier)).toEqual([]);

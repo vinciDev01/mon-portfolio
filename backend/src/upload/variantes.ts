@@ -60,6 +60,9 @@ export async function ecrireVariantes(
 
   const meta = await sharp(buffer).metadata();
   const cote = Math.min(meta.width ?? 0, meta.height ?? 0);
+  // Métadonnées illisibles : mieux vaut ne rien écrire que trois fichiers d'un
+  // pixel que le médaillon servirait comme s'ils étaient de vraies variantes.
+  if (cote === 0) return ecrits;
   for (const taille of tailles) {
     const s = Math.max(1, Math.min(taille, cote));
     const nom = nomVariante(nomFichier, taille);

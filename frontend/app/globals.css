@@ -1278,6 +1278,55 @@ html {
   @media (min-width: 1024px) {
     .ligne-disponibilite { display: none; }
   }
+
+  /* Le journal : une une de presse. La mesure, et non la fenetre, decide des
+     colonnes, d'ou le conteneur. */
+  .journal { container-type: inline-size; }
+
+  .journal-bandeau {
+    border-block-end: 1px solid var(--bordure-signifiante);
+    padding-block-end: var(--espace-1);
+    margin-block-end: var(--espace-3);
+  }
+
+  .journal-article {
+    margin-block-end: var(--espace-3);
+  }
+
+  .journal-image {
+    width: 100%;
+    height: auto;
+    /* Les photos viennent du backoffice a des proportions inconnues : on
+       recadre plutot que d'etirer. */
+    aspect-ratio: 2 / 1;
+    object-fit: cover;
+    border: 1px solid var(--bordure);
+  }
+
+  .journal-signature {
+    color: var(--texte-secondaire);
+    font-variation-settings: "opsz" 12;
+    font-size: 0.8125rem;
+  }
+
+  .journal-colonnes {
+    border-block-start: 1px solid var(--bordure);
+    padding-block-start: var(--espace-3);
+    margin-block-start: var(--espace-3);
+  }
+
+  /* Deux colonnes seulement a partir de 520 px de mesure, ce qui garantit des
+     colonnes d'au moins 244 px, soit 28 caracteres. */
+  @container (min-width: 520px) {
+    .journal-colonnes {
+      columns: 2;
+      /* 32 px et non un jeton : toute l'arithmetique de la section 6.4 de la
+         spec en depend, 520 - 32 donnant deux colonnes de 244 px. */
+      column-gap: 32px;
+      column-rule: 1px solid var(--bordure);
+    }
+    .journal-colonnes > .journal-article { break-inside: avoid; }
+  }
 }
 
 /* -----------------------------------------------------------

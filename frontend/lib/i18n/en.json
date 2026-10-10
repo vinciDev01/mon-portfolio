@@ -82,5 +82,7 @@
   "parcours.colonne": "Site navigation",
   "parcours.disponibilite": "Availability",
   "parcours.identite": "Back to home",
-  "parcours.langue": "Language"
+  "parcours.langue": "Language",
+  "journal.periode": "from {debut} to {fin}",
+  "journal.periodeUnique": "in {date}"
 }

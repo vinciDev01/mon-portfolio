@@ -82,5 +82,7 @@
   "parcours.colonne": "Parcours du site",
   "parcours.disponibilite": "Disponibilité",
   "parcours.identite": "Retour à l'accueil",
-  "parcours.langue": "Langue"
+  "parcours.langue": "Langue",
+  "journal.periode": "de {debut} a {fin}",
+  "journal.periodeUnique": "en {date}"
 }

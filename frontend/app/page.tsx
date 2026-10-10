@@ -6,7 +6,7 @@ import { SectionShell } from "@/components/portfolio/section-shell";
 import { PresentationSection } from "@/components/portfolio/presentation-section";
 import { SkillsSection } from "@/components/portfolio/skills-section";
 import { ExperienceSection } from "@/components/portfolio/experience-section";
-import { ProjectsSection } from "@/components/portfolio/projects-section";
+import { JournalProjets } from "@/components/parcours/journal-projets";
 import { AboutSection } from "@/components/portfolio/about-section";
 import { ContactSection } from "@/components/portfolio/contact-section";
 import { ToastNotification } from "@/components/portfolio/toast-notification";
@@ -72,7 +72,7 @@ export default async function Page() {
 
         {s.showProjects && (
           <SectionShell id="projets" cleTitre="section.projects" index={rang()}>
-            <ProjectsSection projects={data.projects} />
+            <JournalProjets projets={data.projects} />
           </SectionShell>
         )}
 

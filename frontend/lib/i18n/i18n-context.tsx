@@ -12,7 +12,7 @@ const dictionaries: Record<Locale, Record<string, string>> = { fr, en, de };
 interface I18nContextValue {
   locale: Locale;
   setLocale: (locale: Locale) => void;
-  t: (key: string) => string;
+  t: (key: string, params?: Record<string, string>) => string;
 }
 
 const I18nContext = createContext<I18nContextValue | null>(null);
@@ -50,8 +50,10 @@ export function I18nProvider({
   }, []);
 
   const t = useCallback(
-    (key: string): string => {
-      return dictionaries[locale][key] ?? dictionaries.fr[key] ?? key;
+    (key: string, params?: Record<string, string>): string => {
+      const brut = dictionaries[locale][key] ?? dictionaries.fr[key] ?? key;
+      if (!params) return brut;
+      return brut.replace(/\{(\w+)\}/g, (_, nom: string) => params[nom] ?? `{${nom}}`);
     },
     [locale],
   );

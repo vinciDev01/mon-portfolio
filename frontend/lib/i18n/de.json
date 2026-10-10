@@ -82,5 +82,7 @@
   "parcours.colonne": "Seitennavigation",
   "parcours.disponibilite": "Verfügbarkeit",
   "parcours.identite": "Zurück zur Startseite",
-  "parcours.langue": "Sprache"
+  "parcours.langue": "Sprache",
+  "journal.periode": "von {debut} bis {fin}",
+  "journal.periodeUnique": "im {date}"
 }

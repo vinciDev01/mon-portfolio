@@ -107,3 +107,103 @@ export function contenuGaucheA(largeur: number): number {
     return t + (v ? variableA(v[1]!, largeur) : px(terme.trim()));
   }, 0);
 }
+
+/**
+ * Evalue une expression CSS lue dans la feuille (`calc`, `min`, `max`, `var`
+ * avec repli, `+ - * /`) et la rend en pixels. `100%` vaut `largeurPct`, `ch`
+ * vaut `ch` pixels. Les `var(--x)` se resolvent dans `vars`, expressions
+ * comprises, puis par leur repli. Une variable inconnue sans repli jette.
+ */
+export function evaluer(
+  expr: string,
+  ctx: { largeurPct: number; ch: number; vars: Record<string, string | number> },
+): number {
+  const trouves = expr.match(/[a-z]+\(|--[\w-]+|\d*\.?\d+(?:px|ch|%)?|[-+*/(),]/g);
+  if (!trouves) throw new Error("expression vide : " + expr);
+  const jetons: string[] = trouves;
+  let i = 0;
+  const lire = () => jetons[i++]!;
+  const voir = () => jetons[i];
+
+  function atome(): number {
+    const j = lire();
+    if (j === "(") {
+      const v = somme();
+      lire(); // )
+      return v;
+    }
+    if (j === "calc(") {
+      const v = somme();
+      lire();
+      return v;
+    }
+    if (j === "min(" || j === "max(") {
+      const valeurs = [somme()];
+      while (voir() === ",") {
+        lire();
+        valeurs.push(somme());
+      }
+      lire();
+      return j === "min(" ? Math.min(...valeurs) : Math.max(...valeurs);
+    }
+    if (j === "var(") {
+      const nom = lire();
+      let repli: string | undefined;
+      if (voir() === ",") {
+        lire();
+        // Le repli court jusqu'a la parenthese fermante de ce var().
+        const debut = i;
+        let profondeur = 0;
+        while (!(voir() === ")" && profondeur === 0)) {
+          const t = lire();
+          if (t.endsWith("(") || t === "(") profondeur++;
+          if (t === ")") profondeur--;
+        }
+        repli = jetons.slice(debut, i).join(" ");
+      }
+      lire(); // )
+      const brut = ctx.vars[nom];
+      if (brut !== undefined) {
+        return typeof brut === "number" ? brut : evaluer(brut, ctx);
+      }
+      if (repli === undefined) throw new Error(`variable inconnue : ${nom}`);
+      return evaluer(repli, ctx);
+    }
+    const m = /^(\d*\.?\d+)(px|ch|%)?$/.exec(j);
+    if (!m) throw new Error("jeton inattendu : " + j);
+    const n = Number(m[1]);
+    if (m[2] === "%") return (ctx.largeurPct * n) / 100;
+    if (m[2] === "ch") return ctx.ch * n;
+    return n;
+  }
+  function produit(): number {
+    let v = atome();
+    while (voir() === "*" || voir() === "/") {
+      const op = lire();
+      const w = atome();
+      v = op === "*" ? v * w : v / w;
+    }
+    return v;
+  }
+  function somme(): number {
+    let v = produit();
+    while (voir() === "+" || voir() === "-") {
+      const op = lire();
+      const w = produit();
+      v = op === "+" ? v + w : v - w;
+    }
+    return v;
+  }
+  const v = somme();
+  if (i !== jetons.length) throw new Error("reste non lu dans : " + expr);
+  return v;
+}
+
+/** Les proprietes personnalisees (`--x: ...;`) d'un corps de regle. */
+export function proprietes(corps: string): Record<string, string> {
+  const out: Record<string, string> = {};
+  for (const m of corps.matchAll(/(--[\w-]+):\s*([^;]+);/g)) {
+    out[m[1]!] = m[2]!.replace(/\s+/g, " ").trim();
+  }
+  return out;
+}

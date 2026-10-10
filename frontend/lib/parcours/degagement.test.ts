@@ -1,34 +1,64 @@
 import { describe, it, expect } from "vitest";
-import { bloc, contenuGaucheA, css, variableA } from "./feuille-test";
+import {
+  bloc,
+  contenuGaucheA,
+  css,
+  evaluer,
+  proprietes,
+  valeur,
+  variableA,
+} from "./feuille-test";
 
-const CH = 8.73;
-const GARDE = 16;
-const PLEINE = 576;
-const PLANCHER = 358;
+/* `ch` est une metrique de police, absente de la feuille : 8,73 px par
+   caractere, soit 576 px pour 66 ch (spec 4.3, valeur de travail derivee). */
+const CH = 576 / 66;
 
-/* Les reglages de l'ampoule ont une valeur par defaut dans la formule meme
-   (`var(--ampoule-droite, 48px)`) : on la lit la, comme le navigateur. */
+/* Tout le reste se lit : les reglages de l'ampoule ont une valeur par defaut
+   dans la formule meme (`var(--ampoule-droite, 48px)`), la garde, le plancher
+   et la pleine mesure sont ecrits dans `.bloc-parcours`, le reglage du zigzag
+   et le palier ou le decalage s'applique dans la regle de decalage. */
 const regleBloc = bloc(/\.bloc-parcours\s*\{/);
+const proprietesBloc = proprietes(regleBloc);
 const DROITE_DEFAUT = Number(/var\(--ampoule-droite,\s*([\d.]+)px\)/.exec(regleBloc)![1]);
 const ECHELLE_DEFAUT = Number(/var\(--ampoule-echelle,\s*([\d.]+)\)/.exec(css)![1]);
 const OBJET = Number(/--ampoule-largeur:\s*calc\(([\d.]+)px/.exec(regleBloc)![1]);
+const GARDE = Number(/-\s*([\d.]+)px\s*$/.exec(proprietesBloc["--degagement"]!.replace(/\)\s*$/, ""))![1]);
+const PLANCHER_CH = Number(/max\(\s*([\d.]+)ch/.exec(proprietesBloc["--mesure-courante"]!)![1]);
+const PLEINE_CH = Number(/min\(\s*([\d.]+)ch/.exec(proprietesBloc["--mesure-courante"]!)![1]);
+
+const regleDecalage = bloc(/\.bloc-parcours\[data-cote="droite"\]\s*\{/);
+const DECALAGE = valeur(regleDecalage, "margin-inline-start");
+const ZIGZAG_DEFAUT = Number(/var\(--portfolio-zigzag,\s*([\d.]+)\)/.exec(DECALAGE)![1]);
+/** Palier a partir duquel la regle de decalage s'applique. */
+const SEUIL_DECALAGE = Number(
+  /@media \(min-width:\s*(\d+)px\)\s*\{\s*\.bloc-parcours\[data-cote="droite"\]/.exec(css)![1],
+);
 
 /**
- * Reproduit la formule de la spec, section 4.2. Tout ce qui vient de la
- * feuille (colonne, gouttiere, bord gauche du contenu, ampoule) y est lu et
- * non recopie : changer un palier change la geometrie verifiee.
+ * Geometrie d'une fenetre, DERIVEE DE LA FEUILLE : la mesure, le degagement et
+ * le decalage sont les expressions `calc`/`min`/`max` de `globals.css`
+ * evaluees, et non un modele parallele. Retirer le plafond du decalage dans la
+ * feuille fait donc bouger les valeurs ci-dessous.
  */
-function geometrie(largeur: number, zigzag = 0.5) {
+function geometrie(largeur: number, zigzag = ZIGZAG_DEFAUT) {
   const colonne = variableA("--colonne", largeur);
   const gouttiere = variableA("--gouttiere", largeur);
   const x0 = contenuGaucheA(largeur);
   const droite = variableA("--ampoule-droite", largeur, DROITE_DEFAUT);
   const echelle = variableA("--ampoule-echelle", largeur, ECHELLE_DEFAUT);
   const C = largeur - x0 - gouttiere;
-  const A = C + gouttiere - droite - OBJET * echelle - GARDE;
-  const mesure = Math.min(C, Math.max(PLANCHER, Math.min(PLEINE, A)));
+  const vars: Record<string, string | number> = {
+    ...proprietesBloc,
+    "--gouttiere": gouttiere,
+    "--portfolio-zigzag": zigzag,
+  };
+  if (!Number.isNaN(variableA("--ampoule-droite", largeur))) vars["--ampoule-droite"] = droite;
+  if (!Number.isNaN(variableA("--ampoule-echelle", largeur))) vars["--ampoule-echelle"] = echelle;
+  const ctx = { largeurPct: C, ch: CH, vars };
+  const A = evaluer("var(--degagement)", ctx);
+  const mesure = Math.min(C, evaluer("var(--mesure-courante)", ctx));
   const ampouleGauche = largeur - droite - OBJET * echelle;
-  const decalage = Math.max(0, Math.min(zigzag * (C - mesure), A - mesure));
+  const decalage = largeur >= SEUIL_DECALAGE ? evaluer(DECALAGE, ctx) : 0;
   return { colonne, gouttiere, x0, C, A, mesure, ampouleGauche, decalage };
 }
 
@@ -53,6 +83,12 @@ describe("regle de degagement (spec section 4.2)", () => {
       expect(Math.round(g.mesure), `mesure a ${largeur}`).toBe(mesure);
       expect(Math.round(g.ampouleGauche - (g.x0 + g.mesure)), `garde a ${largeur}`).toBe(garde);
     }
+  });
+
+  it("le plancher et la pleine mesure de la feuille sont ceux qui bornent la table", () => {
+    expect(geometrie(1440).mesure).toBeCloseTo(PLEINE_CH * CH, 6);
+    expect(geometrie(480).mesure).toBeCloseTo(PLANCHER_CH * CH, 6);
+    expect(PLANCHER_CH).toBeLessThan(PLEINE_CH);
   });
 
   it("lit la geometrie dans la feuille et non dans des nombres recopies", () => {
@@ -145,11 +181,9 @@ describe("regle de degagement (spec section 4.2)", () => {
     expect(corps).toContain("--portfolio-zigzag");
     expect(corps).toMatch(/margin-inline-start:\s*max\(\s*0px/);
     expect(corps).toContain("var(--degagement)");
-    // Le plafond lui-meme, et non sa seule presence : sans lui le decalage
-    // retombe a 0,5 * (C - mesure) et le defaut de la section 4.2 revient.
-    expect(corps).toMatch(
-      /min\(\s*calc\(var\(--portfolio-zigzag[^)]*\)\s*\*\s*\(100%\s*-\s*var\(--mesure-courante\)\)\),\s*calc\(var\(--degagement\)\s*-\s*var\(--mesure-courante\)\)\s*\)/,
-    );
+    // Le plafond est verifie en VALEUR, par le test de la table 4.3 et par la
+    // garde a tout reglage du zigzag : ces valeurs sont evaluees depuis cette
+    // meme expression, donc elles bougent si on la modifie.
   });
 
   it("le defilement souple repasse en auto sous mouvement reduit", () => {

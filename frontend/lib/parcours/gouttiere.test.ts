@@ -9,12 +9,57 @@ import { bloc, contenuGaucheA, lire, PALIERS, variableA } from "./feuille-test";
 const page = lire("app/page.tsx");
 const GOUTTIERE = "gouttiere-parcours";
 
-/** Elements rendus par la page hors de toute `SectionShell`. */
-const HORS_COQUILLE = [
-  { balise: "Footer", fichier: "components/portfolio/footer.tsx" },
-  { balise: "LigneDisponibilite", fichier: "components/parcours/drapeau-disponibilite.tsx" },
-  { balise: "ToastNotification", fichier: "components/portfolio/toast-notification.tsx" },
-] as const;
+/** Garde minimale entre la colonne et le contenu (spec 4.1), aux paliers
+ *  ou la colonne est une bande superposee. */
+const GARDE_MIN = 16;
+
+/** Corps de `<main>` dans la page, commentaires JSX retires. */
+const corpsMain = (() => {
+  const debut = page.indexOf("<main");
+  const fin = page.indexOf("</main>");
+  expect(debut, "<main> introuvable").toBeGreaterThan(-1);
+  return page
+    .slice(page.indexOf(">", debut) + 1, fin)
+    .replace(/\{\/\*[\s\S]*?\*\/\}/g, "");
+})();
+
+/**
+ * Enfants directs de `<main>` : tout ce qui reste une fois les `SectionShell`
+ * retirees (elles portent la gouttiere elles-memes). Une balise ajoutee demain
+ * y apparait sans qu'on ait rien a declarer.
+ */
+const enfants = (() => {
+  const sansCoquilles = corpsMain.replace(/<SectionShell[\s\S]*?<\/SectionShell>/g, "");
+  return [...sansCoquilles.matchAll(/<([A-Za-z][\w.]*)((?:[^<>]|=>)*?)\/?>/g)].map((m) => ({
+    balise: m[1]!,
+    attributs: m[2]!,
+  }));
+})();
+
+/** Fichier source d'un composant importe par la page. */
+function sourceDe(balise: string): string {
+  const m = new RegExp(`import \\{[^}]*\\b${balise}\\b[^}]*\\} from "@/([^"]+)"`).exec(page);
+  expect(m, `import de ${balise} introuvable dans page.tsx`).not.toBeNull();
+  return lire(`${m![1]}.tsx`);
+}
+
+/** Classes de la premiere balise rendue par le composant `nom` de `source`. */
+function classesRacine(source: string, nom: string): { classes: string[]; rienRendu: boolean } {
+  const i = source.search(new RegExp(`export function ${nom}\\b`));
+  const suite = source.slice(i + 1);
+  const fin = suite.search(/\nexport (?:default )?(?:async )?function /);
+  const corps = source.slice(i, fin === -1 ? undefined : i + 1 + fin);
+  // `return (` suivi d'une balise : `return () => {` d'un effet n'en est pas un.
+  const retours = [...corps.matchAll(/return \(\s*</g)];
+  const r = retours.length ? retours[retours.length - 1]!.index! : -1;
+  if (r === -1) return { classes: [], rienRendu: /return null;/.test(corps) };
+  const m = /<[a-z][\w]*[^>]*?className="([^"]*)"/.exec(corps.slice(r));
+  return { classes: m ? m[1]!.split(/\s+/) : [], rienRendu: false };
+}
+
+const positionFixe = (classe: string) =>
+  classe === "fixed" ||
+  new RegExp(`\\.${classe}\\s*\\{[^}]*position:\\s*fixed`).test(lire("app/globals.css"));
 
 describe("la gouttiere du parcours", () => {
   it("est une regle unique, qui reserve la colonne", () => {
@@ -23,19 +68,20 @@ describe("la gouttiere du parcours", () => {
     expect(regle).toMatch(/padding-inline-end:\s*var\(--gouttiere\)/);
   });
 
-  it("depasse la colonne a chaque palier, d'apres la feuille", () => {
+  it("garde au moins 16 px entre la colonne et le contenu a chaque palier", () => {
     expect(PALIERS.length).toBeGreaterThan(1);
     for (const p of PALIERS) {
       const fenetre = Math.max(p.min, 320);
-      expect(contenuGaucheA(fenetre), `palier ${p.min} px`).toBeGreaterThan(
-        variableA("--colonne", fenetre),
-      );
+      expect(
+        contenuGaucheA(fenetre) - variableA("--colonne", fenetre),
+        `palier ${p.min} px`,
+      ).toBeGreaterThanOrEqual(GARDE_MIN);
     }
   });
 
-  it("est declaree une seule fois : plus de copie de ses deux declarations", () => {
+  it("n'est definie qu'une fois : une seule regle de gouttiere", () => {
     const css = lire("app/globals.css");
-    expect(css.match(/padding-inline-start:\s*var\(--contenu-gauche\)/g)).toHaveLength(1);
+    expect(css.match(/\.gouttiere-parcours\s*\{/g)).toHaveLength(1);
   });
 
   it("la coquille de section la porte", () => {
@@ -44,15 +90,24 @@ describe("la gouttiere du parcours", () => {
 });
 
 describe("les elements hors de SectionShell", () => {
-  it("la page les rend bien (sinon ce test ne garde plus rien)", () => {
-    for (const { balise } of HORS_COQUILLE) {
-      expect(page, balise).toMatch(new RegExp(`<${balise}[\\s/>]`));
-    }
+  it("la page a bien des enfants directs a examiner", () => {
+    expect(enfants.length).toBeGreaterThan(2);
   });
 
-  it("le pied de page et la ligne de disponibilite portent la gouttiere", () => {
-    for (const { fichier } of HORS_COQUILLE.slice(0, 2)) {
-      expect(lire(fichier), fichier).toContain(GOUTTIERE);
+  it("chaque enfant direct de <main> est une SectionShell, porte la gouttiere, ou est fixe", () => {
+    // Un quatrieme element ajoute hors SectionShell reproduirait le defaut : il
+    // echoue ici en etant nomme. Un composant qui ne rend rien (l'observateur
+    // de toast) n'a pas de boite et n'a donc rien a reserver.
+    for (const { balise, attributs } of enfants) {
+      let ok: boolean;
+      if (/^[a-z]/.test(balise)) {
+        const cl = /className="([^"]*)"/.exec(attributs)?.[1]?.split(/\s+/) ?? [];
+        ok = cl.includes(GOUTTIERE) || cl.some(positionFixe);
+      } else {
+        const { classes, rienRendu } = classesRacine(sourceDe(balise), balise);
+        ok = rienRendu || classes.includes(GOUTTIERE) || classes.some(positionFixe);
+      }
+      expect(ok, `<${balise}> est hors SectionShell sans gouttiere ni position fixe`).toBe(true);
     }
   });
 

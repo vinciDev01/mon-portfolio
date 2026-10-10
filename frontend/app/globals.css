@@ -1317,14 +1317,11 @@ html {
     margin-block-end: var(--espace-3);
   }
 
-  /* Le projet de tete se distingue par son titre : il monte d'un demi-cran et
-     passe au corps optique des titres. Sans photo la hierarchie tient encore,
-     le titre prend la place de l'image.
-
-     Un demi-cran et non un cran entier : `--h2` est deja la taille du titre de
-     section, rendu par SectionShell juste au-dessus, et deux lignes de meme
-     corps empilees ne font plus de hierarchie. La valeur est le milieu de
-     `--h3` et `--h2`, donc batie sur l'echelle existante et non choisie. */
+  /* Le projet de tete se distingue par son titre : un cran plus grand que
+     les articles suivants, a mi-chemin entre --h3 et --h2 pour rester sous le
+     titre de section. Le corps optique est deja celui de tous les titres
+     (`h3` pose `opsz 48`) : le seul signal est donc l'ecart de corps. Sans
+     photo, le titre prend la place de l'image et la hierarchie tient encore. */
   .journal-titre {
     font-size: var(--h3);
     margin-block-end: var(--espace-1);
@@ -1332,7 +1329,6 @@ html {
 
   .journal-tete .journal-titre {
     font-size: calc((var(--h3) + var(--h2)) / 2);
-    font-variation-settings: "opsz" 48;
     margin-block-end: var(--espace-2);
   }
 
@@ -1367,6 +1363,15 @@ html {
     color: var(--texte-secondaire);
     font-variation-settings: "opsz" 12;
     font-size: 0.8125rem;
+  }
+
+  /* Le byline : des personnes, a part de la pile technique qui ferme l'article
+     (`.journal-signature`). Meme registre discret, classe propre. */
+  .journal-collaborateurs {
+    color: var(--texte-secondaire);
+    font-variation-settings: "opsz" 12;
+    font-size: 0.8125rem;
+    margin-block-end: var(--espace-1);
   }
 
   .journal-colonnes {
@@ -1507,27 +1512,35 @@ section[data-rang="6"] {
 
   /* La colonne de passage suit les memes regles que l'ampoule (spec 5.5).
 
-     Le drapeau : le libelle est du `color`, donc FORCE a CanvasText, alors
-     que le `fill` du <path> est un attribut de presentation SVG que le mode
-     ne force pas. Le tissu garderait son accent et le texte passerait a
-     environ 1,9:1 en sombre, 2,5:1 en clair. On rend la main sur les trois
-     pieces, pour que la paire texte et tissu reste celle dont le contraste
-     a ete verifie. */
-  .drapeau-toile,
-  .drapeau-guidon,
-  .drapeau-texte {
-    forced-color-adjust: none;
+     Le drapeau : le libelle est du `color`, force a CanvasText, alors que le
+     `fill` du <path> est un attribut de presentation SVG que le mode ne force
+     pas : le tissu garderait l'accent de l'auteur sous un texte devenu noir ou
+     blanc, a environ 1,9:1 en sombre et 2,5:1 en clair. On force donc la
+     propriete que le mode ne force pas, avec la paire que lui-meme honore,
+     Highlight pour le tissu et HighlightText pour le texte, au lieu de sortir
+     les pieces du mode (ce qui rendrait l'accent de l'auteur a qui a demande
+     au systeme de choisir). Le `fill` se pose sur le <path>, qui porte son
+     propre attribut : un `fill` sur le <svg> serait masque par lui. */
+  .drapeau-toile path,
+  .drapeau-guidon path {
+    fill: Highlight;
   }
 
-  /* Le repere de la section courante : hors contraste force, le point plein
-     se distingue du point creux par la forme et non par la seule couleur
-     (WCAG 1.4.1). Le mode force `background-color` et `color` : plein et creux
-     deviendraient identiques et plus rien n'indiquerait la position. On
-     reprend la main sur le repere courant seul, en couleur systeme. */
+  .drapeau-texte {
+    color: HighlightText;
+  }
+
+  /* Le repere de la section courante. Hors contraste force, le point plein se
+     distingue du creux par la forme et non par la seule couleur (WCAG 1.4.1).
+     Le mode force `background-color` : plein et creux deviendraient identiques
+     et plus rien n'indiquerait la position. Pastille sans texte : CanvasText,
+     que son contour creux partage deja, plutot que Highlight dont le contraste
+     n'est garanti qu'avec HighlightText. La distinction reste celle de la
+     forme, plein contre creux. */
   .entree-parcours[aria-current="true"] .entree-repere {
     forced-color-adjust: none;
-    background: Highlight;
-    border-color: Highlight;
+    background: CanvasText;
+    border-color: CanvasText;
   }
 }
 

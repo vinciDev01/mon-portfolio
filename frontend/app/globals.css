@@ -719,6 +719,86 @@ html {
 /* Correction ronde 1 : classes du projet dans `components`, meme
    raison que ci-dessus. */
 @layer components {
+  .colonne-passage {
+    position: fixed;
+    inset-block: 0;
+    inset-inline-start: 0;
+    width: var(--colonne);
+    z-index: 55;
+    display: flex;
+    flex-direction: column;
+    gap: var(--espace-3);
+    padding: var(--espace-3) var(--espace-2);
+    overflow-y: auto;
+    background: var(--fond);
+    border-inline-end: 1px solid var(--bordure);
+  }
+
+  /* Le nom doit se replier plutot que deborder : il vient du backoffice et
+     rien n'en borne la longueur. */
+  .identite-mat {
+    display: flex;
+    align-items: center;
+    gap: var(--espace-1);
+    max-width: 100%;
+    overflow-wrap: anywhere;
+    color: var(--texte);
+  }
+
+  .identite-initiales {
+    display: grid;
+    place-items: center;
+    width: 36px;
+    height: 36px;
+    border: 1px solid var(--bordure-signifiante);
+    border-radius: 4px;
+    background: var(--surface);
+    color: var(--texte-secondaire);
+    font-variation-settings: "opsz" 48;
+  }
+
+  .entrees-parcours {
+    display: flex;
+    flex-direction: column;
+    gap: var(--espace-1);
+    list-style: none;
+    margin: 0;
+    padding: 0;
+  }
+
+  .entree-parcours {
+    display: flex;
+    align-items: center;
+    gap: var(--espace-1);
+    color: var(--texte-secondaire);
+  }
+
+  .entree-parcours[aria-current="true"] {
+    color: var(--texte);
+  }
+
+  .pied-colonne {
+    margin-block-start: auto;
+    display: flex;
+    flex-direction: column;
+    gap: var(--espace-1);
+  }
+
+  /* Sous 1024 px la colonne se reduit : le nom et les noms de sections n'ont
+     plus la place d'etre lus, seuls les reperes subsistent. Le nom reste le
+     nom accessible du lien d'identite. */
+  @media (max-width: 1023px) {
+    .identite-nom,
+    .entree-nom {
+      position: absolute;
+      width: 1px;
+      height: 1px;
+      overflow: hidden;
+      clip-path: inset(50%);
+      white-space: nowrap;
+    }
+  }
+
   /* Mesure de lecture : 66 caracteres, l'optimum de Bringhurst. */
   .mesure {
     max-width: 66ch;
@@ -779,7 +859,7 @@ html {
     /* Le plancher de 41ch existe parce que sans lui la formule etrangle
        la mesure a 21 caracteres a 360 px. Sous environ 520 px le
        degagement ne peut plus etre tenu : le recouvrement est assume et
-       borne a 70 px. */
+       borne a 72 px. */
     --mesure-courante: min(100%, max(41ch, min(66ch, var(--degagement))));
     max-width: var(--mesure-courante);
     margin-inline-start: 0;

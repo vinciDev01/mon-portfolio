@@ -1,6 +1,6 @@
 import { getPortfolioData } from "@/lib/api";
 import { Ampoule } from "@/components/ampoule/ampoule";
-import { Header } from "@/components/portfolio/header";
+import { ColonnePassage } from "@/components/parcours/colonne-passage";
 import { Footer } from "@/components/portfolio/footer";
 import { SectionShell } from "@/components/portfolio/section-shell";
 import { PresentationSection } from "@/components/portfolio/presentation-section";
@@ -30,9 +30,9 @@ export default async function Page() {
   return (
     <>
       <Ampoule />
+      <ColonnePassage reglages={s} infos={data.personalInfo} />
       <main className="min-h-screen">
         <SectionToastObserver />
-        <Header siteSettings={s} personalInfo={data.personalInfo} />
 
         {s.showPresentations && (
           <SectionShell id="ouverture" cleTitre="section.ouverture" index={rang()}>

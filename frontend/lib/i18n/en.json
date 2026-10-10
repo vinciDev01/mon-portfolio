@@ -78,5 +78,7 @@
   "maintenance.title": "Site under maintenance",
   "maintenance.message": "We'll be back soon.",
 
-  "nav.blog": "Blog."
+  "nav.blog": "Blog.",
+  "parcours.colonne": "Site navigation",
+  "parcours.identite": "Back to home"
 }

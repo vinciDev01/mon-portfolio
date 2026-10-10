@@ -1,9 +1,11 @@
 "use client";
 
-import type { PresentationDto } from "@portfolio/shared-types";
+import type { PersonalInfoDto, PresentationDto } from "@portfolio/shared-types";
+import { Medaillon } from "@/components/parcours/medaillon";
 
 interface PresentationSectionProps {
   presentations: PresentationDto[];
+  infos: PersonalInfoDto;
 }
 
 function PresentationCard({ item, index }: { item: PresentationDto; index: number }) {
@@ -26,11 +28,12 @@ function PresentationCard({ item, index }: { item: PresentationDto; index: numbe
   );
 }
 
-export function PresentationSection({ presentations }: PresentationSectionProps) {
+export function PresentationSection({ presentations, infos }: PresentationSectionProps) {
   if (!presentations.length) return null;
 
   return (
     <>
+      <Medaillon infos={infos} />
       {presentations.map((item, index) => (
         <PresentationCard key={item.id} item={item} index={index} />
       ))}

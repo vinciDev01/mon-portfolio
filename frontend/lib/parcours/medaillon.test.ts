@@ -1,0 +1,93 @@
+import { readFileSync } from "node:fs";
+import path from "node:path";
+import { describe, it, expect } from "vitest";
+import { createElement, type ComponentType } from "react";
+import { renderToStaticMarkup } from "react-dom/server";
+import { nomVariante } from "@portfolio/shared-types";
+import type { PersonalInfoDto } from "@portfolio/shared-types";
+import { Medaillon } from "../../components/parcours/medaillon";
+import { I18nProvider } from "../i18n/i18n-context";
+
+const RACINE = path.resolve(import.meta.dirname, "../..");
+const lire = (rel: string) => readFileSync(path.join(RACINE, rel), "utf8");
+const src = lire("components/parcours/medaillon.tsx");
+const css = lire("app/globals.css");
+
+const infos = (p: Partial<PersonalInfoDto>): PersonalInfoDto =>
+  ({ name: "Bertrand", surname: "Fanuel", avatarPath: null, ...p }) as PersonalInfoDto;
+
+const rendre = (p: Partial<PersonalInfoDto>) =>
+  renderToStaticMarkup(
+    createElement(
+      // `children` est requis par le type du fournisseur mais passe en argument
+      // de createElement, comme l'exige la regle react/no-children-prop.
+      I18nProvider as ComponentType<{ defaultLocale: string }>,
+      { defaultLocale: "fr" },
+      createElement(Medaillon, { infos: infos(p) }),
+    ),
+  );
+
+describe("medaillon (spec section 8)", () => {
+  it("declare sa boite : 88 px, bordure signifiante, rayon 4", () => {
+    const m = /\.medaillon\s*\{([^}]*)\}/.exec(css);
+    expect(m, "regle .medaillon introuvable").not.toBeNull();
+    expect(m![1]).toMatch(/width:\s*88px/);
+    expect(m![1]).toMatch(/height:\s*88px/);
+    expect(m![1]).toContain("var(--bordure-signifiante)");
+    expect(m![1]).toMatch(/border-radius:\s*4px/);
+  });
+
+  it("n a ni ombre, ni degrade, ni filtre", () => {
+    const m = /\.medaillon\s*\{([^}]*)\}/.exec(css);
+    expect(m![1]).not.toMatch(/box-shadow|gradient|filter/);
+  });
+
+  it("n est pas un cercle", () => {
+    const m = /\.medaillon\s*\{([^}]*)\}/.exec(css);
+    expect(m![1]).not.toMatch(/border-radius:\s*(50%|9999px)/);
+  });
+
+  it("declare les trois densites dans le rendu", () => {
+    const html = rendre({ avatarPath: "http://hote.test/uploads/personal/u.webp" });
+    const balise = /<img\s[^>]*>/.exec(html)?.[0];
+    expect(balise, "aucune balise img").toBeDefined();
+    const v = (t: number) => nomVariante("http://hote.test/uploads/personal/u.webp", t);
+    expect(balise).toContain(`src="${v(88)}"`);
+    const srcSet = /srcSet="([^"]*)"/.exec(balise!)?.[1];
+    expect(srcSet).toBeDefined();
+    expect(srcSet).toContain(`${v(176)} 2x`);
+    expect(srcSet).toContain(`${v(264)} 3x`);
+    expect(balise).toContain('width="88"');
+    expect(balise).toContain('height="88"');
+    expect(balise).toContain('class="medaillon"');
+  });
+
+  it("se replie sur les initiales quand avatarPath est nul", () => {
+    const html = rendre({ avatarPath: null });
+    expect(html).not.toMatch(/<img[\s>]/);
+    expect(html).toContain("medaillon-repli");
+    expect(html).toContain(">BF<");
+  });
+
+  it("ne cree aucun mouvement propre", () => {
+    expect(src).not.toMatch(/transition|animate-|animation/);
+  });
+
+  it("est monte dans la section d ouverture", () => {
+    expect(lire("components/portfolio/presentation-section.tsx")).toContain("Medaillon");
+  });
+
+  it("lit la regle de nommage partagee et n en redefinit aucune", () => {
+    // La regle vit dans @portfolio/shared-types : ce test empeche de la
+    // redupliquer un jour.
+    expect(src).toContain('from "@portfolio/shared-types"');
+    expect(src).toContain("nomVariante");
+    expect(src, "une regle de nommage locale a ete reintroduite")
+      .not.toMatch(/lastIndexOf\("\."\)/);
+  });
+
+  it("n introduit ni tiret cadratin ni emoji", () => {
+    expect(src).not.toContain("—");
+    expect([...src].some((c) => c.codePointAt(0)! > 0x2500)).toBe(false);
+  });
+});

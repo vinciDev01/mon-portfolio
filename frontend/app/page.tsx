@@ -44,7 +44,7 @@ export default async function Page() {
 
         {s.showPresentations && (
           <SectionShell id="ouverture" cleTitre="section.ouverture" index={rang()}>
-            <PresentationSection presentations={data.presentations} />
+            <PresentationSection presentations={data.presentations} infos={data.personalInfo} />
           </SectionShell>
         )}
 

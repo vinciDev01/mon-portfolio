@@ -82,6 +82,7 @@
   "parcours.colonne": "Parcours du site",
   "parcours.disponibilite": "Disponibilité",
   "parcours.identite": "Retour à l'accueil",
+  "parcours.portrait": "Portrait de {nom}",
   "parcours.langue": "Langue",
   "journal.periode": "de {debut} à {fin}",
   "journal.periodeUnique": "en {date}"

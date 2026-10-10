@@ -719,6 +719,24 @@ html {
 /* Correction ronde 1 : classes du projet dans `components`, meme
    raison que ci-dessus. */
 @layer components {
+  .medaillon {
+    width: 88px;
+    height: 88px;
+    border: 1px solid var(--bordure-signifiante);
+    border-radius: 4px;
+    background: var(--surface);
+    object-fit: cover;
+    margin-block-end: var(--espace-2);
+  }
+
+  .medaillon-repli {
+    display: grid;
+    place-items: center;
+    color: var(--texte-secondaire);
+    font-variation-settings: "opsz" 48;
+    font-size: 1.75rem;
+  }
+
   .colonne-passage {
     position: fixed;
     inset-block: 0;

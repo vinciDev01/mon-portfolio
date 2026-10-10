@@ -1289,8 +1289,12 @@ html {
     margin-block-end: var(--espace-3);
   }
 
-  .journal-article {
+  .journal-article:not(:last-child) {
     margin-block-end: var(--espace-3);
+  }
+
+  .journal-lien {
+    color: var(--accent);
   }
 
   .journal-image {

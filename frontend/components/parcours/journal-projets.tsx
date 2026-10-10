@@ -4,7 +4,7 @@ import Image from "next/image";
 import type { ProjectDto } from "@portfolio/shared-types";
 import { getFileUrl } from "@/lib/api";
 import { useTranslation } from "@/lib/i18n/i18n-context";
-import { dispositionJournal, ligneDate } from "@/lib/parcours/ligne-date";
+import { dispositionJournal, ligneDate } from "@/lib/parcours/journal";
 
 /**
  * Les projets en une de presse : un bandeau date, un projet de tete avec son
@@ -18,6 +18,7 @@ import { dispositionJournal, ligneDate } from "@/lib/parcours/ligne-date";
  * que la ligne de date.
  */
 function Article({ projet, tete }: { projet: ProjectDto; tete: boolean }) {
+  const { t } = useTranslation();
   // Nul quand le projet de tete n'a pas de `photo1Path` : aucune place vide.
   const image = tete ? getFileUrl(projet.photo1Path) : null;
   return (
@@ -33,6 +34,18 @@ function Article({ projet, tete }: { projet: ProjectDto; tete: boolean }) {
       )}
       <h3 className="journal-titre">{projet.name}</h3>
       {projet.description && <p className="journal-corps">{projet.description}</p>}
+      {projet.demoUrl && (
+        <p>
+          <a
+            href={projet.demoUrl}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="journal-lien"
+          >
+            {t("projects.viewDemo")}
+          </a>
+        </p>
+      )}
       {projet.technologies.length > 0 && (
         <p className="journal-signature">
           {projet.technologies.map((x) => x.label).join(" · ")}

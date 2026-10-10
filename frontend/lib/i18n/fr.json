@@ -83,6 +83,6 @@
   "parcours.disponibilite": "Disponibilité",
   "parcours.identite": "Retour à l'accueil",
   "parcours.langue": "Langue",
-  "journal.periode": "de {debut} a {fin}",
+  "journal.periode": "de {debut} à {fin}",
   "journal.periodeUnique": "en {date}"
 }

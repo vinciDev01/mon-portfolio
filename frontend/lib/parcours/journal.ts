@@ -24,7 +24,14 @@ export function ligneDate(
 
   if (bornes.length === 0) return null;
 
-  const format = new Intl.DateTimeFormat(locale, { month: "long", year: "numeric" });
+  const format = new Intl.DateTimeFormat(locale, {
+    month: "long",
+    year: "numeric",
+    // Les dates viennent de la base en date seule, donc analysees en UTC : on
+    // les formate dans le meme fuseau pour que le serveur et le navigateur
+    // ecrivent la meme chose.
+    timeZone: "UTC",
+  });
   const debut = format.format(bornes[0]);
   const fin = format.format(bornes[bornes.length - 1]);
   return debut === fin

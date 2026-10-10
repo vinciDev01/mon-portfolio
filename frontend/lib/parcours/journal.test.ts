@@ -1,7 +1,7 @@
 import { readFileSync } from "node:fs";
 import path from "node:path";
 import { describe, it, expect } from "vitest";
-import { dispositionJournal, ligneDate } from "./ligne-date";
+import { dispositionJournal, ligneDate } from "./journal";
 import type { ProjectDto } from "@portfolio/shared-types";
 
 const RACINE = path.resolve(import.meta.dirname, "../..");
@@ -70,6 +70,13 @@ describe("ligne de date du journal (spec section 6.2)", () => {
 
   it("tient avec une seule borne renseignee", () => {
     expect(ligneDate([projet({ startDate: "2024-03-01" })], "fr", tFaux)).toContain("2024");
+  });
+});
+
+describe("fuseau de la ligne de date", () => {
+  it("une borne au 1er du mois rend ce mois et non le precedent", () => {
+    const l = ligneDate([projet({ startDate: "2024-03-01" })], "fr", tFaux);
+    expect(l).toBe("mars 2024");
   });
 });
 
@@ -148,12 +155,27 @@ describe("journal des projets (spec section 6)", () => {
     expect(src).not.toMatch(/bg-(red|orange|yellow|green|blue)/);
   });
 
-  it("ne cree aucun mouvement", () => {
-    expect(src).not.toMatch(/transition|animate-|animation/);
+  it("ne cree aucun mouvement, ni dans le TSX ni dans les regles journal", () => {
+    const sans = (t: string) =>
+      t.replace(/\/\*[\s\S]*?\*\//g, "").replace(/\/\/.*$/gm, "");
+    const motif = /transition|animate-|animation|@keyframes/;
+    expect(sans(src)).not.toMatch(motif);
+    const regles = [...sans(css).matchAll(/\.journal[\w-]*[^{}]*\{[^{}]*\}/g)].map((m) => m[0]);
+    expect(regles.length).toBeGreaterThan(0);
+    for (const r of regles) expect(r).not.toMatch(motif);
+  });
+
+  it("ne rend pas de lien de demonstration quand demoUrl est nul", () => {
+    expect(src).toMatch(/\{projet\.demoUrl\s*&&\s*\(/);
+  });
+
+  it("ouvre la demonstration avec rel noopener noreferrer", () => {
+    expect(src).toContain('rel="noopener noreferrer"');
+    expect(src).toContain('className="journal-lien"');
   });
 
   it("n introduit ni tiret cadratin ni emoji", () => {
-    for (const f of ["components/parcours/journal-projets.tsx", "lib/parcours/ligne-date.ts"]) {
+    for (const f of ["components/parcours/journal-projets.tsx", "lib/parcours/journal.ts"]) {
       const t = lire(f);
       expect(t, f).not.toContain("—");
       expect([...t].some((c) => c.codePointAt(0)! > 0x2500), f).toBe(false);

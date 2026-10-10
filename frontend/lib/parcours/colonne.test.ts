@@ -1,5 +1,5 @@
 import { describe, it, expect } from "vitest";
-import { entreesSections } from "./entrees-sections";
+import { sectionsActives } from "./sections";
 import type { SiteSettingsDto } from "@portfolio/shared-types";
 import { bloc, corpsDepuis, css, lire, PALIERS, px, racine, valeur } from "./feuille-test";
 
@@ -14,8 +14,8 @@ function tousActifs(): SiteSettingsDto {
 
 describe("entrees de la colonne", () => {
   it("rend une entree par section activee, dans l'ordre du parcours", () => {
-    const e = entreesSections(tousActifs());
-    expect(e.map((x) => x.ancre)).toEqual([
+    const e = sectionsActives(tousActifs());
+    expect(e.map((x) => x.id)).toEqual([
       "ouverture", "stats", "competences", "experience",
       "projets", "a-propos", "contact", "services", "temoignages",
     ]);
@@ -27,29 +27,29 @@ describe("entrees de la colonne", () => {
     // recopier, donc il echoue si l'une des deux bouge sans l'autre.
     const page = lire("app/page.tsx");
     const ordrePage = [...page.matchAll(/id="([a-z-]+)"/g)].map((m) => m[1]);
-    const ordreColonne = entreesSections(tousActifs()).map((e) => e.ancre);
+    const ordreColonne = sectionsActives(tousActifs()).map((e) => e.id);
     expect(ordreColonne).toEqual(ordrePage);
   });
 
   it("omet les sections desactivees", () => {
     const r = { ...tousActifs(), showStats: false, showServices: false };
-    const ancres = entreesSections(r).map((x) => x.ancre);
+    const ancres = sectionsActives(r).map((x) => x.id);
     expect(ancres).not.toContain("stats");
     expect(ancres).not.toContain("services");
     expect(ancres).toContain("projets");
   });
 
   // Review Focus 1 : toutes les sections desactivees.
-  it("rend une liste vide quand tout est desactive, sans jeter", () => {
+  it("ne garde que l ouverture quand tout est desactive, sans jeter", () => {
     const aucune = Object.fromEntries(
       Object.keys(tousActifs()).map((k) => [k, false]),
     ) as unknown as SiteSettingsDto;
-    expect(entreesSections(aucune)).toEqual([]);
+    expect(sectionsActives(aucune).map((x) => x.id)).toEqual(["ouverture"]);
   });
 
   it("ne reference que des cles de traduction qui existent", () => {
     const fr = JSON.parse(lire("lib/i18n/fr.json")) as Record<string, string>;
-    for (const e of entreesSections(tousActifs())) {
+    for (const e of sectionsActives(tousActifs())) {
       expect(fr[e.cleTitre], `cle manquante : ${e.cleTitre}`).toBeTypeOf("string");
     }
   });
@@ -123,7 +123,7 @@ describe("colonne de passage", () => {
 
   it("n introduit ni tiret cadratin ni emoji", () => {
     for (const f of ["components/parcours/colonne-passage.tsx",
-                     "lib/parcours/entrees-sections.ts"]) {
+                     "lib/parcours/sections.ts"]) {
       const t = lire(f);
       expect(t, f).not.toContain("\u2014");
       expect([...t].some((c) => c.codePointAt(0)! > 0x2500), f).toBe(false);

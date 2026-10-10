@@ -5,7 +5,7 @@ import Link from "next/link";
 import type { SiteSettingsDto, PersonalInfoDto } from "@portfolio/shared-types";
 import { getFileUrl } from "@/lib/api";
 import { useTranslation } from "@/lib/i18n/i18n-context";
-import { entreesSections } from "@/lib/parcours/entrees-sections";
+import { sectionsActives } from "@/lib/parcours/sections";
 import { initialesDe } from "@/lib/parcours/identite";
 import { useSectionCourante } from "@/lib/parcours/section-courante";
 import { DrapeauDisponibilite } from "@/components/parcours/drapeau-disponibilite";
@@ -47,8 +47,8 @@ export function ColonnePassage({
   infos: PersonalInfoDto;
 }) {
   const { t } = useTranslation();
-  const entrees = entreesSections(reglages);
-  const courante = useSectionCourante(entrees.map((e) => e.ancre));
+  const entrees = sectionsActives(reglages);
+  const courante = useSectionCourante(entrees.map((e) => e.id));
   const logo = getFileUrl(reglages.logoPath);
   const nomComplet = `${infos.name} ${infos.surname}`.trim();
   const initiales = initialesDe(infos);
@@ -72,11 +72,11 @@ export function ColonnePassage({
       {entrees.length > 0 && (
         <ol className="entrees-parcours">
           {entrees.map((e) => (
-            <li key={e.ancre}>
+            <li key={e.id}>
               <a
-                href={`#${e.ancre}`}
+                href={`#${e.id}`}
                 className="entree-parcours"
-                aria-current={courante === e.ancre ? "true" : undefined}
+                aria-current={courante === e.id ? "true" : undefined}
               >
                 <span className="entree-repere" aria-hidden="true" />
                 <span className="entree-nom">{t(e.cleTitre)}</span>

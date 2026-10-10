@@ -6,6 +6,7 @@ import type { SiteSettingsDto, PersonalInfoDto } from "@portfolio/shared-types";
 import { getFileUrl } from "@/lib/api";
 import { useTranslation } from "@/lib/i18n/i18n-context";
 import { entreesSections } from "@/lib/parcours/entrees-sections";
+import { useSectionCourante } from "@/lib/parcours/section-courante";
 import { LanguageSwitcher } from "@/components/portfolio/language-switcher";
 
 /** Pictogrammes des commandes du pied. Traits seuls, sur `currentColor`, pour
@@ -45,6 +46,7 @@ export function ColonnePassage({
 }) {
   const { t } = useTranslation();
   const entrees = entreesSections(reglages);
+  const courante = useSectionCourante(entrees.map((e) => e.ancre));
   const logo = getFileUrl(reglages.logoPath);
   const nomComplet = `${infos.name} ${infos.surname}`.trim();
   const initiales = `${infos.name?.[0] ?? ""}${infos.surname?.[0] ?? ""}`.toUpperCase();
@@ -67,7 +69,11 @@ export function ColonnePassage({
         <ol className="entrees-parcours">
           {entrees.map((e) => (
             <li key={e.ancre}>
-              <a href={`#${e.ancre}`} className="entree-parcours">
+              <a
+                href={`#${e.ancre}`}
+                className="entree-parcours"
+                aria-current={courante === e.ancre ? "true" : undefined}
+              >
                 <span className="entree-repere" aria-hidden="true" />
                 <span className="entree-nom">{t(e.cleTitre)}</span>
               </a>

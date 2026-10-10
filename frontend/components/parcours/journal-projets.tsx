@@ -41,6 +41,7 @@ export function Article({ projet, tete }: { projet: ProjectDto; tete: boolean })
       )}
       <h3 className="journal-titre">{projet.name}</h3>
       {dateProjet && <p className="meta journal-date">{dateProjet}</p>}
+      {avec && <p className="journal-collaborateurs">{avec}</p>}
       {projet.description && <p className="journal-corps">{projet.description}</p>}
       {projet.demoUrl && (
         <p>
@@ -59,7 +60,6 @@ export function Article({ projet, tete }: { projet: ProjectDto; tete: boolean })
           {projet.technologies.map((x) => x.label).join(" · ")}
         </p>
       )}
-      {avec && <p className="journal-signature">{avec}</p>}
     </article>
   );
 }

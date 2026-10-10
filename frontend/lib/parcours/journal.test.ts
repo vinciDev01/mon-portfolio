@@ -6,6 +6,7 @@ import { createElement, type ComponentType } from "react";
 import { renderToStaticMarkup } from "react-dom/server";
 import { Article } from "../../components/parcours/journal-projets";
 import { I18nProvider } from "../i18n/i18n-context";
+import { bloc, evaluer, proprietes } from "./feuille-test";
 import type { ProjectDto } from "@portfolio/shared-types";
 
 const RACINE = path.resolve(import.meta.dirname, "../..");
@@ -216,18 +217,30 @@ describe("lien de demonstration (rendu)", () => {
     expect(html).toContain("Voir la démo");
   });
 
-  it("ordonne description, lien, signature des technologies", () => {
+  it("ordonne titre, date, byline, corps, lien, technologies", () => {
     const html = rendre({
+      name: "TITRE",
+      startDate: "2024-03-01",
+      collaborators: [
+        { id: "a", firstName: "Ada", lastName: "Lovelace", email: null, linkedinUrl: null, sortOrder: 0 },
+      ],
       demoUrl: "https://exemple.test/demo",
       description: "DESCRIPTION",
       technologies: [{ id: "1", label: "React", logoPath: null, sortOrder: 0 }],
     });
-    const d = html.indexOf("DESCRIPTION");
-    const l = html.search(/<a[\s>]/);
-    const s = html.indexOf("journal-signature");
-    expect(d).toBeGreaterThan(-1);
-    expect(l).toBeGreaterThan(d);
-    expect(s).toBeGreaterThan(l);
+    const sequence = [
+      html.indexOf("TITRE"),
+      html.indexOf("journal-date"),
+      html.indexOf("journal-collaborateurs"),
+      html.indexOf("DESCRIPTION"),
+      html.search(/<a[\s>]/),
+      html.indexOf('<p class="journal-signature">React'),
+    ];
+    for (const i of sequence) expect(i).toBeGreaterThan(-1);
+    expect(sequence).toEqual([...sequence].sort((x, y) => x - y));
+    // Deux registres distincts : la pile technique ferme l'article, le byline
+    // porte des personnes. Jamais la meme classe.
+    expect(html.match(/journal-signature/g)).toHaveLength(1);
   });
 });
 
@@ -238,23 +251,31 @@ describe("hierarchie typographique du journal (spec section 6.1)", () => {
   it("chaque classe posee par le balisage existe dans la feuille", () => {
     // Une classe morte dans le balisage fait croire a une mise en forme qui
     // n'existe pas : c'est ce qui avait laisse la tete sans distinction.
-    for (const c of ["journal-tete", "journal-titre", "journal-corps", "journal-date"]) {
+    for (const c of ["journal-tete", "journal-titre", "journal-corps", "journal-date", "journal-collaborateurs"]) {
       expect(src, c).toContain(c);
     }
     expect(css).toMatch(/\.journal-titre\s*\{/);
     expect(css).toMatch(/\.journal-tete \.journal-titre\s*\{/);
     expect(css).toMatch(/\.journal-corps\s*\{/);
     expect(css).toMatch(/\.journal-date\s*\{/);
+    expect(css).toMatch(/\.journal-collaborateurs\s*\{/);
   });
 
-  it("le titre du projet de tete monte d'un cran sur celui des articles", () => {
-    const tete = blocs(/\.journal-tete \.journal-titre\s*\{/, css)[0]!;
-    const suite = blocs(/\.journal-titre\s*\{/, css)[0]!;
-    const taille = (b: string) => /font-size:\s*([^;]+);/.exec(b)?.[1]?.trim();
-    expect(taille(tete), "taille du titre de tete").toBeDefined();
-    expect(taille(suite), "taille du titre courant").toBeDefined();
-    expect(taille(tete)).not.toBe(taille(suite));
-    expect(tete).toMatch(/font-variation-settings:\s*"opsz" 48/);
+  it("le titre du projet de tete est plus GRAND que celui des articles, et reste sous le titre de section", () => {
+    const racine = proprietes(
+      bloc(/:root\s*\{(?=[^}]*--ratio:)/, css),
+    );
+    const ctx = { largeurPct: 0, ch: 0, vars: racine as Record<string, string | number> };
+    const taille = (b: string) => {
+      const m = /font-size:\s*([^;]+);/.exec(b);
+      expect(m, "font-size absente").not.toBeNull();
+      return evaluer(m![1]!, ctx);
+    };
+    const tete = taille(blocs(/\.journal-tete \.journal-titre\s*\{/, css)[0]!);
+    const suite = taille(blocs(/\.journal-titre\s*\{/, css)[0]!);
+    const sectionH2 = evaluer("var(--h2)", ctx);
+    expect(tete).toBeGreaterThan(suite);
+    expect(tete).toBeLessThanOrEqual(sectionH2);
   });
 });
 
@@ -290,7 +311,7 @@ describe("date et signature de chaque article (spec section 6)", () => {
       collaborators: [collab("b", "Alan", "Turing", 1), collab("a", "Ada", "Lovelace", 0)],
     });
     expect(html).toContain("avec Ada Lovelace et Alan Turing");
-    expect(html).toMatch(/<p class="journal-signature">avec /);
+    expect(html).toMatch(/<p class="journal-collaborateurs">avec /);
   });
 
   it("ne remet ni courriel ni lien LinkedIn des collaborateurs", () => {

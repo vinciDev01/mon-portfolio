@@ -28,7 +28,7 @@ const PLANCHER = 358;
 /** Reproduit la formule de la spec, section 4.2. */
 function geometrie(largeur: number) {
   const colonne = largeur >= 1200 ? 240 : largeur >= 1024 ? 160 : largeur >= 600 ? 72 : 40;
-  const gouttiere = largeur >= 1024 ? 64 : 32;
+  const gouttiere = largeur >= 1024 ? 64 : largeur >= 360 ? 32 : 16;
   const x0 = colonne > 72 ? colonne + gouttiere : colonne + GARDE;
   const [droite, echelle] =
     largeur >= 1440 ? [48, 1.0]
@@ -56,6 +56,7 @@ describe("regle de degagement (spec section 4.2)", () => {
       [600, 358, 16],
       [599, 425, 16],
       [360, 272, -70],
+      [320, 248, -72],
     ];
     for (const [largeur, mesure, garde] of attendu) {
       const g = geometrie(largeur);
@@ -70,9 +71,12 @@ describe("regle de degagement (spec section 4.2)", () => {
     expect(g.ampouleGauche - (g.x0 + g.mesure)).toBeGreaterThanOrEqual(GARDE);
   });
 
-  it("ne descend jamais sous 31 caracteres, meme a 320 px", () => {
+  it("ne descend jamais sous 28 caracteres, meme a 320 px", () => {
+    // 28 et non 31 : a 320 px, atteindre 31 ch demanderait que la colonne et
+    // sa garde tiennent en 49 px, or 40 + 16 en font 56. Aucun reglage n'y
+    // parvient, et la spec section 4.2 inscrit ce plancher.
     for (const largeur of [320, 360, 420, 480, 540]) {
-      expect(geometrie(largeur).mesure / CH).toBeGreaterThanOrEqual(31);
+      expect(geometrie(largeur).mesure / CH).toBeGreaterThanOrEqual(28);
     }
   });
 

@@ -15,3 +15,4 @@ export type { TestimonialDto } from "./testimonial";
 export type { BlogPostDto } from "./blog-post";
 export type { StatsDto } from "./stats";
 export type { PortfolioData } from "./portfolio";
+export * from "./variantes";

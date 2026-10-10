@@ -2,6 +2,7 @@ import { Injectable, InternalServerErrorException } from '@nestjs/common';
 import * as fs from 'fs';
 import * as path from 'path';
 import sharp from 'sharp';
+import { taillesPour, nomVariante } from './variantes';
 
 @Injectable()
 export class UploadService {
@@ -29,6 +30,16 @@ export class UploadService {
         fs.writeFileSync(outputPath, file.buffer);
       } else {
         await sharp(file.buffer).webp({ quality: 85 }).toFile(outputPath);
+
+        // Les variantes de densité du médaillon. `withoutEnlargement` évite
+        // d'agrandir une source trop petite : un agrandissement coûte des octets
+        // sans ajouter un seul détail.
+        for (const taille of taillesPour(category)) {
+          await sharp(file.buffer)
+            .resize(taille, taille, { fit: 'cover', withoutEnlargement: true })
+            .webp({ quality: 82 })
+            .toFile(path.join(categoryDir, nomVariante(filename, taille)));
+        }
       }
     } catch (err) {
       throw new InternalServerErrorException(

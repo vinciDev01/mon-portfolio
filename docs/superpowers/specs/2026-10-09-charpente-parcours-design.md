@@ -72,8 +72,9 @@ commence a `colonne + gouttiere`. A 72 px et en dessous elle est une bande
 superposee, et la gouttiere gauche du contenu est portee a `colonne + 16 px` pour
 que le texte ne passe jamais dessous.
 
-Gouttieres heritees de `section-shell.tsx` : 64 px au-dela de 1024 px, 32 px en
-dessous.
+Gouttieres : 64 px au-dela de 1024 px, 32 px de 360 a 1023 px, **16 px sous
+360 px**. Les deux premieres sont heritees de `section-shell.tsx` ; la
+troisieme est ajoutee par cette spec, pour la raison donnee a la section 4.2.
 
 ### 4.2 La regle de degagement
 
@@ -95,7 +96,14 @@ decalage = max(0px, min(var(--portfolio-zigzag) * (C - mesure), A - mesure))
 Le plancher de 41 caracteres existe parce que sans lui la formule etrangle la
 mesure a 21 caracteres a 360 px, ce qui n'est plus lisible. Au-dessous d'environ
 520 px de fenetre, le degagement ne peut plus etre tenu : le recouvrement est
-alors assume et borne a 70 px, la mesure ne descendant jamais sous 31 caracteres.
+alors assume et borne a 72 px.
+
+**La gouttiere tombe a 16 px sous 360 px**, et le plancher reel de la mesure est
+alors de **28 caracteres**. Ce chiffre n'est pas choisi : a 320 px de fenetre,
+atteindre 31 caracteres demanderait que la colonne et sa garde tiennent en
+49 px, or une bande de 40 px plus 16 px de garde en font deja 56. Aucun reglage
+de colonne n'y parvient, et une gouttiere de 16 px a cette taille est la pratique
+courante.
 
 Le decalage est plafonne et non remplace : `--portfolio-zigzag` reste un reglage
 du backoffice, et la formule doit tenir quelle que soit la valeur reglee.
@@ -118,7 +126,8 @@ la table recalculee si elle s'en ecarte de plus de 2 %.
 | 600 | 72 | 88 | 480 | 358 px, 41 ch | 0 | 16 |
 | 599 | 40 | 56 | 511 | 425 px, 49 ch | 0 | 16 |
 | 480 | 40 | 56 | 392 | 358 px, 41 ch | 0 | -36 |
-| 360 | 40 | 56 | 272 | 272 px, 31 ch | 0 | -70 |
+| 360 | 40 | 56 | 288 | 288 px, 33 ch | 0 | -72 |
+| 320 | 40 | 56 | 248 | 248 px, 28 ch | 0 | -72 |
 
 Une garde positive signifie que le texte ne passe jamais derriere l'ampoule. Une
 garde negative est le recouvrement assume de la section 4.2.

@@ -13,6 +13,11 @@ const TAILLES: Record<string, readonly number[]> = {
   personal: TAILLES_MEDAILLON,
 };
 
+/** Les catégories qui reçoivent des variantes : les clés de la table. */
+export function categoriesAvecVariantes(): string[] {
+  return Object.keys(TAILLES);
+}
+
 export function taillesPour(categorie: string): number[] {
   return [...(TAILLES[categorie] ?? [])];
 }

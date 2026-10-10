@@ -1,4 +1,14 @@
-import { taillesPour, nomVariante, TAILLES_MEDAILLON } from "./variantes";
+import * as fs from "fs";
+import * as os from "os";
+import * as path from "path";
+import sharp from "sharp";
+import {
+  taillesPour,
+  nomVariante,
+  TAILLES_MEDAILLON,
+  categoriesAvecVariantes,
+  ecrireVariantes,
+} from "./variantes";
 import * as partage from "@portfolio/shared-types";
 
 describe("variantes de téléversement", () => {
@@ -40,6 +50,13 @@ describe("accord entre la copie backend et le paquet partagé", () => {
     }
   });
 
+  it("les catégories à variantes sont les mêmes des deux côtés, et leurs tailles aussi", () => {
+    expect(categoriesAvecVariantes().sort()).toEqual(partage.categoriesAvecVariantes().sort());
+    for (const c of [...categoriesAvecVariantes(), ...partage.categoriesAvecVariantes()]) {
+      expect(taillesPour(c)).toEqual(partage.taillesPour(c));
+    }
+  });
+
   it("nomVariante renvoie la même chaîne des deux côtés", () => {
     const bases = [
       "abc.webp",
@@ -60,5 +77,38 @@ describe("accord entre la copie backend et le paquet partagé", () => {
 
   it("TAILLES_MEDAILLON est identique des deux côtés", () => {
     expect([...partage.TAILLES_MEDAILLON]).toEqual([...TAILLES_MEDAILLON]);
+  });
+});
+
+describe("ecrireVariantes", () => {
+  let dossier: string;
+  beforeEach(() => {
+    dossier = fs.mkdtempSync(path.join(os.tmpdir(), "variantes-"));
+  });
+  afterEach(() => fs.rmSync(dossier, { recursive: true, force: true }));
+
+  const source = (width: number, height: number) =>
+    sharp({ create: { width, height, channels: 3, background: "#c33" } })
+      .png()
+      .toBuffer();
+
+  it.each([
+    [200, 150],
+    [150, 200],
+    [500, 300],
+    [100, 100],
+  ])("produit des variantes carrées et jamais agrandies pour %ix%i", async (w, h) => {
+    const noms = await ecrireVariantes(await source(w, h), dossier, "abc.webp", "personal");
+    expect(noms).toEqual(["abc-88.webp", "abc-176.webp", "abc-264.webp"]);
+    for (const [i, taille] of [88, 176, 264].entries()) {
+      const m = await sharp(path.join(dossier, noms[i])).metadata();
+      expect(m.width).toBe(m.height);
+      expect(m.width).toBe(Math.min(taille, w, h));
+    }
+  });
+
+  it("n'écrit rien hors de la catégorie personal", async () => {
+    expect(await ecrireVariantes(await source(200, 150), dossier, "abc.webp", "projects")).toEqual([]);
+    expect(fs.readdirSync(dossier)).toEqual([]);
   });
 });

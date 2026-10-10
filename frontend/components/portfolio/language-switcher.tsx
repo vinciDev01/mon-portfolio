@@ -10,6 +10,12 @@ const languages: { code: Locale; label: string; short: string }[] = [
   { code: "de", label: "Deutsch", short: "DE" },
 ];
 
+/** Globe : cercle, equateur, meridien. Traits seuls, sur `currentColor`. */
+const PICTO_LANGUE =
+  "M 14 8 a 6 6 0 1 1 -12 0 a 6 6 0 1 1 12 0 " +
+  "M 2 8 h 12 " +
+  "M 8 2 c 2.8 3.2 2.8 8.8 0 12 c -2.8 -3.2 -2.8 -8.8 0 -12";
+
 export function LanguageSwitcher() {
   const { locale, setLocale } = useTranslation();
   const [open, setOpen] = useState(false);
@@ -31,22 +37,23 @@ export function LanguageSwitcher() {
     <div ref={ref} className="relative">
       <button
         onClick={() => setOpen(!open)}
-        className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-md border border-border text-xs font-medium hover:bg-muted transition-colors cursor-pointer"
-        aria-label="Language"
+        className="entree-parcours cursor-pointer"
+        aria-label={`Language : ${current!.label}`}
+        aria-expanded={open}
       >
-        {/* Globe icon */}
-        <svg className="size-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-          <circle cx="12" cy="12" r="10" />
-          <path d="M2 12h20M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z" />
+        <svg
+          className="picto-commande"
+          viewBox="0 0 16 16"
+          aria-hidden="true"
+          focusable="false"
+        >
+          <path d={PICTO_LANGUE} />
         </svg>
-        <span>{current!.short}</span>
-        <svg className={cn("size-3 transition-transform", open && "rotate-180")} fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
-          <path strokeLinecap="round" strokeLinejoin="round" d="M19 9l-7 7-7-7" />
-        </svg>
+        <span className="entree-nom">{current!.short}</span>
       </button>
 
       {open && (
-        <div className="absolute right-0 top-full mt-1 w-36 rounded-lg border border-border bg-card shadow-lg overflow-hidden z-50 animate-in fade-in slide-in-from-top-2 duration-200">
+        <div className="absolute left-0 top-full mt-1 w-36 rounded-lg border border-border bg-card shadow-lg overflow-hidden z-50 animate-in fade-in slide-in-from-top-2 duration-200">
           {languages.map((lang) => (
             <button
               key={lang.code}

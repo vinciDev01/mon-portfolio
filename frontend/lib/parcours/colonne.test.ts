@@ -99,6 +99,19 @@ describe("colonne de passage", () => {
     expect(m![1]).toMatch(/overflow:\s*visible/);
   });
 
+  it("le selecteur de langue tient dans la colonne etroite", () => {
+    const sel = lire("components/portfolio/language-switcher.tsx");
+    // Le declencheur suit la forme des autres commandes du pied : un signe,
+    // puis un nom masque sous 1024 px.
+    expect(sel).toContain("entree-parcours");
+    expect(sel).toContain("entree-nom");
+    expect(sel).toContain("PICTO_LANGUE");
+    // Le panneau de 144 px ancre a droite sortirait du cadre, la colonne etant
+    // collee au bord gauche de l'ecran.
+    expect(sel).not.toMatch(/absolute[^"]*right-0/);
+    expect(sel).toMatch(/absolute[^"]*left-0/);
+  });
+
   it("ne cree aucun mouvement", () => {
     expect(src).not.toMatch(/transition|animate-|animation/);
   });

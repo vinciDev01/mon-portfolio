@@ -4,6 +4,12 @@ import type { PersonalInfoDto } from "@portfolio/shared-types";
 import { TAILLES_MEDAILLON, nomVariante } from "@portfolio/shared-types";
 import { getFileUrl } from "@/lib/api";
 import { useTranslation } from "@/lib/i18n/i18n-context";
+import { initialesDe } from "@/lib/parcours/identite";
+
+/** Vrai quand le medaillon a quelque chose a montrer : photo ou initiales. */
+export function aUnPortrait(infos: PersonalInfoDto): boolean {
+  return Boolean(infos.avatarPath) || initialesDe(infos) !== "";
+}
 
 /**
  * Le medaillon d'ouverture, carre de 88 px, a gauche dans la colonne de texte.
@@ -19,15 +25,6 @@ import { useTranslation } from "@/lib/i18n/i18n-context";
  * Aucun mouvement propre : il herite de l'entree de bloc, qui est l'un des deux
  * mouvements autorises.
  */
-export function initialesDe(infos: PersonalInfoDto): string {
-  return `${infos.name?.trim()[0] ?? ""}${infos.surname?.trim()[0] ?? ""}`.toUpperCase();
-}
-
-/** Vrai quand le medaillon a quelque chose a montrer : photo ou initiales. */
-export function aUnPortrait(infos: PersonalInfoDto): boolean {
-  return Boolean(infos.avatarPath) || initialesDe(infos) !== "";
-}
-
 export function Medaillon({ infos }: { infos: PersonalInfoDto }) {
   const { t } = useTranslation();
   const initiales = initialesDe(infos);
@@ -46,6 +43,8 @@ export function Medaillon({ infos }: { infos: PersonalInfoDto }) {
   const base = getFileUrl(infos.avatarPath)!;
   const [un, deux, trois] = TAILLES_MEDAILLON;
   return (
+    // Fragment porteur : il permet les deux commentaires JSX ci-dessous, un
+    // conteneur d'expression ne pouvant se trouver a la racine d'un return.
     <>
       {/* next/image ne sait pas exprimer un srcSet de densite construit a la
           main sur des variantes generees au televersement. */}
@@ -56,7 +55,9 @@ export function Medaillon({ infos }: { infos: PersonalInfoDto }) {
         srcSet={`${nomVariante(base, deux)} 2x, ${nomVariante(base, trois)} 3x`}
         width={un}
         height={un}
-        alt={t("parcours.portrait", { nom: `${infos.name} ${infos.surname}`.trim() })}
+        alt={t("parcours.portrait", {
+          nom: [infos.name, infos.surname].filter(Boolean).join(" "),
+        })}
       />
     </>
   );

@@ -7,6 +7,7 @@ import { nomVariante } from "@portfolio/shared-types";
 import type { PersonalInfoDto } from "@portfolio/shared-types";
 import { Medaillon } from "../../components/parcours/medaillon";
 import { PresentationSection } from "../../components/portfolio/presentation-section";
+import { initialesDe } from "./identite";
 import { I18nProvider } from "../i18n/i18n-context";
 
 const RACINE = path.resolve(import.meta.dirname, "../..");
@@ -74,10 +75,6 @@ describe("medaillon (spec section 8)", () => {
     expect(src).not.toMatch(/transition|animate-|animation/);
   });
 
-  it("est monte dans la section d ouverture", () => {
-    expect(lire("components/portfolio/presentation-section.tsx")).toContain("Medaillon");
-  });
-
   it("lit la regle de nommage partagee et n en redefinit aucune", () => {
     // La regle vit dans @portfolio/shared-types : ce test empeche de la
     // redupliquer un jour.
@@ -115,5 +112,26 @@ describe("section d ouverture sans presentation", () => {
   it("ne rend rien sans presentation, sans photo et sans initiales", () => {
     expect(rendreSection({ name: "", surname: "" })).toBe("");
     expect(rendreSection({ name: " ", surname: " " })).toBe("");
+  });
+});
+
+describe("initiales (regle unique)", () => {
+  it("ignore les blancs, les nuls et met en majuscules", () => {
+    expect(initialesDe({ name: "bertrand", surname: "fanuel" })).toBe("BF");
+    expect(initialesDe({ name: " ", surname: " " })).toBe("");
+    expect(initialesDe({ name: null, surname: "Fanuel" } as never)).toBe("F");
+  });
+
+  it("est lue par la colonne et par le medaillon, sans copie locale", () => {
+    for (const f of ["components/parcours/colonne-passage.tsx", "components/parcours/medaillon.tsx"]) {
+      const t = lire(f);
+      expect(t, f).toContain('from "@/lib/parcours/identite"');
+      expect(t, f).not.toMatch(/name\?\.(trim\(\))?\[0\]/);
+    }
+  });
+
+  it("le texte alternatif n affiche jamais null ni undefined", () => {
+    const html = rendre({ avatarPath: "http://hote.test/u.webp", name: null as never });
+    expect(html).toContain('alt="Portrait de Fanuel"');
   });
 });

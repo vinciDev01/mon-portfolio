@@ -720,6 +720,7 @@ html {
    raison que ci-dessus. */
 @layer components {
   .medaillon {
+    display: block;
     width: 88px;
     height: 88px;
     border: 1px solid var(--bordure-signifiante);

@@ -6,6 +6,7 @@ import type { SiteSettingsDto, PersonalInfoDto } from "@portfolio/shared-types";
 import { getFileUrl } from "@/lib/api";
 import { useTranslation } from "@/lib/i18n/i18n-context";
 import { entreesSections } from "@/lib/parcours/entrees-sections";
+import { initialesDe } from "@/lib/parcours/identite";
 import { useSectionCourante } from "@/lib/parcours/section-courante";
 import { DrapeauDisponibilite } from "@/components/parcours/drapeau-disponibilite";
 import { LanguageSwitcher } from "@/components/portfolio/language-switcher";
@@ -50,7 +51,7 @@ export function ColonnePassage({
   const courante = useSectionCourante(entrees.map((e) => e.ancre));
   const logo = getFileUrl(reglages.logoPath);
   const nomComplet = `${infos.name} ${infos.surname}`.trim();
-  const initiales = `${infos.name?.[0] ?? ""}${infos.surname?.[0] ?? ""}`.toUpperCase();
+  const initiales = initialesDe(infos);
 
   return (
     <nav className="colonne-passage" aria-label={t("parcours.colonne")}>

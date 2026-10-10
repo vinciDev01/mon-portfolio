@@ -135,7 +135,17 @@ describe("les elements hors de SectionShell", () => {
       /className="ligne-disponibilite"/,
     );
     const ouverture = tableDesContenus().find((e) => e.id === "ouverture")!;
-    expect(ouverture.texte).toContain("<SectionShell");
-    expect(ouverture.texte).toContain("<LigneDisponibilite");
+    // Structure, pas cooccurrence : la ligne doit etre DANS la coquille, qui
+    // s'ouvre avant elle et ne s'est pas refermee entre les deux.
+    const ouvre = ouverture.texte.indexOf("<SectionShell");
+    const ligne = ouverture.texte.indexOf("<LigneDisponibilite");
+    expect(ouvre, "<SectionShell> absente de l'ouverture").toBeGreaterThan(-1);
+    expect(ligne, "<LigneDisponibilite> absente de l'ouverture").toBeGreaterThan(-1);
+    expect(ouvre).toBeLessThan(ligne);
+    expect(
+      ouverture.texte.slice(ouvre, ligne),
+      "la coquille est refermee avant la ligne",
+    ).not.toContain("</SectionShell>");
+    expect(ouverture.texte.indexOf("</SectionShell>", ligne)).toBeGreaterThan(ligne);
   });
 });

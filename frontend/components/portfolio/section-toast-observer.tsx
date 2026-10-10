@@ -4,7 +4,8 @@ import { useEffect, useRef } from "react";
 import { useTranslation } from "@/lib/i18n/i18n-context";
 
 import { PICTOS, SECTIONS } from "@/lib/parcours/sections";
-
+import { creerAnnonceur } from "@/lib/parcours/toast-section";
+export { DELAI_STABILISATION, annonceAPoser } from "@/lib/parcours/toast-section";
 
 export function SectionToastObserver() {
   const currentToastRef = useRef<HTMLDivElement | null>(null);
@@ -55,13 +56,17 @@ export function SectionToastObserver() {
     // Avec la pagination, aucune section ne defile dans la fenetre : celle qui
     // compte est celle que le conteneur marque `data-active`. On observe donc
     // cet attribut et non l'intersection, qui verrait toutes les sections
-    // superposees comme visibles.
+    // superposees comme visibles. Chaque changement est signale a l'annonceur,
+    // qui annule l'annonce en attente : seule la section ou l'on se stabilise
+    // est annoncee (rafale de molette, ou saut initial depuis un fragment).
+    const annonceur = creerAnnonceur((id) => {
+      if (id === lastSectionRef.current) return;
+      lastSectionRef.current = id;
+      showToast(id);
+    });
     const annoncer = (el: Element) => {
       const id = el.getAttribute("id");
-      if (id && id !== lastSectionRef.current) {
-        lastSectionRef.current = id;
-        showToast(id);
-      }
+      if (id) annonceur.signaler(id);
     };
     const actives = () =>
       document.querySelectorAll('.parcours-pagine > [data-active="true"]');
@@ -79,6 +84,7 @@ export function SectionToastObserver() {
 
     return () => {
       observer.disconnect();
+      annonceur.arreter();
       if (timeoutRef.current) clearTimeout(timeoutRef.current);
       if (currentToastRef.current) currentToastRef.current.remove();
     };

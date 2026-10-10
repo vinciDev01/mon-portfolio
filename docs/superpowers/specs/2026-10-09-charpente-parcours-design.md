@@ -126,7 +126,7 @@ la table recalculee si elle s'en ecarte de plus de 2 %.
 | 600 | 72 | 88 | 480 | 358 px, 41 ch | 0 | 16 |
 | 599 | 40 | 56 | 511 | 425 px, 49 ch | 0 | 16 |
 | 480 | 40 | 56 | 392 | 358 px, 41 ch | 0 | -36 |
-| 360 | 40 | 56 | 288 | 288 px, 33 ch | 0 | -72 |
+| 360 | 40 | 56 | 272 | 272 px, 31 ch | 0 | -70 |
 | 320 | 40 | 56 | 248 | 248 px, 28 ch | 0 | -72 |
 
 Une garde positive signifie que le texte ne passe jamais derriere l'ampoule. Une

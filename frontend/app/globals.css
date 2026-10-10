@@ -499,30 +499,22 @@ html {
 }
 
 @keyframes toast-enter {
-  0% {
+  from {
     opacity: 0;
-    transform: translateX(120%) translateY(10px) scale(0.9);
   }
 
-  50% {
+  to {
     opacity: 1;
-  }
-
-  100% {
-    opacity: 1;
-    transform: translateX(0) translateY(0) scale(1);
   }
 }
 
 @keyframes toast-exit {
-  0% {
+  from {
     opacity: 1;
-    transform: translateX(0) scale(1);
   }
 
-  100% {
+  to {
     opacity: 0;
-    transform: translateX(40%) scale(0.92);
   }
 }
 
@@ -937,27 +929,37 @@ html {
   }
 
   /* -----------------------------------------------------------
-     Entree des blocs : le seul mouvement du contenu.
+     La transition entre sections : un fondu sequentiel sur le fond de la
+     page. La pagination n'existe que si le JavaScript l'a activee. Sans lui,
+     la page defile comme avant et les entrees de la colonne restent des
+     ancres. Toute regle ajoutee ici DOIT rester sous cet attribut, porte par
+     l'element racine lui-meme (d'ou `html[...]` et non un descendant).
      ----------------------------------------------------------- */
-  .reveal {
-    opacity: 0;
-    transform: translateY(8px);
+  html[data-pagination="active"],
+  html[data-pagination="active"] body {
+    overflow: hidden;
   }
-  .reveal-visible {
+
+  [data-pagination="active"] .section-paginee {
+    height: 100vh;
+    overflow-y: auto;
+    opacity: 0;
+    display: none;
+    transition: opacity calc(var(--duree) * 0.45) var(--courbe);
+  }
+
+  /* La section active parait. Sortie et entree se partagent une seule
+     `--duree` : on pagine jusqu'a huit fois de suite, et deux fondus pleins
+     donneraient 800 ms par changement, ce qui devient poussif. */
+  [data-pagination="active"] .section-paginee[data-active="true"] {
+    display: block;
     opacity: 1;
-    transform: none;
-    transition:
-      opacity var(--duree) var(--courbe),
-      transform var(--duree) var(--courbe);
+    transition: opacity calc(var(--duree) * 0.55) var(--courbe);
   }
 
   @media (prefers-reduced-motion: reduce) {
-    :root:not([data-mouvement="force"]) .reveal {
-      opacity: 1;
-      transform: none;
-    }
-    :root:not([data-mouvement="force"]) .reveal-visible {
-      transition: none;
+    :root:not([data-mouvement="force"])[data-pagination="active"] .section-paginee {
+      transition-duration: 0s;
     }
   }
 
@@ -1438,21 +1440,6 @@ html {
     --colonne: 240px;
     --contenu-gauche: calc(var(--colonne) + var(--gouttiere));
   }
-}
-
-/*
-   CONTENU DIFFERE - Annexe lumiere §8.1, mitigation 4
-   `content-visibility: auto` sur les sections 4 a 6 (rang porte par
-   `data-rang`, section-shell.tsx) : leurs pseudo-elements de nappe ne sont
-   peints qu'a l'approche. `contain-intrinsic-size` (non fixe par la
-   specification) evite le saut de defilement ; `auto` retient la taille
-   reelle une fois la section rendue.
-   */
-section[data-rang="4"],
-section[data-rang="5"],
-section[data-rang="6"] {
-  content-visibility: auto;
-  contain-intrinsic-size: auto 600px;
 }
 
 /*

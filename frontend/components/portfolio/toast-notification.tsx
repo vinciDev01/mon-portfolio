@@ -46,7 +46,7 @@ export function ToastNotification({ message, delayMs }: ToastNotificationProps) 
   return (
     <div className="fixed start-[var(--colonne)] end-0 top-20 z-[100] flex justify-center pointer-events-none">
       <div
-        className={`pointer-events-auto max-w-md w-full mx-4 rounded-2xl border border-border bg-card shadow-2xl overflow-hidden transition-all duration-400 ${exiting ? "opacity-0 -translate-y-4 scale-95" : "opacity-100 translate-y-0 scale-100 animate-in fade-in slide-in-from-top-4"}`}
+        className={`pointer-events-auto max-w-md w-full mx-4 rounded-2xl border border-border bg-card shadow-2xl overflow-hidden transition-opacity duration-400 ${exiting ? "opacity-0" : "opacity-100 animate-in fade-in"}`}
       >
         <div className="relative px-6 py-5">
           {/* Close button */}

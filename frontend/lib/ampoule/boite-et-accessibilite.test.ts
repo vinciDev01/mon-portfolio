@@ -125,10 +125,8 @@ describe("mitigations de performance (annexe §8.1)", () => {
     expect(element).toMatch(/mask=\{/);
   });
 
-  it("content-visibility: auto sur les sections 4 a 6", () => {
-    const m = css.match(/(section\[data-rang="4"\],\s*section\[data-rang="5"\],\s*section\[data-rang="6"\])\s*\{([^}]*)\}/);
-    expect(m).not.toBeNull();
-    expect(m![2]).toMatch(/content-visibility:\s*auto;/);
+  it("content-visibility a ete retire : display none le supplante (transition.test.ts le garde)", () => {
+    expect(css).not.toMatch(/content-visibility:\s*auto/);
     expect(lire("components/portfolio/section-shell.tsx")).toContain("data-rang={index}");
   });
 });

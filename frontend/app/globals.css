@@ -777,6 +777,29 @@ html {
     color: var(--texte);
   }
 
+  /* Le repere est ce qui reste de l'entree quand son nom est masque, sous
+     1024 px : il doit donc etre visible par lui-meme. `--bordure-signifiante`
+     donne 3,31:1 en clair et 4,04:1 en sombre, au-dela du seuil de 3:1 des
+     composants d'interface. */
+  .entree-repere {
+    flex: 0 0 auto;
+    width: 7px;
+    height: 7px;
+    border: 1px solid var(--bordure-signifiante);
+    border-radius: 50%;
+  }
+
+  .entree-parcours[aria-current="true"] .entree-repere {
+    background: var(--accent);
+    border-color: var(--accent);
+  }
+
+  .identite-logo {
+    flex: 0 0 auto;
+    border-radius: 4px;
+    object-fit: contain;
+  }
+
   .pied-colonne {
     margin-block-start: auto;
     display: flex;

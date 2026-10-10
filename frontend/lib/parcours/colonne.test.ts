@@ -21,8 +21,18 @@ describe("entrees de la colonne", () => {
     const e = entreesSections(tousActifs());
     expect(e.map((x) => x.ancre)).toEqual([
       "ouverture", "stats", "competences", "experience",
-      "projets", "services", "a-propos", "temoignages", "contact",
+      "projets", "a-propos", "contact", "services", "temoignages",
     ]);
+  });
+
+  it("suit exactement l ordre de rendu de page.tsx", () => {
+    // Deux listes qui decrivent le meme parcours finissent par diverger. La
+    // page fait autorite : ce test lit son ordre reel plutot que de le
+    // recopier, donc il echoue si l'une des deux bouge sans l'autre.
+    const page = lire("app/page.tsx");
+    const ordrePage = [...page.matchAll(/id="([a-z-]+)"/g)].map((m) => m[1]);
+    const ordreColonne = entreesSections(tousActifs()).map((e) => e.ancre);
+    expect(ordreColonne).toEqual(ordrePage);
   });
 
   it("omet les sections desactivees", () => {

@@ -60,11 +60,16 @@ export function ColonnePassage({
       <div className="pied-colonne">
         {reglages.showCvDownload && (
           <Button asChild size="sm">
-            <a href="/api/download-cv-word" download>{t("nav.downloadCv")}</a>
+            <a href="/api/download-cv-word" download aria-label={t("nav.downloadCv")}>
+              <span className="entree-nom">{t("nav.downloadCv")}</span>
+            </a>
           </Button>
         )}
         <LanguageSwitcher />
-        <Link href="/blog" className="entree-parcours">{t("nav.blog")}</Link>
+        <Link href="/blog" className="entree-parcours" aria-label={t("nav.blog")}>
+          <span className="entree-repere" aria-hidden="true" />
+          <span className="entree-nom">{t("nav.blog")}</span>
+        </Link>
       </div>
     </nav>
   );

@@ -3,7 +3,11 @@ import { css as feuille, lire } from "./feuille-test";
 
 /* Les commentaires sont retires avant toute lecture de selecteur : un mot
    cite dans un commentaire ne doit ni declencher ni masquer une regle. */
-const css = feuille.replace(/\/\*[\s\S]*?\*\//g, "");
+const sansCommentaires = feuille.replace(/\/\*[\s\S]*?\*\//g, "");
+
+/** Le bloc `@media print`, traite a part : il neutralise la pagination. */
+const [BLOC_IMPRESSION = ""] = blocs(/@media print\s*\{/, sansCommentaires);
+const css = sansCommentaires.replace(`@media print {${BLOC_IMPRESSION}}`, "");
 
 /** Corps de chaque bloc dont l'en-tete correspond. */
 function blocs(entete: RegExp, source: string): string[] {
@@ -103,6 +107,19 @@ describe("repli sans JavaScript (spec section 6)", () => {
         }
       }
     }
+  });
+});
+
+describe("l'impression (spec section 6, cinquieme cout accepte)", () => {
+  it("neutralise la pagination comme le repli sans JavaScript", () => {
+    expect(BLOC_IMPRESSION, "bloc @media print introuvable").not.toBe("");
+    const b = norm(BLOC_IMPRESSION);
+    expect(b).toMatch(/html\[data-pagination="active"\],\s*html\[data-pagination="active"\] body\s*\{\s*overflow:\s*auto/);
+    const sections = /\.section-paginee\s*\{([^}]*)\}/.exec(BLOC_IMPRESSION)![1]!;
+    expect(sections).toMatch(/position:\s*static/);
+    expect(sections).toMatch(/visibility:\s*visible/);
+    expect(sections).toMatch(/opacity:\s*1\b/);
+    expect(sections).toMatch(/overflow:\s*visible/);
   });
 });
 

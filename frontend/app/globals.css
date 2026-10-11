@@ -989,6 +989,29 @@ html {
     }
   }
 
+  /* Impression : une seule section serait imprimee, les autres etant
+     `visibility: hidden`. On neutralise la pagination comme le fait le repli
+     sans JavaScript : toute la page s'imprime. */
+  @media print {
+    html[data-pagination="active"],
+    html[data-pagination="active"] body {
+      overflow: auto;
+    }
+
+    [data-pagination="active"] .parcours-pagine {
+      position: static;
+      height: auto;
+    }
+
+    [data-pagination="active"] .section-paginee {
+      position: static;
+      visibility: visible;
+      opacity: 1;
+      overflow: visible;
+      transition: none;
+    }
+  }
+
   /* -----------------------------------------------------------
      Le bloc d'une section du parcours.
      L'objet ampoule est en `position: fixed` et occupe en permanence

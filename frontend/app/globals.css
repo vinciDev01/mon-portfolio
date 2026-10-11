@@ -1445,6 +1445,53 @@ html {
     }
     .journal-colonnes > .journal-article { break-inside: avoid; }
   }
+
+  /* Le parchemin : la forme porte le sens, jamais le mouvement. Meme
+     raisonnement que le drapeau de disponibilite. Aucune de ces regles ne
+     doit gagner de mouvement : le budget du site est de deux mouvements et ce
+     chantier n'en consomme aucun. */
+  .parchemin::backdrop {
+    background: rgb(0 0 0 / 0.55);
+  }
+
+  .parchemin {
+    border: 0;
+    padding: 0;
+    max-width: min(66ch, calc(100vw - 2 * var(--espace-3)));
+    max-height: calc(100dvh - 2 * var(--espace-3));
+    background: transparent;
+  }
+
+  .parchemin-feuille {
+    display: grid;
+    grid-template-rows: auto 1fr auto;
+    background: var(--surface);
+    border-inline: 1px solid var(--bordure-signifiante);
+    max-height: inherit;
+  }
+
+  /* Dessous ombre, pas un degrade : `--fond` est plus sombre que `--surface`
+     dans les deux palettes, donc une bande remplie a plat suffit. La courbe
+     vit dans le trace SVG. */
+  .parchemin-bande {
+    display: block;
+    width: 100%;
+    height: 24px;
+    fill: var(--fond);
+    stroke: var(--bordure-signifiante);
+    stroke-width: 1;
+  }
+
+  .parchemin-corps {
+    overflow-y: auto;
+    padding: var(--espace-3);
+  }
+
+  .parchemin-credits {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+  }
 }
 
 /* -----------------------------------------------------------
@@ -1579,6 +1626,17 @@ html {
     forced-color-adjust: none;
     background: CanvasText;
     border-color: CanvasText;
+  }
+
+  /* Le parchemin en couleurs forcees : une paire systeme pour les bandes et
+     la bordure de la feuille, sans forced-color-adjust. */
+  .parchemin-bande {
+    fill: Canvas;
+    stroke: CanvasText;
+  }
+
+  .parchemin-feuille {
+    border-inline: 1px solid CanvasText;
   }
 }
 

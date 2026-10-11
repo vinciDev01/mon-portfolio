@@ -2,7 +2,7 @@ import type { ReactNode } from "react";
 import { getPortfolioData } from "@/lib/api";
 import { Ampoule } from "@/components/ampoule/ampoule";
 import { ColonnePassage } from "@/components/parcours/colonne-passage";
-import { ParcoursPagine } from "@/components/parcours/parcours-pagine";
+import { FournisseurSectionActive, ParcoursPagine } from "@/components/parcours/parcours-pagine";
 import { Medaillon } from "@/components/parcours/medaillon";
 import { Footer } from "@/components/portfolio/footer";
 import { SectionShell } from "@/components/portfolio/section-shell";
@@ -103,18 +103,18 @@ export default async function Page() {
   };
 
   return (
-    <>
+    <FournisseurSectionActive initial={sections[0]?.id ?? null}>
       <Ampoule />
+      <ColonnePassage reglages={s} infos={data.personalInfo} />
       <main className="min-h-screen">
         <SectionToastObserver />
         <ParcoursPagine
           sections={sections}
           enfants={enfants}
           pied={<Footer personalInfo={data.personalInfo} />}
-          colonne={<ColonnePassage reglages={s} infos={data.personalInfo} />}
         />
         <ToastNotification message={s.toastMessage} delayMs={s.toastDelayMs} />
       </main>
-    </>
+    </FournisseurSectionActive>
   );
 }

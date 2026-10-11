@@ -5,7 +5,7 @@ import { I18nProvider } from "../i18n/i18n-context";
 import { ParcoursPagine } from "@/components/parcours/parcours-pagine";
 import { SECTIONS } from "./sections";
 import { lire, tableDesContenus } from "./feuille-test";
-import { useSectionActive } from "@/components/parcours/parcours-pagine";
+import { FournisseurSectionActive, useSectionActive } from "@/components/parcours/parcours-pagine";
 
 /** Le fournisseur declare `children` en prop requise et `createElement` les
  *  passe en troisieme argument, que les surcharges de TypeScript ne comptent
@@ -129,13 +129,17 @@ describe("l ouverture inconditionnelle (spec section 3.1)", () => {
     ]);
   });
 
-  it("le pied et la colonne sont passes au conteneur, pas rendus a cote", () => {
+  it("le pied est passe au conteneur ; la colonne est la soeur de <main>, sous le meme fournisseur", () => {
     const page = lire("app/page.tsx");
-    const conteneur = page.slice(page.indexOf("<ParcoursPagine"), page.indexOf("/>", page.indexOf("colonne=")));
+    const conteneur = page.slice(page.indexOf("<ParcoursPagine"), page.indexOf("/>", page.indexOf("<ParcoursPagine")));
     expect(conteneur).toContain("pied={<Footer");
-    expect(conteneur).toContain("colonne={<ColonnePassage");
+    expect(conteneur).not.toContain("colonne=");
     expect(page.match(/<Footer/g)).toHaveLength(1);
     expect(page.match(/<ColonnePassage/g)).toHaveLength(1);
+    // La navigation du site ne s'imbrique pas dans le repere `main`.
+    const colonne = page.indexOf("<ColonnePassage");
+    expect(colonne).toBeGreaterThan(page.indexOf("<FournisseurSectionActive"));
+    expect(colonne).toBeLessThan(page.indexOf("<main"));
   });
 });
 
@@ -148,9 +152,9 @@ describe("la colonne lit la section active du conteneur", () => {
     expect(colonne).toContain("useSectionActive()");
   });
 
-  it("le contexte fournit l identifiant de la section active a un enfant rendu en prop", () => {
-    // Le comportement dont `aria-current` depend : un element passe par la
-    // prop `colonne` lit l'id de la section affichee.
+  it("le contexte fournit l identifiant de la section active a la colonne, soeur du conteneur", () => {
+    // Le comportement dont `aria-current` depend : un element place hors du
+    // conteneur, sous le fournisseur, lit l'id de la section affichee.
     function Sonde() {
       return createElement("i", { "data-lu": String(useSectionActive()) });
     }
@@ -159,12 +163,16 @@ describe("la colonne lit la section active du conteneur", () => {
       createElement(
         I18nProvider as ComponentType<{ defaultLocale: string }>,
         { defaultLocale: "fr" },
-        createElement(ParcoursPagine, {
-          sections,
-          enfants: { ouverture: "a", projets: "b" },
-          pied: "p",
-          colonne: createElement(Sonde),
-        }),
+        createElement(
+          FournisseurSectionActive as ComponentType<{ initial: string | null }>,
+          { initial: "ouverture" },
+          createElement(Sonde),
+          createElement(ParcoursPagine, {
+            sections,
+            enfants: { ouverture: "a", projets: "b" },
+            pied: "p",
+          }),
+        ),
       ),
     );
     expect(html).toContain('data-lu="ouverture"');

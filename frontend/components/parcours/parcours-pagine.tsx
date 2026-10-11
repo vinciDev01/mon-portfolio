@@ -212,8 +212,16 @@ export function ParcoursPagine({
     };
 
     // La colonne a son propre defilement aux paliers etroits : on n'y touche pas.
-    const dansColonne = (cible: EventTarget | null) =>
-      cible instanceof Element && !!cible.closest(".colonne-passage");
+    // Elle ne defile que si son contenu deborde : hors de ce cas, lui laisser
+    // l'evenement rendrait morte une bande pleine hauteur, la ou le pointeur
+    // se trouve justement apres un clic sur une entree. `direction` nul : le
+    // geste n'a pas encore de sens, on regarde les deux.
+    const colonneDefile = (cible: EventTarget | null, direction: Direction | 0) => {
+      const col = cible instanceof Element ? cible.closest(".colonne-passage") : null;
+      if (!col) return false;
+      if (direction === 0) return !estEnButee(col, 1) || !estEnButee(col, -1);
+      return !estEnButee(col, direction);
+    };
 
     // Filet : un onglet masque voit ses minuteries ralenties, et la page
     // resterait au fond nu, verrou pose. Au retour, on active la cible tout de
@@ -223,8 +231,9 @@ export function ParcoursPagine({
     };
 
     const surMolette = (e: WheelEvent) => {
-      if (dansColonne(e.target)) return;
-      traiterMolette(e, normaliserDelta(e.deltaY, e.deltaMode, window.innerHeight), {
+      const delta = normaliserDelta(e.deltaY, e.deltaMode, window.innerHeight);
+      if (colonneDefile(e.target, delta === 0 ? 0 : delta > 0 ? 1 : -1)) return;
+      traiterMolette(e, delta, {
         enButee: butee,
         verrouille: () => sequenceur.verrouille,
         pousser: (delta) => accumulateur.pousser(delta),
@@ -236,7 +245,7 @@ export function ParcoursPagine({
     let depart: { x: number; y: number } | null = null;
     let butees: Record<Direction, boolean> = { 1: true, [-1]: true };
     const surDebutTactile = (e: TouchEvent) => {
-      if (dansColonne(e.target)) {
+      if (colonneDefile(e.target, 0)) {
         depart = null;
         return;
       }

@@ -21,7 +21,11 @@ import { VERROU_APRES_MS } from "./sequence";
 
 const Fournisseur = I18nProvider as ComponentType<{ defaultLocale: string }>;
 const IDS = ["ouverture", "projets", "contact"];
-const SORTIE_MS = 180; // repli : jsdom ne calcule aucune transition
+/** Duree injectee dans la feuille du test. Volontairement differente de
+ *  `SORTIE_REPLI_MS` (180) : si le conteneur se rabattait sur le repli, les
+ *  durees observees ne coincideraient plus et le test echouerait. */
+const SORTIE_FEUILLE_S = 0.3;
+const SORTIE_MS = Math.round(SORTIE_FEUILLE_S * 1000);
 
 let racine: Root;
 let hote: HTMLElement;
@@ -63,9 +67,10 @@ beforeEach(() => {
   vi.useFakeTimers();
   // jsdom n'implemente pas `scrollTo` sur les elements.
   Element.prototype.scrollTo = () => {};
-  // La duree de sortie est lue sur la feuille : on en fournit une.
+  // jsdom ne calcule aucune transition de lui-meme : on fournit la duree que
+  // le conteneur lit sur la feuille.
   const feuille = document.createElement("style");
-  feuille.textContent = ".section-paginee { transition-duration: 0.18s; }";
+  feuille.textContent = `.section-paginee { transition-duration: ${SORTIE_FEUILLE_S}s; }`;
   document.head.appendChild(feuille);
   window.history.replaceState(null, "", "/");
   hote = document.createElement("div");
@@ -134,6 +139,9 @@ describe("le conteneur ne fait jamais de fondu croise (spec section 2)", () => {
       .map((r) => r.join(","))
       .filter((v, i, a) => i === 0 || v !== a[i - 1]);
     expect(sequence).toEqual(["ouverture", "", "projets"]);
+    // Le fond nu dure la duree de la FEUILLE (300), pas celle du repli (180).
+    expect(releves[SORTIE_MS / 10 - 1]).toEqual([]);
+    expect(releves[SORTIE_MS / 10 + 1]).toEqual(["projets"]);
     for (const r of releves) expect(r.length).toBeLessThanOrEqual(1);
   });
 
@@ -157,16 +165,43 @@ describe("le conteneur ne fait jamais de fondu croise (spec section 2)", () => {
     expect(document.activeElement).toBe(document.getElementById("projets"));
   });
 
-  it("une molette au-dessus de la colonne ne pagine pas : elle reste a son defilement", () => {
-    monter();
+  /** Une colonne dont on fixe les mesures : jsdom ne fait aucune mise en page. */
+  function poserColonne(scrollHeight: number, clientHeight: number, scrollTop = 0) {
     const colonne = document.createElement("nav");
     colonne.className = "colonne-passage";
+    for (const [k, v] of Object.entries({ scrollHeight, clientHeight, scrollTop })) {
+      Object.defineProperty(colonne, k, { value: v, configurable: true });
+    }
     document.body.appendChild(colonne);
-    act(() => {
-      colonne.dispatchEvent(new WheelEvent("wheel", { deltaY: 120, bubbles: true, cancelable: true }));
-    });
+    return colonne;
+  }
+  const rouler = (cible: Element) => {
+    const e = new WheelEvent("wheel", { deltaY: 120, bubbles: true, cancelable: true });
+    act(() => void cible.dispatchEvent(e));
+    return e;
+  };
+
+  it("une colonne qui ne defile pas laisse paginer (zone morte corrigee)", () => {
+    monter();
+    const e = rouler(poserColonne(500, 500));
+    expect(e.defaultPrevented).toBe(true);
+    avancer(SORTIE_MS + VERROU_APRES_MS);
+    expect(actives()).toEqual(["projets"]);
+  });
+
+  it("une colonne qui defile garde son evenement", () => {
+    monter();
+    const e = rouler(poserColonne(900, 500));
+    expect(e.defaultPrevented).toBe(false);
     avancer(SORTIE_MS + VERROU_APRES_MS);
     expect(actives()).toEqual(["ouverture"]);
+  });
+
+  it("une colonne au bout de son defilement laisse paginer dans ce sens", () => {
+    monter();
+    rouler(poserColonne(900, 500, 400));
+    avancer(SORTIE_MS + VERROU_APRES_MS);
+    expect(actives()).toEqual(["projets"]);
   });
 });
 

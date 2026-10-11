@@ -1,0 +1,199 @@
+// @vitest-environment jsdom
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
+import { act, createElement, type ComponentType } from "react";
+import { createRoot, type Root } from "react-dom/client";
+import { I18nProvider } from "../i18n/i18n-context";
+import {
+  FournisseurSectionActive,
+  ParcoursPagine,
+} from "@/components/parcours/parcours-pagine";
+import { SectionToastObserver } from "@/components/portfolio/section-toast-observer";
+import { SECTIONS } from "./sections";
+import { DELAI_STABILISATION } from "./toast-section";
+import { VERROU_APRES_MS } from "./sequence";
+
+/* Les deux cablages du chantier sont ici exercices dans un DOM, la ou les
+   tests de source ne font que compter des chaines : l'observateur du toast
+   (`data-active` -> annonce) et le sequencement du conteneur (jamais deux
+   sections actives, toujours un passage par le fond). */
+
+(globalThis as { IS_REACT_ACT_ENVIRONMENT?: boolean }).IS_REACT_ACT_ENVIRONMENT = true;
+
+const Fournisseur = I18nProvider as ComponentType<{ defaultLocale: string }>;
+const IDS = ["ouverture", "projets", "contact"];
+const SORTIE_MS = 180; // repli : jsdom ne calcule aucune transition
+
+let racine: Root;
+let hote: HTMLElement;
+
+function monter() {
+  const sections = SECTIONS.filter((s) => IDS.includes(s.id));
+  const enfants: Record<string, string> = {};
+  for (const id of IDS) enfants[id] = `CONTENU-${id}`;
+  act(() => {
+    racine.render(
+      createElement(
+        Fournisseur,
+        { defaultLocale: "fr" },
+        createElement(
+          FournisseurSectionActive as ComponentType<{ initial: string | null }>,
+          { initial: IDS[0]! },
+          createElement(SectionToastObserver),
+          createElement(ParcoursPagine, { sections, enfants, pied: "PIED" }),
+        ),
+      ),
+    );
+  });
+}
+
+const actives = () =>
+  [...document.querySelectorAll('.parcours-pagine > [data-active="true"]')].map((e) => e.id);
+const toasts = () => document.querySelectorAll(".section-toast:not(.section-toast-exit)");
+const avancer = (ms: number) => act(() => void vi.advanceTimersByTime(ms));
+/** `MutationObserver` livre ses enregistrements en micro-tache. */
+const laisserObserver = () => act(async () => {});
+const molette = () =>
+  act(() => {
+    window.dispatchEvent(
+      new WheelEvent("wheel", { deltaY: 120, bubbles: true, cancelable: true }),
+    );
+  });
+
+beforeEach(() => {
+  vi.useFakeTimers();
+  // jsdom n'implemente pas `scrollTo` sur les elements.
+  Element.prototype.scrollTo = () => {};
+  // La duree de sortie est lue sur la feuille : on en fournit une.
+  const feuille = document.createElement("style");
+  feuille.textContent = ".section-paginee { transition-duration: 0.18s; }";
+  document.head.appendChild(feuille);
+  window.history.replaceState(null, "", "/");
+  hote = document.createElement("div");
+  document.body.appendChild(hote);
+  racine = createRoot(hote);
+});
+
+afterEach(() => {
+  act(() => racine.unmount());
+  hote.remove();
+  document.body.innerHTML = "";
+  document.head.innerHTML = "";
+  vi.restoreAllMocks();
+  vi.useRealTimers();
+});
+
+describe("le toast de section suit `data-active` (spec section 3)", () => {
+  it("annonce la section d'arrivee une seule fois, apres la stabilisation", async () => {
+    monter();
+    avancer(DELAI_STABILISATION);
+    expect(toasts()).toHaveLength(1);
+
+    // Bascule a la main, comme le ferait le conteneur.
+    const sortante = document.getElementById("ouverture")!;
+    const entrante = document.getElementById("projets")!;
+    sortante.removeAttribute("data-active");
+    await laisserObserver();
+    avancer(10);
+    entrante.setAttribute("data-active", "true");
+    await laisserObserver();
+    avancer(DELAI_STABILISATION - 1);
+    expect(document.querySelectorAll(".section-toast-title")).toHaveLength(1);
+
+    avancer(1);
+    const titres = [...document.querySelectorAll(".section-toast-title")].map((e) => e.textContent);
+    expect(titres).toHaveLength(2); // l'ancien finit de sortir, le nouveau est la
+    expect(toasts()).toHaveLength(1);
+    expect(toasts()[0]!.textContent).toContain("Projets");
+
+    // Rien de plus ne tombe tant que rien ne change.
+    avancer(5000);
+    expect(document.querySelectorAll(".section-toast")).toHaveLength(0);
+  });
+});
+
+describe("le conteneur ne fait jamais de fondu croise (spec section 2)", () => {
+  /** Releve l'ensemble des sections actives a chaque pas de 10 ms. */
+  function enregistrer(duree: number) {
+    const releves: string[][] = [actives()];
+    for (let t = 0; t < duree; t += 10) {
+      avancer(10);
+      releves.push(actives());
+    }
+    return releves;
+  }
+
+  it("passe par l'etat sans section active entre la sortante et l'entrante", () => {
+    monter();
+    expect(actives()).toEqual(["ouverture"]);
+    const avant = actives();
+    molette();
+    const releves = [avant, ...enregistrer(SORTIE_MS + VERROU_APRES_MS + 50)];
+
+    // Sequence compressee des etats distincts successifs.
+    const sequence = releves
+      .map((r) => r.join(","))
+      .filter((v, i, a) => i === 0 || v !== a[i - 1]);
+    expect(sequence).toEqual(["ouverture", "", "projets"]);
+    for (const r of releves) expect(r.length).toBeLessThanOrEqual(1);
+  });
+
+  it("la molette est inerte pendant le changement, vive ensuite", () => {
+    monter();
+    molette();
+    avancer(SORTIE_MS / 2);
+    molette(); // verrouille : ignoree
+    avancer(SORTIE_MS + VERROU_APRES_MS);
+    expect(actives()).toEqual(["projets"]);
+    avancer(400); // vide l'accumulateur
+    molette();
+    avancer(SORTIE_MS + VERROU_APRES_MS);
+    expect(actives()).toEqual(["contact"]);
+  });
+
+  it("le focus suit la section d'arrivee meme pour une molette", () => {
+    monter();
+    molette();
+    avancer(SORTIE_MS + VERROU_APRES_MS);
+    expect(document.activeElement).toBe(document.getElementById("projets"));
+  });
+
+  it("une molette au-dessus de la colonne ne pagine pas : elle reste a son defilement", () => {
+    monter();
+    const colonne = document.createElement("nav");
+    colonne.className = "colonne-passage";
+    document.body.appendChild(colonne);
+    act(() => {
+      colonne.dispatchEvent(new WheelEvent("wheel", { deltaY: 120, bubbles: true, cancelable: true }));
+    });
+    avancer(SORTIE_MS + VERROU_APRES_MS);
+    expect(actives()).toEqual(["ouverture"]);
+  });
+});
+
+describe("le quota de l'historique ne tue pas la navigation (Safari)", () => {
+  it("si replaceState leve, le verrou se leve et la navigation continue", () => {
+    monter();
+    vi.spyOn(window.history, "replaceState").mockImplementation(() => {
+      throw new DOMException("quota", "SecurityError");
+    });
+    molette();
+    avancer(SORTIE_MS + VERROU_APRES_MS + 400);
+    expect(actives()).toEqual(["projets"]);
+    molette();
+    avancer(SORTIE_MS + VERROU_APRES_MS);
+    expect(actives()).toEqual(["contact"]);
+  });
+});
+
+describe("le filet de visibilite", () => {
+  it("au retour de l'onglet, la cible en attente est activee tout de suite", () => {
+    monter();
+    molette();
+    avancer(20);
+    expect(actives()).toEqual([]);
+    act(() => {
+      document.dispatchEvent(new Event("visibilitychange"));
+    });
+    expect(actives()).toEqual(["projets"]);
+  });
+});

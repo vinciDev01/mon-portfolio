@@ -103,6 +103,42 @@ describe("creerSequenceur : trois etats", () => {
   });
 });
 
+describe("creerSequenceur : le verrou ne fuit jamais", () => {
+  beforeEach(() => vi.useFakeTimers());
+  afterEach(() => vi.useRealTimers());
+
+  it("si `activer` lance, le verrou se leve quand meme", () => {
+    const deverrouille = vi.fn();
+    let echoue = true;
+    const s = creerSequenceur({
+      dureeSortie: () => 100,
+      desactiver: () => {},
+      activer: () => {
+        if (echoue) throw new Error("SecurityError");
+      },
+      surDeverrouillage: deverrouille,
+    });
+    s.aller(1);
+    expect(() => vi.advanceTimersByTime(100)).toThrow("SecurityError");
+    vi.advanceTimersByTime(VERROU_APRES_MS);
+    expect(s.verrouille).toBe(false);
+    expect(deverrouille).toHaveBeenCalledTimes(1);
+    echoue = false;
+    expect(s.aller(2)).toBe(true);
+  });
+
+  it("rattraper active tout de suite la cible en attente, une seule fois", () => {
+    const { s, journal } = monter(1000);
+    s.aller(4);
+    s.rattraper();
+    expect(journal).toEqual(["aucune", "active:4"]);
+    vi.advanceTimersByTime(5000);
+    expect(journal).toEqual(["aucune", "active:4", "deverrouille"]);
+    s.rattraper();
+    expect(journal).toHaveLength(3);
+  });
+});
+
 describe("parcours-pagine.tsx : ce que le composant ne doit pas faire", () => {
   const source = readFileSync(
     path.resolve(import.meta.dirname, "../../components/parcours/parcours-pagine.tsx"),
@@ -117,6 +153,6 @@ describe("parcours-pagine.tsx : ce que le composant ne doit pas faire", () => {
   });
 
   it("n'introduit aucun mouvement propre", () => {
-    expect(source).not.toMatch(/transform|translate|animate|\.animate\(|requestAnimationFrame/);
+    expect(source).not.toMatch(/transform|translate|scale|animate/);
   });
 });

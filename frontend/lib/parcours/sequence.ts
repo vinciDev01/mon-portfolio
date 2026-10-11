@@ -44,7 +44,35 @@ export function creerSequenceur(o: Options) {
   const annulerPlanif =
     o.annulerPlanif ?? ((id) => clearTimeout(id as ReturnType<typeof setTimeout>));
   let verrouille = false;
-  const minuteries: unknown[] = [];
+  const minuteries = new Set<unknown>();
+  /** Cible dont l'activation est en attente, pour `rattraper`. */
+  let enAttente: { cible: number; id: unknown } | null = null;
+
+  /** Arme une minuterie et l'oublie des qu'elle a tire. */
+  const armer = (fn: () => void, ms: number): unknown => {
+    const ref: { id?: unknown } = {};
+    ref.id = planifier(() => {
+      minuteries.delete(ref.id);
+      fn();
+    }, ms);
+    minuteries.add(ref.id);
+    return ref.id;
+  };
+
+  /** Etape 3, puis le verrou. Le verrou doit se lever quoi que fasse
+   *  `activer` : une exception (quota de l'historique de Safari, par exemple)
+   *  qui laisserait `verrouille` a vrai tuerait toute la navigation. */
+  const activer = (cible: number) => {
+    enAttente = null;
+    try {
+      o.activer(cible);
+    } finally {
+      armer(() => {
+        verrouille = false;
+        o.surDeverrouillage();
+      }, VERROU_APRES_MS);
+    }
+  };
 
   return {
     get verrouille() {
@@ -56,22 +84,22 @@ export function creerSequenceur(o: Options) {
       verrouille = true;
       const attente = Math.max(0, o.dureeSortie());
       o.desactiver();
-      minuteries.push(
-        planifier(() => {
-          o.activer(cible);
-          minuteries.push(
-            planifier(() => {
-              verrouille = false;
-              o.surDeverrouillage();
-            }, VERROU_APRES_MS),
-          );
-        }, attente),
-      );
+      enAttente = { cible, id: armer(() => activer(cible), attente) };
       return true;
+    },
+    /** Active tout de suite la cible en attente, s'il y en a une : filet pour
+     *  un onglet en arriere-plan, dont les minuteries sont ralenties. */
+    rattraper() {
+      if (!enAttente) return;
+      const { cible, id } = enAttente;
+      annulerPlanif(id);
+      minuteries.delete(id);
+      activer(cible);
     },
     annuler() {
       for (const m of minuteries) annulerPlanif(m);
-      minuteries.length = 0;
+      minuteries.clear();
+      enAttente = null;
       verrouille = false;
     },
   };

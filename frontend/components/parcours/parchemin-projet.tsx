@@ -1,12 +1,12 @@
 "use client";
 
 import Image from "next/image";
-import { useEffect, useRef } from "react";
+import { useCallback, useEffect, useRef } from "react";
 import type { ProjectDto } from "@portfolio/shared-types";
 import { getFileUrl } from "@/lib/api";
 import { useTranslation } from "@/lib/i18n/i18n-context";
 import { useChangerSurcouche } from "@/components/parcours/parcours-pagine";
-import { blocsPresents, credits } from "@/lib/parcours/parchemin";
+import { blocsPresents, credits, lienDemo } from "@/lib/parcours/parchemin";
 import { ligneDateProjet } from "@/lib/parcours/journal";
 
 /**
@@ -78,6 +78,26 @@ function Dossier({
     fermetureRef.current = surFermeture;
   });
 
+  /**
+   * Joue les etapes natives de `close` tant que le noeud est ENCORE dans le
+   * document. C'est `close` et lui seul qui rend le focus a l'element qui
+   * l'avait au moment du `showModal`, donc au declencheur : retirer le
+   * `<dialog>` de l'arbre encore ouvert sort bien de la couche superieure,
+   * mais la tabulation repartirait du haut de la page.
+   *
+   * MESURE : jsdom n'implemente pas `close` plus qu'il n'implemente
+   * `showModal`. Meme garde qu'a l'ouverture, et pour la meme raison.
+   */
+  const refermerDialogue = useCallback(() => {
+    const d = dialogue.current;
+    if (!d || !d.hasAttribute("open")) return;
+    if (typeof d.close === "function") d.close();
+    // Repli du repli : le dialogue ouvert par l'attribut se referme par
+    // l'attribut. Aucun focus a rendre dans ce cas, `showModal` n'ayant pas
+    // ete joue non plus.
+    else d.removeAttribute("open");
+  }, []);
+
   useEffect(() => {
     const d = dialogue.current;
     if (!d) return;
@@ -104,23 +124,44 @@ function Dossier({
       // parchemin doit s'ouvrir quand meme, seul le bouton Retour y perd.
     }
 
-    const surRetour = () => fermetureRef.current();
+    // Le Retour du navigateur a deja consomme l'entree : on ne rappelle pas
+    // `back()`, mais on referme le dialogue par le meme chemin.
+    const surRetour = () => {
+      refermerDialogue();
+      fermetureRef.current();
+    };
     window.addEventListener("popstate", surRetour);
 
     return () => {
       window.removeEventListener("popstate", surRetour);
+      // Ne PAS appeler `refermerDialogue` ici, et ce n'est pas un oubli.
+      // MESURE, aux deux formes de demontage (suppression d'un sous-arbre et
+      // demontage de la racine) : React detache le noeud et MET LA REF A NULL
+      // avant d'executer ce nettoyage. Un `close()` pose ici serait du code
+      // mort, et le focus ne reviendrait jamais au declencheur. C'est pourquoi
+      // il vit dans `fermer` et dans `surRetour`, ou le noeud est encore
+      // connecte et ouvert, ce qu'un test constate.
+      //
       // Obligatoire, et a cette place et non dans le chemin de fermeture : un
       // parchemin demonte par une autre voie laisserait sinon la pagination
       // MORTE pour le reste de la session, molette, clavier, clic et tactile
       // tous inertes, et la page resterait affichee : panne invisible.
       changerSurcouche(false);
     };
-  }, [changerSurcouche]);
+  }, [changerSurcouche, refermerDialogue]);
 
   /** Le chemin de fermeture unique : bouton, Echap, clic hors de la feuille. */
   const fermer = () => {
-    // `back()` d'ABORD, pour consommer l'entree posee a l'ouverture : sinon
-    // elle resterait et un Retour fermerait un parchemin deja ferme.
+    // `close()` d'abord, tant que le noeud est connecte : c'est lui qui rend
+    // le focus au declencheur. MESURE : React ne commite le retrait demande
+    // par `surFermeture` qu'apres ce gestionnaire, donc l'ordre des trois
+    // appels ci-dessous ne deplace pas la connexion du noeud ; ce qui compte
+    // est que l'appel soit ICI et non dans le nettoyage de l'effet, ou la ref
+    // est deja nulle.
+    refermerDialogue();
+    // `back()` AVANT `surFermeture`, pour consommer l'entree posee a
+    // l'ouverture : sinon elle resterait et un Retour fermerait un parchemin
+    // deja ferme.
     history.back();
     surFermeture();
   };
@@ -132,7 +173,10 @@ function Dossier({
   // contenu.
   const description = projet.description ?? "";
   const publicVise = projet.targetAudience ?? "";
-  const demo = projet.demoUrl?.trim() ?? "";
+  // `lienDemo` applique au lien de demonstration la regle des liens des
+  // credits : `https:` seulement. `blocsPresents` lit la MEME fonction, donc
+  // un lien ecarte emporte son bloc : jamais de titre sans lien dessous.
+  const demo = lienDemo(projet) ?? "";
   // Les chemins blancs sont ecartes comme le fait `renseigne` en amont : le
   // bloc « photos » parait des qu'UNE des deux est renseignee, la seconde ne
   // doit pas laisser une image rompue.

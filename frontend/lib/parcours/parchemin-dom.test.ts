@@ -50,6 +50,13 @@ afterEach(() => {
   hote.remove();
   document.body.innerHTML = "";
   window.history.replaceState(null, "", "/");
+  // Les `mockRestore` en derniere ligne d'un test sont SAUTES des qu'une
+  // assertion echoue avant eux, et `vi.spyOn` rend alors le meme espion, son
+  // compteur compris, au test suivant : une mutation d'un seul site faisait
+  // echouer un test voisin pour un appel herite.
+  vi.restoreAllMocks();
+  deposerClose?.();
+  deposerClose = null;
 });
 
 function monter(ids: string[], ouverte = false) {
@@ -193,6 +200,14 @@ const projetComplet = () => fabrique({
   ],
 });
 
+/** Un debut sans terme : la seule forme qui execute la branche `enCours`.
+ *  Aucune fabrique ne l'avait, donc la mention n'etait jamais rendue. */
+const projetEnCours = () => fabrique({
+  name: "Projet en cours",
+  startDate: "2024-03-01",
+  endDate: null,
+});
+
 /** Grace d'abord dans le tableau mais `sortOrder` plus grand : le tri doit
  *  donc remonter Ada, et Grace n'a pas de lien. */
 const projetAvecCredits = () => fabrique({
@@ -220,6 +235,66 @@ function monterParchemin(p: ProjectDto): HTMLDialogElement {
       ),
     );
   });
+  const d = hote.querySelector("dialog");
+  if (!d) throw new Error("aucun <dialog> rendu");
+  return d as HTMLDialogElement;
+}
+
+/** Le bouton de fermeture, et l'absence NOMMEE s'il manque : sans ce pas, les
+ *  trois tests qui le cliquent leveraient un `TypeError` sur `null.click()`
+ *  sans dire de quoi ils parlaient. Meme famille que le `toMatch(null)` du
+ *  test des bandes. */
+function boutonFermer(racineDom: ParentNode): HTMLButtonElement {
+  const b = racineDom.querySelector("button[data-fermer]");
+  expect(b, "aucun bouton `data-fermer` dans le parchemin").not.toBeNull();
+  return b as HTMLButtonElement;
+}
+
+/**
+ * Pose un `close` sur le prototype, que jsdom n'implemente pas plus que
+ * `showModal`, et releve l'etat du noeud a CHAQUE appel : `connecte/ouvert`.
+ * C'est `close` qui rend le focus au declencheur, et le navigateur ne peut le
+ * faire que sur un noeud encore dans le document. Le focus lui-meme n'est pas
+ * verifiable ici : jsdom ne gere ni couche superieure, ni restitution.
+ */
+function espionnerClose(): string[] {
+  const appels: string[] = [];
+  const proto = HTMLDialogElement.prototype as unknown as { close?: () => void };
+  const avait = Object.prototype.hasOwnProperty.call(proto, "close");
+  proto.close = function (this: HTMLDialogElement) {
+    appels.push(`${this.isConnected}/${this.hasAttribute("open")}`);
+    this.removeAttribute("open");
+  };
+  // La depose est confiee a `afterEach` et non a la derniere ligne du test :
+  // mesure faite, un `restaurer()` en fin de corps est SAUTE des qu'une
+  // assertion echoue avant lui, et le test « jsdom n'a pas close » trouvait
+  // alors une fonction heritee du test precedent.
+  deposerClose = () => {
+    if (!avait) delete proto.close;
+  };
+  return appels;
+}
+
+let deposerClose: (() => void) | null = null;
+
+/**
+ * Le parchemin seul, mais avec un `surFermeture` qui DEMONTE pour de bon, comme
+ * le fera la section des projets. Indispensable a l'assertion de connexion :
+ * avec un `surFermeture` vide, le noeud reste dans le document quoi qu'il
+ * arrive, et « close() sur un noeud connecte » serait vrai sans rien prouver.
+ */
+function monterParcheminFermable(p: ProjectDto): HTMLDialogElement {
+  racine = createRoot(hote);
+  const rendre = (projet: ProjectDto | null) => {
+    racine!.render(
+      createElement(
+        Fournisseur,
+        { defaultLocale: "fr" },
+        createElement(ParcheminProjet, { projet, surFermeture: () => rendre(null) }),
+      ),
+    );
+  };
+  act(() => rendre(p));
   const d = hote.querySelector("dialog");
   if (!d) throw new Error("aucun <dialog> rendu");
   return d as HTMLDialogElement;
@@ -350,12 +425,33 @@ describe("le parchemin (spec sections 4, 5 et 6)", () => {
 
   it("le bouton de fermeture a un nom accessible explicite", () => {
     const d = monterParchemin(projetComplet());
-    const b = d.querySelector("button[data-fermer]");
+    const b = boutonFermer(d);
     expect(b?.getAttribute("aria-label") ?? b?.textContent).toMatch(/\S{4,}/);
   });
 
   // Addendum section D : l'assertion retiree de la tache 3, dont le fichier
   // n'existait pas encore. Constatee sur le DOM rendu.
+  // I1 : l'assertion precedente court-circuite par `??`, donc le texte VISIBLE
+  // n'etait jamais regarde. Les deux choses se constatent separement.
+  it("le bouton de fermeture porte un texte visible, et non une croix seule", () => {
+    const d = monterParchemin(projetComplet());
+    const visible = (boutonFermer(d).textContent ?? "").trim();
+    expect(visible,
+      "le bouton n a pas de libelle visible : « cliquer sur Fermer » ne designerait rien")
+      .toMatch(/\S{4,}/);
+  });
+
+  it("le nom accessible du bouton CONTIENT son texte visible (WCAG 2.5.3)", () => {
+    const d = monterParchemin(projetComplet());
+    const b = boutonFermer(d);
+    const visible = (b.textContent ?? "").trim();
+    // Sans `aria-label`, le nom accessible EST le texte visible : la regle est
+    // tenue d'office, et le test precedent garde le libelle.
+    const nom = b.getAttribute("aria-label") ?? visible;
+    expect(nom, "le nom accessible ne contient pas le texte visible")
+      .toContain(visible);
+  });
+
   it("le corps se declare proprietaire de son defilement", () => {
     const d = monterParchemin(projetComplet());
     const corps = d.querySelector("[data-defilement-propre]");
@@ -388,6 +484,41 @@ describe("le parchemin (spec sections 4, 5 et 6)", () => {
   });
 
   // Point de vigilance 2, cote rendu.
+  // I2, le bloc 2 : il n'etait tenu par aucun test. Les trois mutations de la
+  // revue (paragraphe retire, mention retiree, `{true &&`) passaient toutes.
+  it("rend la ligne de dates du projet, formatee en UTC", () => {
+    const d = monterParchemin(projetComplet());
+    const ligne = d.querySelector("p.meta");
+    expect(ligne, "aucun paragraphe de dates : le bloc 2 a disparu").not.toBeNull();
+    // Le fuseau de vitest est `America/Los_Angeles` : 2024-03-01T00:00Z y
+    // tombe le 29 fevrier, donc une lecture hors UTC dirait « fevrier 2024 ».
+    expect(ligne!.textContent).toContain("de mars 2024 à janvier 2025");
+  });
+
+  it("un projet sans aucune date ne rend PAS de paragraphe de dates vide", () => {
+    const d = monterParchemin(projetNu());
+    // `ligneDateProjet` rend `null` : le bloc se cache de lui-meme. Un
+    // `<p class="meta">` vide serait un bloc vide a cote du test qui les
+    // interdit, et lui ne le verrait pas.
+    expect(d.querySelector("p.meta"),
+      "un paragraphe de dates VIDE est rendu pour un projet sans date")
+      .toBeNull();
+  });
+
+  it("la mention En cours accompagne un debut sans terme, et lui seul", () => {
+    const enCours = monterParchemin(projetEnCours());
+    expect(enCours.querySelector("p.meta")?.textContent)
+      .toContain("en mars 2024");
+    expect(enCours.textContent,
+      "un projet sans terme n est pas annonce en cours").toContain("En cours");
+    // Demonte, puis remonte : l'autre moitie de la regle.
+    act(() => racine!.unmount());
+    racine = null;
+    const termine = monterParchemin(projetComplet());
+    expect(termine.textContent,
+      "un projet termine est annonce « En cours »").not.toContain("En cours");
+  });
+
   it("un collaborateur sans LinkedIn est nomme sans lien", () => {
     const d = monterParchemin(projetAvecCredits());
     const li = [...d.querySelectorAll("li")];
@@ -425,6 +556,32 @@ describe("le parchemin (spec sections 4, 5 et 6)", () => {
     }
   });
 
+  it("un demoUrl non https ne rend ni bloc ni lien", () => {
+    const d = monterParchemin(fabrique({
+      name: "Projet douteux",
+      demoUrl: "javascript:alert(1)",
+    }));
+    expect(d.querySelectorAll("a"),
+      "un javascript: du backoffice est rendu comme un lien vivant").toHaveLength(0);
+    expect(d.textContent,
+      "le titre du bloc demonstration parait sans lien dessous")
+      .not.toContain("Voir la démo");
+  });
+
+  it("le lien de demonstration rendu est EXACTEMENT celui que la regle autorise", () => {
+    // Le composant doit lire `lienDemo` et non le champ brut : sinon un
+    // `href` encadre de blancs partirait dans la page.
+    const d = monterParchemin(fabrique({
+      name: "Projet espace",
+      demoUrl: "  https://exemple.test/demo  ",
+    }));
+    const lien = d.querySelector('a[target="_blank"]');
+    expect(lien, "le bloc demonstration n est pas rendu").not.toBeNull();
+    expect(lien!.getAttribute("href"),
+      "le champ brut est injecte dans le href au lieu du lien valide")
+      .toBe("https://exemple.test/demo");
+  });
+
   it("aucune classe de mouvement dans le parchemin rendu", () => {
     const d = monterParchemin(projetComplet());
     for (const el of [d, ...d.querySelectorAll("*")]) {
@@ -440,7 +597,7 @@ describe("le parchemin (spec sections 4, 5 et 6)", () => {
     const back = vi.spyOn(history, "back").mockImplementation(() => {});
     const d = monterParchemin(projetComplet());
     act(() => {
-      (d.querySelector("button[data-fermer]") as HTMLButtonElement).click();
+      boutonFermer(d).click();
     });
     expect(back, "l entree resterait et un Retour fermerait un parchemin deja ferme")
       .toHaveBeenCalledTimes(1);
@@ -476,6 +633,51 @@ describe("le parchemin (spec sections 4, 5 et 6)", () => {
     back.mockRestore();
   });
 
+  // Promu par le coordinateur : sans `close()`, le dialogue quitte l'arbre
+  // ENCORE OUVERT, les etapes de `close` ne sont pas jouees et le focus ne
+  // revient pas au declencheur.
+  it("la fermeture par le bouton joue close() sur un noeud encore connecte et ouvert", () => {
+    const appels = espionnerClose();
+    vi.spyOn(history, "back").mockImplementation(() => {});
+    // Monteur DEMONTANT : la fermeture retire vraiment le noeud, donc un
+    // `close()` joue trop tard le trouverait detache.
+    const d = monterParcheminFermable(projetComplet());
+    act(() => {
+      boutonFermer(d).click();
+    });
+    expect(hote.querySelector("dialog"), "le parchemin n a pas ete demonte").toBeNull();
+    // `true/true` : au moment de l'appel le noeud etait dans le document et
+    // encore ouvert. Un seul appel, et pas zero.
+    expect(appels,
+      "close() n est pas joue sur un noeud connecte et ouvert : le focus ne revient pas au declencheur")
+      .toEqual(["true/true"]);
+  });
+
+  it("la fermeture par popstate joue close() elle aussi", () => {
+    const appels = espionnerClose();
+    monterParcheminFermable(projetComplet());
+    act(() => {
+      window.dispatchEvent(new PopStateEvent("popstate"));
+    });
+    expect(hote.querySelector("dialog"), "le parchemin n a pas ete demonte").toBeNull();
+    expect(appels, "le Retour du navigateur abandonne un dialogue ouvert")
+      .toEqual(["true/true"]);
+  });
+
+  it("sans close() dans l environnement, la fermeture ne leve pas", () => {
+    // jsdom n'a pas `close` : c'est le cas par defaut de tout ce fichier. Le
+    // repli retire l'attribut, et rien ne doit lever.
+    expect(typeof HTMLDialogElement.prototype.close,
+      "jsdom a gagne close : adapter ce test").not.toBe("function");
+    vi.spyOn(history, "back").mockImplementation(() => {});
+    const d = monterParchemin(projetComplet());
+    act(() => {
+      boutonFermer(d).click();
+    });
+    expect(d.hasAttribute("open"),
+      "le dialogue reste ouvert alors qu il vient d etre ferme").toBe(false);
+  });
+
   it("l ouverture pose UNE SEULE entree d historique", () => {
     const push = vi.spyOn(history, "pushState");
     monterParchemin(projetComplet());
@@ -506,7 +708,7 @@ describe("le parchemin (spec sections 4, 5 et 6)", () => {
       );
     });
     act(() => {
-      (hote.querySelector("button[data-fermer]") as HTMLButtonElement).click();
+      boutonFermer(hote).click();
     });
     // `surFermeture` demonte le parchemin : appelee d'abord, elle retirerait
     // l'ecouteur avant que `back` n'ait rien demande.

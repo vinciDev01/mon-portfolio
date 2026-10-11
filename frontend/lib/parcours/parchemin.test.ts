@@ -1,6 +1,6 @@
 import { describe, it, expect } from "vitest";
 import type { ProjectDto, ProjectCollaboratorDto } from "@portfolio/shared-types";
-import { blocsPresents, credits } from "./parchemin";
+import { blocsPresents, credits, lienDemo } from "./parchemin";
 import { bloc, corpsDepuis, css, valeur } from "./feuille-test";
 import { ratioContraste, luminanceRelative } from "@/lib/color/contrast";
 import { PALETTE_CLAIRE, PALETTE_SOMBRE } from "@/lib/design/tokens";
@@ -156,6 +156,31 @@ describe("credits (spec section 4)", () => {
     }
     expect(credits(projet({ collaborators: [qui({ linkedinUrl: "https://linkedin.test/in/ada" })] }))[0].lien)
       .toBe("https://linkedin.test/in/ada");
+  });
+
+  it("n accepte que https: pour le lien de demonstration non plus", () => {
+    // Le MEME champ de risque que le LinkedIn : rendu comme un lien vivant sur
+    // une page publique, et alimente par le backoffice.
+    for (const mauvais of [
+      "javascript:alert(1)", "  JavaScript:alert(1)", "http://exemple.test",
+      "data:text/html,x", "exemple.test/demo", "https:", "", "   ",
+    ]) {
+      expect(lienDemo(projet({ demoUrl: mauvais })), mauvais).toBeNull();
+    }
+    expect(lienDemo(projet({ demoUrl: null }))).toBeNull();
+    expect(lienDemo(projet({ demoUrl: "  https://exemple.test/demo  " })))
+      .toBe("https://exemple.test/demo");
+  });
+
+  it("ecarte le bloc demonstration quand le lien n est pas exploitable", () => {
+    // `blocsPresents` et `lienDemo` doivent s'accorder, comme le font deja
+    // `blocsPresents` et `credits` : un titre sans lien dessous est un bloc vide.
+    for (const mauvais of ["javascript:alert(1)", "http://exemple.test", "data:text/html,x"]) {
+      expect(blocsPresents(projet({ demoUrl: mauvais })), mauvais)
+        .not.toContain("demonstration");
+    }
+    expect(blocsPresents(projet({ demoUrl: "https://exemple.test" })))
+      .toContain("demonstration");
   });
 
   it("exclut un collaborateur sans prenom ni nom", () => {

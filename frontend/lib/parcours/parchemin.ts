@@ -24,7 +24,10 @@ export function blocsPresents(projet: ProjectDto): BlocParchemin[] {
   // Derive de ce qui sera affiche : credits() exclut les sans-nom, donc le compte
   // brut laisserait un titre sans personne dessous. (credits est hissee.)
   if (credits(projet).length > 0) blocs.push("collaborateurs");
-  if (renseigne(projet.demoUrl)) blocs.push("demonstration");
+  // Et non `renseigne(demoUrl)` : le bloc suit le LIEN, pas le champ. Sans
+  // cela, un `javascript:` saisi au backoffice rendrait un bloc titre dont le
+  // lien est nul, c'est-a-dire un bloc vide.
+  if (lienDemo(projet) !== null) blocs.push("demonstration");
   return blocs;
 }
 
@@ -39,6 +42,17 @@ function lienSur(v: string | null | undefined): string | null {
   } catch {
     return null;
   }
+}
+
+/**
+ * Le lien de demonstration, soumis a la MEME regle que les liens des credits :
+ * ce champ est rendu comme un lien VIVANT sur une page publique et il vient du
+ * backoffice, donc `javascript:`, `data:` et `http:` ne passent pas. Nul quand
+ * l'adresse n'est pas exploitable, auquel cas `blocsPresents` ecarte le bloc :
+ * les deux lisent la meme fonction, ils ne peuvent pas diverger.
+ */
+export function lienDemo(projet: ProjectDto): string | null {
+  return lienSur(projet.demoUrl);
 }
 
 /**

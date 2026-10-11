@@ -7,7 +7,12 @@ const sansCommentaires = feuille.replace(/\/\*[\s\S]*?\*\//g, "");
 
 /** Le bloc `@media print`, traite a part : il neutralise la pagination. */
 const [BLOC_IMPRESSION = ""] = blocs(/@media print\s*\{/, sansCommentaires);
-const css = sansCommentaires.replace(`@media print {${BLOC_IMPRESSION}}`, "");
+/** La source COMPLETE : les interdictions categoriques la lisent entiere, un
+ *  mouvement ou un `display: none` cache sous `@media print` doit etre vu. */
+const css = sansCommentaires;
+/** Sans le bloc d'impression : pour les assertions qui decrivent la forme
+ *  exacte de la transition a l'ecran. */
+const cssEcran = sansCommentaires.replace(`@media print {${BLOC_IMPRESSION}}`, "");
 
 /** Corps de chaque bloc dont l'en-tete correspond. */
 function blocs(entete: RegExp, source: string): string[] {
@@ -50,11 +55,14 @@ function membres(valeur: string): string[] {
 const norm = (v: string) => v.replace(/\s+/g, " ").trim();
 
 /** Les corps des regles dont le selecteur nomme `.section-paginee`. */
-const reglesSections = () =>
-  [...css.matchAll(/([^{}]*\.section-paginee[^{}]*)\{([^}]*)\}/g)].map((m) => ({
+const reglesDe = (source: string) =>
+  [...source.matchAll(/([^{}]*\.section-paginee[^{}]*)\{([^}]*)\}/g)].map((m) => ({
     selecteur: norm(m[1]!),
     corps: m[2]!,
   }));
+
+const reglesSections = () => reglesDe(cssEcran);
+const reglesToutes = () => reglesDe(css);
 
 /** La regle de base : sous l'attribut de pagination, sans `data-active`. */
 const base = () =>
@@ -125,10 +133,13 @@ describe("l'impression (spec section 6, cinquieme cout accepte)", () => {
 
 describe("la transition (spec section 2.5)", () => {
   it("ne fait varier que l opacite et la visibilite, jamais une position", () => {
+    // Interdiction categorique : source complete, impression comprise.
+    for (const { selecteur, corps } of reglesToutes()) {
+      expect(corps, selecteur).not.toMatch(/transform|translate|scale/);
+    }
     const regles = reglesSections();
     expect(regles.length, "aucune regle .section-paginee").toBeGreaterThan(0);
     for (const { selecteur, corps } of regles) {
-      expect(corps, selecteur).not.toMatch(/transform|translate|scale/);
       // Raccourci : chaque membre de la liste, pas seulement le premier.
       for (const m of corps.matchAll(/(?:^|[;\s])transition:\s*([^;]+);/g)) {
         for (const membre of membres(m[1]!)) {
@@ -167,7 +178,7 @@ describe("la transition (spec section 2.5)", () => {
     expect(b, "regle de base introuvable").toBeDefined();
     expect(b!.corps).toMatch(/visibility:\s*hidden/);
     // display: none couperait le fondu sortant : aucune regle ne l'emploie.
-    for (const r of reglesSections()) expect(r.corps, r.selecteur).not.toMatch(/display:\s*none/);
+    for (const r of reglesToutes()) expect(r.corps, r.selecteur).not.toMatch(/display:\s*none/);
   });
 
   it("le retard de visibilite egale la duree de sortie, sinon la section est retiree avant son fondu", () => {

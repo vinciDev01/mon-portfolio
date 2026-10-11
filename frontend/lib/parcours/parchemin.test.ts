@@ -31,12 +31,26 @@ describe("blocsPresents (spec section 4)", () => {
     expect(blocsPresents(projet({ photo2Path: "b.webp" }))).toContain("photos");
   });
 
+  it("ne rend pas les photos quand les deux sont vides ou blanches", () => {
+    expect(blocsPresents(projet({ photo1Path: "", photo2Path: "" }))).not.toContain("photos");
+    expect(blocsPresents(projet({ photo1Path: "  ", photo2Path: " \t" }))).not.toContain("photos");
+    expect(blocsPresents(projet({ photo1Path: "  ", photo2Path: "b.webp" }))).toContain("photos");
+    expect(blocsPresents(projet({ photo1Path: "a.webp", photo2Path: "  " }))).toContain("photos");
+  });
+
+  it("ne rend pas la demonstration quand demoUrl est vide ou blanche", () => {
+    expect(blocsPresents(projet({ demoUrl: "" }))).not.toContain("demonstration");
+    expect(blocsPresents(projet({ demoUrl: "   " }))).not.toContain("demonstration");
+    expect(blocsPresents(projet({ demoUrl: "https://exemple.test" }))).toContain("demonstration");
+  });
+
   it("ne rend pas le public cible quand il est vide ou blanc", () => {
     expect(blocsPresents(projet({ targetAudience: "" }))).not.toContain("public");
     expect(blocsPresents(projet({ targetAudience: "   " }))).not.toContain("public");
   });
 
-  it("ne rend pas la description quand elle est blanche", () => {
+  it("ne rend pas la description quand elle est vide ou blanche", () => {
+    expect(blocsPresents(projet({ description: "" }))).not.toContain("description");
     expect(blocsPresents(projet({ description: "  " }))).not.toContain("description");
   });
 
@@ -80,14 +94,67 @@ describe("credits (spec section 4)", () => {
     expect(c[0].lien).toBe("https://linkedin.test/in/ada");
   });
 
-  it("trie par sortOrder et non par ordre d arrivee", () => {
+  it("trie par sortOrder, et non par id, prenom ou ordre d arrivee", () => {
+    // Ordre d'arrivee : z, m, a. Par id : a, m, z. Par prenom : Alice, Bob, Zoe.
+    // Par sortOrder : m (1), a (2), z (3). Quatre ordres, un seul passe.
     const c = credits(projet({
       collaborators: [
-        qui({ id: "b", firstName: "Grace", lastName: "Hopper", sortOrder: 5 }),
-        qui({ id: "a", firstName: "Ada", lastName: "Lovelace", sortOrder: 0 }),
+        qui({ id: "z", firstName: "Bob", lastName: "", sortOrder: 3 }),
+        qui({ id: "m", firstName: "Zoe", lastName: "", sortOrder: 1 }),
+        qui({ id: "a", firstName: "Alice", lastName: "", sortOrder: 2 }),
       ],
     }));
-    expect(c.map((x) => x.cle)).toEqual(["a", "b"]);
+    expect(c.map((x) => x.cle)).toEqual(["m", "a", "z"]);
+  });
+
+  it("tri stable : a egalite de sortOrder, l ordre d arrivee est conserve", () => {
+    const c = credits(projet({
+      collaborators: [
+        qui({ id: "z", sortOrder: 1 }),
+        qui({ id: "y", sortOrder: 0 }),
+        qui({ id: "b", sortOrder: 1 }),
+        qui({ id: "a", sortOrder: 1 }),
+      ],
+    }));
+    expect(c.map((x) => x.cle)).toEqual(["y", "z", "b", "a"]);
+  });
+
+  it("ne laisse sortir aucun courriel, ni cle ni valeur", () => {
+    const c = credits(projet({
+      collaborators: [qui({ email: "ada@secret.test", linkedinUrl: "https://linkedin.test/in/ada" })],
+    }));
+    expect(c).toHaveLength(1);
+    expect(Object.keys(c[0]).sort()).toEqual(["cle", "lien", "nom"]);
+    for (const v of Object.values(c[0])) expect(String(v)).not.toContain("@");
+  });
+
+  it("rogne les blancs autour de l URL et rend la valeur exacte", () => {
+    const c = credits(projet({
+      collaborators: [qui({ linkedinUrl: "  https://linkedin.test/in/ada \n" })],
+    }));
+    expect(c[0].lien).toBe("https://linkedin.test/in/ada");
+  });
+
+  it("n accepte que https: pour le lien, le nom reste", () => {
+    for (const mauvais of [
+      "javascript:alert(1)", "  JavaScript:alert(1)", "http://linkedin.test/in/ada",
+      "data:text/html,x", "linkedin.test/in/ada", "https:",
+    ]) {
+      const c = credits(projet({ collaborators: [qui({ linkedinUrl: mauvais })] }));
+      expect(c, mauvais).toEqual([{ cle: "c", nom: "Ada Lovelace", lien: null }]);
+    }
+    expect(credits(projet({ collaborators: [qui({ linkedinUrl: "https://linkedin.test/in/ada" })] }))[0].lien)
+      .toBe("https://linkedin.test/in/ada");
+  });
+
+  it("exclut un collaborateur sans prenom ni nom", () => {
+    const c = credits(projet({
+      collaborators: [
+        qui({ id: "v", firstName: "", lastName: "  " }),
+        qui({ id: "a" }),
+      ],
+    }));
+    expect(c.map((x) => x.cle)).toEqual(["a"]);
   });
 
   it("ne modifie pas le tableau recu", () => {

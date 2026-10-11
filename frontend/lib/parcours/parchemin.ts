@@ -28,19 +28,34 @@ export function blocsPresents(projet: ProjectDto): BlocParchemin[] {
 
 export type Credit = { cle: string; nom: string; lien: string | null };
 
+/** Le lien n'est rendu que s'il est une adresse https: valide, sinon null. */
+function lienSur(v: string | null | undefined): string | null {
+  if (!renseigne(v)) return null;
+  const url = v!.trim();
+  try {
+    return new URL(url).protocol === "https:" ? url : null;
+  } catch {
+    return null;
+  }
+}
+
 /**
- * Les personnes creditees, triees par `sortOrder` et non par ordre d'arrivee.
- * Un `linkedinUrl` nul ou blanc rend un nom SANS lien, et non un lien mort :
- * c'est la difference entre crediter quelqu'un et donner une adresse fausse.
- * Les courriels ne sortent pas d'ici : la demande ne porte que sur LinkedIn, et
- * exposer une adresse en clair invite les moissonneurs.
+ * Les personnes creditees, triees par `sortOrder` (tri stable : a egalite,
+ * l'ordre d'arrivee est conserve) et non par ordre d'arrivee.
+ * Un `linkedinUrl` nul, blanc ou hors `https:` rend un nom SANS lien : ce champ
+ * est rendu comme un lien vivant sur une page publique, donc `javascript:` et
+ * `http:` ne passent pas. Un collaborateur sans prenom ni nom est exclu : un
+ * credit sans nom ne dit rien.
+ * Les courriels ne sortent jamais d'ici : c'est une donnee personnelle et le
+ * parchemin est une page publique.
  */
 export function credits(projet: ProjectDto): Credit[] {
   return [...projet.collaborators]
     .sort((a, b) => a.sortOrder - b.sortOrder)
     .map((c: ProjectCollaboratorDto) => ({
       cle: c.id,
-      nom: [c.firstName, c.lastName].filter((p) => renseigne(p)).join(" "),
-      lien: renseigne(c.linkedinUrl) ? c.linkedinUrl!.trim() : null,
-    }));
+      nom: [c.firstName, c.lastName].filter((p) => renseigne(p)).map((p) => p.trim()).join(" "),
+      lien: lienSur(c.linkedinUrl),
+    }))
+    .filter((c) => c.nom !== "");
 }

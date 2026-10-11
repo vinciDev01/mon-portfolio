@@ -63,6 +63,16 @@ describe("blocsPresents (spec section 4)", () => {
     expect(blocsPresents(projet({ collaborators: [] }))).not.toContain("collaborateurs");
   });
 
+  it("ne rend pas les collaborateurs quand le seul est sans prenom ni nom", () => {
+    const sansNom = qui({ firstName: "", lastName: "  " });
+    expect(blocsPresents(projet({ collaborators: [sansNom] }))).not.toContain("collaborateurs");
+  });
+
+  it("rend les collaborateurs quand l un d eux a un nom", () => {
+    const sansNom = qui({ id: "v", firstName: "", lastName: "" });
+    expect(blocsPresents(projet({ collaborators: [sansNom, qui({})] }))).toContain("collaborateurs");
+  });
+
   it("garde l ordre de lecture de la spec", () => {
     const tout = projet({
       photo1Path: "a.webp", description: "d", targetAudience: "p",
@@ -113,11 +123,11 @@ describe("credits (spec section 4)", () => {
       collaborators: [
         qui({ id: "z", sortOrder: 1 }),
         qui({ id: "y", sortOrder: 0 }),
-        qui({ id: "b", sortOrder: 1 }),
         qui({ id: "a", sortOrder: 1 }),
+        qui({ id: "b", sortOrder: 1 }),
       ],
     }));
-    expect(c.map((x) => x.cle)).toEqual(["y", "z", "b", "a"]);
+    expect(c.map((x) => x.cle)).toEqual(["y", "z", "a", "b"]);
   });
 
   it("ne laisse sortir aucun courriel, ni cle ni valeur", () => {

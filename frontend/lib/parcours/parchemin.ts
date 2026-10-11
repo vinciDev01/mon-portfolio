@@ -21,7 +21,9 @@ export function blocsPresents(projet: ProjectDto): BlocParchemin[] {
   if (renseigne(projet.description)) blocs.push("description");
   if (renseigne(projet.targetAudience)) blocs.push("public");
   if (projet.technologies.length > 0) blocs.push("technologies");
-  if (projet.collaborators.length > 0) blocs.push("collaborateurs");
+  // Derive de ce qui sera affiche : credits() exclut les sans-nom, donc le compte
+  // brut laisserait un titre sans personne dessous. (credits est hissee.)
+  if (credits(projet).length > 0) blocs.push("collaborateurs");
   if (renseigne(projet.demoUrl)) blocs.push("demonstration");
   return blocs;
 }

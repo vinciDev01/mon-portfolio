@@ -31,18 +31,32 @@ personne ne « restaure » l'ancien modele en croyant corriger une regression.
 
 ## 1. Le cout assume de l'interception de la molette
 
-Intercepter la molette retire quatre choses au visiteur, et aucune n'est
+Intercepter la molette retire cinq choses au visiteur, et aucune n'est
 contournable. Elles sont acceptees :
 
 1. La barre de defilement cesse d'indiquer la position dans la page.
 2. Le navigateur ne peut plus restaurer la position au retour.
 3. L'inertie du pavé tactile se perd, le geste devenant discret et non continu.
 4. La recherche dans la page ne trouve plus le texte des autres sections.
+5. L'impression ne reproduit plus que la section visible : les autres etant en
+   `visibility: hidden`, elles ne s'impriment pas.
 
 Le quatrieme point est moins grave qu'il n'y parait et il faut le dire :
-les sections inactives etant en `display: none`, `Ctrl+F` n'y trouve **rien**,
-au lieu de trouver un resultat qu'il ne pourrait pas atteindre. Ne rien
-trouver est un comportement honnete ; un resultat inatteignable ne l'est pas.
+les sections inactives etant en `visibility: hidden` (et non `display: none`,
+qu'une decision du chantier a remplace par `visibility` et un positionnement
+absolu, pour que le fondu de sortie puisse se jouer), `Ctrl+F` n'y trouve
+**rien**. Verifie : Chrome et Firefox excluent de la recherche le texte en
+`visibility: hidden` exactement comme celui en `display: none`. Le visiteur ne
+trouve donc rien, au lieu de trouver un resultat qu'il ne pourrait pas
+atteindre. Ne rien trouver est un comportement honnete ; un resultat
+inatteignable ne l'est pas.
+
+Le cinquieme cout est traite par une regle `@media print` qui neutralise la
+pagination (`position: static`, `visibility: visible`, `opacity: 1`,
+`overflow: visible` sur les sections, `overflow: auto` rendu a `html` et
+`body`), exactement comme le repli sans JavaScript de la section 6 : a
+l'impression, toute la page sort. Le cout est donc accepte pour l'ecran et
+neutralise pour le papier.
 
 ## 2. Le modele de pagination
 
@@ -52,7 +66,11 @@ Un composant client, `ParcoursPagine`, entoure les sections et detient l'index
 courant. Au montage il pose sur l'element racine :
 
 - `data-pagination="active"`, qui commande **toutes** les regles de pagination ;
-- `data-section-active="<id>"`, qui commande la transition.
+
+La section active n'est PAS posee sur l'element racine : le contexte React
+(`useSectionActive`) porte son identifiant, et la transition est commandee par
+`data-active` sur les sections elles-memes (voir 2.5). Un crochet documente
+que personne ne lit serait soit supprime, soit cru a tort.
 
 Le document cesse de defiler, et chaque section devient une boite de la hauteur
 de la fenetre avec son propre `overflow-y: auto`.
@@ -107,11 +125,15 @@ section et ne paginent qu'en butee, afin de ne pas voler le defilement fin.
 
 ### 2.5 La transition
 
-Declarative, commandee par `data-section-active`. Jamais les deux sections a la
-fois, et aucune deformation : seule l'opacite varie.
+Commandee par `data-active`, que le conteneur pose sur la section active en
+passant par un etat intermediaire ou aucune section ne le porte. Jamais les deux
+sections a la fois, et aucune deformation : seule l'opacite varie.
 
-La sortante descend son opacite a zero, puis recoit `display: none`. L'entrante
-monte de zero a un.
+La sortante descend son opacite a zero, puis passe en `visibility: hidden`
+(transition de visibilite retardee de la duree de sortie). L'entrante monte de
+zero a un. Les sections sont superposees en position absolue : `display: none`
+couperait le fondu sortant, d'ou `visibility`. **Ne pas « restaurer »
+`display: none`** en croyant corriger une regression.
 
 **Il existe donc un instant ou aucune section n'est visible, et c'est voulu.**
 C'est le « passage par le fond » : une section disparait, le fond nu apparait,
@@ -163,8 +185,9 @@ sans objet : la section courante est desormais un etat detenu par le conteneur,
 et `aria-current` en decoule. Ce travail a servi, il part.
 
 **`content-visibility: auto` sur les sections de rang 4 a 6.** C'etait une
-mitigation de performance pour une page qui defile. `display: none` la
-supplante, et laisser les deux mecanismes se superposer n'apporterait rien.
+mitigation de performance pour une page qui defile. `visibility: hidden` sur
+les sections inactives la supplante, et laisser les deux mecanismes se
+superposer n'apporterait rien.
 
 Les trois suppressions sont verifiees **comme des suppressions** : un test
 constate l'absence des fichiers et l'absence de tout import vers eux.
@@ -255,8 +278,8 @@ blocs. Restent donc en place jusqu'a un chantier dedie, et c'est assume :
 
 ## 5. Accessibilite
 
-**Un seul etat visible, un seul etat percu.** La section sortante recoit
-`display: none`, ce qui la retire a la fois de l'arbre d'accessibilite et de
+**Un seul etat visible, un seul etat percu.** La section sortante passe en
+`visibility: hidden`, ce qui la retire a la fois de l'arbre d'accessibilite et de
 l'ordre de tabulation. Un lecteur d'ecran percoit ce qu'un voyant voit, et la
 tabulation ne peut pas se perdre dans une section invisible.
 
@@ -264,10 +287,14 @@ tabulation ne peut pas se perdre dans une section invisible.
 l'on arrive, parce que le changement d'`aria-current` dans la colonne n'est, lui,
 annonce par rien.
 
-**Le focus suit la navigation deliberee, jamais la molette.** Au clic et au
-clavier, le focus se deplace vers la section arrivante, qui porte
-`tabindex="-1"` pour pouvoir le recevoir. Sur un coup de molette, le focus ne
-bouge pas : le deplacer sous la molette serait hostile.
+**Le focus suit la section arrivante, quelle que soit l'origine du changement.**
+Clic, clavier, molette, geste tactile ou historique : le focus se deplace vers
+la section arrivante, qui porte `tabindex="-1"` pour pouvoir le recevoir
+(`preventScroll`). La spec avait d'abord prevu de le laisser immobile sur un coup
+de molette ; c'etait faux en pratique, car la section sortante devient
+`visibility: hidden` et un element invisible ne peut pas garder le focus : le
+navigateur le rend a `body` et la tabulation suivante repart du haut du
+document. Le focus etant perdu de toute facon, le deplacer rend Tab previsible.
 
 **Contraste.** Inchange : 4,5:1 pour le texte et 3:1 pour les bordures
 signifiantes dans les deux palettes. La transition ne passe par aucun etat
@@ -275,7 +302,7 @@ intermediaire de couleur, puisqu'elle ne fait varier que l'opacite entre zero et
 un sur le fond de la page.
 
 **Couleurs forcees et contraste eleve.** La pagination n'introduit aucune
-couleur. Le seul point a verifier est que `display: none` ne prive pas le mode
+couleur. Le seul point a verifier est que `visibility: hidden` ne prive pas le mode
 contraste eleve d'une indication : la section courante reste signalee par
 `aria-current` dans la colonne, dont le rendu en couleurs forcees a ete corrige
 au chantier precedent.

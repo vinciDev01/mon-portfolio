@@ -34,6 +34,18 @@ export function useSectionActive(): string | null {
   return useContext(ContexteSectionActive);
 }
 
+/** Vrai tant qu'une surcouche (le parchemin) est ouverte : la pagination se
+ *  suspend alors entierement. */
+const ContexteSurcouche = createContext(false);
+const ContexteChangerSurcouche = createContext<(ouverte: boolean) => void>(() => {});
+
+export function useSurcoucheOuverte(): boolean {
+  return useContext(ContexteSurcouche);
+}
+export function useChangerSurcouche(): (ouverte: boolean) => void {
+  return useContext(ContexteChangerSurcouche);
+}
+
 /**
  * Pose le contexte AU-DESSUS de la colonne et de `<main>`, que `page.tsx`
  * garde freres : la colonne est la navigation du site, elle ne doit pas
@@ -47,9 +59,14 @@ export function FournisseurSectionActive({
   children: ReactNode;
 }) {
   const [id, setId] = useState<string | null>(initial);
+  const [surcouche, setSurcouche] = useState(false);
   return (
     <ContexteChangerSection.Provider value={setId}>
-      <ContexteSectionActive.Provider value={id}>{children}</ContexteSectionActive.Provider>
+      <ContexteSectionActive.Provider value={id}>
+        <ContexteChangerSurcouche.Provider value={setSurcouche}>
+          <ContexteSurcouche.Provider value={surcouche}>{children}</ContexteSurcouche.Provider>
+        </ContexteChangerSurcouche.Provider>
+      </ContexteSectionActive.Provider>
     </ContexteChangerSection.Provider>
   );
 }
@@ -106,6 +123,10 @@ export function ParcoursPagine({
   const { t } = useTranslation();
   const changerSection = useContext(ContexteChangerSection);
   const changerSectionRef = useRef(changerSection);
+  const surcoucheOuverte = useSurcoucheOuverte();
+  // Les gestionnaires sont installes une fois : ils lisent le drapeau par une
+  // ref, sans quoi ils garderaient la valeur du premier rendu.
+  const surcoucheRef = useRef(surcoucheOuverte);
   // `null` pendant le passage par le fond : aucune section n'est active.
   const [actif, setActif] = useState<number | null>(0);
   const [annonce, setAnnonce] = useState("");
@@ -119,6 +140,7 @@ export function ParcoursPagine({
   useEffect(() => {
     tRef.current = t;
     changerSectionRef.current = changerSection;
+    surcoucheRef.current = surcoucheOuverte;
     sectionsRef.current = sections;
   });
 
@@ -211,16 +233,17 @@ export function ParcoursPagine({
       return el ? estEnButee(el, direction) : true;
     };
 
-    // La colonne a son propre defilement aux paliers etroits : on n'y touche pas.
-    // Elle ne defile que si son contenu deborde : hors de ce cas, lui laisser
-    // l'evenement rendrait morte une bande pleine hauteur, la ou le pointeur
-    // se trouve justement apres un clic sur une entree. `direction` nul : le
-    // geste n'a pas encore de sens, on regarde les deux.
-    const colonneDefile = (cible: EventTarget | null, direction: Direction | 0) => {
-      const col = cible instanceof Element ? cible.closest(".colonne-passage") : null;
-      if (!col) return false;
-      if (direction === 0) return !estEnButee(col, 1) || !estEnButee(col, -1);
-      return !estEnButee(col, direction);
+    // Tout element qui se declare proprietaire de son defilement garde ses
+    // evenements, a condition de pouvoir reellement defiler dans ce sens. Sans
+    // cette condition, une bande pleine hauteur deviendrait morte, la ou le
+    // pointeur se trouve justement apres un clic. `direction` nul : le geste
+    // n'a pas encore de sens, on regarde les deux.
+    // Une regle, deux clients : la colonne de passage et le parchemin.
+    const proprietaireDefile = (cible: EventTarget | null, direction: Direction | 0) => {
+      const el = cible instanceof Element ? cible.closest("[data-defilement-propre]") : null;
+      if (!el) return false;
+      if (direction === 0) return !estEnButee(el, 1) || !estEnButee(el, -1);
+      return !estEnButee(el, direction);
     };
 
     // Filet : un onglet masque voit ses minuteries ralenties, et la page
@@ -231,8 +254,9 @@ export function ParcoursPagine({
     };
 
     const surMolette = (e: WheelEvent) => {
+      if (surcoucheRef.current) return;
       const delta = normaliserDelta(e.deltaY, e.deltaMode, window.innerHeight);
-      if (colonneDefile(e.target, delta === 0 ? 0 : delta > 0 ? 1 : -1)) return;
+      if (proprietaireDefile(e.target, delta === 0 ? 0 : delta > 0 ? 1 : -1)) return;
       traiterMolette(e, delta, {
         enButee: butee,
         verrouille: () => sequenceur.verrouille,
@@ -245,7 +269,11 @@ export function ParcoursPagine({
     let depart: { x: number; y: number } | null = null;
     let butees: Record<Direction, boolean> = { 1: true, [-1]: true };
     const surDebutTactile = (e: TouchEvent) => {
-      if (colonneDefile(e.target, 0)) {
+      if (surcoucheRef.current) {
+        depart = null;
+        return;
+      }
+      if (proprietaireDefile(e.target, 0)) {
         depart = null;
         return;
       }
@@ -260,6 +288,10 @@ export function ParcoursPagine({
       depart = null;
     };
     const surFinTactile = (e: TouchEvent) => {
+      if (surcoucheRef.current) {
+        depart = null;
+        return;
+      }
       const doigt = e.changedTouches[0];
       if (!depart || !doigt) return;
       const direction = directionTactile(depart.x - doigt.clientX, depart.y - doigt.clientY);
@@ -272,6 +304,7 @@ export function ParcoursPagine({
     };
 
     const surTouche = (e: KeyboardEvent) => {
+      if (surcoucheRef.current) return;
       if (e.defaultPrevented || e.altKey || e.ctrlKey || e.metaKey) return;
       if (e.shiftKey && e.key !== " ") return;
       if (estSaisie(e.target) || estCommande(e.target, e.key)) return;
@@ -293,6 +326,7 @@ export function ParcoursPagine({
     // Les entrees de la colonne sont des ancres `#id` : sans JavaScript elles
     // restent des ancres, avec lui elles paginent.
     const surClic = (e: MouseEvent) => {
+      if (surcoucheRef.current) return;
       if (e.defaultPrevented || e.button !== 0 || e.altKey || e.ctrlKey || e.metaKey || e.shiftKey) return;
       const ancre = (e.target as Element | null)?.closest?.('a[href^="#"]');
       const href = ancre?.getAttribute("href");
@@ -304,6 +338,10 @@ export function ParcoursPagine({
     };
 
     const surRetour = () => {
+      // Deux consommateurs du meme evenement, et celui de la surcouche prime :
+      // c'est le parchemin qui se ferme, par son propre ecouteur. Sans cette
+      // sortie, un Retour fermerait le parchemin ET reculerait d'une section.
+      if (surcoucheRef.current) return;
       if (sequenceur.verrouille) retourIgnore = true;
       aller(indexDepuisFragment(location.hash, ids()), "historique");
     };

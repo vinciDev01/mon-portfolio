@@ -169,6 +169,8 @@ describe("le conteneur ne fait jamais de fondu croise (spec section 2)", () => {
   function poserColonne(scrollHeight: number, clientHeight: number, scrollTop = 0) {
     const colonne = document.createElement("nav");
     colonne.className = "colonne-passage";
+    // La garde lit la convention, plus la classe.
+    colonne.setAttribute("data-defilement-propre", "");
     for (const [k, v] of Object.entries({ scrollHeight, clientHeight, scrollTop })) {
       Object.defineProperty(colonne, k, { value: v, configurable: true });
     }

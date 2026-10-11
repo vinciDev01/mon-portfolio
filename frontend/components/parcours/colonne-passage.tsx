@@ -54,7 +54,9 @@ export function ColonnePassage({
   const initiales = initialesDe(infos);
 
   return (
-    <nav className="colonne-passage" aria-label={t("parcours.colonne")}>
+    // `data-defilement-propre` : convention lue par le conteneur de pagination,
+    // qui laisse alors a l'element ses molettes et gestes tant qu'il peut defiler.
+    <nav className="colonne-passage" data-defilement-propre="" aria-label={t("parcours.colonne")}>
       <Link href="/" className="identite-mat" aria-label={nomComplet}>
         {logo ? (
           <Image src={logo} alt="" width={36} height={36} className="identite-logo" />

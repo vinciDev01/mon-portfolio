@@ -76,6 +76,7 @@
   "parcours.identite": "Back to home",
   "parcours.portrait": "Portrait of {nom}",
   "parcours.langue": "Language",
+  "parcours.fermerParchemin": "Close the project file",
   "journal.periode": "from {debut} to {fin}",
   "journal.periodeUnique": "in {date}",
   "journal.collaborateurs": "with {noms}"

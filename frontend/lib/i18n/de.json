@@ -76,6 +76,7 @@
   "parcours.identite": "Zurück zur Startseite",
   "parcours.portrait": "Porträt von {nom}",
   "parcours.langue": "Sprache",
+  "parcours.fermerParchemin": "Projektakte schliessen",
   "journal.periode": "von {debut} bis {fin}",
   "journal.periodeUnique": "im {date}",
   "journal.collaborateurs": "mit {noms}"

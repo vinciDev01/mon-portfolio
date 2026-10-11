@@ -76,6 +76,7 @@
   "parcours.identite": "Retour à l'accueil",
   "parcours.portrait": "Portrait de {nom}",
   "parcours.langue": "Langue",
+  "parcours.fermerParchemin": "Fermer le dossier du projet",
   "journal.periode": "de {debut} à {fin}",
   "journal.periodeUnique": "en {date}",
   "journal.collaborateurs": "avec {noms}"

@@ -1,6 +1,8 @@
 // @vitest-environment jsdom
-import { afterEach, describe, it, expect, beforeEach } from "vitest";
+import { afterEach, describe, it, expect, beforeEach, vi } from "vitest";
 import { createElement, useEffect, type ComponentType } from "react";
+import type { ProjectDto } from "@portfolio/shared-types";
+import { ParcheminProjet } from "@/components/parcours/parchemin-projet";
 import { createRoot } from "react-dom/client";
 import { act } from "react";
 import { I18nProvider } from "../i18n/i18n-context";
@@ -150,5 +152,544 @@ describe("la pagination se suspend sous une surcouche (spec section 5.2)", () =>
     });
     expect(actif(), "la section a change alors qu'une surcouche etait ouverte")
       .toBe(avant);
+  });
+});
+
+/* ------------------------------------------------------------------
+   Le parchemin lui-meme (spec sections 4, 5 et 6).
+
+   Fait MESURE et non suppose : jsdom n'implemente pas `showModal` et ignore
+   `inert`. Les quatre comportements modaux (capture du focus, inertie du reste
+   de la page, voile natif, Echap gere par le navigateur) sont donc HORS de
+   portee d'ici, et aucun test ci-dessous ne pretend les verifier. C'est le
+   chemin de repli, celui qui pose l'attribut `open`, qui rend tout le reste
+   observable.
+   ------------------------------------------------------------------ */
+
+function fabrique(p: Partial<ProjectDto>): ProjectDto {
+  return {
+    id: "x", name: "Projet", description: null,
+    photo1Path: null, photo2Path: null, demoUrl: null, targetAudience: null,
+    startDate: null, endDate: null, technologies: [], collaborators: [],
+    sortOrder: 0, ...p,
+  } as ProjectDto;
+}
+
+const projetNu = () => fabrique({ name: "Projet nu" });
+
+const projetComplet = () => fabrique({
+  name: "Projet complet",
+  description: "Une description.",
+  targetAudience: "Les gens",
+  photo1Path: "projects/a.webp",
+  photo2Path: "projects/b.webp",
+  demoUrl: "https://exemple.test",
+  startDate: "2024-03-01",
+  endDate: "2025-01-01",
+  technologies: [{ id: "t1", label: "Angular", logoPath: null, sortOrder: 0 }],
+  collaborators: [
+    { id: "c1", firstName: "Ada", lastName: "Lovelace", email: null,
+      linkedinUrl: "https://linkedin.test/in/ada", sortOrder: 0 },
+  ],
+});
+
+/** Grace d'abord dans le tableau mais `sortOrder` plus grand : le tri doit
+ *  donc remonter Ada, et Grace n'a pas de lien. */
+const projetAvecCredits = () => fabrique({
+  name: "Projet credite",
+  collaborators: [
+    { id: "c2", firstName: "Grace", lastName: "Hopper", email: null,
+      linkedinUrl: null, sortOrder: 1 },
+    { id: "c1", firstName: "Ada", lastName: "Lovelace", email: null,
+      linkedinUrl: "https://linkedin.test/in/ada", sortOrder: 0 },
+  ],
+});
+
+/** Le parchemin SEUL, pour les tests de rendu. Le drapeau n'est pas observable
+ *  ainsi : hors du fournisseur de `ParcoursPagine`, `useChangerSurcouche` rend
+ *  la fonction VIDE du contexte par defaut, sans erreur ni avertissement. Les
+ *  tests du drapeau passent donc par `monterAvecConteneur`. */
+function monterParchemin(p: ProjectDto): HTMLDialogElement {
+  racine = createRoot(hote);
+  act(() => {
+    racine!.render(
+      createElement(
+        Fournisseur,
+        { defaultLocale: "fr" },
+        createElement(ParcheminProjet, { projet: p, surFermeture: () => {} }),
+      ),
+    );
+  });
+  const d = hote.querySelector("dialog");
+  if (!d) throw new Error("aucun <dialog> rendu");
+  return d as HTMLDialogElement;
+}
+
+const IDS_PARCOURS = ["ouverture", "projets", "contact"];
+
+function sectionsEt(ids: string[]) {
+  const sections = SECTIONS.filter((s) => ids.includes(s.id));
+  const enfants: Record<string, string> = {};
+  for (const id of ids) enfants[id] = `CONTENU-${id}`;
+  return { sections, enfants };
+}
+
+/**
+ * Le conteneur pagine ET le parchemin sous le MEME fournisseur : c'est la
+ * seule facon de voir le drapeau. `surFermeture` re-rend l'arbre avec un
+ * projet nul, comme le fera la section des projets.
+ */
+function rendreAvecConteneur(projet: ProjectDto | null) {
+  const { sections, enfants } = sectionsEt(IDS_PARCOURS);
+  racine!.render(
+    createElement(
+      Fournisseur,
+      { defaultLocale: "fr" },
+      createElement(
+        FournisseurSectionActive as ComponentType<{ initial: string | null }>,
+        { initial: sections[0]?.id ?? null },
+        createElement(ParcoursPagine, { sections, enfants, pied: "PIED" }),
+        createElement(ParcheminProjet, {
+          projet,
+          surFermeture: () => rendreAvecConteneur(null),
+        }),
+      ),
+    ),
+  );
+}
+
+function monterAvecConteneur(projet: ProjectDto | null) {
+  racine = createRoot(hote);
+  act(() => rendreAvecConteneur(projet));
+}
+
+/** Comme `monter`, mais RE-RENDABLE : fermer la surcouche au milieu d'un geste
+ *  est le seul moyen d'isoler la garde du `touchstart` de celle du `touchend`,
+ *  qui protegent le meme geste. */
+function rendreBascule(ids: string[], ouverte: boolean) {
+  const { sections, enfants } = sectionsEt(ids);
+  racine!.render(
+    createElement(
+      Fournisseur,
+      { defaultLocale: "fr" },
+      createElement(
+        FournisseurSectionActive as ComponentType<{ initial: string | null }>,
+        { initial: sections[0]?.id ?? null },
+        createElement(Bascule, { ouverte }),
+        createElement(ParcoursPagine, { sections, enfants, pied: "PIED" }),
+      ),
+    ),
+  );
+}
+
+let idsCourants: string[] = IDS_PARCOURS;
+
+function monterBascule(ids: string[], ouverte: boolean) {
+  racine = createRoot(hote);
+  idsCourants = ids;
+  act(() => rendreBascule(ids, ouverte));
+}
+
+function rebasculer(ouverte: boolean) {
+  act(() => rendreBascule(idsCourants, ouverte));
+}
+
+/** jsdom expose `TouchEvent` mais pas `Touch` : un point est un simple objet,
+ *  et c'est tout ce que les gestionnaires lisent (clientX, clientY). */
+function tactile(type: "touchstart" | "touchend", x: number, y: number): TouchEvent {
+  const point = { clientX: x, clientY: y } as unknown as Touch;
+  const init: TouchEventInit = { bubbles: true, cancelable: true };
+  if (type === "touchstart") init.touches = [point];
+  else init.changedTouches = [point];
+  return new TouchEvent(type, init);
+}
+
+const molette = () =>
+  act(() => {
+    window.dispatchEvent(
+      new WheelEvent("wheel", { deltaY: 300, bubbles: true, cancelable: true }),
+    );
+  });
+
+/** Laisse passer la sortie de section (180 ms de repli, jsdom ne calculant
+ *  aucune transition), le verrou, et le `popstate` que jsdom emet en tache
+ *  separee apres `history.back()`. */
+const laisserRetomber = () => act(async () => {
+  await new Promise((r) => setTimeout(r, 400));
+});
+
+describe("le parchemin (spec sections 4, 5 et 6)", () => {
+  // Point de vigilance 3 : `showModal` absente, cas de jsdom.
+  it("s ouvre par l attribut open quand showModal manque", () => {
+    expect(typeof HTMLDialogElement.prototype.showModal,
+      "jsdom a gagne showModal : adapter ce test").not.toBe("function");
+    const d = monterParchemin(projetComplet());
+    expect(d.hasAttribute("open")).toBe(true);
+  });
+
+  it("un projet nul ne rend aucun dialogue", () => {
+    racine = createRoot(hote);
+    act(() => {
+      racine!.render(
+        createElement(
+          Fournisseur,
+          { defaultLocale: "fr" },
+          createElement(ParcheminProjet, { projet: null, surFermeture: () => {} }),
+        ),
+      );
+    });
+    expect(hote.querySelector("dialog")).toBeNull();
+  });
+
+  it("porte un nom accessible par le titre du projet", () => {
+    const d = monterParchemin(projetComplet());
+    const lie = d.getAttribute("aria-labelledby");
+    expect(lie).toBeTruthy();
+    expect(d.querySelector(`#${lie}`)?.textContent).toContain("Projet complet");
+  });
+
+  it("le bouton de fermeture a un nom accessible explicite", () => {
+    const d = monterParchemin(projetComplet());
+    const b = d.querySelector("button[data-fermer]");
+    expect(b?.getAttribute("aria-label") ?? b?.textContent).toMatch(/\S{4,}/);
+  });
+
+  // Addendum section D : l'assertion retiree de la tache 3, dont le fichier
+  // n'existait pas encore. Constatee sur le DOM rendu.
+  it("le corps se declare proprietaire de son defilement", () => {
+    const d = monterParchemin(projetComplet());
+    const corps = d.querySelector("[data-defilement-propre]");
+    expect(corps).not.toBeNull();
+    expect(corps!.classList.contains("parchemin-corps")).toBe(true);
+  });
+
+  // Point de vigilance 1, cote rendu. Les libelles sont repris du dictionnaire
+  // FRANCAIS, accents compris : « Public concerne » sans accent ne figure dans
+  // aucune langue et l'assertion serait vraie meme bloc rendu.
+  it("un projet depouille ne rend aucun bloc vide", () => {
+    const d = monterParchemin(projetNu());
+    expect(d.querySelectorAll("img")).toHaveLength(0);
+    expect(d.textContent).not.toContain("Public concerné");
+    expect(d.textContent).not.toContain("Collaborateurs");
+    expect(d.textContent).not.toContain("Technologies");
+    expect(d.querySelectorAll("a")).toHaveLength(0);
+  });
+
+  it("un projet complet rend les six blocs de blocsPresents", () => {
+    const d = monterParchemin(projetComplet());
+    expect(d.querySelectorAll("img")).toHaveLength(2);
+    expect(d.textContent).toContain("Une description.");
+    expect(d.textContent).toContain("Public concerné");
+    expect(d.textContent).toContain("Les gens");
+    expect(d.textContent).toContain("Technologies");
+    expect(d.textContent).toContain("Angular");
+    expect(d.textContent).toContain("Collaborateurs");
+    expect(d.querySelector('a[href="https://exemple.test"]')).not.toBeNull();
+  });
+
+  // Point de vigilance 2, cote rendu.
+  it("un collaborateur sans LinkedIn est nomme sans lien", () => {
+    const d = monterParchemin(projetAvecCredits());
+    const li = [...d.querySelectorAll("li")];
+    const sansLien = li.find((e) => e.textContent?.includes("Grace Hopper"));
+    expect(sansLien, "Grace n est pas nommee du tout").toBeDefined();
+    expect(sansLien?.querySelector("a")).toBeNull();
+    const avecLien = li.find((e) => e.textContent?.includes("Ada Lovelace"));
+    expect(avecLien?.querySelector("a")?.getAttribute("href"))
+      .toBe("https://linkedin.test/in/ada");
+  });
+
+  it("chaque lien LinkedIn porte le nom de la personne, pas LinkedIn seul", () => {
+    const d = monterParchemin(projetAvecCredits());
+    const a = d.querySelector("li a");
+    const nom = a?.getAttribute("aria-label") ?? a?.textContent ?? "";
+    expect(nom).toContain("Ada Lovelace");
+  });
+
+  it("les liens externes portent rel noopener noreferrer", () => {
+    const d = monterParchemin(projetComplet());
+    const liens = [...d.querySelectorAll('a[target="_blank"]')];
+    expect(liens.length, "aucun lien externe : l assertion serait vide")
+      .toBeGreaterThan(0);
+    for (const a of liens) {
+      expect(a.getAttribute("rel")).toBe("noopener noreferrer");
+    }
+  });
+
+  it("les photos portent un alt vide, le nom etant lu a cote", () => {
+    const d = monterParchemin(projetComplet());
+    const images = [...d.querySelectorAll("img")];
+    expect(images.length, "aucune image : l assertion serait vide").toBeGreaterThan(0);
+    for (const img of images) {
+      expect(img.getAttribute("alt")).toBe("");
+    }
+  });
+
+  it("aucune classe de mouvement dans le parchemin rendu", () => {
+    const d = monterParchemin(projetComplet());
+    for (const el of [d, ...d.querySelectorAll("*")]) {
+      for (const classe of el.classList) {
+        expect(classe, `classe de mouvement rendue : ${classe}`)
+          .not.toMatch(/^(transition|animate|duration|ease|fade|slide)-/);
+      }
+    }
+  });
+
+  // Point de vigilance 5.
+  it("fermer consomme l entree d historique", () => {
+    const back = vi.spyOn(history, "back").mockImplementation(() => {});
+    const d = monterParchemin(projetComplet());
+    act(() => {
+      (d.querySelector("button[data-fermer]") as HTMLButtonElement).click();
+    });
+    expect(back, "l entree resterait et un Retour fermerait un parchemin deja ferme")
+      .toHaveBeenCalledTimes(1);
+    back.mockRestore();
+  });
+
+  it("Echap passe par le meme chemin de fermeture, entree comprise", () => {
+    const back = vi.spyOn(history, "back").mockImplementation(() => {});
+    const d = monterParchemin(projetComplet());
+    const evenement = new Event("cancel", { cancelable: true, bubbles: true });
+    act(() => {
+      d.dispatchEvent(evenement);
+    });
+    expect(evenement.defaultPrevented,
+      "sans preventDefault le dialogue se ferme seul et l entree reste").toBe(true);
+    expect(back).toHaveBeenCalledTimes(1);
+    back.mockRestore();
+  });
+
+  it("le clic hors de la feuille ferme, celui sur la feuille ne ferme pas", () => {
+    const back = vi.spyOn(history, "back").mockImplementation(() => {});
+    const d = monterParchemin(projetComplet());
+    act(() => {
+      (d.querySelector(".parchemin-corps") as HTMLElement).dispatchEvent(
+        new MouseEvent("click", { bubbles: true, cancelable: true }),
+      );
+    });
+    expect(back, "un clic DANS la feuille a ferme le parchemin").not.toHaveBeenCalled();
+    act(() => {
+      d.dispatchEvent(new MouseEvent("click", { bubbles: true, cancelable: true }));
+    });
+    expect(back).toHaveBeenCalledTimes(1);
+    back.mockRestore();
+  });
+
+  it("l ouverture pose UNE SEULE entree d historique", () => {
+    const push = vi.spyOn(history, "pushState");
+    monterParchemin(projetComplet());
+    // Une de plus et il faudrait deux Retour pour quitter la section ensuite,
+    // la premiere fermant le parchemin et la seconde ne bougeant pas.
+    expect(push, "l ouverture n empile pas exactement une entree")
+      .toHaveBeenCalledTimes(1);
+    push.mockRestore();
+  });
+
+  // Addendum section A : l'ordre, et non seulement le fait.
+  it("la fermeture consomme l entree AVANT de prevenir l appelant", () => {
+    const ordre: string[] = [];
+    const back = vi.spyOn(history, "back").mockImplementation(() => {
+      ordre.push("back");
+    });
+    racine = createRoot(hote);
+    act(() => {
+      racine!.render(
+        createElement(
+          Fournisseur,
+          { defaultLocale: "fr" },
+          createElement(ParcheminProjet, {
+            projet: projetComplet(),
+            surFermeture: () => ordre.push("fermeture"),
+          }),
+        ),
+      );
+    });
+    act(() => {
+      (hote.querySelector("button[data-fermer]") as HTMLButtonElement).click();
+    });
+    // `surFermeture` demonte le parchemin : appelee d'abord, elle retirerait
+    // l'ecouteur avant que `back` n'ait rien demande.
+    expect(ordre, "l ordre de fermeture est inverse").toEqual(["back", "fermeture"]);
+    back.mockRestore();
+  });
+
+  it("un popstate ferme le parchemin", () => {
+    const fermetures: number[] = [];
+    racine = createRoot(hote);
+    act(() => {
+      racine!.render(
+        createElement(
+          Fournisseur,
+          { defaultLocale: "fr" },
+          createElement(ParcheminProjet, {
+            projet: projetComplet(),
+            surFermeture: () => fermetures.push(1),
+          }),
+        ),
+      );
+    });
+    act(() => {
+      window.dispatchEvent(new PopStateEvent("popstate"));
+    });
+    expect(fermetures, "le Retour du navigateur ne ferme pas le parchemin")
+      .toHaveLength(1);
+  });
+});
+
+/* Addendum section G : le contrat de structure, ecrit en commentaire dans
+   `globals.css` par la tache 3 et reporte ici, faute de composant a l'epoque.
+   Constate sur le DOM rendu, et non en cherchant une chaine dans le source. */
+describe("le contrat de structure de la feuille (tache 3, reporte)", () => {
+  it("la feuille est enfant DIRECT du dialogue", () => {
+    const d = monterParchemin(projetComplet());
+    const feuille = d.querySelector(".parchemin-feuille");
+    expect(feuille).not.toBeNull();
+    expect(feuille!.parentElement,
+      "un conteneur intermediaire casse `max-height: inherit`").toBe(d);
+  });
+
+  it("la feuille a exactement trois enfants : bande, corps, bande", () => {
+    const d = monterParchemin(projetComplet());
+    const enfants = [...d.querySelector(".parchemin-feuille")!.children];
+    // `className` d'un SVG est un `SVGAnimatedString` : on lit l'attribut.
+    expect(enfants.map((e) => e.getAttribute("class")),
+      "la grille `auto 1fr auto` ne borne plus le corps").toEqual([
+      "parchemin-bande", "parchemin-corps", "parchemin-bande",
+    ]);
+    expect(enfants[0]!.tagName.toLowerCase()).toBe("svg");
+    expect(enfants[2]!.tagName.toLowerCase()).toBe("svg");
+  });
+
+  it("les credits vivent DANS le corps, pas a cote", () => {
+    const d = monterParchemin(projetAvecCredits());
+    // TOUTES les listes, et non la premiere : une seconde liste posee a cote du
+    // corps passerait inapercue si l'on ne regardait que celle du document.
+    const listes = [...d.querySelectorAll(".parchemin-credits")];
+    expect(listes).toHaveLength(1);
+    for (const liste of listes) {
+      expect(liste.closest(".parchemin-corps"),
+        "les credits sont sortis du corps et deviendraient une rangee de grille")
+        .not.toBeNull();
+    }
+  });
+
+  it("la bande du bas est le trace du haut retourne par un transform d ATTRIBUT", () => {
+    const d = monterParchemin(projetComplet());
+    const traces = [...d.querySelectorAll(".parchemin-bande")].map((b) =>
+      b.querySelector("path"),
+    );
+    expect(traces).toHaveLength(2);
+    expect(traces[0]!.getAttribute("d")).toBe(traces[1]!.getAttribute("d"));
+    expect(traces[0]!.getAttribute("transform")).toBeNull();
+    const retournement = traces[1]!.getAttribute("transform");
+    // Nomme d'abord l'absence : sans ce pas, `toMatch(null)` leve un TypeError
+    // et l'echec ne dit plus de quoi il parle.
+    expect(retournement,
+      "la bande du bas ne porte aucun transform d attribut, la regle CSS n a pas droit au transform")
+      .toEqual(expect.any(String));
+    expect(retournement!).toMatch(/scale\(\s*1\s+-1\s*\)/);
+  });
+});
+
+/* Addendum sections A, B et F : le drapeau et l'historique, observes depuis le
+   conteneur. Tout ce qui suit est monte DANS le fournisseur : hors de lui le
+   drapeau ne se leve jamais et ces tests seraient verts pour rien. */
+describe("le parchemin et la pagination (addendum A, B, F)", () => {
+  it("le parchemin ouvert leve le drapeau : la molette ne pagine plus", () => {
+    monterAvecConteneur(projetComplet());
+    expect(actif()).toBe("ouverture");
+    molette();
+    expect(actif(), "la pagination a bouge sous un parchemin ouvert")
+      .toBe("ouverture");
+  });
+
+  // Addendum section B : le defaut le plus couteux de la branche.
+  it("le parchemin demonte rend la pagination a la molette", async () => {
+    monterAvecConteneur(projetComplet());
+    act(() => rendreAvecConteneur(null));
+    expect(hote.querySelector("dialog"), "le parchemin n est pas demonte").toBeNull();
+    molette();
+    await laisserRetomber();
+    expect(actif(), "la pagination est restee MORTE apres le demontage du parchemin")
+      .toBe("projets");
+  });
+
+  // Addendum section A, l'invariant lui-meme : l'entree posee a l'ouverture
+  // garde le fragment courant. Elle ne decrit aucun etat.
+  it("l ouverture n emporte pas un fragment etranger", () => {
+    window.history.replaceState(null, "", "#projets");
+    monterAvecConteneur(projetComplet());
+    expect(location.hash,
+      "l entree posee a l ouverture a change de section sous le visiteur")
+      .toBe("#projets");
+  });
+
+  // Addendum section A, de bout en bout.
+  it("fermer par Echap laisse la section exactement ou elle etait", async () => {
+    window.history.replaceState(null, "", "#projets");
+    monterAvecConteneur(projetComplet());
+    const avant = actif();
+    expect(avant).toBe("projets");
+    act(() => {
+      hote
+        .querySelector("dialog")!
+        .dispatchEvent(new Event("cancel", { cancelable: true, bubbles: true }));
+    });
+    await laisserRetomber();
+    expect(hote.querySelector("dialog")).toBeNull();
+    expect(actif(), "la fermeture a change de section sous le visiteur").toBe(avant);
+  });
+});
+
+/* Addendum section C : trois sites de garde du conteneur que la revue de la
+   tache 1 a trouves tenus par AUCUN test. */
+describe("les trois gardes du conteneur restees nues (addendum C)", () => {
+  it("un clic sur une ancre de la colonne ne pagine pas sous surcouche", () => {
+    monterBascule(IDS_PARCOURS, true);
+    const ancre = document.createElement("a");
+    ancre.setAttribute("href", "#contact");
+    hote.append(ancre);
+    act(() => {
+      ancre.dispatchEvent(
+        new MouseEvent("click", { bubbles: true, cancelable: true, button: 0 }),
+      );
+    });
+    expect(actif(), "un clic a pagine alors que le parchemin etait ouvert")
+      .toBe("ouverture");
+  });
+
+  it("un touchstart sous surcouche n arme pas le geste, meme si elle se ferme avant la fin", () => {
+    monterBascule(IDS_PARCOURS, true);
+    act(() => {
+      window.dispatchEvent(tactile("touchstart", 10, 300));
+    });
+    // La surcouche se ferme ENTRE les deux moities du geste : la garde du
+    // `touchend` ne couvre donc plus rien, seule celle du `touchstart` tient.
+    rebasculer(false);
+    act(() => {
+      window.dispatchEvent(tactile("touchend", 10, 100));
+    });
+    expect(actif(), "un geste commence sous surcouche a pagine").toBe("ouverture");
+  });
+
+  it("un touchstart parti d un proprietaire du defilement n arme pas le geste", () => {
+    monterBascule(IDS_PARCOURS, false);
+    const prop = document.createElement("div");
+    prop.setAttribute("data-defilement-propre", "");
+    Object.defineProperties(prop, {
+      scrollTop: { value: 0, writable: true },
+      scrollHeight: { value: 1000, configurable: true },
+      clientHeight: { value: 400, configurable: true },
+    });
+    hote.append(prop);
+    act(() => {
+      prop.dispatchEvent(tactile("touchstart", 10, 300));
+    });
+    act(() => {
+      window.dispatchEvent(tactile("touchend", 10, 100));
+    });
+    expect(actif(), "la pagination a vole le geste du proprietaire du defilement")
+      .toBe("ouverture");
   });
 });

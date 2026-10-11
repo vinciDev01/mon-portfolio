@@ -1447,9 +1447,17 @@ html {
   }
 
   /* Le parchemin : la forme porte le sens, jamais le mouvement. Meme
-     raisonnement que le drapeau de disponibilite. Aucune de ces regles ne
-     doit gagner de mouvement : le budget du site est de deux mouvements et ce
-     chantier n'en consomme aucun. */
+     raisonnement que `.drapeau-disponibilite` (plus haut dans cette couche) :
+     la forme dit la chose, rien ne s'anime. Aucune de ces regles ne doit
+     gagner de mouvement : le budget du site est de deux mouvements et ce
+     chantier n'en consomme aucun.
+
+     Contrat de structure pour le composant : `.parchemin-feuille` est ENFANT
+     DIRECT du `<dialog class="parchemin">` (son `max-height: inherit` lit
+     celui du dialog), et elle a EXACTEMENT trois enfants directs, dans
+     l'ordre : bande, `.parchemin-corps`, bande. `grid-template-rows: auto 1fr
+     auto` en depend, et c'est le corps seul qui defile. `.parchemin-credits`
+     vit DANS le corps, ce n'est pas une rangee de la grille. */
   .parchemin::backdrop {
     background: rgb(0 0 0 / 0.55);
   }
@@ -1460,6 +1468,8 @@ html {
     max-width: min(66ch, calc(100vw - 2 * var(--espace-3)));
     max-height: calc(100dvh - 2 * var(--espace-3));
     background: transparent;
+    /* L'encre est celle de la page, pas le `CanvasText` du navigateur. */
+    color: var(--texte);
   }
 
   .parchemin-feuille {

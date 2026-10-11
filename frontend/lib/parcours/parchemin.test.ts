@@ -1,7 +1,8 @@
 import { describe, it, expect } from "vitest";
 import type { ProjectDto, ProjectCollaboratorDto } from "@portfolio/shared-types";
 import { blocsPresents, credits } from "./parchemin";
-import { css } from "./feuille-test";
+import { bloc, corpsDepuis, css, valeur } from "./feuille-test";
+import { ratioContraste, luminanceRelative } from "@/lib/color/contrast";
 import { PALETTE_CLAIRE, PALETTE_SOMBRE } from "@/lib/design/tokens";
 
 function projet(p: Partial<ProjectDto>): ProjectDto {
@@ -172,55 +173,120 @@ describe("credits (spec section 4)", () => {
   });
 });
 
+/** Le source sans ses commentaires : on ne balaye que des declarations. */
+const sansCommentaires = (s: string) => s.replace(/\/\*[\s\S]*?\*\//g, "");
+
+/** Les declarations `propriete: valeur` d'un corps de regle, commentaires exclus. */
+function declarations(corps: string): Array<{ prop: string; val: string }> {
+  return sansCommentaires(corps)
+    .split(";")
+    .map((d) => /^\s*([a-z-]+)\s*:\s*([\s\S]*?)\s*$/.exec(d))
+    .filter((m): m is RegExpExecArray => m !== null)
+    .map((m) => ({ prop: m[1]!, val: m[2]! }));
+}
+
+/**
+ * Les declarations de mouvement d'un corps. On ancre sur le NOM ENTIER de la
+ * propriete : `text-transform` est legitime, `transform` ne l'est pas.
+ */
+const PROPRIETES_MOUVEMENT =
+  /^(?:transition|animation|transform|translate|rotate|scale|skew|scroll-behavior|offset|zoom)(?:-[a-z-]+)?$/;
+function mouvements(corps: string): string[] {
+  return declarations(corps)
+    .filter(
+      ({ prop, val }) =>
+        PROPRIETES_MOUVEMENT.test(prop) ||
+        (prop === "will-change" && /transform|translate|rotate|scale|offset/.test(val)),
+    )
+    .map(({ prop, val }) => `${prop}: ${val}`);
+}
+
+/** Les declarations d'image de fond ou de degrade d'un corps. */
+const PROPRIETES_IMAGE = /^(?:background-image|border-image(?:-source)?|mask-image|list-style-image)$/;
+function degrades(corps: string): string[] {
+  return declarations(corps)
+    .filter(
+      ({ prop, val }) =>
+        PROPRIETES_IMAGE.test(prop) || /gradient|var\(--degrade/.test(val),
+    )
+    .map(({ prop, val }) => `${prop}: ${val}`);
+}
+
 /** Corps de chaque bloc dont l'en-tete correspond. */
 function blocs(entete: RegExp, source: string): string[] {
   const re = new RegExp(entete.source, "g");
   const trouves: string[] = [];
   for (let m = re.exec(source); m; m = re.exec(source)) {
-    let profondeur = 0;
-    for (let i = m.index + m[0].length - 1; i < source.length; i++) {
-      if (source[i] === "{") profondeur++;
-      if (source[i] === "}" && --profondeur === 0) {
-        trouves.push(source.slice(m.index + m[0].length, i));
-        break;
-      }
-    }
+    trouves.push(corpsDepuis(source, m.index + m[0].length - 1));
   }
   return trouves;
 }
 
-function lum(hex: string): number {
-  const n = hex.replace("#", "");
-  const c = [0, 2, 4].map((i) => parseInt(n.slice(i, i + 2), 16) / 255)
-    .map((v) => (v <= 0.04045 ? v / 12.92 : ((v + 0.055) / 1.055) ** 2.4));
-  return 0.2126 * c[0] + 0.7152 * c[1] + 0.0722 * c[2];
+/** La feuille privee de ses blocs `forced-colors` : les regles de BASE seules. */
+function sansCouleursForcees(source: string): string {
+  const re = /@media \(forced-colors: active\)\s*\{/;
+  let out = source;
+  for (let m = re.exec(out); m; m = re.exec(out)) {
+    const depart = m.index + m[0].length - 1;
+    const corps = corpsDepuis(out, depart);
+    out = out.slice(0, m.index) + out.slice(depart + corps.length + 2);
+  }
+  return out;
 }
-function ratio(a: string, b: string): number {
-  const [x, y] = [lum(a), lum(b)];
-  const [h, l] = x > y ? [x, y] : [y, x];
-  return (h + 0.05) / (l + 0.05);
-}
+
+const FORCEES = blocs(/@media \(forced-colors: active\)\s*\{/, css).join("\n");
+const BASE = sansCouleursForcees(css);
+const regles = (source: string) =>
+  [...source.matchAll(/([^{}]*\.parchemin[a-z-]*[^{}]*)\{([^}]*)\}/g)];
+
+describe("le balayage de mouvement ancre sur des noms de propriete entiers", () => {
+  it("laisse passer text-transform, qui n'est pas un mouvement", () => {
+    expect(mouvements("text-transform: uppercase; letter-spacing: 0.1em")).toEqual([]);
+  });
+
+  it("ignore les commentaires du corps", () => {
+    expect(mouvements("/* transition: all 1s; animation: x */ color: red")).toEqual([]);
+  });
+
+  for (const interdit of [
+    "animation: deroule 1s",
+    "animation-name: deroule",
+    "transition: fill 1s",
+    "transition-duration: 1s",
+    "transform: rotate(3deg)",
+    "transform-origin: top",
+    "scale: 1.1",
+    "rotate: 3deg",
+    "translate: 0 4px",
+    "skew: 2deg",
+    "scroll-behavior: smooth",
+    "offset-path: circle(10px)",
+    "zoom: 1.2",
+    "will-change: transform",
+  ]) {
+    it(`attrape ${interdit}`, () => {
+      expect(mouvements(interdit)).toHaveLength(1);
+    });
+  }
+
+  it("laisse passer will-change sur une valeur sans mouvement", () => {
+    expect(mouvements("will-change: auto")).toEqual([]);
+  });
+});
 
 describe("la forme du parchemin (spec section 2)", () => {
-  const regles = () =>
-    [...css.matchAll(/([^{}]*\.parchemin[a-z-]*[^{}]*)\{([^}]*)\}/g)];
-
-  it("declare au moins la feuille et les bandes", () => {
-    const noms = regles().map((m) => m[1]).join(" ");
+  it("declare la feuille et les bandes dans les regles de BASE", () => {
+    const noms = regles(BASE).map((m) => m[1]).join(" ");
     expect(noms).toContain(".parchemin-feuille");
     expect(noms).toContain(".parchemin-bande");
   });
 
   // Categorique : AUCUNE regle du parchemin ne bouge, quelle qu'elle soit.
-  // `animat` couvre `animation` comme `animate` ; rotate et skew ferment la
-  // classe des transformations individuelles.
   it("aucune regle du parchemin ne porte de mouvement", () => {
-    const r = regles();
+    const r = regles(css);
     expect(r.length, "aucune regle .parchemin").toBeGreaterThan(0);
     for (const [, sel, corps] of r) {
-      expect(corps, sel.trim()).not.toMatch(
-        /transition|transform|translate|rotate|skew|scale|animat/,
-      );
+      expect(mouvements(corps!), sel!.trim()).toEqual([]);
     }
   });
 
@@ -228,52 +294,114 @@ describe("la forme du parchemin (spec section 2)", () => {
     expect(css).not.toMatch(/@keyframes\s+[a-z-]*parchemin/);
   });
 
-  it("aucune regle du parchemin ne porte de degrade", () => {
-    for (const [, sel, corps] of regles()) {
-      expect(corps, sel.trim()).not.toMatch(/gradient/);
+  it("aucune regle du parchemin ne porte de degrade ni d'image de fond", () => {
+    for (const [, sel, corps] of regles(css)) {
+      expect(degrades(corps!), sel!.trim()).toEqual([]);
     }
   });
 
-  it("la feuille est en surface et bordee de la bordure signifiante", () => {
-    const f = blocs(/\.parchemin-feuille\s*\{/, css).join("\n");
-    expect(f).toContain("var(--surface)");
-    expect(f).toContain("var(--bordure-signifiante)");
+  it("le detecteur de degrade attrape les images et les variables de degrade", () => {
+    expect(degrades("background-image: var(--degrade)")).toHaveLength(1);
+    expect(degrades("background: linear-gradient(red, blue)")).toHaveLength(1);
+    expect(degrades("background: radial-gradient(red, blue)")).toHaveLength(1);
+    expect(degrades("background: var(--surface)")).toEqual([]);
   });
 
-  it("les bandes d enroulement sont remplies a plat en fond", () => {
-    const b = blocs(/\.parchemin-bande\s*\{/, css).join("\n");
-    expect(b).toContain("var(--fond)");
-    expect(b).not.toMatch(/gradient/);
+  describe("la boite", () => {
+    const boite = bloc(/(?:^|[\s}])\.parchemin\s*\{/, BASE);
+
+    it("a l'encre de la page et non celle du navigateur", () => {
+      expect(valeur(boite, "color")).toBe("var(--texte)");
+    });
+
+    it("tient dans la zone VISIBLE : 100dvh, jamais 100vh", () => {
+      const h = valeur(boite, "max-height");
+      expect(h).toMatch(/^calc\(100dvh - /);
+      expect(h).not.toMatch(/\dvh\b/);
+    });
+
+    it("reste transparente, la feuille porte la surface", () => {
+      expect(valeur(boite, "background")).toBe("transparent");
+    });
   });
 
-  it("les couleurs forcees donnent aux bandes une paire systeme, sans rendre la couleur de l auteur", () => {
-    const forces = blocs(/@media \(forced-colors: active\)\s*\{/, css).join("\n");
-    const b = blocs(/\.parchemin-bande\s*\{/, forces).join("\n");
-    expect(b).toContain("fill: Canvas");
-    expect(b).toContain("stroke: CanvasText");
-    const f = blocs(/\.parchemin-feuille\s*\{/, forces).join("\n");
-    expect(f).toContain("CanvasText");
-    for (const corps of [b, f]) expect(corps).not.toMatch(/forced-color-adjust/);
+  describe("la feuille", () => {
+    const f = bloc(/\.parchemin-feuille\s*\{/, BASE);
+
+    it("est en surface", () => {
+      expect(valeur(f, "background")).toBe("var(--surface)");
+    });
+
+    it("est bordee de la bordure signifiante", () => {
+      expect(valeur(f, "border-inline")).toBe("1px solid var(--bordure-signifiante)");
+    });
+
+    it("est une grille bande, corps qui prend le reste, bande", () => {
+      expect(valeur(f, "display")).toBe("grid");
+      expect(valeur(f, "grid-template-rows")).toBe("auto 1fr auto");
+    });
+
+    it("herite de la hauteur maximale du dialog, ce qui borne le 1fr", () => {
+      expect(valeur(f, "max-height")).toBe("inherit");
+    });
+  });
+
+  describe("le corps", () => {
+    it("defile seul, les bandes restent en place", () => {
+      expect(valeur(bloc(/\.parchemin-corps\s*\{/, BASE), "overflow-y")).toBe("auto");
+    });
+  });
+
+  describe("les bandes d enroulement", () => {
+    const b = bloc(/\.parchemin-bande\s*\{/, BASE);
+
+    it("sont remplies a plat en fond, et tracees de la bordure signifiante", () => {
+      expect(valeur(b, "fill")).toBe("var(--fond)");
+      expect(valeur(b, "stroke")).toBe("var(--bordure-signifiante)");
+    });
+
+    it("sont en bloc, sans interstice de ligne de base", () => {
+      expect(valeur(b, "display")).toBe("block");
+      expect(valeur(b, "height")).toBe("24px");
+    });
+  });
+
+  describe("en couleurs forcees", () => {
+    const b = bloc(/\.parchemin-bande\s*\{/, FORCEES);
+    const f = bloc(/\.parchemin-feuille\s*\{/, FORCEES);
+
+    it("les bandes prennent une paire systeme, exacte", () => {
+      expect(valeur(b, "fill")).toBe("Canvas");
+      expect(valeur(b, "stroke")).toBe("CanvasText");
+    });
+
+    it("la bordure de la feuille prend CanvasText", () => {
+      expect(valeur(f, "border-inline")).toBe("1px solid CanvasText");
+    });
+
+    it("ne coupe jamais l'ajustement des couleurs", () => {
+      for (const corps of [b, f]) expect(corps).not.toMatch(/forced-color-adjust/);
+    });
   });
 });
 
 describe("les contrastes du parchemin, calcules et non epingles", () => {
   for (const [nom, p] of [["clair", PALETTE_CLAIRE], ["sombre", PALETTE_SOMBRE]] as const) {
     it(`${nom} : bordure sur la feuille atteint 3:1`, () => {
-      expect(ratio(p.bordureSignifiante, p.surface)).toBeGreaterThanOrEqual(3);
+      expect(ratioContraste(p.bordureSignifiante, p.surface)).toBeGreaterThanOrEqual(3);
     });
     it(`${nom} : texte secondaire sur la feuille atteint 4,5:1`, () => {
-      expect(ratio(p.texteSecondaire, p.surface)).toBeGreaterThanOrEqual(4.5);
+      expect(ratioContraste(p.texteSecondaire, p.surface)).toBeGreaterThanOrEqual(4.5);
     });
     it(`${nom} : accent sur la feuille atteint 4,5:1`, () => {
-      expect(ratio(p.accent, p.surface)).toBeGreaterThanOrEqual(4.5);
+      expect(ratioContraste(p.accent, p.surface)).toBeGreaterThanOrEqual(4.5);
     });
   }
 
   it("le fond reste plus sombre que la surface, sinon la bande ne lit plus", () => {
     // C'est ce qui fait qu'une bande en `--fond` se lit comme un dessous
     // ombre dans les DEUX palettes, sans degrade.
-    expect(lum(PALETTE_CLAIRE.fond)).toBeLessThan(lum(PALETTE_CLAIRE.surface));
-    expect(lum(PALETTE_SOMBRE.fond)).toBeLessThan(lum(PALETTE_SOMBRE.surface));
+    expect(luminanceRelative(PALETTE_CLAIRE.fond)).toBeLessThan(luminanceRelative(PALETTE_CLAIRE.surface));
+    expect(luminanceRelative(PALETTE_SOMBRE.fond)).toBeLessThan(luminanceRelative(PALETTE_SOMBRE.surface));
   });
 });

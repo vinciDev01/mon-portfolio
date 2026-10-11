@@ -121,6 +121,20 @@ describe("source unique : aucune autre declaration (spec section 7.1)", () => {
     }
   });
 
+  // Les titres de section vivent sous `nav.*`. Une seconde famille `section.*`
+  // est le vehicule de la divergence d'origine : le balayage ci-dessous ne
+  // couvrait que les identifiants.
+  it("aucune source ne reference `section.<id>` pour un identifiant de section", () => {
+    for (const f of fichiersSource()) {
+      const src = lire(f);
+      for (const { id } of SECTIONS) {
+        expect(src, `${f} reference section.${id}`).not.toMatch(
+          new RegExp(`["'\`]section\\.${id}["'\`]`),
+        );
+      }
+    }
+  });
+
   it("l ancien module est bien supprime", () => {
     expect(() => lire("lib/parcours/entrees-sections.ts")).toThrow();
   });
@@ -140,8 +154,21 @@ describe("les cles de titre existent dans les trois langues", () => {
     });
   }
 
-  // Exception voulue : `nav.blog` garde son point final, ce n'est pas une
-  // section. Ne pas le « corriger ».
+  for (const langue of ["fr", "en", "de"]) {
+    it(`${langue}.json : aucune cle section.* hors section.certifications`, () => {
+      const dict = JSON.parse(lire(`lib/i18n/${langue}.json`));
+      const cles = Object.keys(dict).filter((k) => k.startsWith("section."));
+      expect(cles).toEqual(["section.certifications"]);
+    });
+
+    it(`${langue}.json : aucun libelle de navigation ne finit par un point`, () => {
+      const dict = JSON.parse(lire(`lib/i18n/${langue}.json`));
+      for (const [k, v] of Object.entries(dict)) {
+        if (k.startsWith("nav.")) expect(v, k).not.toMatch(/\.$/);
+      }
+    });
+  }
+
   for (const langue of ["fr", "en", "de"]) {
     it(`${langue}.json : aucun libelle de section ne finit par un point`, () => {
       const dict = JSON.parse(lire(`lib/i18n/${langue}.json`));

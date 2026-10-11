@@ -10,16 +10,7 @@
   "nav.stats": "Chiffres",
   "nav.downloadCv": "Télécharger CV",
 
-  "section.skills": "Compétences",
-  "section.experience": "Expérience",
   "section.certifications": "Certifications",
-  "section.projects": "Projets",
-  "section.services": "Services",
-  "section.about": "À propos",
-  "section.testimonials": "Témoignages",
-  "section.contact": "Contact",
-  "section.ouverture": "Ouverture",
-  "section.stats": "Chiffres",
 
   "projects.clickForDetails": "Cliquer pour plus de détails",
   "projects.ongoing": "En cours",
@@ -79,7 +70,7 @@
   "maintenance.title": "Site en maintenance",
   "maintenance.message": "Nous revenons bientôt.",
 
-  "nav.blog": "Blog.",
+  "nav.blog": "Blog",
   "parcours.colonne": "Parcours du site",
   "parcours.disponibilite": "Disponibilité",
   "parcours.identite": "Retour à l'accueil",

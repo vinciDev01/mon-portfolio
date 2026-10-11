@@ -10,16 +10,7 @@
   "nav.stats": "Kennzahlen",
   "nav.downloadCv": "Lebenslauf herunterladen",
 
-  "section.skills": "Kompetenzen",
-  "section.experience": "Erfahrung",
   "section.certifications": "Zertifikate",
-  "section.projects": "Projekte",
-  "section.services": "Dienstleistungen",
-  "section.about": "Über mich",
-  "section.testimonials": "Referenzen",
-  "section.contact": "Kontakt",
-  "section.ouverture": "Einleitung",
-  "section.stats": "Kennzahlen",
 
   "projects.clickForDetails": "Klicken für mehr Details",
   "projects.ongoing": "Laufend",
@@ -79,7 +70,7 @@
   "maintenance.title": "Wartungsmodus",
   "maintenance.message": "Wir sind bald zurück.",
 
-  "nav.blog": "Blog.",
+  "nav.blog": "Blog",
   "parcours.colonne": "Seitennavigation",
   "parcours.disponibilite": "Verfügbarkeit",
   "parcours.identite": "Zurück zur Startseite",

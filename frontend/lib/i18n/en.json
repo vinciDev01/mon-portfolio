@@ -10,16 +10,7 @@
   "nav.stats": "Key figures",
   "nav.downloadCv": "Download CV",
 
-  "section.skills": "Skills",
-  "section.experience": "Experience",
   "section.certifications": "Certifications",
-  "section.projects": "Projects",
-  "section.services": "Services",
-  "section.about": "About",
-  "section.testimonials": "Testimonials",
-  "section.contact": "Contact",
-  "section.ouverture": "Introduction",
-  "section.stats": "Key figures",
 
   "projects.clickForDetails": "Click for more details",
   "projects.ongoing": "Ongoing",
@@ -79,7 +70,7 @@
   "maintenance.title": "Site under maintenance",
   "maintenance.message": "We'll be back soon.",
 
-  "nav.blog": "Blog.",
+  "nav.blog": "Blog",
   "parcours.colonne": "Site navigation",
   "parcours.disponibilite": "Availability",
   "parcours.identite": "Back to home",

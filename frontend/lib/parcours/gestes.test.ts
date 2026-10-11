@@ -50,6 +50,11 @@ describe("actionClavier", () => {
     const a = actionClavier("PageUp", false, 1, 5, butee(false), 800);
     expect(a?.type === "defiler" && a.dy < 0).toBe(true);
   });
+  it("Home et End ne font rien sur une liste vide", () => {
+    expect(actionClavier("End", false, 0, 0, butee(true), 800)).toBeNull();
+    expect(actionClavier("Home", false, 0, 0, butee(true), 800)).toBeNull();
+  });
+
   it("Home et End sautent aux extremites meme hors butee", () => {
     expect(actionClavier("End", false, 1, 5, butee(false), 800)).toEqual({ type: "aller", cible: 4 });
     expect(actionClavier("Home", false, 3, 5, butee(false), 800)).toEqual({ type: "aller", cible: 0 });

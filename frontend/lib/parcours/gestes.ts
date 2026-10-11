@@ -40,9 +40,9 @@ export function actionClavier(
     case "ArrowUp":
       return pas(-1, 40);
     case "End":
-      return { type: "aller", cible: nombre - 1 };
+      return nombre > 0 ? { type: "aller", cible: nombre - 1 } : null;
     case "Home":
-      return { type: "aller", cible: 0 };
+      return nombre > 0 ? { type: "aller", cible: 0 } : null;
     default:
       return null;
   }

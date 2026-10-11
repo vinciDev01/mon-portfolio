@@ -125,7 +125,7 @@ describe("mitigations de performance (annexe §8.1)", () => {
     expect(element).toMatch(/mask=\{/);
   });
 
-  it("content-visibility a ete retire : display none le supplante (transition.test.ts le garde)", () => {
+  it("content-visibility a ete retire : visibility le supplante (transition.test.ts le garde)", () => {
     expect(css).not.toMatch(/content-visibility:\s*auto/);
   });
 });

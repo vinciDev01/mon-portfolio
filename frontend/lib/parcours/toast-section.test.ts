@@ -54,7 +54,7 @@ describe("la regle de stabilisation (spec section 3.2)", () => {
   });
 });
 
-// Le ccâblage avec une vraie minuterie, sur l'horloge simulee de vitest.
+// Le cablage avec une vraie minuterie, sur l'horloge simulee de vitest.
 describe("l annonceur branche sur une minuterie", () => {
   beforeEach(() => vi.useFakeTimers());
   afterEach(() => vi.useRealTimers());

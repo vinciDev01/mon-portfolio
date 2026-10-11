@@ -5,7 +5,6 @@ import { useTranslation } from "@/lib/i18n/i18n-context";
 
 import { PICTOS, SECTIONS } from "@/lib/parcours/sections";
 import { creerAnnonceur } from "@/lib/parcours/toast-section";
-export { DELAI_STABILISATION, annonceAPoser } from "@/lib/parcours/toast-section";
 
 export function SectionToastObserver() {
   const currentToastRef = useRef<HTMLDivElement | null>(null);

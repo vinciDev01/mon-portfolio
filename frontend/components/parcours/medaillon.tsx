@@ -22,8 +22,7 @@ export function aUnPortrait(infos: PersonalInfoDto): boolean {
  * couches de lumiere sont de toute facon en z-index -1, derriere le contenu :
  * aucune cohabitation avec la lumiere n'est a verifier.
  *
- * Aucun mouvement propre : il herite de l'entree de bloc, qui est l'un des deux
- * mouvements autorises.
+ * Aucun mouvement propre : il apparait avec sa section, par l'opacite seule.
  */
 export function Medaillon({ infos }: { infos: PersonalInfoDto }) {
   const { t } = useTranslation();

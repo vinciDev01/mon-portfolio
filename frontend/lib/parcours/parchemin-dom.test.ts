@@ -257,12 +257,13 @@ function boutonFermer(racineDom: ParentNode): HTMLButtonElement {
  * faire que sur un noeud encore dans le document. Le focus lui-meme n'est pas
  * verifiable ici : jsdom ne gere ni couche superieure, ni restitution.
  */
-function espionnerClose(): string[] {
+function espionnerClose(journal?: string[]): string[] {
   const appels: string[] = [];
   const proto = HTMLDialogElement.prototype as unknown as { close?: () => void };
   const avait = Object.prototype.hasOwnProperty.call(proto, "close");
   proto.close = function (this: HTMLDialogElement) {
     appels.push(`${this.isConnected}/${this.hasAttribute("open")}`);
+    journal?.push("close");
     this.removeAttribute("open");
   };
   // La depose est confiee a `afterEach` et non a la derniere ligne du test :
@@ -678,6 +679,22 @@ describe("le parchemin (spec sections 4, 5 et 6)", () => {
       "le dialogue reste ouvert alors qu il vient d etre ferme").toBe(false);
   });
 
+  // Symetrique du test du bouton, et mesure a l'origine de son ajout : sans
+  // lui, retirer l'appel explicite de `surRetour` ne faisait echouer AUCUN
+  // test, le nettoyage de mise en page couvrant deja ce chemin quand
+  // l'appelant demonte. Ici `surFermeture` ne demonte RIEN, donc aucun
+  // nettoyage ne tourne et seul l'appel explicite peut refermer.
+  it("un popstate referme le dialogue meme si l appelant ne demonte pas", () => {
+    const d = monterParchemin(projetComplet());
+    expect(d.hasAttribute("open")).toBe(true);
+    act(() => {
+      window.dispatchEvent(new PopStateEvent("popstate"));
+    });
+    expect(d.hasAttribute("open"),
+      "le Retour laisse le dialogue ouvert, et son entree vient d etre consommee")
+      .toBe(false);
+  });
+
   it("l ouverture pose UNE SEULE entree d historique", () => {
     const push = vi.spyOn(history, "pushState");
     monterParchemin(projetComplet());
@@ -689,8 +706,9 @@ describe("le parchemin (spec sections 4, 5 et 6)", () => {
   });
 
   // Addendum section A : l'ordre, et non seulement le fait.
-  it("la fermeture consomme l entree AVANT de prevenir l appelant", () => {
+  it("la fermeture joue close(), consomme l entree, PUIS previent l appelant", () => {
     const ordre: string[] = [];
+    espionnerClose(ordre);
     const back = vi.spyOn(history, "back").mockImplementation(() => {
       ordre.push("back");
     });
@@ -711,8 +729,11 @@ describe("le parchemin (spec sections 4, 5 et 6)", () => {
       boutonFermer(hote).click();
     });
     // `surFermeture` demonte le parchemin : appelee d'abord, elle retirerait
-    // l'ecouteur avant que `back` n'ait rien demande.
-    expect(ordre, "l ordre de fermeture est inverse").toEqual(["back", "fermeture"]);
+    // l'ecouteur avant que `back` n'ait rien demande. Et `close` doit preceder
+    // les deux : un appelant usant de `flushSync` detacherait le noeud des
+    // `surFermeture`, et un `close()` tardif redeviendrait du code mort.
+    expect(ordre, "l ordre de fermeture est inverse")
+      .toEqual(["close", "back", "fermeture"]);
     back.mockRestore();
   });
 
@@ -736,6 +757,71 @@ describe("le parchemin (spec sections 4, 5 et 6)", () => {
     });
     expect(fermetures, "le Retour du navigateur ne ferme pas le parchemin")
       .toHaveLength(1);
+  });
+});
+
+/* N1 de la re-revue : les quatre voies de FERMETURE passent par `fermer` ou
+   par `surRetour`, mais trois voies de DISPARITION ne passaient par aucune des
+   deux, et le `<dialog>` quittait l'arbre en portant encore `open`. C'est le
+   nettoyage de l'effet de MISE EN PAGE qui les couvre : mesure, lui seul tourne
+   avant que React detache les noeuds hotes. */
+describe("close() sur les voies de DISPARITION (re-revue, N1)", () => {
+  /** Un rendu pilote de l'EXTERIEUR, sans passer par le chemin de fermeture du
+   *  parchemin : c'est exactement ce qu'un appelant peut ecrire, et rien dans
+   *  le composant ne l'en empeche. */
+  function rendreur(): (p: ProjectDto | null) => void {
+    racine = createRoot(hote);
+    return (p) => {
+      racine!.render(
+        createElement(
+          Fournisseur,
+          { defaultLocale: "fr" },
+          createElement(ParcheminProjet, { projet: p, surFermeture: () => {} }),
+        ),
+      );
+    };
+  }
+
+  it("un changement de projet referme le dialogue SORTANT", () => {
+    const appels = espionnerClose();
+    const rendre = rendreur();
+    act(() => rendre(fabrique({ id: "a", name: "Projet A" })));
+    const sortant = hote.querySelector("dialog") as HTMLDialogElement;
+    act(() => rendre(fabrique({ id: "b", name: "Projet B" })));
+    expect(appels,
+      "le dialogue sortant quitte l arbre encore ouvert : pas de focus rendu")
+      .toEqual(["true/true"]);
+    expect(sortant.hasAttribute("open")).toBe(false);
+    // Et l'entrant est bien ouvert, lui : la remontee par cle a fait son
+    // travail, le repli n'a pas ferme le mauvais noeud.
+    const entrant = hote.querySelector("dialog") as HTMLDialogElement;
+    expect(entrant).not.toBe(sortant);
+    expect(entrant.hasAttribute("open")).toBe(true);
+  });
+
+  it("un projet remis a nul HORS du chemin de fermeture referme quand meme", () => {
+    const appels = espionnerClose();
+    const rendre = rendreur();
+    act(() => rendre(fabrique({ id: "a", name: "Projet A" })));
+    const d = hote.querySelector("dialog") as HTMLDialogElement;
+    act(() => rendre(null));
+    expect(hote.querySelector("dialog")).toBeNull();
+    expect(appels,
+      "l appelant peut faire disparaitre le parchemin en l abandonnant ouvert")
+      .toEqual(["true/true"]);
+    expect(d.hasAttribute("open")).toBe(false);
+  });
+
+  it("le demontage de la racine referme quand meme", () => {
+    const appels = espionnerClose();
+    const rendre = rendreur();
+    act(() => rendre(fabrique({ id: "a", name: "Projet A" })));
+    const d = hote.querySelector("dialog") as HTMLDialogElement;
+    act(() => racine!.unmount());
+    racine = null;
+    expect(appels, "la page qui s en va abandonne un dialogue ouvert")
+      .toEqual(["true/true"]);
+    expect(d.hasAttribute("open")).toBe(false);
   });
 });
 

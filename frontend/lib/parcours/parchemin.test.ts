@@ -158,6 +158,33 @@ describe("credits (spec section 4)", () => {
       .toBe("https://linkedin.test/in/ada");
   });
 
+  it("exclut un collaborateur sans prenom ni nom", () => {
+    const c = credits(projet({
+      collaborators: [
+        qui({ id: "v", firstName: "", lastName: "  " }),
+        qui({ id: "a" }),
+      ],
+    }));
+    expect(c.map((x) => x.cle)).toEqual(["a"]);
+  });
+
+  it("ne modifie pas le tableau recu", () => {
+    const liste = [
+      qui({ id: "b", sortOrder: 5 }),
+      qui({ id: "a", sortOrder: 0 }),
+    ];
+    credits(projet({ collaborators: liste }));
+    expect(liste.map((x) => x.id)).toEqual(["b", "a"]);
+  });
+
+  it("tolere un nom partiel sans laisser d espace en trop", () => {
+    expect(credits(projet({ collaborators: [qui({ lastName: "" })] }))[0].nom)
+      .toBe("Ada");
+  });
+});
+
+describe("lienDemo (spec section 4)", () => {
+
   it("n accepte que https: pour le lien de demonstration non plus", () => {
     // Le MEME champ de risque que le LinkedIn : rendu comme un lien vivant sur
     // une page publique, et alimente par le backoffice.
@@ -181,30 +208,6 @@ describe("credits (spec section 4)", () => {
     }
     expect(blocsPresents(projet({ demoUrl: "https://exemple.test" })))
       .toContain("demonstration");
-  });
-
-  it("exclut un collaborateur sans prenom ni nom", () => {
-    const c = credits(projet({
-      collaborators: [
-        qui({ id: "v", firstName: "", lastName: "  " }),
-        qui({ id: "a" }),
-      ],
-    }));
-    expect(c.map((x) => x.cle)).toEqual(["a"]);
-  });
-
-  it("ne modifie pas le tableau recu", () => {
-    const liste = [
-      qui({ id: "b", sortOrder: 5 }),
-      qui({ id: "a", sortOrder: 0 }),
-    ];
-    credits(projet({ collaborators: liste }));
-    expect(liste.map((x) => x.id)).toEqual(["b", "a"]);
-  });
-
-  it("tolere un nom partiel sans laisser d espace en trop", () => {
-    expect(credits(projet({ collaborators: [qui({ lastName: "" })] }))[0].nom)
-      .toBe("Ada");
   });
 });
 

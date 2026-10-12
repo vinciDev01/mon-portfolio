@@ -1,7 +1,7 @@
 "use client";
 
 import Image from "next/image";
-import { useCallback, useEffect, useRef } from "react";
+import { useCallback, useEffect, useLayoutEffect, useRef } from "react";
 import type { ProjectDto } from "@portfolio/shared-types";
 import { getFileUrl } from "@/lib/api";
 import { useTranslation } from "@/lib/i18n/i18n-context";
@@ -55,8 +55,16 @@ export function ParcheminProjet({
   surFermeture: () => void;
 }) {
   if (!projet) return null;
-  // Remonte par la cle : un autre projet remplace entierement l'etat interne
-  // (l'entree d'historique, le drapeau) au lieu de le recycler.
+  // Remonte par la cle : un autre projet repart d'un etat interne NEUF, effet
+  // et drapeau compris, au lieu de recycler celui du precedent.
+  //
+  // Et ce n'est PAS un remplacement de l'entree d'historique, contrairement a
+  // ce que disait ce commentaire. MESURE, de A vers B : `pushState` est appele
+  // DEUX fois et `back` zero fois, donc la seconde entree s'ajoute a la
+  // premiere. Apres une fermeture, qui n'en consomme qu'une, il en reste une
+  // inerte, et une pression du bouton Retour reste sans effet visible.
+  // L'appelant a pour consigne de toujours repasser par `null` entre deux
+  // projets, ce qui evite le cas : aucun garde-fou n'est ajoute ici.
   return <Dossier key={projet.id} projet={projet} surFermeture={surFermeture} />;
 }
 
@@ -98,6 +106,27 @@ function Dossier({
     else d.removeAttribute("open");
   }, []);
 
+  /**
+   * Les quatre voies de FERMETURE passent par `fermer` ou par `surRetour`. Il
+   * reste trois voies de DISPARITION qu'elles ne couvrent pas : un changement
+   * de `projet` d'un objet a un autre, un `projet` remis a nul par l'appelant
+   * hors du chemin de fermeture, et le demontage de la racine. Mesure : dans
+   * les trois cas le `<dialog>` quittait l'arbre en portant encore `open`,
+   * donc sans rendre le focus au declencheur.
+   *
+   * MESURE, aux trois formes de demontage : le nettoyage d'un effet de MISE EN
+   * PAGE tourne dans la phase de mutation du commit, AVANT que React detache
+   * les noeuds hotes, et la ref y est encore pleine (`isConnected` vrai,
+   * `document.contains` vrai, `open` encore pose). Ce n'est PAS vrai du
+   * nettoyage d'un `useEffect`, ou la ref est nulle : voir le commentaire de
+   * l'effet suivant. La distinction est tout l'interet de cette ligne.
+   *
+   * Un double appel est impossible : `refermerDialogue` sort d'emblee si
+   * l'attribut `open` n'est plus la, donc une fermeture deja jouee par
+   * `fermer` ou `surRetour` ne compte pas deux fois.
+   */
+  useLayoutEffect(() => () => refermerDialogue(), [refermerDialogue]);
+
   useEffect(() => {
     const d = dialogue.current;
     if (!d) return;
@@ -134,13 +163,15 @@ function Dossier({
 
     return () => {
       window.removeEventListener("popstate", surRetour);
-      // Ne PAS appeler `refermerDialogue` ici, et ce n'est pas un oubli.
-      // MESURE, aux deux formes de demontage (suppression d'un sous-arbre et
-      // demontage de la racine) : React detache le noeud et MET LA REF A NULL
-      // avant d'executer ce nettoyage. Un `close()` pose ici serait du code
-      // mort, et le focus ne reviendrait jamais au declencheur. C'est pourquoi
-      // il vit dans `fermer` et dans `surRetour`, ou le noeud est encore
-      // connecte et ouvert, ce qu'un test constate.
+      // Ne PAS appeler `refermerDialogue` ICI, et ce n'est pas un oubli : le
+      // nettoyage d'un `useEffect` est le SEUL des deux qui arrive trop tard.
+      // MESURE, aux trois formes de demontage (suppression d'un sous-arbre,
+      // demontage de la racine, changement de cle) : React detache le noeud et
+      // MET LA REF A NULL avant d'executer ce nettoyage-ci, donc un `close()`
+      // pose la sortirait aussitot sur `if (!d) return` : du code mort.
+      // Le nettoyage de l'effet de MISE EN PAGE, plus haut, tourne lui AVANT
+      // le detachement et fait le travail. `useEffect` non, `useLayoutEffect`
+      // oui : ne pas deplacer l'un vers l'autre.
       //
       // Obligatoire, et a cette place et non dans le chemin de fermeture : un
       // parchemin demonte par une autre voie laisserait sinon la pagination

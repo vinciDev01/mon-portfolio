@@ -6,7 +6,7 @@ import { createElement, type ComponentType } from "react";
 import { renderToStaticMarkup } from "react-dom/server";
 import { Article } from "../../components/parcours/journal-projets";
 import { I18nProvider } from "../i18n/i18n-context";
-import { bloc, evaluer, proprietes } from "./feuille-test";
+import { bloc, evaluer, proprietes, valeur, px } from "./feuille-test";
 import type { ProjectDto } from "@portfolio/shared-types";
 
 const RACINE = path.resolve(import.meta.dirname, "../..");
@@ -151,7 +151,15 @@ describe("journal des projets (spec section 6)", () => {
   it("ne reserve aucune place vide quand le projet de tete n a pas d image", () => {
     // `image` est nul quand la tete n'a pas de photo1Path : l'<Image> n'est
     // alors pas rendue.
-    expect(src).toMatch(/\{image\s*&&\s*\(\s*<Image/);
+    const html = renderToStaticMarkup(
+      createElement(
+        I18nProvider as ComponentType<{ defaultLocale: string }>,
+        { defaultLocale: "fr" },
+        createElement(Article, { projet: projet({}), tete: true, surOuverture: () => {} }),
+      ),
+    );
+    expect(html).not.toContain("<img");
+    expect(html, "un bouton de photo sans photo").not.toContain("journal-declencheur-image");
   });
 
   it("ferme chaque article par la signature des technologies", () => {
@@ -194,7 +202,7 @@ describe("lien de demonstration (rendu)", () => {
         // argument de createElement, comme l'exige la regle react/no-children-prop.
         I18nProvider as ComponentType<{ defaultLocale: string }>,
         { defaultLocale: "fr" },
-        createElement(Article, { projet: projet(p), tete: false }),
+        createElement(Article, { projet: projet(p), tete: false, surOuverture: () => {} }),
       ),
     );
 
@@ -285,7 +293,7 @@ describe("date et signature de chaque article (spec section 6)", () => {
       createElement(
         I18nProvider as ComponentType<{ defaultLocale: string }>,
         { defaultLocale: "fr" },
-        createElement(Article, { projet: projet(p), tete }),
+        createElement(Article, { projet: projet(p), tete, surOuverture: () => {} }),
       ),
     );
   const collab = (id: string, firstName: string, lastName: string, sortOrder: number) => ({
@@ -330,5 +338,115 @@ describe("date et signature de chaque article (spec section 6)", () => {
       const dict = JSON.parse(lire(`lib/i18n/${d}.json`)) as Record<string, unknown>;
       expect(dict["journal.collaborateurs"], d).toMatch(/\{noms\}/);
     }
+  });
+});
+
+describe("le declencheur du parchemin (spec section 3)", () => {
+  const Fournisseur = I18nProvider as ComponentType<{ defaultLocale: string }>;
+  function rendreArticle(p: Partial<ProjectDto>, tete = false): string {
+    return renderToStaticMarkup(
+      createElement(
+        Fournisseur,
+        { defaultLocale: "fr" },
+        createElement(Article, { projet: projet(p), tete, surOuverture: () => {} }),
+      ),
+    );
+  }
+
+  it("le titre porte un bouton, et reste un titre", () => {
+    const html = rendreArticle({ name: "Mon projet" });
+    const h = /<h3[^>]*>([\s\S]*?)<\/h3>/.exec(html);
+    expect(h, "le titre n est plus un h3").not.toBeNull();
+    expect(h![1]).toMatch(/<button[\s>]/);
+    expect(h![1]).toContain("Mon projet");
+  });
+
+  // Categorique : c'est l'invariant d'accessibilite, pas une orthographe.
+  it("le bouton du titre ne contient AUCUN element interactif", () => {
+    const html = rendreArticle({ name: "Mon projet", demoUrl: "https://exemple.test" });
+    const b = /<button[^>]*>([\s\S]*?)<\/button>/.exec(html);
+    expect(b).not.toBeNull();
+    expect(b![1], "un element interactif est dans le bouton").not.toMatch(
+      /<a[\s>]|<button[\s>]|<input[\s>]|<select[\s>]/,
+    );
+  });
+
+  it("le lien de demonstration reste frere du bouton, pas son enfant", () => {
+    const html = rendreArticle({ demoUrl: "https://exemple.test" });
+    const finBouton = html.indexOf("</button>");
+    expect(finBouton).toBeGreaterThan(-1);
+    expect(html.indexOf('href="https://exemple.test"')).toBeGreaterThan(finBouton);
+  });
+
+  it("la photo de tete est aussi un declencheur, avec un nom accessible", () => {
+    const html = rendreArticle({ name: "Mon projet", photo1Path: "a.webp" }, true);
+    const avant = html.slice(0, html.indexOf("<img"));
+    expect(avant).toMatch(/<button[^>]*>$/);
+    const balise = /<button[^>]*>$/.exec(avant)![0];
+    expect(balise).toContain('aria-label="Mon projet"');
+    expect(balise).not.toContain("aria-hidden");
+    expect(balise).toContain('type="button"');
+  });
+
+  it("l article lui-meme n est pas cliquable", () => {
+    const html = rendreArticle({ name: "Mon projet" });
+    const art = /<article[^>]*>/.exec(html)![0];
+    expect(art).not.toMatch(/onclick|role="button"|tabindex/i);
+  });
+
+  it("chaque declencheur dit que cela s ouvre, hors couleur", () => {
+    const html = rendreArticle({ name: "Mon projet", photo1Path: "a.webp" }, true);
+    const boutons = html.match(/<button[^>]*>/g) ?? [];
+    expect(boutons).toHaveLength(2);
+    for (const b of boutons) expect(b).toContain('title="Cliquer pour plus de détails"');
+  });
+});
+
+describe("le lien de demonstration du journal suit la regle du parchemin (https seul)", () => {
+  const rendre = (demoUrl: string) =>
+    renderToStaticMarkup(
+      createElement(
+        I18nProvider as ComponentType<{ defaultLocale: string }>,
+        { defaultLocale: "fr" },
+        createElement(Article, {
+          projet: projet({ demoUrl }), tete: false, surOuverture: () => {},
+        }),
+      ),
+    );
+
+  it.each(["http://exemple.test", "exemple.test", "javascript:alert(1)", "   "])(
+    "%s ne produit aucun lien",
+    (v) => {
+      expect(rendre(v)).not.toMatch(/<a[\s>]/);
+    },
+  );
+
+  it("un https valide produit un lien", () => {
+    const html = rendre("https://exemple.test/demo");
+    expect(html).toMatch(/<a\s[^>]*href="https:\/\/exemple.test\/demo"/);
+  });
+});
+
+describe("la feuille du declencheur", () => {
+  const css = lire("app/globals.css");
+  const corps = bloc(/\.journal-declencheur\s*\{/, css);
+
+  it("reprend le style du titre, sans mouvement", () => {
+    expect(valeur(corps, "background")).toBe("none");
+    expect(valeur(corps, "border")).toBe("0");
+    expect(valeur(corps, "font")).toBe("inherit");
+    expect(valeur(corps, "color")).toBe("inherit");
+    expect(corps, "un mouvement sur le declencheur").not.toMatch(/transition|animation|transform/);
+  });
+
+  it("offre une cible d'au moins 24 px", () => {
+    expect(px(valeur(corps, "min-block-size"))).toBeGreaterThanOrEqual(24);
+    expect(px(valeur(corps, "min-inline-size"))).toBeGreaterThanOrEqual(24);
+  });
+
+  it("montre le focus au clavier", () => {
+    const f = bloc(/\.journal-declencheur:focus-visible\s*\{/, css);
+    expect(valeur(f, "outline")).toBe("2px solid var(--accent)");
+    expect(valeur(f, "outline-offset")).toBe("3px");
   });
 });

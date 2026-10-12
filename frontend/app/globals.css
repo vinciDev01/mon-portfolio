@@ -1385,6 +1385,29 @@ html {
     margin-block-end: var(--espace-2);
   }
 
+  /* Le declencheur du parchemin : un vrai bouton remis au style du titre.
+     Aucune transition, aucun soulignement mobile. La cible couvre au moins
+     24 x 24 px (WCAG 2.5.8) et l'infobulle dit que cela s'ouvre (1.4.1). */
+  .journal-declencheur {
+    background: none;
+    border: 0;
+    padding: 0;
+    font: inherit;
+    color: inherit;
+    text-align: start;
+    cursor: pointer;
+    min-block-size: 24px;
+    min-inline-size: 24px;
+  }
+  .journal-declencheur-image {
+    display: block;
+    inline-size: 100%;
+  }
+  .journal-declencheur:focus-visible {
+    outline: 2px solid var(--accent);
+    outline-offset: 3px;
+  }
+
   .journal-corps {
     margin-block-end: var(--espace-2);
   }

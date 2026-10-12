@@ -79,5 +79,7 @@
   "parcours.fermerParchemin": "Close the project file",
   "journal.periode": "from {debut} to {fin}",
   "journal.periodeUnique": "in {date}",
-  "journal.collaborateurs": "with {noms}"
+  "journal.collaborateurs": "with {noms}",
+  "projects.photoDe": "Photo of {nom}",
+  "projects.sansTitre": "Untitled project"
 }

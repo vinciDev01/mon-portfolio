@@ -39,6 +39,9 @@ export function Article({
   // Meme regle que le parchemin (`https:` seul) : le meme champ ne doit pas
   // donner un lien vivant ici et un bloc masque la.
   const demo = lienDemo(projet);
+  // Un nom blanc vaut un nom absent : sans repli, les deux boutons seraient
+  // anonymes.
+  const nom = projet.name.trim() || t("projects.sansTitre");
   const dateProjet = ligneDateProjet(projet, locale, t);
   const avec = ligneCollaborateurs(projet, locale, t);
   // Nul quand le projet de tete n'a pas de `photo1Path` : aucune place vide.
@@ -48,11 +51,12 @@ export function Article({
       {image && (
         // Meme action que le titre. Pas d'`aria-hidden` : un bouton focalisable
         // cache aux lecteurs d'ecran est un defaut, et `alt=""` laisserait ce
-        // bouton sans nom. Le nom du projet fait donc son etiquette.
+        // bouton sans nom. Son etiquette dit qu'il s'agit de la photo, pour ne pas
+        // doublonner celle du titre (liste de boutons, commande vocale).
         <button
           type="button"
           className="journal-declencheur journal-declencheur-image"
-          aria-label={projet.name}
+          aria-label={t("projects.photoDe", { nom })}
           title={t("projects.clickForDetails")}
           onClick={() => surOuverture(projet)}
         >
@@ -74,7 +78,7 @@ export function Article({
           title={t("projects.clickForDetails")}
           onClick={() => surOuverture(projet)}
         >
-          {projet.name}
+          {nom}
         </button>
       </h3>
       {dateProjet && <p className="meta journal-date">{dateProjet}</p>}

@@ -79,5 +79,7 @@
   "parcours.fermerParchemin": "Fermer le dossier du projet",
   "journal.periode": "de {debut} à {fin}",
   "journal.periodeUnique": "en {date}",
-  "journal.collaborateurs": "avec {noms}"
+  "journal.collaborateurs": "avec {noms}",
+  "projects.photoDe": "Photo de {nom}",
+  "projects.sansTitre": "Projet sans titre"
 }

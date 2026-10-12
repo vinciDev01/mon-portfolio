@@ -9,9 +9,9 @@ import { I18nProvider } from "../i18n/i18n-context";
 (globalThis as { IS_REACT_ACT_ENVIRONMENT?: boolean }).IS_REACT_ACT_ENVIRONMENT = true;
 const Fournisseur = I18nProvider as ComponentType<{ defaultLocale: string }>;
 
-const projet = (id: string, name: string): ProjectDto =>
+const projet = (id: string, name: string, photo1Path: string | null = null): ProjectDto =>
   ({
-    id, name, description: null, photo1Path: null, photo2Path: null,
+    id, name, description: null, photo1Path, photo2Path: null,
     demoUrl: null, targetAudience: null, startDate: null, endDate: null,
     technologies: [], collaborators: [], sortOrder: 0,
   }) as ProjectDto;
@@ -30,7 +30,7 @@ beforeEach(() => {
         Fournisseur,
         { defaultLocale: "fr" },
         createElement(JournalProjets, {
-          projets: [projet("a", "Alpha"), projet("b", "Beta"), projet("c", "Gamma")],
+          projets: [projet("a", "Alpha", "alpha.webp"), projet("b", "Beta"), projet("c", "Gamma")],
         }),
       ),
     );
@@ -96,5 +96,28 @@ describe("l'article n'est pas le declencheur", () => {
     expect(titre.tabIndex).toBeGreaterThanOrEqual(0);
     titre.focus();
     expect(document.activeElement).toBe(titre);
+  });
+});
+
+const fermerParchemin = () =>
+  cliquer(document.querySelector<HTMLButtonElement>("dialog button")!);
+
+describe("ouvrir, fermer, rouvrir depuis le journal", () => {
+  it("la photo de tete ouvre le parchemin de SON projet", () => {
+    const photo = hote.querySelector<HTMLButtonElement>("button.journal-declencheur-image");
+    if (!photo) throw new Error("aucun bouton de photo rendu");
+    cliquer(photo);
+    expect(document.querySelectorAll("dialog"), "le bouton de la photo est mort").toHaveLength(1);
+    expect(document.querySelector("#parchemin-titre")!.textContent).toContain("Alpha");
+  });
+
+  it("apres fermeture, un AUTRE projet s'ouvre : les declencheurs ne restent pas muets", () => {
+    cliquer(declencheur("Alpha"));
+    expect(document.querySelectorAll("dialog")).toHaveLength(1);
+    fermerParchemin();
+    expect(document.querySelectorAll("dialog"), "le parchemin ne se ferme pas").toHaveLength(0);
+    cliquer(declencheur("Beta"));
+    expect(document.querySelectorAll("dialog"), "declencheurs muets apres fermeture").toHaveLength(1);
+    expect(document.querySelector("#parchemin-titre")!.textContent).toContain("Beta");
   });
 });

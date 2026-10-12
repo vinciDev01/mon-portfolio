@@ -259,9 +259,10 @@ describe("hierarchie typographique du journal (spec section 6.1)", () => {
   it("chaque classe posee par le balisage existe dans la feuille", () => {
     // Une classe morte dans le balisage fait croire a une mise en forme qui
     // n'existe pas : c'est ce qui avait laisse la tete sans distinction.
-    for (const c of ["journal-tete", "journal-titre", "journal-corps", "journal-date", "journal-collaborateurs"]) {
+    for (const c of ["journal-tete", "journal-titre", "journal-corps", "journal-date", "journal-collaborateurs", "journal-declencheur", "journal-declencheur-image"]) {
       expect(src, c).toContain(c);
     }
+    expect(css, "journal-declencheur-image").toMatch(/\.journal-declencheur-image\s*\{/);
     expect(css).toMatch(/\.journal-titre\s*\{/);
     expect(css).toMatch(/\.journal-tete \.journal-titre\s*\{/);
     expect(css).toMatch(/\.journal-corps\s*\{/);
@@ -383,22 +384,40 @@ describe("le declencheur du parchemin (spec section 3)", () => {
     const avant = html.slice(0, html.indexOf("<img"));
     expect(avant).toMatch(/<button[^>]*>$/);
     const balise = /<button[^>]*>$/.exec(avant)![0];
-    expect(balise).toContain('aria-label="Mon projet"');
+    expect(balise).toContain('aria-label="Photo de Mon projet"');
+    expect(balise, "meme nom que le titre").not.toContain('aria-label="Mon projet"');
     expect(balise).not.toContain("aria-hidden");
     expect(balise).toContain('type="button"');
+  });
+
+  it("un nom blanc ne laisse aucun bouton anonyme", () => {
+    const html = rendreArticle({ name: "   ", photo1Path: "a.webp" }, true);
+    const fr = JSON.parse(lire("lib/i18n/fr.json")) as Record<string, string>;
+    const repli = fr["projects.sansTitre"]!;
+    expect(/<h3[^>]*>\s*<button[^>]*>([\s\S]*?)<\/button>/.exec(html)![1]!.trim()).toBe(repli);
+    expect(html).toContain(`aria-label="${fr["projects.photoDe"]!.replace("{nom}", repli)}"`);
+  });
+
+  it("les deux cles neuves existent a plat dans les trois langues", () => {
+    for (const d of ["fr", "en", "de"]) {
+      const dict = JSON.parse(lire(`lib/i18n/${d}.json`)) as Record<string, string>;
+      expect(dict["projects.photoDe"], d).toMatch(/\{nom\}/);
+      expect(dict["projects.sansTitre"], d).toBeTruthy();
+    }
   });
 
   it("l article lui-meme n est pas cliquable", () => {
     const html = rendreArticle({ name: "Mon projet" });
     const art = /<article[^>]*>/.exec(html)![0];
-    expect(art).not.toMatch(/onclick|role="button"|tabindex/i);
+    expect(art).not.toMatch(/role="button"|tabindex/i);
   });
 
   it("chaque declencheur dit que cela s ouvre, hors couleur", () => {
     const html = rendreArticle({ name: "Mon projet", photo1Path: "a.webp" }, true);
     const boutons = html.match(/<button[^>]*>/g) ?? [];
     expect(boutons).toHaveLength(2);
-    for (const b of boutons) expect(b).toContain('title="Cliquer pour plus de détails"');
+    const attendu = JSON.parse(lire("lib/i18n/fr.json"))["projects.clickForDetails"] as string;
+    for (const b of boutons) expect(b).toContain(`title="${attendu}"`);
   });
 });
 
@@ -414,9 +433,14 @@ describe("le lien de demonstration du journal suit la regle du parchemin (https 
       ),
     );
 
-  it.each(["http://exemple.test", "exemple.test", "javascript:alert(1)", "   "])(
+  it.each([
+    ["http:", "http://exemple.test"],
+    ["sans schema", "exemple.test"],
+    ["javascript:", "javascript:alert(1)"],
+    ["espaces seuls", "   "],
+  ])(
     "%s ne produit aucun lien",
-    (v) => {
+    (_etiquette, v) => {
       expect(rendre(v)).not.toMatch(/<a[\s>]/);
     },
   );
@@ -437,6 +461,13 @@ describe("la feuille du declencheur", () => {
     expect(valeur(corps, "font")).toBe("inherit");
     expect(valeur(corps, "color")).toBe("inherit");
     expect(corps, "un mouvement sur le declencheur").not.toMatch(/transition|animation|transform/);
+  });
+
+  it("garde ce qui le fait ressembler au titre et non a un bouton", () => {
+    expect(valeur(corps, "padding")).toBe("0");
+    // Un bouton centre son texte par defaut : sans cela le titre se centrerait.
+    expect(valeur(corps, "text-align")).toBe("start");
+    expect(valeur(corps, "cursor")).toBe("pointer");
   });
 
   it("offre une cible d'au moins 24 px", () => {

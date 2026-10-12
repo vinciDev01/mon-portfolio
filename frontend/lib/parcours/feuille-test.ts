@@ -10,6 +10,23 @@ export const RACINE = path.resolve(import.meta.dirname, "../..");
 export const lire = (rel: string) => readFileSync(path.join(RACINE, rel), "utf8");
 export const css = lire("app/globals.css");
 
+/**
+ * Le source prive de ses commentaires CSS. On ne balaye que des DECLARATIONS
+ * et des REGLES : sans ce passage, une declaration, une variable ou une regle
+ * entiere mise en commentaire satisferait l'assertion, et une absence passerait
+ * pour une presence. MESURE, sur trois des cinq points d'appel ci-dessous :
+ * `--contenu-gauche`, `--mesure-courante` et la regle `.gouttiere-parcours`
+ * commentees laissaient toute la suite verte.
+ *
+ * Le retrait sert aussi `corpsDepuis`, qui compte des accolades : une accolade
+ * ecrite dans un commentaire ne derange plus son comptage.
+ */
+export const sansCommentaires = (s: string) => s.replace(/\/\*[\s\S]*?\*\//g, "");
+
+/** La feuille ACTIVE : `css` prive de ses commentaires. C'est elle que lisent
+ *  tous les balayages, et les indices qu'ils calculent s'y rapportent. */
+export const cssNu = sansCommentaires(css);
+
 /** Corps a accolades equilibrees ouvert a l'indice de l'accolade `depart`. */
 export function corpsDepuis(source: string, depart: number): string {
   let profondeur = 0;
@@ -20,19 +37,17 @@ export function corpsDepuis(source: string, depart: number): string {
   throw new Error("bloc non ferme a l'indice " + depart);
 }
 
-/** Corps du premier bloc dont l'en-tete correspond. */
-export function bloc(entete: RegExp, source = css): string {
-  const m = entete.exec(source);
-  expect(m, `bloc ${entete} introuvable`).not.toBeNull();
-  return corpsDepuis(source, m!.index + m![0].length - 1);
-}
-
 /**
- * Le source prive de ses commentaires CSS. On ne balaye que des DECLARATIONS :
- * sans ce passage, une ligne commentee commencant par le nom d'une propriete
- * satisferait l'assertion, et une declaration absente passerait pour presente.
+ * Corps du premier bloc dont l'en-tete correspond, commentaires exclus. La
+ * recherche ET le decoupage portent sur le MEME source nu, sans quoi les
+ * indices ne concorderaient pas.
  */
-export const sansCommentaires = (s: string) => s.replace(/\/\*[\s\S]*?\*\//g, "");
+export function bloc(entete: RegExp, source = css): string {
+  const nu = sansCommentaires(source);
+  const m = entete.exec(nu);
+  expect(m, `bloc ${entete} introuvable`).not.toBeNull();
+  return corpsDepuis(nu, m!.index + m![0].length - 1);
+}
 
 /** Derniere valeur declaree pour `prop` dans un corps de regle, commentaires exclus. */
 export function valeur(corps: string, prop: string): string {
@@ -50,8 +65,8 @@ export function px(v: string): number {
 
 /** Le `:root` qui pose le palier par defaut de la colonne. */
 export const racine = (() => {
-  for (const m of css.matchAll(/:root\s*\{/g)) {
-    const corps = corpsDepuis(css, m.index + m[0].length - 1);
+  for (const m of cssNu.matchAll(/:root\s*\{/g)) {
+    const corps = corpsDepuis(cssNu, m.index + m[0].length - 1);
     if (/--colonne:/.test(corps) && /--panneau-langue:/.test(corps)) return corps;
   }
   throw new Error(":root de la colonne introuvable");
@@ -60,8 +75,8 @@ export const racine = (() => {
 /** Les paliers de colonne (`min-width`), lus dans la feuille. */
 export const PALIERS: Array<{ min: number; colonne: number }> = (() => {
   const out = [{ min: 0, colonne: px(valeur(racine, "--colonne")) }];
-  for (const m of css.matchAll(/@media \(min-width:\s*(\d+)px\)\s*\{/g)) {
-    const corps = corpsDepuis(css, m.index + m[0].length - 1);
+  for (const m of cssNu.matchAll(/@media \(min-width:\s*(\d+)px\)\s*\{/g)) {
+    const corps = corpsDepuis(cssNu, m.index + m[0].length - 1);
     const v = /--colonne:\s*([\d.]+px)/.exec(corps);
     if (v) out.push({ min: Number(m[1]), colonne: px(v[1]!) });
   }
@@ -77,10 +92,10 @@ export const PALIERS: Array<{ min: number; colonne: number }> = (() => {
  */
 export function declareeA(nom: string, largeur: number): string | undefined {
   const regles: Array<{ ordre: number; corps: string }> = [];
-  for (const m of css.matchAll(/:root\s*\{/g)) {
-    const corps = corpsDepuis(css, m.index + m[0].length - 1);
+  for (const m of cssNu.matchAll(/:root\s*\{/g)) {
+    const corps = corpsDepuis(cssNu, m.index + m[0].length - 1);
     if (!new RegExp(`${nom}:`).test(corps)) continue;
-    const med = /@media \((min|max)-width:\s*(\d+)px\)\s*\{\s*$/.exec(css.slice(0, m.index));
+    const med = /@media \((min|max)-width:\s*(\d+)px\)\s*\{\s*$/.exec(cssNu.slice(0, m.index));
     if (!med) regles.push({ ordre: -1, corps });
     else if (med[1] === "min" && largeur >= Number(med[2])) {
       regles.push({ ordre: Number(med[2]), corps });
@@ -207,10 +222,11 @@ export function evaluer(
   return v;
 }
 
-/** Les proprietes personnalisees (`--x: ...;`) d'un corps de regle. */
+/** Les proprietes personnalisees (`--x: ...;`) d'un corps de regle, commentaires
+ *  exclus : une variable commentee n'est pas une variable declaree. */
 export function proprietes(corps: string): Record<string, string> {
   const out: Record<string, string> = {};
-  for (const m of corps.matchAll(/(--[\w-]+):\s*([^;]+);/g)) {
+  for (const m of sansCommentaires(corps).matchAll(/(--[\w-]+):\s*([^;]+);/g)) {
     out[m[1]!] = m[2]!.replace(/\s+/g, " ").trim();
   }
   return out;

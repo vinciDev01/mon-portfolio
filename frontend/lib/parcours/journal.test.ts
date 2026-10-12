@@ -9,6 +9,12 @@ import { I18nProvider } from "../i18n/i18n-context";
 import { bloc, evaluer, proprietes, valeur, px } from "./feuille-test";
 import type { ProjectDto } from "@portfolio/shared-types";
 
+/** `children` est requis par le type du fournisseur mais passe ici en troisieme
+ *  argument de `createElement`, comme l'exige la regle `react/no-children-prop` :
+ *  les surcharges de TypeScript ne le comptent pas, et le cast ne masque rien.
+ *  Declare UNE fois, au lieu des cinq repetitions en deux styles d'avant. */
+const Fournisseur = I18nProvider as ComponentType<{ defaultLocale: string }>;
+
 const RACINE = path.resolve(import.meta.dirname, "../..");
 const lire = (rel: string) => readFileSync(path.join(RACINE, rel), "utf8");
 
@@ -153,7 +159,7 @@ describe("journal des projets (spec section 6)", () => {
     // alors pas rendue.
     const html = renderToStaticMarkup(
       createElement(
-        I18nProvider as ComponentType<{ defaultLocale: string }>,
+        Fournisseur,
         { defaultLocale: "fr" },
         createElement(Article, { projet: projet({}), tete: true, surOuverture: () => {} }),
       ),
@@ -198,9 +204,7 @@ describe("lien de demonstration (rendu)", () => {
   const rendre = (p: Partial<ProjectDto>) =>
     renderToStaticMarkup(
       createElement(
-        // `children` est requis par le type du fournisseur mais passe ici en
-        // argument de createElement, comme l'exige la regle react/no-children-prop.
-        I18nProvider as ComponentType<{ defaultLocale: string }>,
+        Fournisseur,
         { defaultLocale: "fr" },
         createElement(Article, { projet: projet(p), tete: false, surOuverture: () => {} }),
       ),
@@ -292,7 +296,7 @@ describe("date et signature de chaque article (spec section 6)", () => {
   const rendre = (p: Partial<ProjectDto>, tete = false) =>
     renderToStaticMarkup(
       createElement(
-        I18nProvider as ComponentType<{ defaultLocale: string }>,
+        Fournisseur,
         { defaultLocale: "fr" },
         createElement(Article, { projet: projet(p), tete, surOuverture: () => {} }),
       ),
@@ -343,7 +347,6 @@ describe("date et signature de chaque article (spec section 6)", () => {
 });
 
 describe("le declencheur du parchemin (spec section 3)", () => {
-  const Fournisseur = I18nProvider as ComponentType<{ defaultLocale: string }>;
   function rendreArticle(p: Partial<ProjectDto>, tete = false): string {
     return renderToStaticMarkup(
       createElement(
@@ -425,7 +428,7 @@ describe("le lien de demonstration du journal suit la regle du parchemin (https 
   const rendre = (demoUrl: string) =>
     renderToStaticMarkup(
       createElement(
-        I18nProvider as ComponentType<{ defaultLocale: string }>,
+        Fournisseur,
         { defaultLocale: "fr" },
         createElement(Article, {
           projet: projet({ demoUrl }), tete: false, surOuverture: () => {},

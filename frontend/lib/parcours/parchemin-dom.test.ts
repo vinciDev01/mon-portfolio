@@ -13,11 +13,11 @@ import {
 } from "@/components/parcours/parcours-pagine";
 import { SECTIONS } from "./sections";
 
+(globalThis as { IS_REACT_ACT_ENVIRONMENT?: boolean }).IS_REACT_ACT_ENVIRONMENT = true;
+
 /** Le fournisseur declare `children` en prop requise et `createElement` les
  *  passe en troisieme argument, que les surcharges de TypeScript ne comptent
  *  pas. Le cast ne masque rien : les enfants sont bien fournis. */
-(globalThis as { IS_REACT_ACT_ENVIRONMENT?: boolean }).IS_REACT_ACT_ENVIRONMENT = true;
-
 const Fournisseur = I18nProvider as ComponentType<{ defaultLocale: string }>;
 
 /** Bascule la surcouche depuis l'interieur de l'arbre, seul endroit d'ou le
@@ -146,7 +146,8 @@ describe("la pagination se suspend sous une surcouche (spec section 5.2)", () =>
     expect(actif()).toBe("ouverture");
   });
 
-  // Point de vigilance 4.
+  // Spec section 5.4 : deux consommateurs du meme `popstate`, et celui du
+  // parchemin doit primer sur celui du conteneur.
   it("un popstate ferme la surcouche et NE change PAS de section", () => {
     monter(["ouverture", "projets"], true);
     const avant = actif();
@@ -193,7 +194,12 @@ const projetComplet = () => fabrique({
   demoUrl: "https://exemple.test",
   startDate: "2024-03-01",
   endDate: "2025-01-01",
-  technologies: [{ id: "t1", label: "Angular", logoPath: null, sortOrder: 0 }],
+  // DEUX technologies, et non une : avec une seule, le point median n'est
+  // jamais rendu et toute assertion sur le separateur serait vide.
+  technologies: [
+    { id: "t1", label: "Angular", logoPath: null, sortOrder: 0 },
+    { id: "t2", label: "NestJS", logoPath: null, sortOrder: 1 },
+  ],
   collaborators: [
     { id: "c1", firstName: "Ada", lastName: "Lovelace", email: null,
       linkedinUrl: "https://linkedin.test/in/ada", sortOrder: 0 },
@@ -206,6 +212,17 @@ const projetEnCours = () => fabrique({
   name: "Projet en cours",
   startDate: "2024-03-01",
   endDate: null,
+});
+
+/** Un chemin de photo BLANC a cote d'un chemin reel. Le bloc « photos » parait,
+ *  puisque l'une des deux est renseignee, et le blanc ne doit rien rendre : une
+ *  `<img>` sur un chemin blanc est une image rompue. Meme famille que les trois
+ *  `photo1Path: null` qui avaient rendu un bouton inerte sans qu'un test ne
+ *  bouge. */
+const projetPhotoBlanche = () => fabrique({
+  name: "Projet photo blanche",
+  photo1Path: "   ",
+  photo2Path: "projects/b.webp",
 });
 
 /** Grace d'abord dans le tableau mais `sortOrder` plus grand : le tri doit
@@ -395,7 +412,8 @@ const laisserRetomber = () => act(async () => {
 });
 
 describe("le parchemin (spec sections 4, 5 et 6)", () => {
-  // Point de vigilance 3 : `showModal` absente, cas de jsdom.
+  // Spec sections 1 et 5.1 : `showModal` est absente sous jsdom, et c'est le
+  // repli par l'attribut `open` qui rend tout le reste observable.
   it("s ouvre par l attribut open quand showModal manque", () => {
     expect(typeof HTMLDialogElement.prototype.showModal,
       "jsdom a gagne showModal : adapter ce test").not.toBe("function");
@@ -430,10 +448,10 @@ describe("le parchemin (spec sections 4, 5 et 6)", () => {
     expect(b?.getAttribute("aria-label") ?? b?.textContent).toMatch(/\S{4,}/);
   });
 
-  // Addendum section D : l'assertion retiree de la tache 3, dont le fichier
-  // n'existait pas encore. Constatee sur le DOM rendu.
-  // I1 : l'assertion precedente court-circuite par `??`, donc le texte VISIBLE
-  // n'etait jamais regarde. Les deux choses se constatent separement.
+  // Spec section 6 : le bouton de fermeture porte un nom accessible EXPLICITE,
+  // et non une croix seule. L'assertion precedente court-circuite par `??` des
+  // qu'un `aria-label` existe, donc le texte VISIBLE n'y est jamais regarde :
+  // les deux choses se constatent separement.
   it("le bouton de fermeture porte un texte visible, et non une croix seule", () => {
     const d = monterParchemin(projetComplet());
     const visible = (boutonFermer(d).textContent ?? "").trim();
@@ -460,7 +478,9 @@ describe("le parchemin (spec sections 4, 5 et 6)", () => {
     expect(corps!.classList.contains("parchemin-corps")).toBe(true);
   });
 
-  // Point de vigilance 1, cote rendu. Les libelles sont repris du dictionnaire
+  // Spec section 4, la degradation champ par champ, cote rendu : chaque bloc
+  // disparait quand sa donnee manque, sans espace ni titre vide. Les libelles
+  // sont repris du dictionnaire
   // FRANCAIS, accents compris : « Public concerne » sans accent ne figure dans
   // aucune langue et l'assertion serait vraie meme bloc rendu.
   it("un projet depouille ne rend aucun bloc vide", () => {
@@ -484,9 +504,9 @@ describe("le parchemin (spec sections 4, 5 et 6)", () => {
     expect(d.querySelector('a[href="https://exemple.test"]')).not.toBeNull();
   });
 
-  // Point de vigilance 2, cote rendu.
-  // I2, le bloc 2 : il n'etait tenu par aucun test. Les trois mutations de la
-  // revue (paragraphe retire, mention retiree, `{true &&`) passaient toutes.
+  // Spec section 4, bloc 2 : les dates propres du projet, formatees en UTC et
+  // jamais depuis l'horloge. Ce bloc n'etait tenu par aucun test, et trois
+  // mutations (paragraphe retire, mention retiree, `{true &&`) passaient.
   it("rend la ligne de dates du projet, formatee en UTC", () => {
     const d = monterParchemin(projetComplet());
     const ligne = d.querySelector("p.meta");
@@ -557,6 +577,42 @@ describe("le parchemin (spec sections 4, 5 et 6)", () => {
     }
   });
 
+  it("un chemin de photo BLANC ne rend pas d image rompue", () => {
+    const d = monterParchemin(projetPhotoBlanche());
+    const images = [...d.querySelectorAll("img")];
+    expect(images,
+      "le chemin blanc est rendu comme une seconde image, donc rompue")
+      .toHaveLength(1);
+    expect(images[0]!.getAttribute("src") ?? "").toContain("b.webp");
+  });
+
+  it("les blancs autour d un chemin de photo sont rognes avant le src", () => {
+    const d = monterParchemin(fabrique({
+      name: "Projet photo espacee",
+      photo1Path: "  projects/a.webp  ",
+    }));
+    const src = d.querySelector("img")?.getAttribute("src") ?? "";
+    expect(src, "aucune image rendue : l assertion serait vide").toContain("a.webp");
+    expect(src, "les blancs du chemin partent dans l URL de l image")
+      .not.toMatch(/%20|\s/);
+  });
+
+  it("les technologies sont separees par un point median, comme dans le journal", () => {
+    const projet = projetComplet();
+    // Sans deux technologies au moins, aucun separateur n'est rendu et
+    // l'assertion serait vide par construction.
+    expect(projet.technologies.length,
+      "la fixture ne porte pas deux technologies : aucun separateur a observer")
+      .toBeGreaterThan(1);
+    const d = monterParchemin(projet);
+    const titre = [...d.querySelectorAll("h3")]
+      .find((h) => h.textContent === "Technologies");
+    expect(titre, "aucun titre Technologies : l assertion serait vide").toBeDefined();
+    expect(titre!.nextElementSibling?.textContent,
+      "les technologies ne sont plus separees par un point median")
+      .toBe("Angular · NestJS");
+  });
+
   it("un demoUrl non https ne rend ni bloc ni lien", () => {
     const d = monterParchemin(fabrique({
       name: "Projet douteux",
@@ -593,7 +649,8 @@ describe("le parchemin (spec sections 4, 5 et 6)", () => {
     }
   });
 
-  // Point de vigilance 5.
+  // Spec section 5.4 : fermer doit CONSOMMER l'entree posee a l'ouverture,
+  // sans quoi un Retour plus tard fermerait un parchemin deja ferme.
   it("fermer consomme l entree d historique", () => {
     const back = vi.spyOn(history, "back").mockImplementation(() => {});
     const d = monterParchemin(projetComplet());
@@ -634,7 +691,7 @@ describe("le parchemin (spec sections 4, 5 et 6)", () => {
     back.mockRestore();
   });
 
-  // Promu par le coordinateur : sans `close()`, le dialogue quitte l'arbre
+  // Spec section 6, exigence 3 : sans `close()`, le dialogue quitte l'arbre
   // ENCORE OUVERT, les etapes de `close` ne sont pas jouees et le focus ne
   // revient pas au declencheur.
   it("la fermeture par le bouton joue close() sur un noeud encore connecte et ouvert", () => {
@@ -705,7 +762,7 @@ describe("le parchemin (spec sections 4, 5 et 6)", () => {
     push.mockRestore();
   });
 
-  // Addendum section A : l'ordre, et non seulement le fait.
+  // L'ORDRE des trois etapes, et non seulement le fait qu'elles arrivent.
   it("la fermeture joue close(), consomme l entree, PUIS previent l appelant", () => {
     const ordre: string[] = [];
     espionnerClose(ordre);
@@ -760,12 +817,13 @@ describe("le parchemin (spec sections 4, 5 et 6)", () => {
   });
 });
 
-/* N1 de la re-revue : les quatre voies de FERMETURE passent par `fermer` ou
-   par `surRetour`, mais trois voies de DISPARITION ne passaient par aucune des
-   deux, et le `<dialog>` quittait l'arbre en portant encore `open`. C'est le
+/* Les quatre voies de FERMETURE passent par `fermer` ou par `surRetour`, mais
+   trois voies de DISPARITION ne passaient par aucune des deux, et le `<dialog>`
+   quittait l'arbre en portant encore `open` : pas de focus rendu au
+   declencheur, ce que la spec section 6, exigence 3, demande. C'est le
    nettoyage de l'effet de MISE EN PAGE qui les couvre : mesure, lui seul tourne
    avant que React detache les noeuds hotes. */
-describe("close() sur les voies de DISPARITION (re-revue, N1)", () => {
+describe("close() sur les voies de DISPARITION", () => {
   /** Un rendu pilote de l'EXTERIEUR, sans passer par le chemin de fermeture du
    *  parchemin : c'est exactement ce qu'un appelant peut ecrire, et rien dans
    *  le composant ne l'en empeche. */
@@ -825,10 +883,12 @@ describe("close() sur les voies de DISPARITION (re-revue, N1)", () => {
   });
 });
 
-/* Addendum section G : le contrat de structure, ecrit en commentaire dans
-   `globals.css` par la tache 3 et reporte ici, faute de composant a l'epoque.
+/* Le contrat de structure que `globals.css` ecrit en commentaire au-dessus des
+   regles du parchemin : la feuille est enfant DIRECT du dialogue, et elle a
+   exactement trois enfants, bande, corps, bande. La grille `auto 1fr auto` en
+   depend, et c'est ce `1fr` qui borne le corps et le fait defiler seul.
    Constate sur le DOM rendu, et non en cherchant une chaine dans le source. */
-describe("le contrat de structure de la feuille (tache 3, reporte)", () => {
+describe("le contrat de structure de la feuille", () => {
   it("la feuille est enfant DIRECT du dialogue", () => {
     const d = monterParchemin(projetComplet());
     const feuille = d.querySelector(".parchemin-feuille");
@@ -880,10 +940,10 @@ describe("le contrat de structure de la feuille (tache 3, reporte)", () => {
   });
 });
 
-/* Addendum sections A, B et F : le drapeau et l'historique, observes depuis le
-   conteneur. Tout ce qui suit est monte DANS le fournisseur : hors de lui le
+/* Le drapeau (spec section 5.2) et l'historique (section 5.4), observes depuis
+   le conteneur. Tout ce qui suit est monte DANS le fournisseur : hors de lui le
    drapeau ne se leve jamais et ces tests seraient verts pour rien. */
-describe("le parchemin et la pagination (addendum A, B, F)", () => {
+describe("le parchemin et la pagination (spec sections 5.2 et 5.4)", () => {
   it("le parchemin ouvert leve le drapeau : la molette ne pagine plus", () => {
     monterAvecConteneur(projetComplet());
     expect(actif()).toBe("ouverture");
@@ -892,7 +952,8 @@ describe("le parchemin et la pagination (addendum A, B, F)", () => {
       .toBe("ouverture");
   });
 
-  // Addendum section B : le defaut le plus couteux de la branche.
+  // Le defaut le plus couteux de la branche : un parchemin demonte par une
+  // autre voie laissait la pagination MORTE pour le reste de la session.
   it("le parchemin demonte rend la pagination a la molette", async () => {
     monterAvecConteneur(projetComplet());
     act(() => rendreAvecConteneur(null));
@@ -903,7 +964,7 @@ describe("le parchemin et la pagination (addendum A, B, F)", () => {
       .toBe("projets");
   });
 
-  // Addendum section A, l'invariant lui-meme : l'entree posee a l'ouverture
+  // L'invariant de la section 5.4 : l'entree posee a l'ouverture
   // garde le fragment courant. Elle ne decrit aucun etat.
   it("l ouverture n emporte pas un fragment etranger", () => {
     window.history.replaceState(null, "", "#projets");
@@ -913,7 +974,7 @@ describe("le parchemin et la pagination (addendum A, B, F)", () => {
       .toBe("#projets");
   });
 
-  // Addendum section A, de bout en bout.
+  // La section 5.4 de bout en bout.
   it("fermer par Echap laisse la section exactement ou elle etait", async () => {
     window.history.replaceState(null, "", "#projets");
     monterAvecConteneur(projetComplet());
@@ -930,9 +991,12 @@ describe("le parchemin et la pagination (addendum A, B, F)", () => {
   });
 });
 
-/* Addendum section C : trois sites de garde du conteneur que la revue de la
-   tache 1 a trouves tenus par AUCUN test. */
-describe("les trois gardes du conteneur restees nues (addendum C)", () => {
+/* Les QUATRE gardes de surcouche du conteneur de pagination, qu'aucun test ne
+   tenait : `surClic`, `surDebutTactile` (deux sorties) et `surFinTactile`. Les
+   trois premieres ont ete fermees d'abord, la quatrieme n'avait pas ete
+   enumeree et restait sterile. Elles tiennent toutes la section 5.2 de la
+   specification : la pagination se suspend sous une surcouche. */
+describe("les quatre gardes de surcouche du conteneur", () => {
   it("un clic sur une ancre de la colonne ne pagine pas sous surcouche", () => {
     monterBascule(IDS_PARCOURS, true);
     const ancre = document.createElement("a");
@@ -959,6 +1023,24 @@ describe("les trois gardes du conteneur restees nues (addendum C)", () => {
       window.dispatchEvent(tactile("touchend", 10, 100));
     });
     expect(actif(), "un geste commence sous surcouche a pagine").toBe("ouverture");
+  });
+
+  /* La QUATRIEME garde, celle de `surFinTactile`. Pour l'isoler il faut
+     l'inverse de ce que fait le test precedent : la surcouche s'OUVRE entre les
+     deux moities du geste. Sans cela la garde du `touchstart` aurait deja remis
+     `depart` a nul et celle du `touchend` ne serait jamais atteinte, ce qui est
+     exactement ce qui la laissait sterile. */
+  it("une surcouche ouverte en COURS de geste empeche encore la pagination", () => {
+    monterBascule(IDS_PARCOURS, false);
+    act(() => {
+      window.dispatchEvent(tactile("touchstart", 10, 300));
+    });
+    // Le geste est bel et bien arme : rien ne l'a ecarte au depart.
+    rebasculer(true);
+    act(() => {
+      window.dispatchEvent(tactile("touchend", 10, 100));
+    });
+    expect(actif(), "un geste acheve sous surcouche a pagine").toBe("ouverture");
   });
 
   it("un touchstart parti d un proprietaire du defilement n arme pas le geste", () => {

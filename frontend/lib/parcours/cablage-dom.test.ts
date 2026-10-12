@@ -8,6 +8,8 @@ import {
   ParcoursPagine,
 } from "@/components/parcours/parcours-pagine";
 import { SectionToastObserver } from "@/components/portfolio/section-toast-observer";
+import { ColonnePassage } from "@/components/parcours/colonne-passage";
+import type { PersonalInfoDto, SiteSettingsDto } from "@portfolio/shared-types";
 import { SECTIONS } from "./sections";
 import { DELAI_STABILISATION } from "./toast-section";
 import { VERROU_APRES_MS } from "./sequence";
@@ -232,5 +234,66 @@ describe("le filet de visibilite", () => {
       document.dispatchEvent(new Event("visibilitychange"));
     });
     expect(actives()).toEqual(["projets"]);
+  });
+});
+
+/* La colonne de passage est l'AUTRE client de la garde generique de la section
+   5.3 de la specification du parchemin : elle declare son defilement propre, et
+   la garde ne la laisse tranquille que parce qu'elle le declare.
+
+   Avant la generalisation, cette garde lisait la classe `.colonne-passage`, que
+   la mise en forme rend indelebile. Elle lit desormais un attribut invisible,
+   que plus rien ne tenait : mesure faite, l'attribut retire du `<nav>` reel
+   laissait toute la suite verte, et une molette aux paliers etroits aurait
+   rendu la main a la pagination au lieu de faire defiler la colonne.
+
+   Constate sur le DOM RENDU, et non en cherchant une chaine dans le source. */
+describe("la colonne declare son defilement propre (spec du parchemin, section 5.3)", () => {
+  const reglages = {
+    showProjects: true,
+    showCvDownload: true,
+    logoPath: null,
+    availabilityStatus: "available",
+    availabilityLabel: null,
+  } as unknown as SiteSettingsDto;
+  const infos = {
+    name: "Bertrand",
+    surname: "Fanuel",
+    avatarPath: null,
+  } as unknown as PersonalInfoDto;
+
+  function monterColonne() {
+    act(() => {
+      racine.render(
+        createElement(
+          Fournisseur,
+          { defaultLocale: "fr" },
+          createElement(ColonnePassage, { reglages, infos }),
+        ),
+      );
+    });
+  }
+
+  it("le nav rendu porte data-defilement-propre", () => {
+    monterColonne();
+    const nav = hote.querySelector("nav.colonne-passage");
+    expect(nav, "aucune colonne de passage rendue : l assertion serait vide").not.toBeNull();
+    expect(
+      nav!.hasAttribute("data-defilement-propre"),
+      "la colonne ne se declare plus proprietaire de son defilement : la pagination lui volerait molettes et gestes aux paliers etroits",
+    ).toBe(true);
+  });
+
+  it("c'est l element qui defile qui le declare, et non un parent", () => {
+    monterColonne();
+    const proprietaires = [...hote.querySelectorAll("[data-defilement-propre]")];
+    expect(proprietaires, "un seul proprietaire du defilement dans la colonne").toHaveLength(1);
+    // La feuille pose `overflow-y: auto` sur `.colonne-passage` : la
+    // declaration doit vivre sur CE noeud, la garde ne remontant que jusqu'au
+    // plus proche porteur de l'attribut.
+    expect(
+      proprietaires[0]!.classList.contains("colonne-passage"),
+      "la declaration a glisse sur un autre noeud que celui qui defile",
+    ).toBe(true);
   });
 });

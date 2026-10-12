@@ -1,7 +1,7 @@
 import { describe, it, expect } from "vitest";
 import type { ProjectDto, ProjectCollaboratorDto } from "@portfolio/shared-types";
 import { blocsPresents, credits, lienDemo } from "./parchemin";
-import { bloc, corpsDepuis, css, valeur } from "./feuille-test";
+import { bloc, corpsDepuis, css, sansCommentaires, valeur } from "./feuille-test";
 import { ratioContraste, luminanceRelative } from "@/lib/color/contrast";
 import { PALETTE_CLAIRE, PALETTE_SOMBRE } from "@/lib/design/tokens";
 
@@ -22,7 +22,7 @@ function qui(p: Partial<ProjectCollaboratorDto>): ProjectCollaboratorDto {
 }
 
 describe("blocsPresents (spec section 4)", () => {
-  // Point de vigilance 1 : un projet depouille.
+  // Spec section 4 : un projet depouille ne rend aucun bloc.
   it("ne rend aucun bloc pour un projet sans rien", () => {
     expect(blocsPresents(projet({}))).toEqual([]);
   });
@@ -87,7 +87,8 @@ describe("blocsPresents (spec section 4)", () => {
 });
 
 describe("credits (spec section 4)", () => {
-  // Point de vigilance 2 : un collaborateur sans LinkedIn.
+  // Spec section 4 : un collaborateur dont `linkedinUrl` est nul rend son
+  // nom SANS lien, et non un lien mort.
   it("rend un nom sans lien quand le LinkedIn est nul", () => {
     expect(credits(projet({ collaborators: [qui({ linkedinUrl: null })] })))
       .toEqual([{ cle: "c", nom: "Ada Lovelace", lien: null }]);
@@ -211,30 +212,42 @@ describe("lienDemo (spec section 4)", () => {
   });
 });
 
-/** Le source sans ses commentaires : on ne balaye que des declarations. */
-const sansCommentaires = (s: string) => s.replace(/\/\*[\s\S]*?\*\//g, "");
-
-/** Les declarations `propriete: valeur` d'un corps de regle, commentaires exclus. */
+/**
+ * Les declarations `propriete: valeur` d'un corps de regle, commentaires exclus.
+ *
+ * Le nom de propriete accepte les MAJUSCULES et un prefixe fournisseur, parce
+ * que le CSS les accepte : `Transform:` et `-webkit-transform:` sont honores par
+ * les navigateurs. Il est rendu en minuscules, de sorte que les balayages
+ * ci-dessous n'aient pas a se soucier de la casse.
+ */
 function declarations(corps: string): Array<{ prop: string; val: string }> {
   return sansCommentaires(corps)
     .split(";")
-    .map((d) => /^\s*([a-z-]+)\s*:\s*([\s\S]*?)\s*$/.exec(d))
+    .map((d) => /^\s*(-?[A-Za-z][A-Za-z0-9-]*)\s*:\s*([\s\S]*?)\s*$/.exec(d))
     .filter((m): m is RegExpExecArray => m !== null)
-    .map((m) => ({ prop: m[1]!, val: m[2]! }));
+    .map((m) => ({ prop: m[1]!.toLowerCase(), val: m[2]! }));
 }
+
+/** Les prefixes fournisseur, optionnels devant chaque nom de propriete. */
+const PREFIXE = "(?:-(?:webkit|moz|ms|o)-)?";
 
 /**
  * Les declarations de mouvement d'un corps. On ancre sur le NOM ENTIER de la
- * propriete : `text-transform` est legitime, `transform` ne l'est pas.
+ * propriete, prefixe fournisseur optionnel compris et sans distinction de
+ * casse : `text-transform` est legitime, `transform`, `-webkit-transform` et
+ * `Transform` ne le sont pas. Les deux dernieres orthographes contournaient le
+ * balayage, mesure, et ce sont du CSS que les navigateurs honorent.
  */
-const PROPRIETES_MOUVEMENT =
-  /^(?:transition|animation|transform|translate|rotate|scale|skew|scroll-behavior|offset|zoom)(?:-[a-z-]+)?$/;
+const PROPRIETES_MOUVEMENT = new RegExp(
+  `^${PREFIXE}(?:transition|animation|transform|translate|rotate|scale|skew|scroll-behavior|offset|zoom)(?:-[a-z-]+)?$`,
+);
+const WILL_CHANGE = new RegExp(`^${PREFIXE}will-change$`);
 function mouvements(corps: string): string[] {
   return declarations(corps)
     .filter(
       ({ prop, val }) =>
         PROPRIETES_MOUVEMENT.test(prop) ||
-        (prop === "will-change" && /transform|translate|rotate|scale|offset/.test(val)),
+        (WILL_CHANGE.test(prop) && /transform|translate|rotate|scale|offset/i.test(val)),
     )
     .map(({ prop, val }) => `${prop}: ${val}`);
 }
@@ -280,6 +293,43 @@ const regles = (source: string) =>
 describe("le balayage de mouvement ancre sur des noms de propriete entiers", () => {
   it("laisse passer text-transform, qui n'est pas un mouvement", () => {
     expect(mouvements("text-transform: uppercase; letter-spacing: 0.1em")).toEqual([]);
+  });
+
+  // Les deux orthographes qui contournaient le balayage : du CSS valide, que
+  // les navigateurs honorent, et que le site interdit tout autant.
+  it("attrape un prefixe fournisseur", () => {
+    expect(mouvements("-webkit-transform: rotate(3deg)")).toHaveLength(1);
+    expect(mouvements("-moz-transition: fill 1s")).toHaveLength(1);
+    expect(mouvements("-ms-animation: deroule 1s")).toHaveLength(1);
+    expect(mouvements("-o-transform: scale(1.1)")).toHaveLength(1);
+    expect(mouvements("-webkit-will-change: transform")).toHaveLength(1);
+  });
+
+  it("attrape une majuscule", () => {
+    expect(mouvements("Transform: rotate(3deg)")).toHaveLength(1);
+    expect(mouvements("TRANSITION: fill 1s")).toHaveLength(1);
+    expect(mouvements("-WebKit-Transform: rotate(3deg)")).toHaveLength(1);
+    expect(mouvements("will-change: Transform")).toHaveLength(1);
+  });
+
+  // Aucune propriete legitime ne doit tomber dans le filet, prefixee ou non :
+  // c'est le faux positif qu'un passage precedent avait du corriger.
+  it("ne rejette aucune propriete legitime", () => {
+    for (const bonne of [
+      "text-transform: uppercase",
+      "Text-Transform: uppercase",
+      "-webkit-text-size-adjust: 100%",
+      "-webkit-font-smoothing: antialiased",
+      "overflow-y: auto",
+      "-webkit-overflow-scrolling: touch",
+      "overscroll-behavior: contain",
+      "background: var(--surface)",
+      "letter-spacing: 0.1em",
+      "will-change: auto",
+      "-webkit-will-change: auto",
+    ]) {
+      expect(mouvements(bonne), bonne).toEqual([]);
+    }
   });
 
   it("ignore les commentaires du corps", () => {

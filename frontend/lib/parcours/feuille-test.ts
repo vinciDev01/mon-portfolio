@@ -27,9 +27,17 @@ export function bloc(entete: RegExp, source = css): string {
   return corpsDepuis(source, m!.index + m![0].length - 1);
 }
 
-/** Derniere valeur declaree pour `prop` dans un corps de regle. */
+/**
+ * Le source prive de ses commentaires CSS. On ne balaye que des DECLARATIONS :
+ * sans ce passage, une ligne commentee commencant par le nom d'une propriete
+ * satisferait l'assertion, et une declaration absente passerait pour presente.
+ */
+export const sansCommentaires = (s: string) => s.replace(/\/\*[\s\S]*?\*\//g, "");
+
+/** Derniere valeur declaree pour `prop` dans un corps de regle, commentaires exclus. */
 export function valeur(corps: string, prop: string): string {
-  const tous = [...corps.matchAll(new RegExp(`(?:^|[;{\\n])\\s*${prop}:\\s*([^;}]+)`, "g"))];
+  const nu = sansCommentaires(corps);
+  const tous = [...nu.matchAll(new RegExp(`(?:^|[;{\\n])\\s*${prop}:\\s*([^;}]+)`, "g"))];
   expect(tous.length, `declaration ${prop} introuvable`).toBeGreaterThan(0);
   return tous[tous.length - 1]![1]!.trim();
 }

@@ -238,7 +238,14 @@ export function ParcoursPagine({
     // cette condition, une bande pleine hauteur deviendrait morte, la ou le
     // pointeur se trouve justement apres un clic. `direction` nul : le geste
     // n'a pas encore de sens, on regarde les deux.
-    // Une regle, deux clients : la colonne de passage et le parchemin.
+    // La regle est GENERIQUE par precaution, mais elle n'a aujourd'hui qu'UN
+    // client : la colonne de passage. Le parchemin, lui, est couvert plus tot :
+    // les quatre gestionnaires lisent `surcoucheRef` AVANT d'appeler cette
+    // fonction, et le drapeau est leve pendant toute la vie du parchemin.
+    // MESURE : en excluant explicitement le parchemin d'ici, aucun test ne
+    // tombe. L'attribut que le parchemin pose sur son corps est donc une
+    // ceinture, le drapeau etant la bretelle : il sert si un parchemin est
+    // rendu hors du fournisseur, ou si le drapeau tombe.
     const proprietaireDefile = (cible: EventTarget | null, direction: Direction | 0) => {
       const el = cible instanceof Element ? cible.closest("[data-defilement-propre]") : null;
       if (!el) return false;

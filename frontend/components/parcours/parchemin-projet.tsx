@@ -20,7 +20,8 @@ const ID_TITRE = "parchemin-titre";
 /**
  * Le trace des deux bandes. La courbe vit ICI, dans le chemin, et non dans la
  * feuille de style : `.parchemin-bande` ne porte ni `transform` ni
- * `transition`, et le test de forme de la tache 3 le verifie regle par regle.
+ * `transition`, et le balayage de mouvement du parchemin le verifie regle par
+ * regle.
  */
 const TRACE_BANDE = "M0 0 H100 V9 C78 22 52 -1 26 11 C17 15 8 15 0 11 Z";
 
@@ -58,13 +59,16 @@ export function ParcheminProjet({
   // Remonte par la cle : un autre projet repart d'un etat interne NEUF, effet
   // et drapeau compris, au lieu de recycler celui du precedent.
   //
-  // Et ce n'est PAS un remplacement de l'entree d'historique, contrairement a
-  // ce que disait ce commentaire. MESURE, de A vers B : `pushState` est appele
-  // DEUX fois et `back` zero fois, donc la seconde entree s'ajoute a la
-  // premiere. Apres une fermeture, qui n'en consomme qu'une, il en reste une
-  // inerte, et une pression du bouton Retour reste sans effet visible.
-  // L'appelant a pour consigne de toujours repasser par `null` entre deux
-  // projets, ce qui evite le cas : aucun garde-fou n'est ajoute ici.
+  // Et ce n'est PAS un remplacement de l'entree d'historique. MESURE, de A vers
+  // B : `pushState` est appele DEUX fois et `back` zero fois, donc la seconde
+  // entree s'ajoute a la premiere. Apres une fermeture, qui n'en consomme
+  // qu'une, il en reste une inerte, et une pression du bouton Retour reste sans
+  // effet visible.
+  //
+  // Le seul appelant ne passe PAS par `null` entre deux projets : il REFUSE la
+  // seconde demande, par `setOuvert((courant) => courant ?? p)`, de sorte
+  // qu'un parchemin ouvert ne soit jamais remplace par un autre. Le cas est
+  // donc ecarte chez lui, et non ici : aucun garde-fou n'est ajoute.
   return <Dossier key={projet.id} projet={projet} surFermeture={surFermeture} />;
 }
 

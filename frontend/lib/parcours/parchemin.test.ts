@@ -1,7 +1,7 @@
 import { describe, it, expect } from "vitest";
 import type { ProjectDto, ProjectCollaboratorDto } from "@portfolio/shared-types";
 import { blocsPresents, credits, lienDemo } from "./parchemin";
-import { bloc, corpsDepuis, css, px, sansCommentaires, valeur } from "./feuille-test";
+import { bloc, corpsDepuis, css, px, sansCommentaires, valeur, variableA } from "./feuille-test";
 import { ratioContraste, luminanceRelative } from "@/lib/color/contrast";
 import { PALETTE_CLAIRE, PALETTE_SOMBRE } from "@/lib/design/tokens";
 
@@ -290,6 +290,19 @@ const BASE = sansCouleursForcees(css);
 const regles = (source: string) =>
   [...source.matchAll(/([^{}]*\.parchemin[a-z-]*[^{}]*)\{([^}]*)\}/g)];
 
+/* `ch` est une metrique de police, absente de la feuille : meme valeur de
+   travail que `degagement.test.ts`, 8,73 px par caractere, soit 576 px pour
+   66 ch (spec 4.3). Elle sert a comparer une mesure en `ch` a un padding en
+   `px`, les deux unites que la feuille melange ici. */
+const CH = 576 / 66;
+
+/** Une longueur litterale `ch` ou `px` lue dans la feuille, rendue en pixels. */
+function enPx(v: string): number {
+  const m = /^([\d.]+)(ch|px)$/.exec(v.trim());
+  expect(m, `longueur illisible : ${v}`).not.toBeNull();
+  return Number(m![1]) * (m![2] === "ch" ? CH : 1);
+}
+
 describe("le balayage de mouvement ancre sur des noms de propriete entiers", () => {
   it("laisse passer text-transform, qui n'est pas un mouvement", () => {
     expect(mouvements("text-transform: uppercase; letter-spacing: 0.1em")).toEqual([]);
@@ -453,10 +466,54 @@ describe("la forme du parchemin (spec section 2)", () => {
       expect(valeur(enfants, "text-align")).toBe("start");
     });
 
-    it("la mesure tient dans la boite", () => {
-      const ch = Number.parseFloat(valeur(enfants, "max-inline-size"));
-      const boiteCh = Number.parseFloat(/min\((\d+)ch/.exec(valeur(bloc(/(?:^|[\s}])\.parchemin\s*\{/, BASE), "max-width"))![1]!);
-      expect(ch).toBeLessThanOrEqual(boiteCh);
+    /* La place utile du corps, et non la largeur de la boite : `.parchemin`
+       plafonne a 66ch, mais `.parchemin-corps` prend un padding de chaque
+       cote, donc un enfant ne dispose que de 66ch moins DEUX paddings.
+       L'ancienne garde comparait la mesure a la boite NUE : 66ch y passait,
+       c'est-a-dire un centrage nul, et 60ch aussi. Les trois nombres se
+       lisent dans la feuille. */
+
+    /** Le plafond de la boite, en ch, lu dans le `min()` de `.parchemin`. */
+    const BOITE_CH = Number.parseFloat(
+      /min\(\s*([\d.]+)ch/.exec(
+        valeur(bloc(/(?:^|[\s}])\.parchemin\s*\{/, BASE), "max-width"),
+      )![1]!,
+    );
+    /** Le padding lateral du corps, resolu depuis la variable de la feuille. */
+    const PADDING = (() => {
+      const decl = valeur(bloc(/\.parchemin-corps\s*\{/, BASE), "padding");
+      const v = /^var\((--[\w-]+)\)$/.exec(decl);
+      return v ? variableA(v[1]!, 1440) : px(decl);
+    })();
+    /** La place utile, en pixels : la boite moins les deux cotes de padding. */
+    const UTILE = BOITE_CH * CH - 2 * PADDING;
+    /** La mesure declaree, en pixels, `ch` ou `px` indifferemment. */
+    const MESURE = enPx(valeur(enfants, "max-inline-size"));
+
+    it("les trois longueurs du calcul se lisent bien dans la feuille", () => {
+      // Sans cela, un `NaN` glisse dans les deux gardes suivantes et toute
+      // comparaison y devient fausse donc muette.
+      expect(BOITE_CH, "plafond de la boite illisible").toBeGreaterThan(0);
+      expect(PADDING, "padding du corps illisible").toBeGreaterThan(0);
+      expect(MESURE, "mesure des enfants illisible").toBeGreaterThan(0);
+    });
+
+    it("la mesure tient dans la place UTILE, padding du corps deduit", () => {
+      expect(
+        MESURE,
+        `mesure ${MESURE.toFixed(1)}px pour ${UTILE.toFixed(1)}px utiles ` +
+          `(${BOITE_CH}ch moins 2 x ${PADDING}px)`,
+      ).toBeLessThan(UTILE);
+    });
+
+    it("le centrage se VOIT : au moins un espace-3 de jeu de chaque cote", () => {
+      // Le seuil n'est pas choisi : c'est le padding du corps lui-meme, le
+      // plus petit ecart que la mise en page de la feuille tient pour
+      // perceptible. A 56ch il restait 19,6 px par cote, et la revue a juge
+      // que vingt pixels ne se voient pas.
+      const jeu = (UTILE - MESURE) / 2;
+      expect(jeu, `jeu de ${jeu.toFixed(1)}px par cote, pour ${PADDING}px exiges`)
+        .toBeGreaterThanOrEqual(PADDING);
     });
   });
 

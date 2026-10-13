@@ -417,12 +417,25 @@ describe("le declencheur du parchemin (spec section 3)", () => {
 
   it("chaque declencheur dit que cela s ouvre, hors couleur", () => {
     const html = rendreArticle({ name: "Mon projet", photo1Path: "a.webp" }, true);
-    // Le bouton « Details » porte un mot visible : il n'a pas besoin d'infobulle.
+    const balises = html.match(/<button[^>]*>/g) ?? [];
+    /** Les classes d'une balise, en JETONS et non en sous-chaine de l'attribut.
+     *  Le filtre precedent exemptait toute balise dont le texte CONTENAIT
+     *  `journal-details` : une classe voisine comme `journal-details-bis`
+     *  echappait donc a l'obligation d'infobulle. */
+    const classes = (b: string) =>
+      (/\sclass="([^"]*)"/.exec(b)?.[1] ?? "").trim().split(/\s+/).filter(Boolean);
+    const porteLaClasse = (b: string) => classes(b).includes("journal-details");
+    // Le bouton « Details » porte un mot visible : il n'a pas besoin
+    // d'infobulle, et il est le SEUL a porter cette classe. Un bouton du titre
+    // ou de la photo qui la recevrait par erreur ferait tomber cette ligne, au
+    // lieu de s'exempter en silence.
+    expect(
+      balises.filter(porteLaClasse),
+      "la classe journal-details ne doit nommer qu un bouton, celui du mot visible",
+    ).toHaveLength(1);
     // Le titre et la photo, eux, n'ont que leur curseur et leur infobulle.
-    const boutons = (html.match(/<button[^>]*>/g) ?? []).filter(
-      (b) => !b.includes("journal-details"),
-    );
-    expect(boutons).toHaveLength(2);
+    const boutons = balises.filter((b) => !porteLaClasse(b));
+    expect(boutons, "un declencheur manque, ou un bouton de plus s est glisse").toHaveLength(2);
     const attendu = JSON.parse(lire("lib/i18n/fr.json"))["projects.clickForDetails"] as string;
     for (const b of boutons) expect(b).toContain(`title="${attendu}"`);
   });

@@ -1542,9 +1542,22 @@ html {
      ENFANTS du corps et non sur un conteneur intermediaire : la feuille garde
      ses trois enfants directs (contrat ci-dessus). Le centrage est celui des
      BLOCS ; le texte reste aligne au debut, une description centree perdant
-     l'oeil a chaque retour de ligne. */
+     l'oeil a chaque retour de ligne.
+
+     48ch et non 56ch, revision 1 bis : la boite plafonne a 66ch et le corps
+     prend 24 px de padding de chaque cote, donc la place UTILE vaut 66ch
+     moins 48 px. A 56ch il restait une vingtaine de pixels par cote, soit un
+     centrage que l'on ne voit pas ; a 48ch il en reste plus de cinquante, et
+     la mesure tient encore dans la plage de lecture confortable de 45 a 75
+     caracteres. Le test de la mesure lit cette valeur et le padding dans la
+     feuille, il ne les recopie pas.
+
+     Au palier etroit le centrage est NUL, le contenu faisant moins de 48ch :
+     c'est VOULU. On ne veut pas de marges laterales sur un telephone, ou la
+     place est deja comptee. Ne pas « corriger » en baissant la mesure ou en
+     posant une mesure par palier. */
   .parchemin-corps > * {
-    max-inline-size: 56ch;
+    max-inline-size: 48ch;
     margin-inline: auto;
     text-align: start;
   }

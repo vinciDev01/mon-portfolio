@@ -12,8 +12,11 @@ import { ligneDateProjet } from "@/lib/parcours/journal";
 /**
  * Identifiant du titre, cible de `aria-labelledby`. Une constante et non
  * `useId` : un seul parchemin est ouvert a la fois, le nom accessible doit
- * etre stable, et `useId` rend en React 19 un jeton entoure de guillemets
- * typographiques, qui n'est pas un identifiant CSS valide.
+ * etre stable, et les tests le cherchent par `#parchemin-titre`, ce qu'un
+ * jeton de `useId` ne permet pas de garantir : sa forme est interne a React et
+ * a change d'une version a l'autre (`:r0:` en 18, un temps `«r0»` en 19,
+ * `_r_o_` sous la 19.2.4 mesuree ici), et les deux premieres ne sont pas des
+ * identifiants CSS valides.
  */
 const ID_TITRE = "parchemin-titre";
 

@@ -26,31 +26,37 @@
   initial-value: 0;
   inherits: true;
 }
+
 @property --t-lueur {
   syntax: "<number>";
   initial-value: 0;
   inherits: true;
 }
+
 @property --t-faisceau {
   syntax: "<number>";
   initial-value: 0;
   inherits: true;
 }
+
 @property --t-halo {
   syntax: "<number>";
   initial-value: 0;
   inherits: true;
 }
+
 @property --t-moucheture {
   syntax: "<number>";
   initial-value: 0;
   inherits: true;
 }
+
 @property --t-page {
   syntax: "<number>";
   initial-value: 0;
   inherits: true;
 }
+
 /*
  * Ronde de correction 2 : pilote le degrade de `stroke` des meridiens
  * (« brins chauds »/« brins refroidis », annexe §5.1/§5.2), sur ses
@@ -65,6 +71,7 @@
   initial-value: 0;
   inherits: true;
 }
+
 /* Rampe chromatique du filament (annexe §5.1/§5.2) : une propriete
    personnalisee enregistree en <color> s'interpole en oklab lorsqu'elle
    est animee par la Web Animations API ou une transition CSS, jamais en
@@ -196,23 +203,17 @@
   --fond: color-mix(in oklch, var(--fond-sombre), var(--fond-clair) calc(var(--t-page) * 100%));
   --surface: color-mix(in oklch, var(--surface-sombre), var(--surface-clair) calc(var(--t-page) * 100%));
   --bordure: color-mix(in oklch, var(--bordure-sombre), var(--bordure-clair) calc(var(--t-page) * 100%));
-  --bordure-signifiante: color-mix(
-    in oklch,
-    var(--bordure-signifiante-sombre),
-    var(--bordure-signifiante-clair) calc(var(--t-page) * 100%)
-  );
-  --texte-secondaire: color-mix(
-    in oklch,
-    var(--texte-secondaire-sombre),
-    var(--texte-secondaire-clair) calc(var(--t-page) * 100%)
-  );
+  --bordure-signifiante: color-mix(in oklch,
+      var(--bordure-signifiante-sombre),
+      var(--bordure-signifiante-clair) calc(var(--t-page) * 100%));
+  --texte-secondaire: color-mix(in oklch,
+      var(--texte-secondaire-sombre),
+      var(--texte-secondaire-clair) calc(var(--t-page) * 100%));
   --texte: color-mix(in oklch, var(--texte-sombre), var(--texte-clair) calc(var(--t-page) * 100%));
   --accent: color-mix(in oklch, var(--accent-sombre), var(--accent-clair) calc(var(--t-page) * 100%));
-  --ombre-teinte: color-mix(
-    in oklch,
-    var(--ombre-teinte-sombre),
-    var(--ombre-teinte-clair) calc(var(--t-page) * 100%)
-  );
+  --ombre-teinte: color-mix(in oklch,
+      var(--ombre-teinte-sombre),
+      var(--ombre-teinte-clair) calc(var(--t-page) * 100%));
 
   /*
    * Les trois ombres : un seul jeu de formules, dont les decalages et
@@ -222,14 +223,11 @@
    * palier, le resultat est l'un des deux jeux, sans etat intermediaire.
    */
   --ombre-proche:
-    calc(-1px * var(--t-page)) calc(1px + 1px * var(--t-page)) calc(2px + 1px * var(--t-page))
-    color-mix(in oklch, var(--ombre-teinte) calc((0.4 - 0.22 * var(--t-page)) * 100%), transparent);
+    calc(-1px * var(--t-page)) calc(1px + 1px * var(--t-page)) calc(2px + 1px * var(--t-page)) color-mix(in oklch, var(--ombre-teinte) calc((0.4 - 0.22 * var(--t-page)) * 100%), transparent);
   --ombre-moyenne:
-    calc(-2px * var(--t-page)) calc(4px + 2px * var(--t-page)) calc(10px + 2px * var(--t-page))
-    color-mix(in oklch, var(--ombre-teinte) calc((0.35 - 0.2 * var(--t-page)) * 100%), transparent);
+    calc(-2px * var(--t-page)) calc(4px + 2px * var(--t-page)) calc(10px + 2px * var(--t-page)) color-mix(in oklch, var(--ombre-teinte) calc((0.35 - 0.2 * var(--t-page)) * 100%), transparent);
   --ombre-lointaine:
-    calc(-4px * var(--t-page)) calc(10px + 4px * var(--t-page)) calc(24px + 4px * var(--t-page))
-    color-mix(in oklch, var(--ombre-teinte) calc((0.3 - 0.18 * var(--t-page)) * 100%), transparent);
+    calc(-4px * var(--t-page)) calc(10px + 4px * var(--t-page)) calc(24px + 4px * var(--t-page)) color-mix(in oklch, var(--ombre-teinte) calc((0.3 - 0.18 * var(--t-page)) * 100%), transparent);
 }
 
 /* Mapping shadcn, commun aux deux themes. */
@@ -371,11 +369,9 @@ html {
    que le repli sans JavaScript et `color-scheme`. */
 .animated-card::before,
 .animated-card::after {
-  border-color: color-mix(
-    in oklch,
-    oklch(1 0 0 / 0.08),
-    var(--bordure) calc(var(--t-page, 0) * 100%)
-  );
+  border-color: color-mix(in oklch,
+      oklch(1 0 0 / 0.08),
+      var(--bordure) calc(var(--t-page, 0) * 100%));
 }
 
 /*
@@ -578,10 +574,7 @@ html {
   --chapo: calc(var(--corps) * var(--ratio));
   --h3: calc(var(--corps) * var(--ratio) * var(--ratio));
   --h2: calc(var(--corps) * var(--ratio) * var(--ratio) * var(--ratio));
-  --h1: calc(
-    var(--corps) * var(--ratio) * var(--ratio) * var(--ratio) * var(--ratio) *
-      var(--ratio)
-  );
+  --h1: calc(var(--corps) * var(--ratio) * var(--ratio) * var(--ratio) * var(--ratio) * var(--ratio));
 
   /* Rythme vertical, grille de 8 px */
   --espace-1: 8px;
@@ -649,22 +642,18 @@ html {
     inset: 0;
     pointer-events: none;
     background-image:
-      radial-gradient(
-        540px 620px at calc(100% - 136px) 250px,
+      radial-gradient(540px 620px at calc(100% - 136px) 250px,
         hsl(34 88% 72% / 0.3) 0%,
         hsl(32 80% 66% / 0.19) 26%,
         hsl(30 70% 58% / 0.08) 55%,
         hsl(28 62% 50% / 0.025) 80%,
-        hsl(28 60% 46% / 0) 100%
-      ),
-      radial-gradient(
-        540px 620px at calc(100% - 136px) 250px,
+        hsl(28 60% 46% / 0) 100%),
+      radial-gradient(540px 620px at calc(100% - 136px) 250px,
         hsl(34 88% 72% / 0.12) 0%,
         hsl(32 80% 66% / 0.076) 26%,
         hsl(30 70% 58% / 0.032) 55%,
         hsl(28 62% 50% / 0.01) 80%,
-        hsl(28 60% 46% / 0) 100%
-      );
+        hsl(28 60% 46% / 0) 100%);
     background-blend-mode: soft-light, screen;
     mix-blend-mode: soft-light;
     /* L5 lit directement --t-halo (tache 10, ronde de correction 1) :
@@ -697,11 +686,13 @@ html {
     line-height: 1.1;
     letter-spacing: -0.02em;
   }
+
   h2 {
     font-size: var(--h2);
     line-height: 1.25;
     letter-spacing: -0.01em;
   }
+
   h3 {
     font-size: var(--h3);
     line-height: 1.35;
@@ -851,6 +842,7 @@ html {
      plus la place d'etre lus, seuls les reperes subsistent. Le nom reste le
      nom accessible du lien d'identite. */
   @media (max-width: 1023px) {
+
     .identite-nom,
     .entree-nom {
       position: absolute;
@@ -993,6 +985,7 @@ html {
      `visibility: hidden`. On neutralise la pagination comme le fait le repli
      sans JavaScript : toute la page s'imprime. */
   @media print {
+
     html[data-pagination="active"],
     html[data-pagination="active"] body {
       overflow: auto;
@@ -1025,10 +1018,7 @@ html {
      ----------------------------------------------------------- */
   .bloc-parcours {
     --ampoule-largeur: calc(172px * var(--ampoule-echelle, 1));
-    --degagement: calc(
-      100% + var(--gouttiere) - var(--ampoule-droite, 48px)
-      - var(--ampoule-largeur) - 16px
-    );
+    --degagement: calc(100% + var(--gouttiere) - var(--ampoule-droite, 48px) - var(--ampoule-largeur) - 16px);
     /* Le plancher de 41ch existe parce que sans lui la formule etrangle
        la mesure a 21 caracteres a 360 px. Sous environ 520 px le
        degagement ne peut plus etre tenu : le recouvrement est assume et
@@ -1042,10 +1032,8 @@ html {
     .bloc-parcours[data-cote="droite"] {
       /* `--portfolio-zigzag` reste un reglage du backoffice : le decalage
          est plafonne, jamais remplace. */
-      margin-inline-start: max(0px, min(
-        calc(var(--portfolio-zigzag, 0.5) * (100% - var(--mesure-courante))),
-        calc(var(--degagement) - var(--mesure-courante))
-      ));
+      margin-inline-start: max(0px, min(calc(var(--portfolio-zigzag, 0.5) * (100% - var(--mesure-courante))),
+            calc(var(--degagement) - var(--mesure-courante))));
     }
   }
 
@@ -1133,6 +1121,7 @@ html {
     padding: 0;
     cursor: pointer;
   }
+
   .ampoule-interrupteur:focus-visible {
     outline: 2px solid var(--accent);
     outline-offset: 3px;
@@ -1210,8 +1199,7 @@ html {
    * par le selecteur `.couche-filament .halo-serre` ci-dessous : un
    * selecteur descendant n'exige aucune regle sur son ancetre.
    */
-  .couche-filament {
-  }
+  .couche-filament {}
 
   .couche-filament .halo-serre {
     mix-blend-mode: screen;
@@ -1263,18 +1251,21 @@ html {
       --ampoule-droite: 40px;
     }
   }
+
   @media (max-width: 1199px) {
     :root {
       --ampoule-echelle: 0.82;
       --ampoule-droite: 32px;
     }
   }
+
   @media (max-width: 899px) {
     :root {
       --ampoule-echelle: 0.66;
       --ampoule-droite: 24px;
     }
   }
+
   @media (max-width: 599px) {
     :root {
       --ampoule-echelle: 0.5;
@@ -1283,6 +1274,7 @@ html {
       --faisceau-flou: 14px;
     }
   }
+
   @media (max-width: 359px) {
     :root {
       --ampoule-echelle: 0.44;
@@ -1313,7 +1305,9 @@ html {
     inset: 0;
   }
 
-  .drapeau-guidon { display: none; }
+  .drapeau-guidon {
+    display: none;
+  }
 
   /* Le libelle vient du backoffice et rien n'en borne la longueur : deux
      lignes au plus, puis troncature. Le libelle complet reste le nom
@@ -1335,30 +1329,42 @@ html {
   /* La ligne ne porte pas `.gouttiere-parcours` : elle est dans le contenu
      de l'ouverture, donc dans une `SectionShell` qui la porte deja. La porter
      aussi doublerait le retrait. */
-  .ligne-disponibilite { margin-block-end: var(--espace-2); }
+  .ligne-disponibilite {
+    margin-block-end: var(--espace-2);
+  }
 
   /* Sous 1024 px le drapeau se replie en guidon sans texte. Le guidon a son
      propre viewBox : sous 600 px la colonne n'offre que 31 px utiles, il
      rapetisse donc sans deformation plutot que d'etre rogne. L'element
      masque l'est par display: none, il quitte l'arbre d'accessibilite. */
   @media (max-width: 1023px) {
-    .drapeau-toile { display: none; }
+    .drapeau-toile {
+      display: none;
+    }
+
     .drapeau-guidon {
       display: block;
       width: 100%;
       max-width: 40px;
       height: 56px;
     }
-    .drapeau-texte { display: none; }
+
+    .drapeau-texte {
+      display: none;
+    }
   }
 
   @media (min-width: 1024px) {
-    .ligne-disponibilite { display: none; }
+    .ligne-disponibilite {
+      display: none;
+    }
   }
 
   /* Le journal : une une de presse. La mesure, et non la fenetre, decide des
      colonnes, d'ou le conteneur. */
-  .journal { container-type: inline-size; }
+  .journal {
+    container-type: inline-size;
+  }
 
   .journal-bandeau {
     border-block-end: 1px solid var(--bordure-signifiante);
@@ -1399,10 +1405,12 @@ html {
     min-block-size: 24px;
     min-inline-size: 24px;
   }
+
   .journal-declencheur-image {
     display: block;
     inline-size: 100%;
   }
+
   .journal-declencheur:focus-visible {
     outline: 2px solid var(--accent);
     outline-offset: 3px;
@@ -1421,6 +1429,7 @@ html {
     min-inline-size: 24px;
     margin-block-end: var(--espace-2);
   }
+
   .journal-details:focus-visible {
     outline: 2px solid var(--accent);
     outline-offset: 3px;
@@ -1484,7 +1493,10 @@ html {
       column-gap: 32px;
       column-rule: 1px solid var(--bordure);
     }
-    .journal-colonnes > .journal-article { break-inside: avoid; }
+
+    .journal-colonnes>.journal-article {
+      break-inside: avoid;
+    }
   }
 
   /* Le parchemin : la forme porte le sens, jamais le mouvement. Meme
@@ -1556,7 +1568,7 @@ html {
      c'est VOULU. On ne veut pas de marges laterales sur un telephone, ou la
      place est deja comptee. Ne pas « corriger » en baissant la mesure ou en
      posant une mesure par palier. */
-  .parchemin-corps > * {
+  .parchemin-corps>* {
     max-inline-size: 48ch;
     margin-inline: auto;
     text-align: start;
@@ -1578,10 +1590,12 @@ html {
     border: 1px solid var(--bordure-signifiante);
     cursor: pointer;
   }
+
   .parchemin-fermer:focus-visible {
     outline: 2px solid var(--accent);
     outline-offset: 3px;
   }
+
   .parchemin-fermer svg {
     display: block;
     inline-size: 16px;
@@ -1671,6 +1685,7 @@ html {
    a son contour de dome seul, trace en CanvasText.
    */
 @media (forced-colors: active) {
+
   .couche-lueur,
   .couche-filament,
   .couche-faisceau,

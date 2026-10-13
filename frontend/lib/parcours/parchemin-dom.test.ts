@@ -1,4 +1,6 @@
 // @vitest-environment jsdom
+import { readFileSync } from "node:fs";
+import path from "node:path";
 import { afterEach, describe, it, expect, beforeEach, vi } from "vitest";
 import { createElement, useEffect, type ComponentType } from "react";
 import type { ProjectDto } from "@portfolio/shared-types";
@@ -12,6 +14,8 @@ import {
   useChangerSurcouche,
 } from "@/components/parcours/parcours-pagine";
 import { SECTIONS } from "./sections";
+
+const RACINE = path.resolve(import.meta.dirname, "../..");
 
 (globalThis as { IS_REACT_ACT_ENVIRONMENT?: boolean }).IS_REACT_ACT_ENVIRONMENT = true;
 
@@ -445,30 +449,32 @@ describe("le parchemin (spec sections 4, 5 et 6)", () => {
   it("le bouton de fermeture a un nom accessible explicite", () => {
     const d = monterParchemin(projetComplet());
     const b = boutonFermer(d);
-    expect(b?.getAttribute("aria-label") ?? b?.textContent).toMatch(/\S{4,}/);
+    expect(b.getAttribute("aria-label") ?? "").toMatch(/\S{4,}/);
   });
 
-  // Spec section 6 : le bouton de fermeture porte un nom accessible EXPLICITE,
-  // et non une croix seule. L'assertion precedente court-circuite par `??` des
-  // qu'un `aria-label` existe, donc le texte VISIBLE n'y est jamais regarde :
-  // les deux choses se constatent separement.
-  it("le bouton de fermeture porte un texte visible, et non une croix seule", () => {
-    const d = monterParchemin(projetComplet());
-    const visible = (boutonFermer(d).textContent ?? "").trim();
-    expect(visible,
-      "le bouton n a pas de libelle visible : « cliquer sur Fermer » ne designerait rien")
-      .toMatch(/\S{4,}/);
-  });
-
-  it("le nom accessible du bouton CONTIENT son texte visible (WCAG 2.5.3)", () => {
+  // Revision 2 : la croix remplace le libelle. Un bouton a icone seule nomme par
+  // `aria-label` est juste ; WCAG 2.5.3 ne vaut qu'en presence de texte visible.
+  it("le bouton de fermeture ne porte AUCUN texte visible, mais un aria-label non vide", () => {
     const d = monterParchemin(projetComplet());
     const b = boutonFermer(d);
-    const visible = (b.textContent ?? "").trim();
-    // Sans `aria-label`, le nom accessible EST le texte visible : la regle est
-    // tenue d'office, et le test precedent garde le libelle.
-    const nom = b.getAttribute("aria-label") ?? visible;
-    expect(nom, "le nom accessible ne contient pas le texte visible")
-      .toContain(visible);
+    expect((b.textContent ?? "").trim(), "du texte visible dans le bouton").toBe("");
+    expect((b.getAttribute("aria-label") ?? "").trim(), "bouton sans nom accessible")
+      .not.toBe("");
+  });
+
+  it("l aria-label vaut la cle parcours.fermerParchemin, et une croix SVG dessinee est presente", () => {
+    const d = monterParchemin(projetComplet());
+    const b = boutonFermer(d);
+    const fr = JSON.parse(readFileSync(path.join(RACINE, "lib/i18n/fr.json"), "utf8")) as
+      Record<string, string>;
+    expect(b.getAttribute("aria-label")).toBe(fr["parcours.fermerParchemin"]);
+    const svg = b.querySelector("svg");
+    expect(svg, "aucun SVG dans le bouton de fermeture").not.toBeNull();
+    const traits = svg!.querySelectorAll("path, line");
+    expect(traits, "une croix a deux traits").toHaveLength(2);
+    expect(svg!.getAttribute("stroke")).toBe("currentColor");
+    expect(svg!.getAttribute("aria-hidden")).toBe("true");
+    expect(b.innerHTML, "le caractere de multiplication").not.toContain("\u00d7");
   });
 
   it("le corps se declare proprietaire de son defilement", () => {

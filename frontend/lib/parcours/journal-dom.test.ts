@@ -99,6 +99,39 @@ describe("l'article n'est pas le declencheur", () => {
   });
 });
 
+const details = (nom: string): HTMLButtonElement => {
+  const art = [...hote.querySelectorAll("article")].find(
+    (a) => a.querySelector("h3 button")?.textContent === nom,
+  );
+  const b = art?.querySelector<HTMLButtonElement>("button.journal-details");
+  if (!b) throw new Error(`aucun bouton Details dans l'article de "${nom}"`);
+  return b;
+};
+
+describe("le bouton Details (revision 3)", () => {
+  it("chaque article en porte un, avec le mot visible", () => {
+    expect(hote.querySelectorAll("button.journal-details")).toHaveLength(3);
+    expect(details("Alpha").textContent).toBe("Détails");
+    expect(details("Alpha").type).toBe("button");
+  });
+
+  it("ouvre le parchemin de SON projet, et le titre fonctionne toujours", () => {
+    cliquer(details("Gamma"));
+    expect(document.querySelectorAll("dialog")).toHaveLength(1);
+    expect(document.querySelector("#parchemin-titre")!.textContent).toContain("Gamma");
+    cliquer(document.querySelector<HTMLButtonElement>("dialog button")!);
+    cliquer(declencheur("Beta"));
+    expect(document.querySelector("#parchemin-titre")!.textContent).toContain("Beta");
+  });
+
+  it("passe par la meme garde : un second projet n'est pas ouvert par-dessus", () => {
+    cliquer(details("Alpha"));
+    cliquer(details("Beta"));
+    expect(document.querySelectorAll("dialog")).toHaveLength(1);
+    expect(document.querySelector("#parchemin-titre")!.textContent).toContain("Alpha");
+  });
+});
+
 const fermerParchemin = () =>
   cliquer(document.querySelector<HTMLButtonElement>("dialog button")!);
 

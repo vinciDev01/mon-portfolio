@@ -250,14 +250,29 @@ function Dossier({
             <h2 id={ID_TITRE} className="text-xl font-semibold">
               {projet.name}
             </h2>
+            {/* Une croix DESSINEE, jamais le caractere de multiplication : il
+                rend mal selon les polices et se comporte mal en couleurs
+                forcees. Pas de texte visible, donc le nom accessible vient de
+                l'`aria-label` seul. */}
             <button
               type="button"
               data-fermer
               aria-label={t("parcours.fermerParchemin")}
               onClick={fermer}
-              className="border border-[var(--bordure-signifiante)] px-3 py-1 text-sm"
+              className="parchemin-fermer"
             >
-              {t("parcours.fermerParchemin")}
+              <svg
+                viewBox="0 0 16 16"
+                aria-hidden="true"
+                focusable="false"
+                fill="none"
+                stroke="currentColor"
+                strokeWidth="2"
+                strokeLinecap="square"
+              >
+                <path d="M3 3 L13 13" />
+                <path d="M13 3 L3 13" />
+              </svg>
             </button>
           </div>
 

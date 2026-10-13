@@ -1,7 +1,7 @@
 import { describe, it, expect } from "vitest";
 import type { ProjectDto, ProjectCollaboratorDto } from "@portfolio/shared-types";
 import { blocsPresents, credits, lienDemo } from "./parchemin";
-import { bloc, corpsDepuis, css, sansCommentaires, valeur } from "./feuille-test";
+import { bloc, corpsDepuis, css, px, sansCommentaires, valeur } from "./feuille-test";
 import { ratioContraste, luminanceRelative } from "@/lib/color/contrast";
 import { PALETTE_CLAIRE, PALETTE_SOMBRE } from "@/lib/design/tokens";
 
@@ -437,6 +437,39 @@ describe("la forme du parchemin (spec section 2)", () => {
   describe("le corps", () => {
     it("defile seul, les bandes restent en place", () => {
       expect(valeur(bloc(/\.parchemin-corps\s*\{/, BASE), "overflow-y")).toBe("auto");
+    });
+  });
+
+  describe("les blocs de detail (revision 1)", () => {
+    // Le selecteur est lu tel quel : `> *` et non un conteneur intermediaire.
+    const enfants = bloc(/\.parchemin-corps\s*>\s*\*\s*\{/, BASE);
+
+    it("ont une mesure centree, sans noeud ajoute", () => {
+      expect(valeur(enfants, "max-inline-size")).toMatch(/^[1-9]\d*(\.\d+)?(ch|px)$/);
+      expect(valeur(enfants, "margin-inline")).toBe("auto");
+    });
+
+    it("gardent le texte aligne au debut", () => {
+      expect(valeur(enfants, "text-align")).toBe("start");
+    });
+
+    it("la mesure tient dans la boite", () => {
+      const ch = Number.parseFloat(valeur(enfants, "max-inline-size"));
+      const boiteCh = Number.parseFloat(/min\((\d+)ch/.exec(valeur(bloc(/(?:^|[\s}])\.parchemin\s*\{/, BASE), "max-width"))![1]!);
+      expect(ch).toBeLessThanOrEqual(boiteCh);
+    });
+  });
+
+  describe("la croix de fermeture (revision 2)", () => {
+    const x = bloc(/\.parchemin-fermer\s*\{/, BASE);
+
+    it("offre une cible d'au moins 24 px, par la feuille", () => {
+      expect(px(valeur(x, "min-inline-size"))).toBeGreaterThanOrEqual(24);
+      expect(px(valeur(x, "min-block-size"))).toBeGreaterThanOrEqual(24);
+    });
+
+    it("garde la bordure signifiante", () => {
+      expect(valeur(x, "border")).toBe("1px solid var(--bordure-signifiante)");
     });
   });
 

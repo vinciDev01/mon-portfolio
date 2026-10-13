@@ -1408,6 +1408,24 @@ html {
     outline-offset: 3px;
   }
 
+  /* Le bouton « Details » : la marque VISIBLE du declencheur. Le curseur et
+     l'infobulle du titre n'existent ni au tactile ni au clavier seul. */
+  .journal-details {
+    background: none;
+    color: inherit;
+    font: inherit;
+    cursor: pointer;
+    border: 1px solid var(--bordure-signifiante);
+    padding: var(--espace-1) var(--espace-2);
+    min-block-size: 24px;
+    min-inline-size: 24px;
+    margin-block-end: var(--espace-2);
+  }
+  .journal-details:focus-visible {
+    outline: 2px solid var(--accent);
+    outline-offset: 3px;
+  }
+
   .journal-corps {
     margin-block-end: var(--espace-2);
   }
@@ -1518,6 +1536,43 @@ html {
   .parchemin-corps {
     overflow-y: auto;
     padding: var(--espace-3);
+  }
+
+  /* Les blocs de detail ont une mesure centree dans la feuille. Posee sur les
+     ENFANTS du corps et non sur un conteneur intermediaire : la feuille garde
+     ses trois enfants directs (contrat ci-dessus). Le centrage est celui des
+     BLOCS ; le texte reste aligne au debut, une description centree perdant
+     l'oeil a chaque retour de ligne. */
+  .parchemin-corps > * {
+    max-inline-size: 56ch;
+    margin-inline: auto;
+    text-align: start;
+  }
+
+  /* La croix de fermeture : un bouton sans texte visible, nomme par son
+     `aria-label`. La cible de 24 px (WCAG 2.5.8) vient d'ici et non de
+     classes utilitaires, sinon un bouton sans texte devient trop petit. */
+  .parchemin-fermer {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    flex: none;
+    min-inline-size: 24px;
+    min-block-size: 24px;
+    padding: var(--espace-1);
+    background: none;
+    color: inherit;
+    border: 1px solid var(--bordure-signifiante);
+    cursor: pointer;
+  }
+  .parchemin-fermer:focus-visible {
+    outline: 2px solid var(--accent);
+    outline-offset: 3px;
+  }
+  .parchemin-fermer svg {
+    display: block;
+    inline-size: 16px;
+    block-size: 16px;
   }
 
   .parchemin-credits {

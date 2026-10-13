@@ -417,10 +417,34 @@ describe("le declencheur du parchemin (spec section 3)", () => {
 
   it("chaque declencheur dit que cela s ouvre, hors couleur", () => {
     const html = rendreArticle({ name: "Mon projet", photo1Path: "a.webp" }, true);
-    const boutons = html.match(/<button[^>]*>/g) ?? [];
+    // Le bouton « Details » porte un mot visible : il n'a pas besoin d'infobulle.
+    // Le titre et la photo, eux, n'ont que leur curseur et leur infobulle.
+    const boutons = (html.match(/<button[^>]*>/g) ?? []).filter(
+      (b) => !b.includes("journal-details"),
+    );
     expect(boutons).toHaveLength(2);
     const attendu = JSON.parse(lire("lib/i18n/fr.json"))["projects.clickForDetails"] as string;
     for (const b of boutons) expect(b).toContain(`title="${attendu}"`);
+  });
+
+  it("un troisieme bouton, au mot visible, ouvre aussi le parchemin", () => {
+    const html = rendreArticle({ name: "Mon projet", photo1Path: "a.webp" }, true);
+    const m = /<button[^>]*class="journal-details"[^>]*>([\s\S]*?)<\/button>/.exec(html);
+    expect(m, "aucun bouton Details dans l'article").not.toBeNull();
+    const fr = JSON.parse(lire("lib/i18n/fr.json")) as Record<string, string>;
+    expect(m![1]!.trim()).toBe(fr["projects.details"]);
+    expect(html.match(/<button/g)).toHaveLength(3);
+  });
+
+  it("la cle projects.details existe, non vide, en parite exacte dans les trois langues", () => {
+    const dicts = ["fr", "en", "de"].map(
+      (d) => JSON.parse(lire(`lib/i18n/${d}.json`)) as Record<string, string>,
+    );
+    for (const dict of dicts) expect(dict["projects.details"]).toBeTruthy();
+    const cles = dicts.map((x) => Object.keys(x).sort());
+    expect(cles[1]).toEqual(cles[0]);
+    expect(cles[2]).toEqual(cles[0]);
+    expect(cles[0]).toHaveLength(70);
   });
 });
 
@@ -476,6 +500,16 @@ describe("la feuille du declencheur", () => {
   it("offre une cible d'au moins 24 px", () => {
     expect(px(valeur(corps, "min-block-size"))).toBeGreaterThanOrEqual(24);
     expect(px(valeur(corps, "min-inline-size"))).toBeGreaterThanOrEqual(24);
+  });
+
+  it("le bouton Details a une bordure signifiante et une cible d'au moins 24 px", () => {
+    const d = bloc(/\.journal-details\s*\{/, css);
+    expect(valeur(d, "border")).toBe("1px solid var(--bordure-signifiante)");
+    expect(px(valeur(d, "min-block-size"))).toBeGreaterThanOrEqual(24);
+    expect(px(valeur(d, "min-inline-size"))).toBeGreaterThanOrEqual(24);
+    expect(d, "un mouvement sur le bouton Details").not.toMatch(/transition|animation|transform/);
+    const f = bloc(/\.journal-details:focus-visible\s*\{/, css);
+    expect(valeur(f, "outline")).toBe("2px solid var(--accent)");
   });
 
   it("montre le focus au clavier", () => {

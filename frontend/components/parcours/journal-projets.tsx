@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useId, useState } from "react";
 import Image from "next/image";
 import type { ProjectDto } from "@portfolio/shared-types";
 import { getFileUrl } from "@/lib/api";
@@ -36,6 +36,8 @@ export function Article({
   surOuverture: (p: ProjectDto) => void;
 }) {
   const { t, locale } = useTranslation();
+  // Relie chaque bouton « Details » au titre de SON article.
+  const idTitre = useId();
   // Meme regle que le parchemin (`https:` seul) : le meme champ ne doit pas
   // donner un lien vivant ici et un bloc masque la.
   const demo = lienDemo(projet);
@@ -71,7 +73,7 @@ export function Article({
       )}
       {/* Un bouton DANS le titre : le titre garde sa semantique, et le lien de
           demonstration reste frere du bouton, jamais son enfant. */}
-      <h3 className="journal-titre">
+      <h3 id={idTitre} className="journal-titre">
         <button
           type="button"
           className="journal-declencheur"
@@ -84,6 +86,17 @@ export function Article({
       {dateProjet && <p className="meta journal-date">{dateProjet}</p>}
       {avec && <p className="journal-collaborateurs">{avec}</p>}
       {projet.description && <p className="journal-corps">{projet.description}</p>}
+      {/* Troisieme declencheur, meme gestionnaire que le titre et la photo. */}
+      <p>
+        <button
+          type="button"
+          className="journal-details"
+          aria-describedby={idTitre}
+          onClick={() => surOuverture(projet)}
+        >
+          {t("projects.details")}
+        </button>
+      </p>
       {demo && (
         <p>
           <a

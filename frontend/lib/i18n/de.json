@@ -81,5 +81,6 @@
   "journal.periodeUnique": "im {date}",
   "journal.collaborateurs": "mit {noms}",
   "projects.photoDe": "Foto von {nom}",
+  "projects.details": "Details",
   "projects.sansTitre": "Projekt ohne Titel"
 }

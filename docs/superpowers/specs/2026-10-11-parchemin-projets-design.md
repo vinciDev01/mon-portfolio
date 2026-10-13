@@ -192,8 +192,10 @@ Ce qui reste a notre charge :
 
 - Le dialogue porte un nom accessible : `aria-labelledby` vers le titre du
   projet rendu dans le parchemin.
-- Le bouton de fermeture porte un nom accessible explicite, et non une croix
-  seule.
+- Le bouton de fermeture est une croix dessinee en SVG (jamais le caractere de
+  multiplication) sans texte visible, et son nom accessible reste obligatoire :
+  il vient de l'`aria-label` seul, WCAG 2.5.3 ne valant qu'en presence de texte
+  visible.
 - Les deux photos portent un `alt` vide, le nom du projet etant lu juste a cote,
   comme la photo du journal.
 - Chaque lien LinkedIn porte le nom de la personne dans son nom accessible, et

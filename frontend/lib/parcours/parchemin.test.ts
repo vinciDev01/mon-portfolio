@@ -361,13 +361,6 @@ const regles = (source: string) =>
    `px`, les deux unites que la feuille melange ici. */
 const CH = 576 / 66;
 
-/** Une longueur litterale `ch` ou `px` lue dans la feuille, rendue en pixels. */
-function enPx(v: string): number {
-  const m = /^([\d.]+)(ch|px)$/.exec(v.trim());
-  expect(m, `longueur illisible : ${v}`).not.toBeNull();
-  return Number(m![1]) * (m![2] === "ch" ? CH : 1);
-}
-
 describe("le balayage de mouvement ancre sur des noms de propriete entiers", () => {
   it("laisse passer text-transform, qui n'est pas un mouvement", () => {
     expect(mouvements("text-transform: uppercase; letter-spacing: 0.1em")).toEqual([]);
@@ -518,67 +511,89 @@ describe("la forme du parchemin (spec section 2)", () => {
     });
   });
 
-  describe("les blocs de detail (revision 1)", () => {
+  describe("la largeur de la feuille (revision 1 ter)", () => {
+    const boite = bloc(/(?:^|[\s}])\.parchemin\s*\{/, BASE);
+    const maxWidth = valeur(boite, "max-width");
+
+    it("plafonne a 110ch : un panneau de deux photos n'est pas une colonne de texte", () => {
+      const m = /^min\(\s*([\d.]+)ch\s*,/.exec(maxWidth);
+      expect(m, `max-width illisible : ${maxWidth}`).not.toBeNull();
+      expect(Number(m![1]), `plafond de ${m![1]}ch`).toBe(110);
+    });
+
+    it("garde le calc(100vw - ...) qui protege les petits ecrans", () => {
+      expect(maxWidth).toMatch(
+        /^min\(\s*[\d.]+ch\s*,\s*calc\(100vw - 2 \* var\(--espace-3\)\)\s*\)$/,
+      );
+    });
+  });
+
+  describe("les blocs du corps (revision 1 ter)", () => {
     // Le selecteur est lu tel quel : `> *` et non un conteneur intermediaire.
     const enfants = bloc(/\.parchemin-corps\s*>\s*\*\s*\{/, BASE);
-
-    it("ont une mesure centree, sans noeud ajoute", () => {
-      expect(valeur(enfants, "max-inline-size")).toMatch(/^[1-9]\d*(\.\d+)?(ch|px)$/);
-      expect(valeur(enfants, "margin-inline")).toBe("auto");
-    });
 
     it("gardent le texte aligne au debut", () => {
       expect(valeur(enfants, "text-align")).toBe("start");
     });
 
-    /* La place utile du corps, et non la largeur de la boite : `.parchemin`
-       plafonne a 66ch, mais `.parchemin-corps` prend un padding de chaque
-       cote, donc un enfant ne dispose que de 66ch moins DEUX paddings.
-       L'ancienne garde comparait la mesure a la boite NUE : 66ch y passait,
-       c'est-a-dire un centrage nul, et 60ch aussi. Les trois nombres se
-       lisent dans la feuille. */
+    it("n'ont AUCUNE mesure ni centrage : ils prennent toute la largeur du corps", () => {
+      // Toutes les regles dont le selecteur vise les enfants du corps, et non
+      // la premiere : une seconde regle reintroduirait la mesure ailleurs.
+      const regles_ = regles(BASE).filter(([, sel]) =>
+        /\.parchemin-corps\s*>\s*\*/.test(sel!),
+      );
+      expect(regles_.length, "aucune regle `.parchemin-corps > *`").toBeGreaterThan(0);
+      const MESURES =
+        /^(?:max-|min-)?(?:inline-size|width)$|^margin-inline(?:-start|-end)?$|^margin$|^padding-inline(?:-start|-end)?$/;
+      for (const [, sel, corps] of regles_) {
+        const posees = declarations(corps!)
+          .filter(({ prop }) => MESURES.test(prop))
+          .map(({ prop, val }) => `${prop}: ${val}`);
+        expect(posees, `${sel!.trim()} reintroduit une mesure`).toEqual([]);
+      }
+    });
+  });
 
-    /** Le plafond de la boite, en ch, lu dans le `min()` de `.parchemin`. */
+  describe("la mesure de prose (revision 1 ter)", () => {
+    const prose = bloc(/\.parchemin-prose\s*\{/, BASE);
     const BOITE_CH = Number.parseFloat(
-      /min\(\s*([\d.]+)ch/.exec(
+      /^(?:min\(\s*)?([\d.]+)ch/.exec(
         valeur(bloc(/(?:^|[\s}])\.parchemin\s*\{/, BASE), "max-width"),
       )![1]!,
     );
-    /** Le padding lateral du corps, resolu depuis la variable de la feuille. */
     const PADDING = (() => {
       const decl = valeur(bloc(/\.parchemin-corps\s*\{/, BASE), "padding");
       const v = /^var\((--[\w-]+)\)$/.exec(decl);
       return v ? variableA(v[1]!, 1440) : px(decl);
     })();
-    /** La place utile, en pixels : la boite moins les deux cotes de padding. */
     const UTILE = BOITE_CH * CH - 2 * PADDING;
-    /** La mesure declaree, en pixels, `ch` ou `px` indifferemment. */
-    const MESURE = enPx(valeur(enfants, "max-inline-size"));
+    const MESURE_CH = Number.parseFloat(valeur(prose, "max-inline-size"));
 
-    it("les trois longueurs du calcul se lisent bien dans la feuille", () => {
-      // Sans cela, un `NaN` glisse dans les deux gardes suivantes et toute
-      // comparaison y devient fausse donc muette.
+    it("les longueurs du calcul se lisent bien dans la feuille", () => {
+      // Sans cela, un `NaN` rendrait les comparaisons suivantes muettes.
       expect(BOITE_CH, "plafond de la boite illisible").toBeGreaterThan(0);
       expect(PADDING, "padding du corps illisible").toBeGreaterThan(0);
-      expect(MESURE, "mesure des enfants illisible").toBeGreaterThan(0);
+      expect(MESURE_CH, "mesure de prose illisible").toBeGreaterThan(0);
     });
 
-    it("la mesure tient dans la place UTILE, padding du corps deduit", () => {
+    it("vaut environ 70ch, en ch : au-dela de 75 l'oeil perd la ligne suivante", () => {
+      expect(valeur(prose, "max-inline-size")).toMatch(/^[\d.]+ch$/);
+      expect(MESURE_CH).toBeGreaterThanOrEqual(65);
+      expect(MESURE_CH).toBeLessThanOrEqual(75);
+    });
+
+    it("tient dans la place utile de la feuille, padding du corps deduit", () => {
+      // Marge large : `ch` est ici la metrique du depot, pas l'avance de la
+      // police, donc aucune comparaison a quelques pixels pres.
+      const mesure = MESURE_CH * CH;
       expect(
-        MESURE,
-        `mesure ${MESURE.toFixed(1)}px pour ${UTILE.toFixed(1)}px utiles ` +
-          `(${BOITE_CH}ch moins 2 x ${PADDING}px)`,
+        mesure,
+        `mesure ${mesure.toFixed(0)}px pour ${UTILE.toFixed(0)}px utiles`,
       ).toBeLessThan(UTILE);
     });
 
-    it("le centrage se VOIT : au moins un espace-3 de jeu de chaque cote", () => {
-      // Le seuil n'est pas choisi : c'est le padding du corps lui-meme, le
-      // plus petit ecart que la mise en page de la feuille tient pour
-      // perceptible. A 56ch il restait 19,6 px par cote, et la revue a juge
-      // que vingt pixels ne se voient pas.
-      const jeu = (UTILE - MESURE) / 2;
-      expect(jeu, `jeu de ${jeu.toFixed(1)}px par cote, pour ${PADDING}px exiges`)
-        .toBeGreaterThanOrEqual(PADDING);
+    it("est centree par margin-inline: auto", () => {
+      expect(valeur(prose, "margin-inline")).toBe("auto");
     });
   });
 

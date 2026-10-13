@@ -984,6 +984,28 @@ describe("le contrat de structure de la feuille", () => {
     }
   });
 
+  it("la mesure de prose est posee sur la description et le public, et sur eux seuls", () => {
+    const d = monterParchemin(projetComplet());
+    const corps = d.querySelector(".parchemin-corps")!;
+    const prose = [...corps.querySelectorAll(".parchemin-prose")];
+    expect(prose, "la description et le public concerne, ni plus ni moins")
+      .toHaveLength(2);
+    // Constate par le CONTENU rendu, pas par la position : la classe suit les
+    // blocs, quel que soit l'ordre de `blocsPresents`.
+    expect(prose.map((n) => n.parentElement), "des enfants DIRECTS du corps")
+      .toEqual([corps, corps]);
+    expect(prose[0]!.textContent).toBe("Une description.");
+    expect(prose[1]!.textContent).toContain("Les gens");
+    // Les autres blocs profitent de la largeur : photos, technologies,
+    // collaborateurs et liens n'ont aucune mesure.
+    const autres = [...corps.children].filter((n) => !prose.includes(n));
+    expect(autres.length).toBeGreaterThan(3);
+    for (const n of autres) {
+      expect(n.classList.contains("parchemin-prose"), n.outerHTML.slice(0, 60))
+        .toBe(false);
+    }
+  });
+
   it("la bande du bas est le trace du haut retourne par un transform d ATTRIBUT", () => {
     const d = monterParchemin(projetComplet());
     const traces = [...d.querySelectorAll(".parchemin-bande")].map((b) =>

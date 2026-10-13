@@ -1518,7 +1518,7 @@ html {
   .parchemin {
     border: 0;
     padding: 0;
-    max-width: min(66ch, calc(100vw - 2 * var(--espace-3)));
+    max-width: min(110ch, calc(100vw - 2 * var(--espace-3)));
     max-height: calc(100dvh - 2 * var(--espace-3));
     background: transparent;
     /* L'encre est celle de la page, pas le `CanvasText` du navigateur. */
@@ -1550,28 +1550,30 @@ html {
     padding: var(--espace-3);
   }
 
-  /* Les blocs de detail ont une mesure centree dans la feuille. Posee sur les
-     ENFANTS du corps et non sur un conteneur intermediaire : la feuille garde
-     ses trois enfants directs (contrat ci-dessus). Le centrage est celui des
-     BLOCS ; le texte reste aligne au debut, une description centree perdant
-     l'oeil a chaque retour de ligne.
+  /* Les blocs de detail prennent TOUTE la largeur du corps : la feuille est
+     un panneau, pas une colonne de texte, et elle porte des photos, des
+     technologies, des collaborateurs et des liens qui profitent de la place.
+     Aucune mesure ici : une mesure posee sur tous les enfants avait indente un
+     panneau deja trop etroit pour son ecran (revision 1 ter : la feuille passe
+     de 66ch a 110ch, et la mesure de 48ch disparait).
 
-     48ch et non 56ch, revision 1 bis : la boite plafonne a 66ch et le corps
-     prend 24 px de padding de chaque cote, donc la place UTILE vaut 66ch
-     moins 48 px. A 56ch il restait une vingtaine de pixels par cote, soit un
-     centrage que l'on ne voit pas ; a 48ch il en reste plus de cinquante, et
-     la mesure tient encore dans la plage de lecture confortable de 45 a 75
-     caracteres. Le test de la mesure lit cette valeur et le padding dans la
-     feuille, il ne les recopie pas.
-
-     Au palier etroit le centrage est NUL, le contenu faisant moins de 48ch :
-     c'est VOULU. On ne veut pas de marges laterales sur un telephone, ou la
-     place est deja comptee. Ne pas « corriger » en baissant la mesure ou en
-     posant une mesure par palier. */
+     Le texte reste aligne au debut : une description centree perd l'oeil a
+     chaque retour de ligne, quelle que soit la largeur. */
   .parchemin-corps>* {
-    max-inline-size: 48ch;
-    margin-inline: auto;
     text-align: start;
+  }
+
+  /* UNE seule mesure, sur les textes COURANTS seulement : la description et le
+     public concerne. Un panneau peut etre large, une ligne de prose non : au-
+     dela d'environ 75 caracteres l'oeil ne retrouve plus le debut de la ligne
+     suivante. 70ch reste sous ce seuil, et le bloc est centre par
+     `margin-inline: auto`. Posee par une CLASSE explicite sur ces deux blocs
+     et non par un selecteur de position (`:nth-child`), qui casserait au
+     moindre reordonnancement de `blocsPresents`. Sur un petit ecran la place
+     est inferieure a 70ch : la mesure ne mord pas, c'est voulu. */
+  .parchemin-prose {
+    max-inline-size: 70ch;
+    margin-inline: auto;
   }
 
   /* La croix de fermeture : un bouton sans texte visible, nomme par son

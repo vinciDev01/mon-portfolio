@@ -314,13 +314,13 @@ function Dossier({
                 );
               case "description":
                 return (
-                  <p key={bloc} className="mt-4">
+                  <p key={bloc} className="mt-4 parchemin-prose">
                     {description}
                   </p>
                 );
               case "public":
                 return (
-                  <div key={bloc} className="mt-4">
+                  <div key={bloc} className="mt-4 parchemin-prose">
                     <h3 className="font-semibold">{t("projects.targetAudience")}</h3>
                     <p>{publicVise}</p>
                   </div>

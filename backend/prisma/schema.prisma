@@ -219,6 +219,7 @@ model Project {
   photo1Path     String?   @map("photo1_path")
   photo2Path     String?   @map("photo2_path")
   demoUrl        String?   @map("demo_url")
+  projectUrl     String?   @map("project_url")
   targetAudience String?   @map("target_audience")
   startDate      DateTime? @map("start_date")
   endDate        DateTime? @map("end_date")

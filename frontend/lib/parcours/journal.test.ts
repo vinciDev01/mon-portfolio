@@ -43,7 +43,8 @@ function blocs(entete: RegExp, source: string): string[] {
 function projet(p: Partial<ProjectDto>): ProjectDto {
   return {
     id: p.id ?? "x", name: p.name ?? "Projet", description: null,
-    photo1Path: null, photo2Path: null, demoUrl: null, targetAudience: null,
+    photo1Path: null, photo2Path: null, demoUrl: null, projectUrl: null,
+    targetAudience: null,
     startDate: null, endDate: null, technologies: [], collaborators: [],
     sortOrder: 0, ...p,
   } as ProjectDto;
@@ -449,15 +450,48 @@ describe("le declencheur du parchemin (spec section 3)", () => {
     expect(html.match(/<button/g)).toHaveLength(3);
   });
 
-  it("la cle projects.details existe, non vide, en parite exacte dans les trois langues", () => {
+  it("le journal ne montre PAS l adresse du projet : il reste une une de presse", () => {
+    // DECISION de la passe, et non un oubli : la une porte deja un titre
+    // cliquable, une ligne de date, les collaborateurs, un chapo, le bouton
+    // « Details », le lien de demonstration et la signature des technologies.
+    // Une seconde adresse y ajouterait une action de plus par article, en
+    // concurrence du bouton « Details » qui est l'action PRINCIPALE du
+    // journal. L'adresse du projet vit dans le parchemin, qui est le dossier.
+    // Si cette ligne tombe un jour, c'est la decision qu'il faut rouvrir.
+    const html = rendreArticle({
+      name: "Mon projet",
+      projectUrl: "https://exemple.test/vitrine",
+      demoUrl: "https://exemple.test/demo",
+    });
+    const fr = JSON.parse(lire("lib/i18n/fr.json")) as Record<string, string>;
+    expect(html, "l adresse du projet a fuite dans la une").not.toContain(
+      "https://exemple.test/vitrine",
+    );
+    expect(html, "le libelle de l adresse du projet parait dans la une").not.toContain(
+      fr["projects.viewProject"]!,
+    );
+    // La demonstration, elle, parait toujours : sans cette moitie, les deux
+    // lignes ci-dessus passeraient aussi pour un article sans aucun lien.
+    expect(html, "le lien de demonstration a disparu : l assertion serait vide").toContain(
+      "https://exemple.test/demo",
+    );
+  });
+
+  it("les cles neuves existent, non vides, en parite exacte dans les trois langues", () => {
     const dicts = ["fr", "en", "de"].map(
       (d) => JSON.parse(lire(`lib/i18n/${d}.json`)) as Record<string, string>,
     );
-    for (const dict of dicts) expect(dict["projects.details"]).toBeTruthy();
+    for (const dict of dicts) {
+      expect(dict["projects.details"]).toBeTruthy();
+      // L'adresse du projet en ligne, distincte de la demonstration : les deux
+      // libelles doivent DIFFERER, sinon le visiteur ne sait pas lequel mene ou.
+      expect(dict["projects.viewProject"]).toBeTruthy();
+      expect(dict["projects.viewProject"]).not.toBe(dict["projects.viewDemo"]);
+    }
     const cles = dicts.map((x) => Object.keys(x).sort());
     expect(cles[1]).toEqual(cles[0]);
     expect(cles[2]).toEqual(cles[0]);
-    expect(cles[0]).toHaveLength(70);
+    expect(cles[0]).toHaveLength(71);
   });
 });
 

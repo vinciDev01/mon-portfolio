@@ -181,7 +181,8 @@ describe("la pagination se suspend sous une surcouche (spec section 5.2)", () =>
 function fabrique(p: Partial<ProjectDto>): ProjectDto {
   return {
     id: "x", name: "Projet", description: null,
-    photo1Path: null, photo2Path: null, demoUrl: null, targetAudience: null,
+    photo1Path: null, photo2Path: null, demoUrl: null, projectUrl: null,
+    targetAudience: null,
     startDate: null, endDate: null, technologies: [], collaborators: [],
     sortOrder: 0, ...p,
   } as ProjectDto;
@@ -196,6 +197,10 @@ const projetComplet = () => fabrique({
   photo1Path: "projects/a.webp",
   photo2Path: "projects/b.webp",
   demoUrl: "https://exemple.test",
+  // Les DEUX adresses, distinctes : `demoUrl` montre une demonstration,
+  // `projectUrl` mene au projet lui-meme. Un projet « complet » porte les deux,
+  // sinon le bloc neuf ne serait jamais rendu par cette fabrique.
+  projectUrl: "https://exemple.test/en-ligne",
   startDate: "2024-03-01",
   endDate: "2025-01-01",
   // DEUX technologies, et non une : avec une seule, le point median n'est
@@ -498,7 +503,7 @@ describe("le parchemin (spec sections 4, 5 et 6)", () => {
     expect(d.querySelectorAll("a")).toHaveLength(0);
   });
 
-  it("un projet complet rend les six blocs de blocsPresents", () => {
+  it("un projet complet rend les sept blocs de blocsPresents", () => {
     const d = monterParchemin(projetComplet());
     expect(d.querySelectorAll("img")).toHaveLength(2);
     expect(d.textContent).toContain("Une description.");
@@ -507,7 +512,10 @@ describe("le parchemin (spec sections 4, 5 et 6)", () => {
     expect(d.textContent).toContain("Technologies");
     expect(d.textContent).toContain("Angular");
     expect(d.textContent).toContain("Collaborateurs");
-    expect(d.querySelector('a[href="https://exemple.test"]')).not.toBeNull();
+    expect(d.querySelector('a[href="https://exemple.test"]'),
+      "le bloc de la demonstration a disparu").not.toBeNull();
+    expect(d.querySelector('a[href="https://exemple.test/en-ligne"]'),
+      "le bloc de l adresse du projet a disparu").not.toBeNull();
   });
 
   // Spec section 4, bloc 2 : les dates propres du projet, formatees en UTC et
@@ -629,6 +637,54 @@ describe("le parchemin (spec sections 4, 5 et 6)", () => {
     expect(d.textContent,
       "le titre du bloc demonstration parait sans lien dessous")
       .not.toContain("Voir la démo");
+  });
+
+  /* L'adresse du projet en ligne, le champ `projectUrl` de la revision. Elle
+     passe par la MEME fonction de filtrage que la demonstration et que les
+     liens des credits, et le bloc lit cette fonction et non le champ brut :
+     une adresse ecartee n'emporte donc pas un titre orphelin. */
+
+  it("un projectUrl non https ne rend ni bloc ni lien", () => {
+    const d = monterParchemin(fabrique({
+      name: "Projet douteux en ligne",
+      projectUrl: "javascript:alert(1)",
+    }));
+    expect(d.querySelectorAll("a"),
+      "un javascript: du backoffice est rendu comme un lien vivant").toHaveLength(0);
+    expect(d.textContent,
+      "le libelle de l adresse du projet parait sans lien dessous")
+      .not.toContain("Voir le projet en ligne");
+  });
+
+  it("l adresse du projet rendue est EXACTEMENT celle que la regle autorise", () => {
+    const d = monterParchemin(fabrique({
+      name: "Projet espace en ligne",
+      projectUrl: "  https://exemple.test/vitrine  ",
+    }));
+    const lien = d.querySelector('a[target="_blank"]');
+    expect(lien, "le bloc de l adresse du projet n est pas rendu").not.toBeNull();
+    expect(lien!.getAttribute("href"),
+      "le champ brut est injecte dans le href au lieu du lien valide")
+      .toBe("https://exemple.test/vitrine");
+    expect(lien!.getAttribute("rel")).toBe("noopener noreferrer");
+    expect(lien!.textContent).toBe("Voir le projet en ligne");
+  });
+
+  it("les deux adresses se distinguent a l ecran, libelle et href", () => {
+    // Deux liens de meme libelle laisseraient le visiteur sans moyen de
+    // savoir lequel mene ou : le defaut se verrait a l'ecran, pas en console.
+    const d = monterParchemin(fabrique({
+      name: "Projet aux deux adresses",
+      demoUrl: "https://exemple.test/demo",
+      projectUrl: "https://exemple.test/vitrine",
+    }));
+    const liens = [...d.querySelectorAll("a")];
+    expect(liens, "les deux blocs ne sont pas rendus").toHaveLength(2);
+    const libelles = liens.map((a) => a.textContent);
+    expect(new Set(libelles).size, `libelles identiques : ${libelles.join(" / ")}`).toBe(2);
+    expect(liens.map((a) => a.getAttribute("href")),
+      "l adresse du projet doit preceder la demonstration, qui clot")
+      .toEqual(["https://exemple.test/vitrine", "https://exemple.test/demo"]);
   });
 
   it("le lien de demonstration rendu est EXACTEMENT celui que la regle autorise", () => {

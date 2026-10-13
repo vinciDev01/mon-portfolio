@@ -6,7 +6,7 @@ import type { ProjectDto } from "@portfolio/shared-types";
 import { getFileUrl } from "@/lib/api";
 import { useTranslation } from "@/lib/i18n/i18n-context";
 import { useChangerSurcouche } from "@/components/parcours/parcours-pagine";
-import { blocsPresents, credits, lienDemo } from "@/lib/parcours/parchemin";
+import { blocsPresents, credits, lienDemo, lienProjet } from "@/lib/parcours/parchemin";
 import { ligneDateProjet } from "@/lib/parcours/journal";
 
 /**
@@ -215,6 +215,10 @@ function Dossier({
   // credits : `https:` seulement. `blocsPresents` lit la MEME fonction, donc
   // un lien ecarte emporte son bloc : jamais de titre sans lien dessous.
   const demo = lienDemo(projet) ?? "";
+  // L'adresse du projet LUI-MEME, distincte de la demonstration : `demoUrl`
+  // montre une video ou un bac a sable, `projectUrl` mene au projet en ligne.
+  // Meme fonction de filtrage, meme accord avec `blocsPresents`.
+  const adresse = lienProjet(projet) ?? "";
   // Les chemins blancs sont ecartes comme le fait `renseigne` en amont : le
   // bloc « photos » parait des qu'UNE des deux est renseignee, la seconde ne
   // doit pas laisser une image rompue.
@@ -288,7 +292,7 @@ function Dossier({
             </p>
           )}
 
-          {/* Blocs 3 a 8, dans l'ordre que donne `blocsPresents`. */}
+          {/* Blocs 3 a 9, dans l'ordre que donne `blocsPresents`. */}
           {blocsPresents(projet).map((bloc) => {
             switch (bloc) {
               case "photos":
@@ -352,6 +356,14 @@ function Dossier({
                       ))}
                     </ul>
                   </div>
+                );
+              case "adresseProjet":
+                return (
+                  <p key={bloc} className="mt-4">
+                    <a href={adresse} target="_blank" rel="noopener noreferrer">
+                      {t("projects.viewProject")}
+                    </a>
+                  </p>
                 );
               case "demonstration":
                 return (

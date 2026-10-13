@@ -27,11 +27,12 @@ export default function ProjectsPage() {
   return (
     <div>
       <PageHeader title="Projets" addHref="/projects/new" />
-      <table className="w-full text-sm"><thead><tr className="border-b border-border text-left"><th className="py-3 px-2">Nom</th><th className="py-3 px-2">Technologies</th><th className="py-3 px-2">Demo</th><th className="py-3 px-2 text-right">Actions</th></tr></thead>
+      <table className="w-full text-sm"><thead><tr className="border-b border-border text-left"><th className="py-3 px-2">Nom</th><th className="py-3 px-2">Technologies</th><th className="py-3 px-2">En ligne</th><th className="py-3 px-2">Démo</th><th className="py-3 px-2 text-right">Actions</th></tr></thead>
         <tbody>{items.map((item) => (
           <tr key={item.id} className="border-b border-border">
             <td className="py-3 px-2">{item.name}</td>
             <td className="py-3 px-2 text-xs text-muted-foreground">{item.technologies?.map((pt) => pt.technology.label).join(", ") || "-"}</td>
+            <td className="py-3 px-2 text-xs">{item.projectUrl ? "Oui" : "-"}</td>
             <td className="py-3 px-2 text-xs">{item.demoUrl ? "Oui" : "-"}</td>
             <td className="py-3 px-2 text-right space-x-2">
               <button onClick={() => router.push(`/projects/${item.id}/edit`)} className="text-xs px-3 py-1 rounded border border-border hover:bg-accent">Modifier</button>

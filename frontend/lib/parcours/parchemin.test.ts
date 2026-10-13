@@ -1,6 +1,6 @@
 import { describe, it, expect } from "vitest";
 import type { ProjectDto, ProjectCollaboratorDto } from "@portfolio/shared-types";
-import { blocsPresents, credits, lienDemo } from "./parchemin";
+import { blocsPresents, credits, lienDemo, lienProjet } from "./parchemin";
 import { bloc, corpsDepuis, css, px, sansCommentaires, valeur, variableA } from "./feuille-test";
 import { ratioContraste, luminanceRelative } from "@/lib/color/contrast";
 import { PALETTE_CLAIRE, PALETTE_SOMBRE } from "@/lib/design/tokens";
@@ -8,7 +8,8 @@ import { PALETTE_CLAIRE, PALETTE_SOMBRE } from "@/lib/design/tokens";
 function projet(p: Partial<ProjectDto>): ProjectDto {
   return {
     id: "x", name: "Projet", description: null,
-    photo1Path: null, photo2Path: null, demoUrl: null, targetAudience: null,
+    photo1Path: null, photo2Path: null, demoUrl: null, projectUrl: null,
+    targetAudience: null,
     startDate: null, endDate: null, technologies: [], collaborators: [],
     sortOrder: 0, ...p,
   } as ProjectDto;
@@ -73,15 +74,39 @@ describe("blocsPresents (spec section 4)", () => {
     expect(blocsPresents(projet({ collaborators: [sansNom, qui({})] }))).toContain("collaborateurs");
   });
 
+  it("ne rend pas l adresse du projet quand projectUrl est vide ou blanche", () => {
+    expect(blocsPresents(projet({ projectUrl: "" }))).not.toContain("adresseProjet");
+    expect(blocsPresents(projet({ projectUrl: "   " }))).not.toContain("adresseProjet");
+    expect(blocsPresents(projet({ projectUrl: "https://exemple.test" })))
+      .toContain("adresseProjet");
+  });
+
+  it("les deux adresses sont INDEPENDANTES, chacune son bloc", () => {
+    // Le piege serait de lire un seul champ pour les deux blocs, ou de
+    // conditionner l'un a l'autre : le proprietaire peut n'avoir que l'une.
+    const seulProjet = blocsPresents(projet({ projectUrl: "https://exemple.test" }));
+    expect(seulProjet).toContain("adresseProjet");
+    expect(seulProjet, "la demonstration parait sans demoUrl").not.toContain("demonstration");
+    const seuleDemo = blocsPresents(projet({ demoUrl: "https://exemple.test/demo" }));
+    expect(seuleDemo).toContain("demonstration");
+    expect(seuleDemo, "l adresse du projet parait sans projectUrl")
+      .not.toContain("adresseProjet");
+  });
+
   it("garde l ordre de lecture de la spec", () => {
     const tout = projet({
       photo1Path: "a.webp", description: "d", targetAudience: "p",
       technologies: [{ id: "t", label: "Angular", logoPath: null, sortOrder: 0 }],
-      collaborators: [qui({})], demoUrl: "https://exemple.test",
+      collaborators: [qui({})],
+      projectUrl: "https://exemple.test",
+      demoUrl: "https://exemple.test/demo",
     });
+    // Les deux adresses ferment, le projet AVANT sa demonstration : une
+    // demonstration est un artefact derive de la chose qu'elle demontre, et
+    // la spec garde le lien de demonstration « en cloture ».
     expect(blocsPresents(tout)).toEqual([
       "photos", "description", "public", "technologies",
-      "collaborateurs", "demonstration",
+      "collaborateurs", "adresseProjet", "demonstration",
     ]);
   });
 });
@@ -209,6 +234,46 @@ describe("lienDemo (spec section 4)", () => {
     }
     expect(blocsPresents(projet({ demoUrl: "https://exemple.test" })))
       .toContain("demonstration");
+  });
+});
+
+describe("lienProjet : l adresse du projet suit la MEME regle (spec section 4)", () => {
+  it("n accepte que https:, comme la demonstration et les credits", () => {
+    // Le MEME champ de risque : rendu comme un lien vivant sur une page
+    // publique, et alimente par le backoffice.
+    for (const mauvais of [
+      "javascript:alert(1)", "  JavaScript:alert(1)", "http://exemple.test",
+      "data:text/html,x", "exemple.test", "https:", "", "   ",
+    ]) {
+      expect(lienProjet(projet({ projectUrl: mauvais })), mauvais).toBeNull();
+    }
+    expect(lienProjet(projet({ projectUrl: null }))).toBeNull();
+    expect(lienProjet(projet({ projectUrl: "  https://exemple.test  " })))
+      .toBe("https://exemple.test");
+  });
+
+  it("ecarte le bloc de l adresse quand le lien n est pas exploitable", () => {
+    // `blocsPresents` et `lienProjet` doivent s'accorder : un titre sans lien
+    // dessous est un bloc vide, et les deux lisent la MEME fonction.
+    for (const mauvais of ["javascript:alert(1)", "http://exemple.test", "data:text/html,x"]) {
+      expect(blocsPresents(projet({ projectUrl: mauvais })), mauvais)
+        .not.toContain("adresseProjet");
+    }
+    expect(blocsPresents(projet({ projectUrl: "https://exemple.test" })))
+      .toContain("adresseProjet");
+  });
+
+  it("ne confond pas les deux champs : chacun lit le SIEN", () => {
+    expect(lienProjet(projet({ demoUrl: "https://exemple.test/demo" })),
+      "lienProjet lit demoUrl").toBeNull();
+    expect(lienDemo(projet({ projectUrl: "https://exemple.test" })),
+      "lienDemo lit projectUrl").toBeNull();
+    const deux = projet({
+      projectUrl: "https://exemple.test",
+      demoUrl: "https://exemple.test/demo",
+    });
+    expect(lienProjet(deux)).toBe("https://exemple.test");
+    expect(lienDemo(deux)).toBe("https://exemple.test/demo");
   });
 });
 

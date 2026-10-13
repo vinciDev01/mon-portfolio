@@ -13,7 +13,8 @@ const Fournisseur = I18nProvider as ComponentType<{ defaultLocale: string }>;
 const projet = (id: string, name: string, photo1Path: string | null = null): ProjectDto =>
   ({
     id, name, description: null, photo1Path, photo2Path: null,
-    demoUrl: null, targetAudience: null, startDate: null, endDate: null,
+    demoUrl: null, projectUrl: null, targetAudience: null,
+    startDate: null, endDate: null,
     technologies: [], collaborators: [], sortOrder: 0,
   }) as ProjectDto;
 

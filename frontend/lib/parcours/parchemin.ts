@@ -2,7 +2,7 @@ import type { ProjectDto, ProjectCollaboratorDto } from "@portfolio/shared-types
 
 export type BlocParchemin =
   | "photos" | "description" | "public"
-  | "technologies" | "collaborateurs" | "demonstration";
+  | "technologies" | "collaborateurs" | "adresseProjet" | "demonstration";
 
 /** Vrai quand la chaine porte autre chose que des blancs. */
 function renseigne(v: string | null | undefined): boolean {
@@ -24,6 +24,14 @@ export function blocsPresents(projet: ProjectDto): BlocParchemin[] {
   // Derive de ce qui sera affiche : credits() exclut les sans-nom, donc le compte
   // brut laisserait un titre sans personne dessous. (credits est hissee.)
   if (credits(projet).length > 0) blocs.push("collaborateurs");
+  // Les DEUX adresses ferment le parchemin, et dans cet ordre : ce sont des
+  // ACTIONS, elles vont donc apres les blocs descriptifs. L'adresse du projet
+  // vient AVANT la demonstration, qui reste « en cloture, comme l'action
+  // finale » selon la section 4 de la spec : une demonstration est un artefact
+  // DERIVE du projet, elle suit naturellement la chose qu'elle demontre.
+  //
+  // Meme regle que ci-dessous : le bloc suit le LIEN, pas le champ.
+  if (lienProjet(projet) !== null) blocs.push("adresseProjet");
   // Et non `renseigne(demoUrl)` : le bloc suit le LIEN, pas le champ. Sans
   // cela, un `javascript:` saisi au backoffice rendrait un bloc titre dont le
   // lien est nul, c'est-a-dire un bloc vide.
@@ -53,6 +61,22 @@ function lienSur(v: string | null | undefined): string | null {
  */
 export function lienDemo(projet: ProjectDto): string | null {
   return lienSur(projet.demoUrl);
+}
+
+/**
+ * L'adresse du projet LUI-MEME, son site en ligne. A ne pas confondre avec
+ * `demoUrl` : celui-la montre une DEMONSTRATION (video, bac a sable), celui-ci
+ * mene au projet.
+ *
+ * Soumise a la MEME regle `https:` que le lien de demonstration et que les
+ * liens des credits, par la meme fonction : c'est la discipline du chantier,
+ * etablie apres qu'un champ est passe sans filtre. `blocsPresents` lit cette
+ * fonction et non le champ brut, donc le bloc et le lien ne peuvent pas
+ * diverger : une adresse ecartee emporte son bloc, il n'y a jamais de titre
+ * sans lien dessous.
+ */
+export function lienProjet(projet: ProjectDto): string | null {
+  return lienSur(projet.projectUrl);
 }
 
 /**

@@ -108,7 +108,22 @@ Un parchemin se lit de haut en bas. L'ordre est donc :
 5. Le public cible, `targetAudience`.
 6. Les technologies.
 7. Les collaborateurs, chacun avec son lien LinkedIn.
-8. Le lien de demonstration, en cloture, comme l'action finale.
+8. L'adresse du projet en ligne, `projectUrl`.
+9. Le lien de demonstration, `demoUrl`, en cloture, comme l'action finale.
+
+**Les deux adresses sont distinctes, et les blocs 8 et 9 aussi.** `projectUrl`
+mene au projet LUI-MEME, son site en ligne ; `demoUrl` mene a une
+DEMONSTRATION, une video, un bac a sable, une maquette jouable. Les deux
+libelles doivent differer a l'ecran, sinon le visiteur ne sait pas lequel mene
+ou. Les deux ferment le parchemin parce que ce sont des ACTIONS, et l'adresse du
+projet precede la demonstration : une demonstration est un artefact derive de la
+chose qu'elle demontre, et le lien de demonstration reste ainsi l'action finale.
+
+**Les deux adresses passent par la meme regle que les liens des credits** :
+`https:` seul. Une adresse hors `https:` ne rend AUCUN lien, et le bloc
+disparait avec elle, le bloc et le lien lisant la MEME fonction. Un
+`javascript:` saisi au backoffice ne doit jamais devenir un lien vivant sur une
+page publique, et un bloc titre sans lien dessous est un bloc vide.
 
 **Degradation champ par champ.** Chaque bloc disparait quand sa donnee est
 absente, sans laisser d'espace ni de titre vide. Un collaborateur dont

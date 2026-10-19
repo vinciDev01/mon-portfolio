@@ -4,7 +4,7 @@
  * Il vit dans une fonction pure parce qu'il porte une regle de
  * confidentialite : l'adresse postale ne sort que si elle a ete declaree
  * publique. Un refactor qui casserait cette regle en silence publierait le
- * domicile du proprietaire du site — d'ou les tests.
+ * domicile du proprietaire du site, d'ou les tests.
  */
 
 export type InfoContact = {

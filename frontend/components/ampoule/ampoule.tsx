@@ -24,7 +24,7 @@ const COULEUR_INTERIEUR = "#1C1F22";
 /**
  * Polyligne du profil gauche, de l'apex (88, 178) a (11,87 ; 212), fournie
  * par la spec (meme superellipse que `geometrie.ts`, echantillonnee) pour
- * le lisere d'incidence — jamais une valeur inventee.
+ * le lisere d'incidence, jamais une valeur inventee.
  */
 const PROFIL_GAUCHE_LISERE: Array<[number, number]> = [
   [88.0, 178.0],
@@ -62,7 +62,7 @@ const [LISERE_FIN_X, LISERE_FIN_Y] = PROFIL_GAUCHE_LISERE[PROFIL_GAUCHE_LISERE.l
  * que `Maille` derive a son tour). Une valeur par defaut convient tant
  * qu'une seule instance est montee ; des que la tache 13 en monte une
  * seconde (le commutateur), deux jeux de `<defs>` partageant les memes
- * identifiants se marcheraient dessus en silence — aucun test ni typecheck
+ * identifiants se marcheraient dessus en silence : aucun test ni typecheck
  * ne le detecte, seul le rendu HTML le revele.
  */
 export function Ampoule({ id = "ampoule-eteinte" }: { id?: string } = {}) {
@@ -141,7 +141,7 @@ export function Ampoule({ id = "ampoule-eteinte" }: { id?: string } = {}) {
           points (4,256) et (172,256) admettent DEUX moities d'ellipse aux
           coordonnees identiques, seul ce drapeau les distingue. sweep=1
           fait croitre theta de 180 a 360 deg et passe par le haut, milieu
-          (88, 244) — a l'interieur de la coupole, comme l'exige l'annexe
+          (88, 244) : a l'interieur de la coupole, comme l'exige l'annexe
           §1.4. sweep=0 ferait decroitre theta et passerait par le bas,
           milieu (88, 268) : 12 px sous le bord du dome, hors de l'objet et
           non ecrete. Ne pas rebasculer ce drapeau sans revalider sur le
@@ -161,7 +161,7 @@ export function Ampoule({ id = "ampoule-eteinte" }: { id?: string } = {}) {
       <line x1={82} y1={208} x2={94} y2={208} stroke={COULEUR_DOUILLE} strokeWidth={1} />
 
       {/* Ampoule : col, tiges, globe (remplissage + contour), filament,
-          coeur, reflet speculaire — dans cet ordre. */}
+          coeur, reflet speculaire, dans cet ordre. */}
       <path d="M 81 208 L 95 208 L 91.5 214 L 84.5 214 Z" fill={COULEUR_GLOBE} fillOpacity={0.9} />
       <line
         x1={85}
@@ -208,15 +208,15 @@ export function Ampoule({ id = "ampoule-eteinte" }: { id?: string } = {}) {
       />
 
       {/* Groupe isole (addendum du controleur, tache 8, point B) : seules
-          ces trois couches — L2 la lueur du tressage, la maille, L1 le
-          filament — vivent dans un contexte d'empilement isole.
+          ces trois couches (L2 la lueur du tressage, la maille, L1 le
+          filament) vivent dans un contexte d'empilement isole.
           `isolation: isolate` (globals.css, `.lampe-isolee`) confine leur
           `mix-blend-mode: screen` a l'interieur du groupe, pour qu'il
           n'eclaircisse pas le fond de la page a travers le SVG. NE PAS
           poser cette isolation sur le SVG de la lumiere : L4 le faisceau,
           L5 le halo de fond et L6 la moucheture (SVG `.ampoule-lumiere`
           ci-dessus et globals.css) doivent au contraire eclairer la page
-          au-dela de l'objet — les isoler les neutraliserait. Ne pas
+          au-dela de l'objet : les isoler les neutraliserait. Ne pas
           elargir ce groupe pour les y inclure. */}
       <g className="lampe-isolee">
         <CoucheLueur />

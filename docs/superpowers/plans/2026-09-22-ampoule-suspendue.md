@@ -1,13 +1,13 @@
-# Ampoule suspendue — Plan d'implémentation
+# Ampoule suspendue : Plan d'implémentation
 
 > **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking.
 
 **Goal:** Remplacer la lampe d'atelier par une ampoule suspendue sous abat-jour en rotin, placée dans l'angle supérieur droit, qui commande le thème clair ou sombre du site.
 
-**Architecture:** L'objet est un SVG unique en `position: fixed`, dont le tressage est construit géométriquement — 37 méridiens réutilisés par `<use>` et 18 ellipses à pas d'arc constant — de sorte que l'assombrissement des bords émerge de la densité de la trame au lieu d'être simulé. Six couches de lumière s'empilent sous et sur la maille, pilotées par une variable unique `--lampe-t` animée par la Web Animations API. Le thème est posé sur `<html>` par un script exécuté avant le premier tracé, qui lit la préférence enregistrée puis retombe sur une règle horaire.
+**Architecture:** L'objet est un SVG unique en `position: fixed`, dont le tressage est construit géométriquement (37 méridiens réutilisés par `<use>` et 18 ellipses à pas d'arc constant), de sorte que l'assombrissement des bords émerge de la densité de la trame au lieu d'être simulé. Six couches de lumière s'empilent sous et sur la maille, pilotées par une variable unique `--lampe-t` animée par la Web Animations API. Le thème est posé sur `<html>` par un script exécuté avant le premier tracé, qui lit la préférence enregistrée puis retombe sur une règle horaire.
 
-> **Écarts assumés en cours d'exécution** — consignés au registre avec leur motif :
-> 1. La variable unique `--lampe-t` a été remplacée par une variable par couche (`--t-filament`, `--t-lueur`, `--t-faisceau`, `--t-halo`, `--t-moucheture`, `--t-brins`, `--t-page`, plus `--filament-couleur`). Une seule variable parcourue à rebours ne peut produire que le miroir de l'allumage, alors que §5.2 exige une extinction qui n'en est pas le miroir — le faisceau doit partir le premier.
+> **Écarts assumés en cours d'exécution** : consignés au registre avec leur motif :
+> 1. La variable unique `--lampe-t` a été remplacée par une variable par couche (`--t-filament`, `--t-lueur`, `--t-faisceau`, `--t-halo`, `--t-moucheture`, `--t-brins`, `--t-page`, plus `--filament-couleur`). Une seule variable parcourue à rebours ne peut produire que le miroir de l'allumage, alors que §5.2 exige une extinction qui n'en est pas le miroir : le faisceau doit partir le premier.
 > 2. Le faisceau et la moucheture ne sont pas dans le SVG de l'objet mais dans deux conteneurs en `z-index: -1`, derrière le contenu. Au-dessus du texte, leur `screen` faisait tomber le texte secondaire de 6,42:1 à 3,15:1 contre un seuil WCAG de 4,5.
 > 3. Les trois couches de lumière de page sont plafonnées par `--lumiere-plafond: 0.75` : leur superposition dépassait sinon le garde-fou de ±0,04 sur la luminance du fond, à +0,0438.
 
@@ -42,7 +42,7 @@ Ces règles lient **toutes** les tâches. Valeurs copiées telles quelles depuis
 | `frontend/lib/theme/regle-horaire.test.ts` | Ses cas limites |
 | `frontend/lib/theme/theme-context.tsx` | État du thème, persistance, bascule |
 | `frontend/lib/theme/script-initial.ts` | Le script injecté avant le premier tracé |
-| `frontend/lib/ampoule/geometrie.ts` | Méridiens, cercles, seuil de fusion — fonctions pures |
+| `frontend/lib/ampoule/geometrie.ts` | Méridiens, cercles, seuil de fusion : fonctions pures |
 | `frontend/lib/ampoule/geometrie.test.ts` | Ses cas limites |
 | `frontend/lib/ampoule/animation.ts` | Pilotage de `--lampe-t` par la Web Animations API |
 | `frontend/components/ampoule/ampoule.tsx` | Le SVG complet, objet et lumière |
@@ -152,7 +152,7 @@ git commit -m "refactor(lampe): depose la lampe d atelier et ses cinq reglages"
 - Consumes: `ratioContraste` de `frontend/lib/color/contrast.ts`
 - Produces:
   - `PALETTE_CLAIRE` et `PALETTE_SOMBRE`, objets figés aux clés `fond`, `surface`, `bordure`, `bordureSignifiante`, `texteSecondaire`, `textePrincipal`, `accent`
-  - `PALETTES` — `{ clair: PALETTE_CLAIRE, sombre: PALETTE_SOMBRE }`
+  - `PALETTES` : `{ clair: PALETTE_CLAIRE, sombre: PALETTE_SOMBRE }`
 
 - [ ] **Étape 1 : Écrire le test qui échoue**
 
@@ -219,7 +219,7 @@ describe("les deux palettes", () => {
 npm run test -w frontend -- contrast
 ```
 
-Attendu : ÉCHEC — `PALETTES` n'existe pas dans `@/lib/design/tokens`.
+Attendu : ÉCHEC, `PALETTES` n'existe pas dans `@/lib/design/tokens`.
 
 - [ ] **Étape 3 : Écrire les deux palettes**
 
@@ -284,7 +284,7 @@ Attendu : 18 tests au vert (8 par palette + 2 communs).
 Dans `frontend/app/globals.css`, remplacer le bloc `:root, .dark` par deux blocs distincts :
 
 ```css
-/* Thème clair — ampoule allumée. Source : frontend/lib/design/tokens.ts */
+/* Thème clair : ampoule allumée. Source : frontend/lib/design/tokens.ts */
 :root,
 .clair {
   --fond: #f6f1e8;
@@ -297,7 +297,7 @@ Dans `frontend/app/globals.css`, remplacer le bloc `:root, .dark` par deux blocs
   --ombre-teinte: 28deg 42% 30%;
 }
 
-/* Thème sombre — ampoule éteinte. */
+/* Thème sombre : ampoule éteinte. */
 .sombre {
   --fond: #131518;
   --surface: #1a1d21;
@@ -400,7 +400,7 @@ describe('themeParDefaut', () => {
 cd backend && npx jest src/site-settings/dto
 ```
 
-Attendu : ÉCHEC sur les deux tests de refus — la propriété n'existe pas, aucune erreur de validation n'est levée.
+Attendu : ÉCHEC sur les deux tests de refus, la propriété n'existe pas, aucune erreur de validation n'est levée.
 
 - [ ] **Étape 3 : Ajouter le champ au schéma**
 
@@ -482,7 +482,7 @@ Dans `backoffice/app/site-settings/page.tsx`, à l'emplacement de l'ancien group
     <p className="text-xs text-muted-foreground mt-1">
       En mode automatique, l&apos;ampoule est <strong>éteinte de 7 h à 19 h</strong>
       {" "}(thème sombre) et <strong>allumée le reste du temps</strong> (thème clair).
-      Cette règle suit la logique de l&apos;objet — on allume une lampe le soir —
+      Cette règle suit la logique de l&apos;objet (on allume une lampe le soir)
       et inverse donc la convention habituelle. Dès qu&apos;un visiteur clique
       l&apos;ampoule, son choix est mémorisé et cette règle ne s&apos;applique plus à lui.
     </p>
@@ -530,7 +530,7 @@ git commit -m "feat(theme): reglage themeParDefaut en auto, clair ou sombre"
   - `themeSelonHeure(heure: number, strategie: Strategie): Theme`
   - `CLE_STOCKAGE = "portfolio-theme"`
   - `scriptInitial(strategie: Strategie): string`
-  - `ThemeProvider` — props `{ strategie: Strategie; children: React.ReactNode }`
+  - `ThemeProvider` : props `{ strategie: Strategie; children: React.ReactNode }`
   - `useTheme(): { theme: Theme; allumee: boolean; basculer: () => void }`
 
 `allumee` vaut `theme === "clair"` : l'ampoule allumée donne le thème clair.
@@ -608,7 +608,7 @@ describe("themeSelonHeure, entrees aberrantes", () => {
 npm run test -w frontend -- regle-horaire
 ```
 
-Attendu : ÉCHEC — `Failed to resolve import "./regle-horaire"`.
+Attendu : ÉCHEC, `Failed to resolve import "./regle-horaire"`.
 
 - [ ] **Étape 3 : Écrire la règle**
 
@@ -631,7 +631,7 @@ const HEURE_NUIT = 19;
  *
  * La regle suit la logique de l'objet, pas celle de l'ecran : on allume une
  * lampe le soir, pas au reveil. Le site est donc SOMBRE en journee et CLAIR
- * la nuit — l'inverse de la convention courante. C'est voulu ; ne pas
+ * la nuit, l'inverse de la convention courante. C'est voulu ; ne pas
  * « corriger » ce sens sans revenir a la specification.
  *
  * Toute entree aberrante retombe sur le sombre, qui est l'identite
@@ -666,7 +666,7 @@ import { CLE_STOCKAGE, type Strategie } from "./regle-horaire";
  * Le serveur ignore l'heure locale du visiteur : calculer le theme au montage
  * produirait un basculement visible. Ce script pose la classe sur <html> avant
  * que quoi que ce soit ne soit peint, donc sans clignotement ni divergence
- * d'hydratation — React retrouve la classe deja en place.
+ * d'hydratation : React retrouve la classe deja en place.
  *
  * Il est volontairement ecrit en une seule expression, sans dependance, et
  * duplique la regle de `themeSelonHeure` : il ne peut pas importer de module.
@@ -887,7 +887,7 @@ Et remplacer l'enveloppe :
         <ThemeProvider strategie={strategie}>
 ```
 
-Retirer `suppressHydrationWarning` du `<html>` **uniquement si** aucun autre usage ne le justifie — le script pose la classe avant l'hydratation, React ne voit donc pas de divergence. En cas de doute, le conserver : il est sans effet négatif.
+Retirer `suppressHydrationWarning` du `<html>` **uniquement si** aucun autre usage ne le justifie : le script pose la classe avant l'hydratation, React ne voit donc pas de divergence. En cas de doute, le conserver : il est sans effet négatif.
 
 ```bash
 rm frontend/components/theme-provider.tsx
@@ -1017,7 +1017,7 @@ Reporter les chiffres obtenus dans le rapport de tâche, **sans les comparer à 
 curl -s http://localhost:3000 | grep -o 'titre-[a-z]*">[^<]*' | head -8
 ```
 
-Attendu : « Compétences », « Expérience », « À propos » — avec leurs accents, dont le **À majuscule accentué**.
+Attendu : « Compétences », « Expérience », « À propos », avec leurs accents, dont le **À majuscule accentué**.
 
 - [ ] **Étape 6 : Vérifier**
 
@@ -1204,7 +1204,7 @@ describe("cercles", () => {
 npm run test -w frontend -- geometrie
 ```
 
-Attendu : ÉCHEC — `Failed to resolve import "./geometrie"`.
+Attendu : ÉCHEC, `Failed to resolve import "./geometrie"`.
 
 - [ ] **Étape 3 : Écrire le module**
 
@@ -1216,8 +1216,8 @@ Créer `frontend/lib/ampoule/geometrie.ts` :
  *
  * Le point cardinal de la specification : l'assombrissement des bords du dome
  * ne doit JAMAIS etre simule par un degrade. Il emerge du fait que les
- * meridiens se resserrent en projection — leur pas local suit une loi en
- * cosinus — et donc que la densite de brins opaques augmente vers le bord.
+ * meridiens se resserrent en projection (leur pas local suit une loi en
+ * cosinus) et donc que la densite de brins opaques augmente vers le bord.
  * Peindre la lueur SOUS la maille et la maille par-dessus suffit : le rapport
  * de transmission 0,484 au centre contre 0,145 au bord se produit tout seul.
  */
@@ -1291,7 +1291,7 @@ const INCLINAISON = 12 / 84;
 const RENFORCES = new Set([6, 12, 17]);
 
 /**
- * Les 18 cercles, a pas d'arc CONSTANT — et non a pas vertical constant.
+ * Les 18 cercles, a pas d'arc CONSTANT, et non a pas vertical constant.
  * C'est ce qui produit le resserrement visible au sommet : les quatre
  * premiers cercles se chevauchent en projection, et la specification impose
  * de les remplacer par une calotte pleine au rendu.
@@ -1342,7 +1342,7 @@ git commit -m "feat(ampoule): geometrie du tressage en fonctions pures, 20 tests
 
 **Interfaces:**
 - Consumes: `meridiens`, `cercles`, `CENTRE_X`, `APEX_Y`, `BORD_Y` (Task 6) ; `useTheme` (Task 4)
-- Produces: `Maille` — props `{ id: string }` ; `Ampoule` — sans props
+- Produces: `Maille` : props `{ id: string }` ; `Ampoule` : sans props
 
 Cette tâche livre **l'objet éteint uniquement**. Aucune lumière : c'est ce qui permet de juger la silhouette et la densité du tressage avant d'y ajouter quoi que ce soit.
 
@@ -1359,7 +1359,7 @@ const PROFIL_DROIT =
 
 Le groupe contient, dans cet ordre :
 1. une `<defs>` avec le chemin `#profil` et le filtre d'irrégularité ;
-2. la **calotte pleine** — ellipse `rx 30 / ry 4.3` centrée `(88, 180.1)` — qui remplace les cercles C1 à C4 qui se chevauchent ;
+2. la **calotte pleine** : ellipse `rx 30 / ry 4.3` centrée `(88, 180.1)`, qui remplace les cercles C1 à C4 qui se chevauchent ;
 3. les méridiens non fusionnés, chacun un `<use href="#profil">` porteur de `transform="translate(88,0) scale(<echelle>,1) translate(-88,0)"` ;
 4. les **deux bandes pleines** de 4,6 px remplaçant les méridiens fusionnés, `x ∈ [4 ; 8.6]` et `x ∈ [167.4 ; 172]` ;
 5. les cercles C5 à C18, chacun une `<ellipse>` ;
@@ -1417,8 +1417,8 @@ crénèle. La spécification impose donc, sous 600 px de large :
 
 | Paramètre | Pleine résolution | Dégradé |
 |---|---|---|
-| Méridiens | `meridiens()` — 37 | `meridiens(10)` — 19 |
-| Cercles | `cercles()` — 18 | `cercles(11)` — 11 |
+| Méridiens | `meridiens()` : 37 | `meridiens(10)` : 19 |
+| Cercles | `cercles()` : 18 | `cercles(11)` : 11 |
 | Épaisseur de brin | 1,2 px | **1,8 px** |
 | Filtre `feDisplacementMap` | actif | **désactivé** |
 | Opacité de l'interstice | 0,38 | **0,30** |
@@ -1429,7 +1429,7 @@ nettement plus clair que le maillage complet.
 
 Le composant lit une media query côté client pour choisir son maillage. Le
 rendu serveur produit toujours le maillage complet : sous 600 px, la première
-image sera brièvement la version dense, corrigée au montage. C'est acceptable —
+image sera brièvement la version dense, corrigée au montage. C'est acceptable :
 l'écart est une densité de trait, pas un changement de mise en page.
 
 Le filtre est désactivé en retirant l'attribut `filter` du groupe, pas en
@@ -1437,7 +1437,7 @@ changeant son `scale` : un filtre appliqué coûte même à `scale=0`.
 
 - [ ] **Étape 5 : Monter dans la page**
 
-Dans `frontend/app/page.tsx`, rendre `<Ampoule />` à l'intérieur du fournisseur de thème, **avant** `<main>` — comme l'était l'interrupteur de la lampe, pour que la commande vienne tôt dans l'ordre de tabulation à la tâche 13.
+Dans `frontend/app/page.tsx`, rendre `<Ampoule />` à l'intérieur du fournisseur de thème, **avant** `<main>`, comme l'était l'interrupteur de la lampe, pour que la commande vienne tôt dans l'ordre de tabulation à la tâche 13.
 
 - [ ] **Étape 6 : Vérifier**
 
@@ -1461,7 +1461,7 @@ git commit -m "feat(ampoule): objet eteint, tressage construit en projection"
 
 ---
 
-## Task 8 : Les couches proches — filament et lueur du tressage
+## Task 8 : Les couches proches : filament et lueur du tressage
 
 **Files:**
 - Create: `frontend/components/ampoule/couches-lumiere.tsx`
@@ -1477,7 +1477,7 @@ Cette tâche livre **L2 et L1**, c'est-à-dire les deux couches les plus proches
 
 - [ ] **Étape 1 : Écrire L2, la lueur à travers le tressage**
 
-Peinte **sous la maille**, écrêtée au contour du dôme. Dégradé radial centré `(88, 236)` — décalé de 3 px sous le filament, parce que le flux remonte moins qu'il ne descend — de rayon 96 px, flou 6 px, `mix-blend-mode: screen`.
+Peinte **sous la maille**, écrêtée au contour du dôme. Dégradé radial centré `(88, 236)` (décalé de 3 px sous le filament, parce que le flux remonte moins qu'il ne descend), de rayon 96 px, flou 6 px, `mix-blend-mode: screen`.
 
 | Position | Couleur | Opacité |
 |---|---|---|
@@ -1506,7 +1506,7 @@ Quatre sous-couches, peintes **par-dessus la maille** :
 |---|---|---|---|---|
 | Cœur | ellipse (88, 233) rx 2,2 ry 1,4 | `#FFFDF6` | 1,00 | 0,5 px |
 | Boucle | ellipse (88, 233) rx 6 ry 3,5, stroke 1,4 | `#FFF3D6` | 0,95 | 1,2 px |
-| Halo serré | cercle (88, 233) r 20, dégradé radial | — | 1,00 | 3 px |
+| Halo serré | cercle (88, 233) r 20, dégradé radial | sans objet | 1,00 | 3 px |
 | Globe éclairé | cercle (88, 232) r 21 | `#FFE6B0` | 0,42 | 4 px |
 
 Dégradé du halo serré : 0 % `hsl(44 100% 96%)` à 1,00 · 22 % `hsl(40 100% 88%)` à 0,86 · 50 % `hsl(35 97% 76%)` à 0,48 · 78 % `hsl(30 90% 66%)` à 0,17 · 100 % `hsl(28 85% 60%)` à 0,00. `mix-blend-mode: screen`.
@@ -1541,7 +1541,7 @@ git commit -m "feat(ampoule): filament et lueur a travers le tressage"
 
 ---
 
-## Task 9 : Les couches lointaines — faisceau, halo et moucheture
+## Task 9 : Les couches lointaines : faisceau, halo et moucheture
 
 **Files:**
 - Modify: `frontend/components/ampoule/couches-lumiere.tsx`, `frontend/app/globals.css`
@@ -1552,7 +1552,7 @@ git commit -m "feat(ampoule): filament et lueur a travers le tressage"
 
 - [ ] **Étape 1 : Écrire L4, le faisceau**
 
-Cône partant du plan du bord : 168 px de large en y = 256, 300 px en y = 560, portée 304 px, demi-angle 12,25°. Flou **26 px** — c'est le seul flou réel de forme de tout l'effet. `mix-blend-mode: screen`.
+Cône partant du plan du bord : 168 px de large en y = 256, 300 px en y = 560, portée 304 px, demi-angle 12,25°. Flou **26 px** : c'est le seul flou réel de forme de tout l'effet. `mix-blend-mode: screen`.
 
 Dégradé linéaire vertical : 0 % `#FDD599` à 0,36 · 15 % `hsl(35 94% 73%)` à 0,26 · 45 % `hsl(33 90% 70%)` à 0,13 · 75 % `hsl(31 85% 66%)` à 0,05 · 100 % `hsl(30 82% 62%)` à 0,00.
 
@@ -1564,7 +1564,7 @@ La loi est **en inverse du carré**, `I(d) = 0,36 / (1 + d/120)²`, et non liné
 
 **Ne pas l'implémenter comme une forme floutée** : un `radial-gradient` coûte 0,3 ms là où une forme floutée en coûte plusieurs. Support : `body::before`, `position: fixed; inset: 0; pointer-events: none`.
 
-Centre `calc(100% - 136px)` en x, `250px` en y. Rayons 540 × 620 px — ellipse verticale, la lumière descend plus qu'elle ne remonte.
+Centre `calc(100% - 136px)` en x, `250px` en y. Rayons 540 × 620 px : ellipse verticale, la lumière descend plus qu'elle ne remonte.
 
 Stops : 0 % `hsl(34 88% 72%)` à 0,30 · 26 % `hsl(32 80% 66%)` à 0,19 · 55 % `hsl(30 70% 58%)` à 0,08 · 80 % `hsl(28 62% 50%)` à 0,025 · 100 % à 0,00.
 
@@ -1572,11 +1572,11 @@ Blend `soft-light`, puis une seconde passe `screen` à 40 % de l'opacité.
 
 - [ ] **Étape 3 : Écrire L6, la moucheture**
 
-C'est l'ombre de la maille projetée sur le fond — les « marbrures » de la référence. Source : `<use href="#maille">`, transformée par `translate(88,250) scale(2.35) translate(-88,-250)` puis `skewY(4deg)`. Étendue résultante 395 × 183 px. Blend `overlay`, opacité globale 0,55.
+C'est l'ombre de la maille projetée sur le fond : les « marbrures » de la référence. Source : `<use href="#maille">`, transformée par `translate(88,250) scale(2.35) translate(-88,-250)` puis `skewY(4deg)`. Étendue résultante 395 × 183 px. Blend `overlay`, opacité globale 0,55.
 
 Brins projetés `hsl(28 55% 38%)` à 0,16 ; interstices `hsl(36 82% 68%)` à 0,20.
 
-**Dégradé de netteté** : deux copies superposées et masquées l'une par l'autre — une copie nette floutée à 2 px, masque radial opaque jusqu'à 120 px du centre puis dégressif jusqu'à 200 px ; une copie floue à 9 px, masque inverse.
+**Dégradé de netteté** : deux copies superposées et masquées l'une par l'autre : une copie nette floutée à 2 px, masque radial opaque jusqu'à 120 px du centre puis dégressif jusqu'à 200 px ; une copie floue à 9 px, masque inverse.
 
 Loi **linéaire** sur 230 px, et non quadratique : c'est une modulation de texture, pas une source. Une loi quadratique la ferait disparaître trop vite et on perdrait le caractère « panier ».
 
@@ -1643,7 +1643,7 @@ export const DUREE_EXTINCTION = 1100;
 /**
  * Changer d'etat pendant une transition appelle `reverse()` plutot que de
  * relancer une animation : l'objet repart de sa position courante au lieu de
- * sauter. Le `playbackRate` est ajuste pour conserver l'asymetrie des durees —
+ * sauter. Le `playbackRate` est ajuste pour conserver l'asymetrie des durees :
  * l'extinction est plus lente que l'allumage, parce qu'un filament refroidit.
  */
 export function basculerAnimation(animation: Animation, versAllume: boolean): void {
@@ -1661,7 +1661,7 @@ export function basculerAnimation(animation: Animation, versAllume: boolean): vo
 
 - [ ] **Étape 2 : Décrire les deux séquences en CSS**
 
-L'allumage dure 900 ms et suit cet ordre : **filament → lueur du tressage → faisceau → halo de fond → moucheture**. Le décalage de 130 ms entre le filament et le faisceau est ce qui rend l'allumage lisible — on voit la lumière « sortir » de l'abat-jour au lieu d'apparaître partout d'un coup.
+L'allumage dure 900 ms et suit cet ordre : **filament → lueur du tressage → faisceau → halo de fond → moucheture**. Le décalage de 130 ms entre le filament et le faisceau est ce qui rend l'allumage lisible : on voit la lumière « sortir » de l'abat-jour au lieu d'apparaître partout d'un coup.
 
 | Phase | Fenêtre | Ce qui bouge |
 |---|---|---|
@@ -1709,7 +1709,7 @@ npm run typecheck -w frontend
 npm run test -w frontend
 ```
 
-**Vérification manuelle indispensable** : cliquer l'ampoule cinq fois rapidement. L'objet doit toujours finir dans un état cohérent — allumé ou éteint, jamais à mi-course figé. Reporter le résultat.
+**Vérification manuelle indispensable** : cliquer l'ampoule cinq fois rapidement. L'objet doit toujours finir dans un état cohérent : allumé ou éteint, jamais à mi-course figé. Reporter le résultat.
 
 - [ ] **Étape 5 : Commit**
 
@@ -1728,7 +1728,7 @@ git commit -m "feat(ampoule): transition d incandescence, allumage 900ms extinct
 
 **Interfaces:**
 - Consumes: les couches de la Task 9
-- Produces: rien de nouveau — cette tâche répare ce que `mix-blend-mode` casse
+- Produces: rien de nouveau : cette tâche répare ce que `mix-blend-mode` casse
 
 - [ ] **Étape 1 : Recenser tous les contextes d'empilement**
 
@@ -1741,7 +1741,7 @@ grep -rn "z-index\|z-\[\|z-[0-9]\|sticky\|backdrop-filter\|backdrop-blur" \
 
 Repères connus : l'ampoule est en `z-index: 60`, l'en-tête collant est en `z-50`, les modales de projet en `z-50` également, et le halo de fond vit sur `body::before`.
 
-**Le conflit attendu :** `body::before` en `mix-blend-mode` crée un contexte d'empilement qui peut passer devant ou derrière selon l'ordre de peinture. L'en-tête collant, en particulier, ne doit pas se retrouver au-dessus du halo — ou alors il flottera « en pleine lumière » sans être teinté, ce qui se verra.
+**Le conflit attendu :** `body::before` en `mix-blend-mode` crée un contexte d'empilement qui peut passer devant ou derrière selon l'ordre de peinture. L'en-tête collant, en particulier, ne doit pas se retrouver au-dessus du halo, ou alors il flottera « en pleine lumière » sans être teinté, ce qui se verra.
 
 - [ ] **Étape 2 : Isoler l'anneau de focus**
 
@@ -1755,7 +1755,7 @@ Repères connus : l'ampoule est en `z-index: 60`, l'en-tête collant est en `z-5
 }
 ```
 
-Vérifier après coup que l'anneau reste visible dans les deux thèmes — c'est une exigence d'accessibilité, pas une finition.
+Vérifier après coup que l'anneau reste visible dans les deux thèmes : c'est une exigence d'accessibilité, pas une finition.
 
 - [ ] **Étape 3 : Mesurer les contrastes après composition**
 
@@ -1855,7 +1855,7 @@ git commit -m "feat(ambiance): ombres en deux jeux, teintees en clair et neutres
 
 **Interfaces:**
 - Consumes: `useTheme` (Task 4)
-- Produces: `Interrupteur` — sans props
+- Produces: `Interrupteur` : sans props
 
 - [ ] **Étape 1 : Écrire le bouton**
 
@@ -1875,7 +1875,7 @@ L'objet entier est `pointer-events: none` ; seul le bouton reçoit `auto`. Il co
 </button>
 ```
 
-`aria-pressed` décrit l'état de l'ampoule, et le libellé masqué dit **ce que le clic va faire au site** — sans quoi un visiteur non voyant entend « bouton pressé » sans savoir qu'il commande le thème.
+`aria-pressed` décrit l'état de l'ampoule, et le libellé masqué dit **ce que le clic va faire au site**, sans quoi un visiteur non voyant entend « bouton pressé » sans savoir qu'il commande le thème.
 
 Les couleurs de l'anneau de focus doivent être explicites dans les deux thèmes, et ne jamais compter sur `currentColor` : c'est un piège déjà rencontré sur ce projet.
 
@@ -1925,7 +1925,7 @@ La spécification impose que l'affordance repose sur la **silhouette du dôme**,
 node -e '
 const lum=h=>{const n=h.replace("#","");const c=[0,2,4].map(i=>parseInt(n.slice(i,i+2),16)/255).map(v=>v<=0.03928?v/12.92:Math.pow((v+0.055)/1.055,2.4));return 0.2126*c[0]+0.7152*c[1]+0.0722*c[2];};
 const r=(a,b)=>{const x=lum(a),y=lum(b);const[h,l]=x>y?[x,y]:[y,x];return (h+0.05)/(l+0.05);};
-console.log("brin #6E6355 sur #131518 :", r("#6E6355","#131518").toFixed(2), "attendu 3,12 — seuil 3");
+console.log("brin #6E6355 sur #131518 :", r("#6E6355","#131518").toFixed(2), "attendu 3,12, seuil 3");
 console.log("ourlet #7C7162 sur #131518 :", r("#7C7162","#131518").toFixed(2), "attendu 3,83");
 '
 ```
@@ -1965,7 +1965,7 @@ curl -s http://localhost:3000 | grep -o 'getHours()' | head -1
 curl -s http://localhost:3000 | grep -oE 'classList.add\("(clair|sombre)"\)' | head -2
 ```
 
-Puis, dans le navigateur, vider le stockage local et recharger à une heure de jour comme de nuit — ou modifier temporairement l'horloge du système. Confirmer que le site arrive **sombre en journée et clair la nuit**, sans clignotement au chargement.
+Puis, dans le navigateur, vider le stockage local et recharger à une heure de jour comme de nuit, ou modifier temporairement l'horloge du système. Confirmer que le site arrive **sombre en journée et clair la nuit**, sans clignotement au chargement.
 
 - [ ] **Étape 7 : Commit**
 
@@ -1984,6 +1984,6 @@ git commit -m "feat(ampoule): interrupteur accessible et verification finale"
 
 **Le point le plus coûteux** est le filtre `feTurbulence` de la maille. S'il est recalculé pour la moucheture au lieu d'être rastérisé une fois dans un `<symbol>`, le premier rendu double et sort du budget.
 
-**Ce que ce plan ne peut pas garantir.** Les tâches 7, 8, 9 et 12 comportent une vérification visuelle qu'aucune commande ne remplace. Le projet passe de 46 à environ 40 tests, mais ces tests couvrent la géométrie, la règle horaire et les contrastes — pas l'apparence. Il faut que le propriétaire du site regarde à la fin de chacune de ces quatre tâches, et non à la fin du plan.
+**Ce que ce plan ne peut pas garantir.** Les tâches 7, 8, 9 et 12 comportent une vérification visuelle qu'aucune commande ne remplace. Le projet passe de 46 à environ 40 tests, mais ces tests couvrent la géométrie, la règle horaire et les contrastes, pas l'apparence. Il faut que le propriétaire du site regarde à la fin de chacune de ces quatre tâches, et non à la fin du plan.
 
 **Ne jamais simuler l'assombrissement des bords du dôme par un dégradé.** C'est la seule règle de cette spécification qui, si elle est enfreinte, détruit tout l'effet sans qu'aucun test ne le signale.

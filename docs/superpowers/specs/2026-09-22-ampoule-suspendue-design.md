@@ -1,4 +1,4 @@
-# Ampoule suspendue — commutateur de thème et refonte de l'ambiance
+# Ampoule suspendue : commutateur de thème et refonte de l'ambiance
 
 Date : 2026-09-22
 Statut : design validé, en attente du plan d'implémentation
@@ -24,9 +24,9 @@ organique.
 Ce document porte les décisions. Les valeurs d'exécution vivent dans deux
 annexes, produites par des agents spécialisés et adoptées telles quelles :
 
-- `2026-09-22-ampoule-lumiere-annexe.md` — géométrie, tressage, couches de
+- `2026-09-22-ampoule-lumiere-annexe.md` : géométrie, tressage, couches de
   lumière, transitions, palettes, coût de rendu.
-- `2026-09-22-typographie-annexe.md` — choix et mesure de la police.
+- `2026-09-22-typographie-annexe.md` : choix et mesure de la police.
 
 En cas de contradiction, **le présent document tranche**.
 
@@ -69,7 +69,7 @@ Quatre conséquences, qui dépassent l'angle de l'écran :
 
 Ce qui est préservé : la grille de 8 px pour la mise en page, le plafond de
 66 caractères, les six sections en zigzag, et le registre « calme, leader,
-professionnel » — la lumière est chaude mais basse, l'opacité maximale d'une
+professionnel » : la lumière est chaude mais basse, l'opacité maximale d'une
 couche de fond est 0,30. Rien ne brille.
 
 ---
@@ -98,29 +98,29 @@ l'inspection visuelle par le propriétaire du site.
 
 Valeurs et ratios mesurés en annexe. Résumé :
 
-### Clair — ampoule allumée
+### Clair : ampoule allumée
 
 | Rôle | Valeur | Contraste sur le fond |
 |---|---|---|
-| Fond | `#F6F1E8` | — |
-| Surface | `#FCF8F1` | — |
+| Fond | `#F6F1E8` | sans objet |
+| Surface | `#FCF8F1` | sans objet |
 | Bordure décorative | `#DCD1BF` | 1,34:1 |
 | Bordure signifiante | `#948263` | **3,31:1** |
 | Texte secondaire | `#5E564A` | **6,42:1** |
 | Texte principal | `#1F2320` | **14,15:1** |
 | Accent | `#456040` | **6,22:1** |
 
-### Sombre — ampoule éteinte
+### Sombre : ampoule éteinte
 
 L'identité existante est conservée, avec **un ajustement imposé** : le jeton
 `--texte-secondaire` passe de `#8b8f8a` à **`#9AA096`**. L'ancienne valeur donne
-5,15:1 sur la surface — conforme mais sans marge, alors que les couches de blend
+5,15:1 sur la surface, conforme mais sans marge, alors que les couches de blend
 peuvent en retirer 0,5. La nouvelle donne 6,32:1.
 
 | Rôle | Valeur | Contraste sur le fond |
 |---|---|---|
-| Fond | `#131518` | — |
-| Surface | `#1A1D21` | — |
+| Fond | `#131518` | sans objet |
+| Surface | `#1A1D21` | sans objet |
 | Bordure signifiante | `#707780` | **4,04:1** |
 | Texte secondaire | `#9AA096` | **6,83:1** |
 | Texte principal | `#E4E5E3` | **14,47:1** |
@@ -168,7 +168,7 @@ sans divergence d'hydratation.
 Les cinq réglages de lampe sont supprimés et remplacés par **un seul** :
 
 ```prisma
-/** auto | clair | sombre — « auto » applique la regle horaire. */
+/** auto | clair | sombre : « auto » applique la regle horaire. */
 themeParDefaut  String  @default("auto")  @map("theme_par_defaut")
 ```
 
@@ -196,8 +196,8 @@ registre corporate. **Son axe optique remplace une seconde famille** : titres en
 
 ### Correction d'une régression existante
 
-Le code spécifie un tableau `weight` explicite pour IBM Plex Sans — quatre
-graisses — et deux pour IBM Plex Mono. Cela force Next.js à servir des
+Le code spécifie un tableau `weight` explicite pour IBM Plex Sans (quatre
+graisses) et deux pour IBM Plex Mono. Cela force Next.js à servir des
 **instances statiques** au lieu de la police variable.
 
 **Mesuré sur le site en fonctionnement**, et non estimé :
@@ -214,9 +214,9 @@ proche, mais **le chiffre des requêtes et le coût réel pour un visiteur sont
 faux** : Next.js ne précharge que les sous-ensembles employés, et le reste n'est
 récupéré que si la page contient les caractères correspondants.
 
-Le gain attendu du passage à Literata porte donc sur la **surface déclarée** —
-un axe variable au lieu de quatre graisses figées, donc nettement moins de
-fichiers et de règles — et non sur une division du poids préchargé, qui restera
+Le gain attendu du passage à Literata porte donc sur la **surface déclarée**
+(un axe variable au lieu de quatre graisses figées, donc nettement moins de
+fichiers et de règles) et non sur une division du poids préchargé, qui restera
 du même ordre. C'est une simplification réelle, pas la division par trois
 annoncée.
 
@@ -237,7 +237,7 @@ résultat soit beau, ni que le tressage lise correctement à l'écran.
 Points à regarder en priorité, dans l'ordre :
 
 1. La silhouette du dôme et la densité du tressage sur les bords.
-2. La crédibilité de l'allumage — une ampoule à incandescence monte en
+2. La crédibilité de l'allumage : une ampoule à incandescence monte en
    température, elle ne s'allume pas d'un coup.
 3. L'ambiance de la page en thème clair : c'est le thème qui n'existait plus et
    qui est reconstruit de zéro.

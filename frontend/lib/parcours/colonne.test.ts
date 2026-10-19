@@ -126,7 +126,7 @@ describe("colonne de passage", () => {
                      "lib/parcours/sections.ts"]) {
       const t = lire(f);
       expect(t, f).not.toContain("\u2014");
-      expect([...t].some((c) => c.codePointAt(0)! > 0x2500), f).toBe(false);
+      expect([...t].some((c) => c.codePointAt(0)! >= 0x2500), f).toBe(false);
     }
   });
 });
@@ -350,7 +350,7 @@ describe("ronde de correction 2 : les contraintes globales", () => {
     ]) {
       const t = lire(f);
       expect(t, f).not.toContain("\u2014");
-      expect([...t].some((c) => c.codePointAt(0)! > 0x2500), f).toBe(false);
+      expect([...t].some((c) => c.codePointAt(0)! >= 0x2500), f).toBe(false);
     }
     for (const [nom, corps] of [
       ["panneau-langue", bloc(/\.panneau-langue\s*\{/)],

@@ -195,8 +195,8 @@ describe("journal des projets (spec section 6)", () => {
   it("n introduit ni tiret cadratin ni emoji", () => {
     for (const f of ["components/parcours/journal-projets.tsx", "lib/parcours/journal.ts"]) {
       const t = lire(f);
-      expect(t, f).not.toContain("—");
-      expect([...t].some((c) => c.codePointAt(0)! > 0x2500), f).toBe(false);
+      expect(t, f).not.toContain("\u2014");
+      expect([...t].some((c) => c.codePointAt(0)! >= 0x2500), f).toBe(false);
     }
   });
 });

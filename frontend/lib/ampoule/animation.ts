@@ -4,7 +4,7 @@
  * Ronde de correction 1 (task-10-fix-1.md) : abandon d'une variable
  * unique de pilotage (derivee par couche via des rampes CSS bornees) au
  * profit d'une variable CSS par couche, toutes animees ENSEMBLE par le
- * meme et unique objet `Animation` — la reentrance (annexe §5.3) tient a
+ * meme et unique objet `Animation` : la reentrance (annexe §5.3) tient a
  * un seul objet, pas a une seule variable. Deux jeux d'images-cles
  * distincts, un par sens, recopies verbatim des deux tables de l'annexe.
  * La bascule entre les deux jeux ne se fait QU'AU REPOS sur une borne ;
@@ -12,17 +12,17 @@
  * est inversee (avec la correction d'asymetrie des durees).
  *
  * Ronde de correction 2 (task-10-fix-2.md) : les deux jeux ci-dessous
- * etaient incomplets — recopies des tableaux condenses du brief, pas de
+ * etaient incomplets : recopies des tableaux condenses du brief, pas de
  * l'annexe. Quatre manques combles ici :
  * 1. Les courbes `cubic-bezier`/mots-cles par phase (`easing` sur chaque
- *    entree de keyframe, gouvernant le segment qui PART de cette entree —
+ *    entree de keyframe, gouvernant le segment qui PART de cette entree,
  *    convention WAAPI). Sans elles, toute la transition est lineaire.
  * 2. Les rampes chromatiques du filament a SIX arrets par sens (pas
  *    trois).
  * 3. Les six opacites intermediaires du filament a l'extinction (pas
  *    quatre) : 1,00 · 0,42 · 0,30 · 0,17 · 0,07 · 0,00.
  * 4. Une huitieme variable, `--t-brins`, pour le degrade de `stroke` des
- *    meridiens — fenetres distinctes de celles du filament (180->620 ms
+ *    meridiens : fenetres distinctes de celles du filament (180->620 ms
  *    a l'allumage, 80->480 ms a l'extinction). Animee et testee ici ;
  *    consommee par quatre arrets de degrade `color-mix()` dans
  *    `components/ampoule/maille.tsx` (le degrade de `stroke` des meridiens).
@@ -33,7 +33,7 @@
  * partagent le meme offset mais des courbes DIFFERENTES (ex. a
  * l'allumage, offset 0,0444 : `--t-filament` veut
  * `cubic-bezier(0.33, 0, 0.67, 0.35)` tandis que `--filament-couleur` n'a
- * aucune courbe specifiee), elles ne peuvent PAS partager le meme objet —
+ * aucune courbe specifiee), elles ne peuvent PAS partager le meme objet :
  * la WAAPI n'autorise que des offsets NON DECROISSANTS sur tout le
  * tableau (pas seulement par propriete, decouverte de la ronde 1), mais
  * elle autorise des offsets EGAUX repartis sur plusieurs objets
@@ -58,7 +58,7 @@ const CADENCE_ANNULE_EXTINCTION = -DUREE_EXTINCTION / DUREE_ALLUMAGE;
 
 /*
  * Les courbes de l'annexe, nommees par phase (task-10-fix-2.md). Plusieurs
- * phases distinctes partagent la meme courbe numerique — reprises comme
+ * phases distinctes partagent la meme courbe numerique : reprises comme
  * une seule constante reutilisee, jamais retapees, pour qu'un ecart de
  * frappe entre deux occurrences soit impossible.
  */
@@ -82,7 +82,7 @@ const EASE_DEPART_EXTINCTION = "cubic-bezier(0.5, 0, 0.9, 0.4)";
 
 /**
  * Jeu d'images-cles de l'allumage (annexe §5.1, duree 900 ms, offsets =
- * ms / 900 — recopies tels quels depuis task-10-fix-2.md, courbes et
+ * ms / 900, recopies tels quels depuis task-10-fix-2.md, courbes et
  * rampe chromatique a six arrets comprises). Voir la note de tete du
  * fichier pour la regle de fusion/scission des offsets partages.
  */
@@ -132,7 +132,7 @@ export const IMAGES_ALLUMAGE: Keyframe[] = [
 
 /**
  * Jeu d'images-cles de l'extinction (annexe §5.2, duree 1100 ms, offsets
- * = ms / 1100 — recopies tels quels depuis task-10-fix-2.md). Ordre de
+ * = ms / 1100, recopies tels quels depuis task-10-fix-2.md). Ordre de
  * disparition : faisceau -> halo/moucheture -> lueur -> filament, PAS le
  * miroir de l'allumage (voir la note de tete du fichier). Six opacites
  * intermediaires pour le filament (et non quatre), six arrets pour sa
@@ -248,7 +248,7 @@ function jeuChargeEstAllumage(animation: Animation): boolean {
  * sens que si `auRepos` est vrai : il distingue laquelle des deux bornes
  * est occupee, en tenant compte du fait que les deux jeux ont une
  * semantique OPPOSEE (allumage : 0 = eteint, duree = allume ; extinction :
- * 0 = allume, duree = eteint) — d'ou la lecture de la duree actuellement
+ * 0 = allume, duree = eteint), d'ou la lecture de la duree actuellement
  * chargee (900 ou 1100, les deux constantes etant distinctes) pour savoir
  * quel jeu est en place, plutot que de maintenir un drapeau separe qui
  * pourrait diverger de l'etat reel de l'objet `Animation`.
@@ -280,7 +280,7 @@ export function etatDeRepos(animation: Animation): { auRepos: boolean; allume: b
  * jeux d'images-cles ne se fait QU'AU REPOS sur une borne (clic normal).
  * En pleine transition, on garde le jeu en cours et on se contente
  * d'inverser la cadence (avec la correction d'asymetrie) : les deux jeux
- * decrivent des configurations differentes au meme instant relatif — a
+ * decrivent des configurations differentes au meme instant relatif : a
  * mi-allumage le faisceau est a 0,63, a mi-extinction il est deja a 0,
  * puisqu'il finit a 260 ms sur 1100. Basculer de jeu a chaud ferait donc
  * disparaitre le faisceau d'un coup. On obtient ainsi les deux tables

@@ -5,8 +5,8 @@ import { SILHOUETTE_FERMEE } from "./maille";
 
 /**
  * Polygone a 4 sommets + arc superieur de L4 (annexe §3.3), partage entre le
- * remplissage du faisceau et son masque de penombre (ronde de correction 1)
- * — c'est le MEME contour qui doit etre flout pour l'un et l'autre, jamais
+ * remplissage du faisceau et son masque de penombre (ronde de correction 1) :
+ * c'est le MEME contour qui doit etre flout pour l'un et l'autre, jamais
  * deux traces independants qui pourraient diverger. sweep = 0 : l'arc
  * epouse le bord EXTERIEUR de l'ouverture (passe par (88 ; 268)), pas
  * l'interieur de la coupole (sweep = 1, tache 7, a (88 ; 244)).
@@ -17,11 +17,11 @@ const CHEMIN_FAISCEAU = `M 4 ${BORD_Y} A 84 12 0 0 0 172 ${BORD_Y} L 238 560 L -
  * Masque de penombre de L4 (ronde de correction 2) : PAS le contour ferme
  * du cone, mais ses seuls flancs, prolonges au-dela du champ visible en
  * haut comme en bas. L'annexe §3.3 ne demande une penombre que « de chaque
- * cote » — or l'arc superieur du cone (`A 84 12 0 0 0`) plonge de y = 256 a
+ * cote », or l'arc superieur du cone (`A 84 12 0 0 0`) plonge de y = 256 a
  * ses extremites jusqu'a y = 268 en son centre, ou la tangente est quasi
  * horizontale : flouter ce contour ferme y produisait une transition
  * VERTICALE d'environ 18 px, en plus du flou de forme de 26 px deja voulu,
- * et le faisceau s'estompait a sa naissance sous l'abat-jour — son point
+ * et le faisceau s'estompait a sa naissance sous l'abat-jour, son point
  * le plus visible.
  *
  * Les flancs gardent leur position exacte (penombre laterale de 18 px
@@ -59,10 +59,10 @@ const CHEMIN_MASQUE_FAISCEAU = "M 8.56 235 L 167.44 235 L 251.03 620 L -75.03 62
  *
  * `CoucheMoucheture` deroge a cette regle par necessite : L6 est la
  * projection de la maille elle-meme (`<use href="#maille-symbole-...">`),
- * donc elle a besoin de savoir QUEL identifiant d'ampoule reutiliser — la
+ * donc elle a besoin de savoir QUEL identifiant d'ampoule reutiliser : la
  * meme valeur `id` que celle passee a `<Maille id={id}>` dans `Ampoule`.
  * C'est le seul lien entre les deux fichiers ; `idSymboleMaille` (exporte
- * par `lib/ampoule/geometrie.ts`, pas par `maille.tsx` — ce dernier porte
+ * par `lib/ampoule/geometrie.ts`, pas par `maille.tsx` : ce dernier porte
  * `"use client"`, et un export de fonction d'un module client ne peut pas
  * etre appele depuis un composant serveur) garantit que les deux cotes
  * calculent le meme identifiant sans jamais l'ecrire en dur.
@@ -76,7 +76,7 @@ const CHEMIN_MASQUE_FAISCEAU = "M 8.56 235 L 167.44 235 L 251.03 620 L -75.03 62
  * §4.4.
  */
 
-/** L2 — lueur a travers le tressage, ecretee au contour du dome. */
+/** L2 : lueur a travers le tressage, ecretee au contour du dome. */
 export function CoucheLueur() {
   const id = useId();
   const idClip = `lueur-clip-${id}`;
@@ -91,7 +91,7 @@ export function CoucheLueur() {
         </clipPath>
         {/* Centre (88, 236) : 3 px sous le filament (88, 233), parce que le
             flux remonte moins qu'il ne descend (annexe §3.2). Rayon 96 px,
-            en unites utilisateur — coordonnees absolues du repere du dome,
+            en unites utilisateur : coordonnees absolues du repere du dome,
             jamais relatives a une boite englobante. */}
         <radialGradient
           id={idDegrade}
@@ -125,7 +125,7 @@ export function CoucheLueur() {
 }
 
 /**
- * L1 — filament, par-dessus la maille. Quatre sous-couches, du plus large
+ * L1 : filament, par-dessus la maille. Quatre sous-couches, du plus large
  * au plus concentre : globe eclaire, halo serre, boucle, coeur.
  *
  * Tache 10, ronde de correction 2, point 5 : chaque sous-couche multiplie
@@ -138,7 +138,7 @@ export function CoucheLueur() {
  * `opacity` de groupe a regime 1. En multipliant par 0,42 (globe) ou 0,95
  * (boucle), le pic redevient observable : le globe monte reellement a
  * 0,4536 avant de redescendre a 0,42. Sur le coeur et le halo serre, dont
- * le regime vaut deja 1, le clampage a 1 persiste — sans remede, annonce
+ * le regime vaut deja 1, le clampage a 1 persiste : sans remede, annonce
  * comme tel par le controleur.
  */
 export function CoucheFilament() {
@@ -153,7 +153,7 @@ export function CoucheFilament() {
     <g className="couche-filament">
       <defs>
         {/* Degrade radial du halo serre (annexe §3.1) : centre 50/50, r
-            100% — pris tel quel, verbatim. */}
+            100% : pris tel quel, verbatim. */}
         <radialGradient id={idHalo} cx="50%" cy="50%" r="100%">
           <stop offset="0%" stopColor="hsl(44 100% 96%)" stopOpacity={1} />
           <stop offset="22%" stopColor="hsl(40 100% 88%)" stopOpacity={0.86} />
@@ -175,7 +175,7 @@ export function CoucheFilament() {
         </filter>
       </defs>
 
-      {/* Globe eclaire : le plus large, le plus doux — peint en premier.
+      {/* Globe eclaire : le plus large, le plus doux, peint en premier.
           Regime 0,42 (annexe §3.1) multiplie par --t-filament (ronde de
           correction 2, point 5) : c'est cette sous-couche qui rend le
           depassement visible, 0,42 * 1,08 = 0,4536 au pic. */}
@@ -189,7 +189,7 @@ export function CoucheFilament() {
       />
 
       {/* Halo serre : seule sous-couche de L1 en mix-blend-mode: screen
-          (addendum du controleur, point C — avec L2, cela fait deux
+          (addendum du controleur, point C : avec L2, cela fait deux
           couches melees sur les quatre autorisees ; il en reste deux pour
           la tache 9, qui ajoute L4/L5/L6). Regime 1,00 (annexe §3.1) :
           `var(--t-filament)` seule, le clampage du depassement a 1
@@ -206,10 +206,10 @@ export function CoucheFilament() {
 
       {/* Boucle. `stroke` lit `var(--filament-couleur)` (tache 10, ronde
           de correction 1) : la rampe chromatique de l'annexe §5.1/§5.2
-          (oklab, jamais sRGB — @property `--filament-couleur` en
+          (oklab, jamais sRGB : @property `--filament-couleur` en
           `syntax: "<color>"`, globals.css) anime cette couleur au fil de
           la transition, sur SIX arrets par sens (ronde de correction 2,
-          point 2) — plus les trois du premier jet. Regime d'opacite 0,95
+          point 2), plus les trois du premier jet. Regime d'opacite 0,95
           (annexe §3.1) multiplie par --t-filament (ronde de correction 2,
           point 5). */}
       <ellipse
@@ -224,7 +224,7 @@ export function CoucheFilament() {
         filter={`url(#${idFlouBoucle})`}
       />
 
-      {/* Coeur, la sous-couche la plus concentree — tout au-dessus.
+      {/* Coeur, la sous-couche la plus concentree, tout au-dessus.
           `fill` lit `var(--filament-couleur)`, meme rampe que la boucle
           ci-dessus. Regime d'opacite 1,00 (annexe §3.1) : `opacity`
           egale `var(--t-filament)` seule ; le clampage du depassement a 1
@@ -243,12 +243,12 @@ export function CoucheFilament() {
 }
 
 /**
- * L4 — le faisceau direct sous l'abat-jour (annexe §3.3). Cone du bord du
+ * L4 : le faisceau direct sous l'abat-jour (annexe §3.3). Cone du bord du
  * dome (y = 256, 168 px de large) jusqu'a y = 560 (300 px de large),
  * portee 304 px, demi-angle 12,25°.
  *
  * **Les stops ci-dessous sont recopies de la table de l'annexe au
- * caractere pres — ce ne sont pas les valeurs de la loi `I(d) = 0,36 /
+ * caractere pres : ce ne sont pas les valeurs de la loi `I(d) = 0,36 /
  * (1 + d/120)²` enoncee dans le texte.** L'addendum du controleur (point
  * A, tache 9) constate que la loi ne reproduit la table sur aucune des
  * trois couches degradees (L1, L2, L4) : la table est normative, la loi
@@ -261,16 +261,16 @@ export function CoucheFilament() {
  *
  * Un degrade horizontal ne peut pas donner une penombre de largeur
  * CONSTANTE sur des bords obliques : 18 px valent 10,7 % de la largeur en
- * haut du cone (168 px) mais seulement 6,0 % en bas (300 px) — aucun couple
+ * haut du cone (168 px) mais seulement 6,0 % en bas (300 px) : aucun couple
  * de pourcentages fixes ne les satisfait tous les deux a la fois. La cote
  * en pixels fait foi ici (a la difference des tables de couleur, ou ce sont
  * les valeurs tabulees qui priment) : c'est une grandeur geometrique
  * explicite, pas une couleur dont le referentiel de pourcentage serait
  * ambigu. Le masque est fait des FLANCS du cone, prolonges au-dela du champ
- * (`CHEMIN_MASQUE_FAISCEAU`, distinct de `CHEMIN_FAISCEAU` — voir sa
+ * (`CHEMIN_MASQUE_FAISCEAU`, distinct de `CHEMIN_FAISCEAU` ; voir sa
  * documentation, ronde de correction 2), rempli en blanc puis floute : un
  * bord net floute par une gaussienne d'ecart-type s donne une transition
- * 10 %-90 % de 2,563 s ; pour 18 px, s = 18 / 2,563 = 7,02, arrondi a 7 —
+ * 10 %-90 % de 2,563 s ; pour 18 px, s = 18 / 2,563 = 7,02, arrondi a 7,
  * d'ou `2,563 * 7 = 17,94 px`, les 18 px demandes a 0,06 px pres.
  *
  * La region elargie du `<mask>` (bien au-dela de la boite englobante
@@ -278,13 +278,13 @@ export function CoucheFilament() {
  * desormais : ne pas rogner la trainee du flou de FORME de 26 px
  * (ci-dessous, qui etale la geometrie source d'environ 78 px / 3 sigma), et
  * contenir le chemin de masque prolonge (y de 235 a 620) plus ses propres
- * 21 px de flou (3 sigma a 7 px) — x de -96 a 272, y de 214 a 641, ce qui
+ * 21 px de flou (3 sigma a 7 px) : x de -96 a 272, y de 214 a 641, ce qui
  * tient dans `x=-152 y=166 width=480 height=484`.
  *
  * Flou 26 px : c'est le seul flou reel de forme de tout l'effet (les
  * autres flous du fichier sont des flous de detail, celui-ci flou une
- * forme entiere). `mix-blend-mode: screen`, hors du groupe `.lampe-isolee`
- * — c'est pour cela qu'`Ampoule` la place avant ce groupe, jamais dedans.
+ * forme entiere). `mix-blend-mode: screen`, hors du groupe `.lampe-isolee` :
+ * c'est pour cela qu'`Ampoule` la place avant ce groupe, jamais dedans.
  */
 export function CoucheFaisceau() {
   const id = useId();
@@ -332,7 +332,7 @@ export function CoucheFaisceau() {
 /**
  * Chaine de recoloration de la maille projetee (L6), partagee par les deux
  * copies du degrade de nettete (ronde de correction 1 : une copie nette a
- * 2 px, une copie floue a 9 px — seul le flou final differe entre les
+ * 2 px, une copie floue a 9 px : seul le flou final differe entre les
  * deux, donc toute la chaine en amont est factorisee ici plutot que
  * dupliquee a la main dans les deux `<filter>`). Comme un `<use>` ne peut
  * pas remplacer un `fill`/`stroke` deja pose explicitement sur les
@@ -340,7 +340,7 @@ export function CoucheFaisceau() {
  * seuille le canal alpha de la source : au-dessus de 0,5 (les brins, dont
  * le trait est pose a une opacite de 0,82) elle peint `hsl(28 55% 38%)` a
  * 0,16 ; entre 0 exclu et 0,5 (l'interstice, rempli a 0,38 ou 0,30 selon le
- * maillage) elle peint `hsl(36 82% 68%)` a 0,20 — sans jamais teinter le
+ * maillage) elle peint `hsl(36 82% 68%)` a 0,20, sans jamais teinter le
  * fond totalement transparent hors du dome. Le resultat merge est nomme
  * `recolore` ; chaque appelant y ajoute son propre `<feGaussianBlur
  * in="recolore">`.
@@ -382,18 +382,18 @@ function primitivesRecolorationMaille() {
 }
 
 /**
- * L6 — la moucheture : l'ombre de la maille projetee sur le fond (annexe
+ * L6, la moucheture : l'ombre de la maille projetee sur le fond (annexe
  * §3.5). Ce n'est jamais un second `feTurbulence` : `idMaille` est
  * l'identifiant de l'instance d'`Ampoule` qui a deja rendu sa maille (le
  * meme `id` que `<Maille id={id}>`), et les deux `<use>` ci-dessous
  * referencent le MEME `<symbol>` deja filtre que `maille.tsx` rasterise
- * pour son propre rendu — voir `idSymboleMaille`. Aucun filtre de bruit
+ * pour son propre rendu, voir `idSymboleMaille`. Aucun filtre de bruit
  * n'est declare ici ; la mitigation obligatoire de la spec (annexe §8.1)
  * tient precisement a ce qu'un seul `feTurbulence` existe sur toute la
  * page.
  *
  * **Degrade de nettete** (annexe §3.5, ronde de correction 1) : deux copies
- * superposees du meme `<use>`, masquees l'une par l'autre — une copie
+ * superposees du meme `<use>`, masquees l'une par l'autre : une copie
  * nette (flou 2 px) visible pres du centre de projection (88 ; 250),
  * degressive de 120 a 200 px ; une copie floue (flou 9 px) avec le masque
  * exactement inverse. Les deux masques sont des `radialGradient` en
@@ -405,7 +405,7 @@ function primitivesRecolorationMaille() {
  * Ce degrade de nettete est distinct de la loi de decroissance LINEAIRE de
  * l'intensite globale sur 230 px (`idDegradeChute`/`idMasqueChute`
  * ci-dessous, sur le groupe englobant) : l'un module la NETTETE selon la
- * distance, l'autre module l'OPACITE globale selon la distance — deux
+ * distance, l'autre module l'OPACITE globale selon la distance : deux
  * masques radiaux centres au meme point mais a des rayons differents
  * (200 px contre 230 px), pour deux raisons differentes.
  */
@@ -423,7 +423,7 @@ export function CoucheMoucheture({ idMaille }: { idMaille: string }) {
 
   /* Transformation verbatim de l'annexe §3.5 : mise a l'echelle 2,35
      autour du point fixe (88 ; 250) (translate/scale/translate), puis
-     cisaillement de 4° — dans cet ordre de composition, donc `skewY` en
+     cisaillement de 4°, dans cet ordre de composition, donc `skewY` en
      tete de la liste (le plus a gauche s'applique en dernier). Etendue
      resultante ~395 x 183 px. Partagee par les deux copies : seuls le
      flou et le masque de nettete different entre elles. */
@@ -474,7 +474,7 @@ export function CoucheMoucheture({ idMaille }: { idMaille: string }) {
         </mask>
 
         {/* Loi de decroissance LINEAIRE (pas quadratique) sur 230 px depuis
-            (88 ; 250) — annexe §3.5 : c'est une modulation de texture, pas
+            (88 ; 250), annexe §3.5 : c'est une modulation de texture, pas
             une source lumineuse, une loi quadratique la ferait disparaitre
             trop vite. Un degrade radial a deux arrets, interpole
             lineairement par position, produit exactement cette loi. */}
@@ -490,7 +490,7 @@ export function CoucheMoucheture({ idMaille }: { idMaille: string }) {
         </radialGradient>
         {/* Le masque vit sur le groupe EXTERIEUR (non transforme) : son
             centre (88 ; 250) doit rester celui de la specification, dans
-            le repere d'origine du dome — pas celui, redimensionne par
+            le repere d'origine du dome, pas celui, redimensionne par
             scale(2,35), du `<use>` transforme ci-dessous. */}
         <mask id={idMasqueChute} maskContentUnits="userSpaceOnUse">
           <rect x={-150} y={40} width={600} height={320} fill={`url(#${idDegradeChute})`} />

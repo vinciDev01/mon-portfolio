@@ -1,4 +1,4 @@
-# Refonte frontend et lampe d'atelier — Plan d'implémentation
+# Refonte frontend et lampe d'atelier : Plan d'implémentation
 
 > **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking.
 
@@ -21,7 +21,7 @@ Ces règles s'appliquent à **toutes** les tâches. Elles viennent de la spec, v
 - **Deux mouvements sur tout le site** : l'entrée d'un bloc (opacité + 8 px, 400 ms, `cubic-bezier(0.22, 1, 0.36, 1)`) et la lampe. Rien d'autre ne bouge. Pas de parallaxe, pas d'agrandissement au survol, pas de rotation, pas de compteur incrémental, pas d'apparition lettre par lettre.
 - **Grille de 8 px sans exception** pour tous les espacements.
 - **Mesure de texte plafonnée à 66 caractères** (`max-width: 66ch`) sur tout bloc de texte courant.
-- **Aucune hauteur fixe sur un conteneur de texte** — WCAG 2.2 critère 1.4.12.
+- **Aucune hauteur fixe sur un conteneur de texte** : WCAG 2.2 critère 1.4.12.
 - **`prefers-reduced-motion: reduce`** neutralise les deux mouvements, sauf si `respectReducedMotion` vaut `false`.
 - **Langue de l'interface : français.** Libellés, messages et commentaires de code en français, comme le reste du dépôt.
 - **Branche de travail : `refonte-frontend-lampe`.** Ne jamais commiter sur `main`.
@@ -49,7 +49,7 @@ Ces règles s'appliquent à **toutes** les tâches. Elles viennent de la spec, v
 | `backoffice/app/site-settings/page.tsx` | quatre groupes de réglages |
 | `backoffice/lib/contrast.ts` | ratio de contraste affiché en direct |
 
-**Frontend — fondations**
+**Frontend : fondations**
 | Fichier | Responsabilité |
 |---|---|
 | `frontend/vitest.config.ts` | harnais de test |
@@ -59,7 +59,7 @@ Ces règles s'appliquent à **toutes** les tâches. Elles viennent de la spec, v
 | `frontend/app/globals.css` | jetons CSS, rythme, typographie |
 | `frontend/app/layout.tsx` | polices Plex, injection des réglages en variables CSS |
 
-**Frontend — moteur de la lampe**
+**Frontend : moteur de la lampe**
 | Fichier | Responsabilité |
 |---|---|
 | `frontend/lib/lamp/geometry.ts` | fonctions pures de géométrie du faisceau |
@@ -69,7 +69,7 @@ Ces règles s'appliquent à **toutes** les tâches. Elles viennent de la spec, v
 | `frontend/lib/lamp/lamp-context.tsx` | état partagé, cible active, focus clavier |
 | `frontend/lib/lamp/use-lamp-engine.ts` | la boucle rAF et les trois ressorts |
 
-**Frontend — composants**
+**Frontend : composants**
 | Fichier | Responsabilité |
 |---|---|
 | `frontend/components/lamp/work-lamp.tsx` | le SVG de l'objet |
@@ -90,7 +90,7 @@ Ces règles s'appliquent à **toutes** les tâches. Elles viennent de la spec, v
 
 **Interfaces:**
 - Consumes: rien
-- Produces: 15 champs sur `SiteSettings` et sur `SiteSettingsDto` — `lampEnabled`, `lampOnByDefault`, `lampBeamAngle`, `lampIntensity`, `lampDimLevel`, `showStats`, `typeScale`, `lineHeight`, `zigzagAmplitude`, `sectionSpacing`, `animationsEnabled`, `animationSpeed`, `respectReducedMotion`, `accentHue`, `accentSaturation`
+- Produces: 15 champs sur `SiteSettings` et sur `SiteSettingsDto` : `lampEnabled`, `lampOnByDefault`, `lampBeamAngle`, `lampIntensity`, `lampDimLevel`, `showStats`, `typeScale`, `lineHeight`, `zigzagAmplitude`, `sectionSpacing`, `animationsEnabled`, `animationSpeed`, `respectReducedMotion`, `accentHue`, `accentSaturation`
 
 - [ ] **Étape 1 : Ajouter les champs au schéma Prisma**
 
@@ -570,7 +570,7 @@ Puis insérer dans le `<form>`, juste avant le bouton de soumission :
       const conforme = ratio >= 4.5;
       return (
         <p className={`text-xs mt-1 ${conforme ? "text-muted-foreground" : "text-red-600"}`}>
-          Contraste du texte hors faisceau : {ratio.toFixed(2)}:1 —{" "}
+          Contraste du texte hors faisceau : {ratio.toFixed(2)}:1,{" "}
           {conforme ? "conforme AA" : "sous le seuil AA de 4.5:1"}
         </p>
       );
@@ -756,8 +756,8 @@ git commit -m "feat(backoffice): expose les reglages lampe, rythme, mouvement et
 **Interfaces:**
 - Consumes: rien
 - Produces:
-  - `PALETTE` — objet figé exposant `fond`, `surface`, `bordure`, `texteSecondaire`, `textePrincipal`, `accent`, `ombre`, `lumiere`
-  - `ECHELLE_TYPO` — objet figé des ratios `{ compact: 1.2, normal: 1.25, airy: 1.333 }`
+  - `PALETTE` : objet figé exposant `fond`, `surface`, `bordure`, `texteSecondaire`, `textePrincipal`, `accent`, `ombre`, `lumiere`
+  - `ECHELLE_TYPO` : objet figé des ratios `{ compact: 1.2, normal: 1.25, airy: 1.333 }`
   - `luminanceRelative(hex: string): number`
   - `ratioContraste(avant: string, arriere: string): number`
   - `melanger(source: string, cible: string, taux: number): string`
@@ -842,7 +842,7 @@ describe("contraste de la palette", () => {
 npm run test -w frontend
 ```
 
-Attendu : ÉCHEC — les modules `./contrast` et `@/lib/design/tokens` n'existent pas.
+Attendu : ÉCHEC, les modules `./contrast` et `@/lib/design/tokens` n'existent pas.
 
 - [ ] **Étape 6 : Créer les jetons**
 
@@ -926,7 +926,7 @@ Les deux copies sont volontaires : `backoffice` et `frontend` sont deux applicat
 npm run test -w frontend
 ```
 
-Attendu : 6 tests au vert. Le quatrième est le plus important — il verrouille le plancher d'accessibilité du mode lampe.
+Attendu : 6 tests au vert. Le quatrième est le plus important : il verrouille le plancher d'accessibilité du mode lampe.
 
 - [ ] **Étape 9 : Commit**
 
@@ -948,9 +948,9 @@ git commit -m "feat(frontend): harnais Vitest et jetons de couleur verifies"
 - Produces:
   - `type Point = { x: number; y: number }`
   - `type Viewport = { width: number; height: number }`
-  - `angleVers(pivot: Point, cible: Point): number` — radians
+  - `angleVers(pivot: Point, cible: Point): number` : radians
   - `sommetsFaisceau(pivot, angleTete, angleMeneur, angleSuiveur, longueurTete, rayonOuverture, viewport): [Point, Point, Point, Point]`
-  - `formaterSommets(sommets): string` — la chaîne de l'attribut `points`
+  - `formaterSommets(sommets): string` : la chaîne de l'attribut `points`
 
 **Convention de repère :** coordonnées écran, `y` croît vers le bas. Les angles sont en radians, `0` pointe vers la droite, `+π/2` vers le bas.
 
@@ -1075,7 +1075,7 @@ function segmentsSeCroisent(
 npm run test -w frontend -- geometry
 ```
 
-Attendu : ÉCHEC — `Failed to resolve import "./geometry"`.
+Attendu : ÉCHEC, `Failed to resolve import "./geometry"`.
 
 - [ ] **Étape 3 : Écrire l'implémentation**
 
@@ -1181,7 +1181,7 @@ git commit -m "feat(lampe): geometrie du faisceau, couverte par ses cas limites"
 - Consumes: rien
 - Produces:
   - `type EtatRessort = { valeur: number; vitesse: number }`
-  - `DT_MAX: number` — pas de temps maximal, `1/30`
+  - `DT_MAX: number` : pas de temps maximal, `1/30`
   - `pasRessort(etat: EtatRessort, cible: number, omega: number, zeta: number, dt: number): EtatRessort`
   - `estImmobile(etat: EtatRessort, cible: number): boolean`
   - `differenceAngulaire(depuis: number, vers: number): number`
@@ -1295,7 +1295,7 @@ describe("differenceAngulaire", () => {
 npm run test -w frontend -- spring
 ```
 
-Attendu : ÉCHEC — `Failed to resolve import "./spring"`.
+Attendu : ÉCHEC, `Failed to resolve import "./spring"`.
 
 - [ ] **Étape 3 : Écrire l'implémentation**
 
@@ -1368,7 +1368,7 @@ export function differenceAngulaire(depuis: number, vers: number): number {
 npm run test -w frontend
 ```
 
-Attendu : l'ensemble des suites au vert — contraste, géométrie, ressort.
+Attendu : l'ensemble des suites au vert (contraste, géométrie, ressort).
 
 - [ ] **Étape 5 : Commit**
 
@@ -1386,7 +1386,7 @@ git commit -m "feat(lampe): ressort amorti avec bornage du pas et chemin angulai
 - Modify: `frontend/app/globals.css` (ajout d'un bloc typographie et rythme en fin de fichier)
 
 **Interfaces:**
-- Consumes: `PALETTE` et `ECHELLE_TYPO` de `frontend/lib/design/tokens.ts` (Task 4) — les valeurs doivent correspondre exactement
+- Consumes: `PALETTE` et `ECHELLE_TYPO` de `frontend/lib/design/tokens.ts` (Task 4) : les valeurs doivent correspondre exactement
 - Produces: variables CSS `--fond`, `--surface`, `--bordure`, `--texte-secondaire`, `--texte`, `--accent`, `--ombre`, `--lumiere`, `--ratio`, `--corps`, `--meta`, `--chapo`, `--h3`, `--h2`, `--h1`, `--espace-section`, `--duree`, et les classes `.mesure`, `.meta`, `.section-shell`
 
 - [ ] **Étape 1 : Remplacer les deux blocs de palette**
@@ -1580,7 +1580,7 @@ Supprimer chaque occurrence trouvée, dans le CSS comme dans les composants.
 npm run dev:frontend
 ```
 
-Ouvrir `http://localhost:3000`. Le fond doit être `#131518`, le texte blanc cassé. La mise en page est encore l'ancienne — c'est attendu, seules les couleurs et l'échelle ont changé.
+Ouvrir `http://localhost:3000`. Le fond doit être `#131518`, le texte blanc cassé. La mise en page est encore l'ancienne : c'est attendu, seules les couleurs et l'échelle ont changé.
 
 - [ ] **Étape 5 : Commit**
 
@@ -1601,7 +1601,7 @@ git commit -m "feat(frontend): identite sombre, echelle modulaire et rythme de 8
 
 **Interfaces:**
 - Consumes: `SiteSettingsDto` étendu (Task 1), `ECHELLE_TYPO` (Task 4)
-- Produces: variables CSS sur `<html>` (l'element cible de `:root`) — `--portfolio-bg`, `--portfolio-text`, `--portfolio-font-size`, `--portfolio-line-height`, `--portfolio-section-spacing`, `--portfolio-zigzag`, `--portfolio-animation-speed`, `--ratio`, `--accent` ; attribut `data-mouvement` sur `<html>`
+- Produces: variables CSS sur `<html>` (l'element cible de `:root`) : `--portfolio-bg`, `--portfolio-text`, `--portfolio-font-size`, `--portfolio-line-height`, `--portfolio-section-spacing`, `--portfolio-zigzag`, `--portfolio-animation-speed`, `--ratio`, `--accent` ; attribut `data-mouvement` sur `<html>`
 
 Le site n'a plus qu'un thème. Le sélecteur clair/sombre disparaît : maintenir deux thèmes obligerait à calibrer deux fois chaque état du faisceau, pour un bénéfice nul sur une identité qui est sombre par nature.
 
@@ -1727,10 +1727,10 @@ git commit -m "feat(frontend): polices Plex, injection des reglages et theme uni
 **Interfaces:**
 - Consumes: rien
 - Produces:
-  - `LampProvider` — props `{ reglages: ReglagesLampe; children: React.ReactNode }`
+  - `LampProvider` : props `{ reglages: ReglagesLampe; children: React.ReactNode }`
   - `type ReglagesLampe = { activee: boolean; allumeeParDefaut: boolean; ouverture: number; intensite: number; assombrissement: number }`
   - `useLampe(): { activee, allumee, basculer, cibleRef, cibles, reglages }`
-  - `useBeamTarget(): (el: HTMLElement | null) => void` — callback ref à poser sur la zone éclairable d'une section
+  - `useBeamTarget(): (el: HTMLElement | null) => void` : callback ref à poser sur la zone éclairable d'une section
 
 `cibleRef` est une `MutableRefObject<HTMLElement | null>` : le moteur d'animation la lit à chaque image sans provoquer de re-rendu.
 
@@ -1905,7 +1905,7 @@ git commit -m "feat(lampe): contexte, cible visible et suivi du focus clavier"
 - Produces:
   - `type RefsLampe = { trou: RefObject<SVGPolygonElement | null>; voile: RefObject<SVGPolygonElement | null>; tete: RefObject<SVGGElement | null> }`
   - `useLampEngine(refs: RefsLampe): void`
-  - `BeamLayer` — props `{ trou, voile }`, ne possède pas le moteur
+  - `BeamLayer` : props `{ trou, voile }`, ne possède pas le moteur
 
 Trois ressorts, comme le prévoit la spec : la tête à ω₀ = 9, le bord meneur à 12, le bord suiveur à 7. Ce sont les deux dernières valeurs qui font changer le trapèze de forme pendant une transition au lieu de le translater.
 
@@ -2143,8 +2143,8 @@ git commit -m "feat(lampe): moteur a trois ressorts et couche lumineuse masquee"
 **Interfaces:**
 - Consumes: `RefsLampe`, `useLampEngine` (Task 10) ; `BeamLayer` (Task 10) ; `useLampe` (Task 9)
 - Produces:
-  - `WorkLamp` — props `{ tete: RefObject<SVGGElement | null> }`
-  - `LampStage` — sans props ; possède les trois refs et appelle `useLampEngine`
+  - `WorkLamp` : props `{ tete: RefObject<SVGGElement | null> }`
+  - `LampStage` : sans props ; possède les trois refs et appelle `useLampEngine`
 
 `LampStage` est le seul propriétaire des refs. C'est lui qu'on monte dans la page.
 
@@ -2223,7 +2223,7 @@ export function WorkLamp({ tete }: { tete: RefObject<SVGGElement | null> }) {
           theta : la geometrie de base doit donc etre celle de l'angle 0.
           Au repos (theta = PI) la tete apparait bien tournee vers la gauche.
           Verifie numeriquement : l'ouverture dessinee en px+44, apres
-          rotate(180), tombe en px-44 — exactement la ou sommetsFaisceau place
+          rotate(180), tombe en px-44, exactement la ou sommetsFaisceau place
           l'ouverture du faisceau. Dessinee vers la gauche, elle tomberait en
           px+44 et la tete tournerait le dos a son propre faisceau. */}
         <path
@@ -2326,7 +2326,7 @@ git commit -m "feat(lampe): objet SVG articule et scene proprietaire des refs"
 
 **Interfaces:**
 - Consumes: `useLampe` (Task 9), `LampStage` (Task 11)
-- Produces: `LampSwitch` — sans props
+- Produces: `LampSwitch` : sans props
 
 - [ ] **Étape 1 : Écrire l'interrupteur**
 
@@ -2421,7 +2421,7 @@ Sur `http://localhost:3000`, vérifier point par point :
 - le bouton « Allumer la lampe » est en bas à droite ;
 - au clic, la page s'assombrit et un trapèze de lumière aux bords nets apparaît ;
 - en faisant défiler, la tête pivote et le faisceau suit la section lue ;
-- pendant la transition, le trapèze **change de forme** — le bord meneur part avant le suiveur ;
+- pendant la transition, le trapèze **change de forme** : le bord meneur part avant le suiveur ;
 - au `Tab`, le faisceau saute sur l'élément focalisé ;
 - l'interrupteur est atteignable au clavier et son anneau de focus est visible ;
 - dans l'onglet Performances des outils de développement, l'activité JavaScript retombe à zéro quelques centaines de millisecondes après l'arrêt du défilement.
@@ -2450,8 +2450,8 @@ la Task 14, une fois les sections réécrites.
 **Interfaces:**
 - Consumes: `useBeamTarget` (Task 9)
 - Produces:
-  - `useReveal(): (el: HTMLElement | null) => void` — callback ref
-  - `SectionShell` — props `{ id: string; titre: string; index: number; children: React.ReactNode }`
+  - `useReveal(): (el: HTMLElement | null) => void` : callback ref
+  - `SectionShell` : props `{ id: string; titre: string; index: number; children: React.ReactNode }`
 
 `index` est l'ordre de la section dans la page, à partir de 1. Sa parité décide du côté du zigzag : impair à gauche, pair à droite.
 
@@ -2513,7 +2513,7 @@ import { useReveal } from "@/lib/use-reveal";
 /**
  * Coquille commune a toutes les sections : place le bloc dans la grille selon
  * la parite de `index`, declare sa zone eclairable, et rend le titre en deux
- * couches — celle du dessus n'apparait que dans le faisceau.
+ * couches : celle du dessus n'apparait que dans le faisceau.
  */
 export function SectionShell({
   id,
@@ -2633,7 +2633,7 @@ git commit -m "feat(frontend): observateur d entree partage et coquille de secti
 
 Chaque section rend aujourd'hui son propre `SectionWrapper` avec son titre. Le titre remonte désormais dans `SectionShell`. Dans chacun des sept fichiers de section, supprimer l'import de `SectionWrapper` et remplacer l'enveloppe par un fragment.
 
-Exemple pour `skills-section.tsx` — remplacer :
+Exemple pour `skills-section.tsx`, remplacer :
 
 ```tsx
 <SectionWrapper id="skills" title={t("skills")}>
@@ -2653,7 +2653,7 @@ Répéter à l'identique dans `presentation-section.tsx`, `experience-section.ts
 
 - [ ] **Étape 2 : Plafonner la mesure dans chaque section**
 
-Dans chacun des sept fichiers, ajouter la classe `mesure` sur tout conteneur de texte courant — paragraphes, descriptions, listes. Aucun bloc de texte ne doit dépasser 66 caractères de large.
+Dans chacun des sept fichiers, ajouter la classe `mesure` sur tout conteneur de texte courant : paragraphes, descriptions, listes. Aucun bloc de texte ne doit dépasser 66 caractères de large.
 
 ```bash
 grep -rn "<p " frontend/components/portfolio/*-section.tsx
@@ -3155,7 +3155,7 @@ Le test « le texte reste conforme AA a 40% d assombrissement » est le garde-fo
 
 ## Notes pour l'exécutant
 
-**L'ordre compte.** Les tâches 1 à 4 posent les fondations et n'ont pas de dépendance entre elles au-delà de leur ordre. Les tâches 5 et 6 sont des modules purs, testables isolément, et peuvent être menées en parallèle. Les tâches 9 à 12 forment une chaîne : chacune consomme la précédente. Les tâches 13 et 14 doivent rester ensemble — supprimer `SectionWrapper` avant d'avoir réécrit les sections casse la compilation.
+**L'ordre compte.** Les tâches 1 à 4 posent les fondations et n'ont pas de dépendance entre elles au-delà de leur ordre. Les tâches 5 et 6 sont des modules purs, testables isolément, et peuvent être menées en parallèle. Les tâches 9 à 12 forment une chaîne : chacune consomme la précédente. Les tâches 13 et 14 doivent rester ensemble : supprimer `SectionWrapper` avant d'avoir réécrit les sections casse la compilation.
 
 **Le point le plus risqué** est l'étape 1 de la Task 11 : SVG n'accepte pas `calc()` dans ses attributs de géométrie. Le plan donne directement la forme correcte à implémenter, mais si le rendu apparaît vide, c'est là qu'il faut regarder en premier.
 

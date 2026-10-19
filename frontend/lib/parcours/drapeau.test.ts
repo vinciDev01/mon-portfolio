@@ -150,6 +150,6 @@ describe("drapeau au mat (spec section 7)", () => {
 
   it("n introduit ni tiret cadratin ni emoji", () => {
     expect(src).not.toContain("\u2014");
-    expect([...src].some((c) => c.codePointAt(0)! > 0x2500)).toBe(false);
+    expect([...src].some((c) => c.codePointAt(0)! >= 0x2500)).toBe(false);
   });
 });

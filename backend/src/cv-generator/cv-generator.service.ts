@@ -107,7 +107,7 @@ export class CvGeneratorService {
 
     const polices = choisirPolices(reglages?.cvFontFamily);
 
-    // ── Sections alimentees par la base ──────────────────────────────────
+    // Sections alimentees par la base
     const base: SectionBase[] = [
       {
         titre: 'PRÉSENTATION',
@@ -204,7 +204,7 @@ export class CvGeneratorService {
           .fillColor(ENCRE);
       };
 
-      // ── En-tete ────────────────────────────────────────────────────────
+      // En-tete
       doc.font(polices.gras).fontSize(NOM).fillColor(ENCRE).text(nomComplet);
       doc.moveDown(0.25);
 
@@ -213,7 +213,7 @@ export class CvGeneratorService {
         else lien(l.etiquette, l.url);
       }
 
-      // ── Sections ───────────────────────────────────────────────────────
+      // Sections
       for (const section of sections) {
         doc.moveDown(AVANT_SECTION);
         doc

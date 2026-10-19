@@ -19,7 +19,7 @@ import { LUMIERE } from "@/lib/design/tokens";
 
 /**
  * Demi-profil droit du dome : le chemin de reference de la specification.
- * Le demi-profil gauche n'est JAMAIS redessine a la main — chaque meridien
+ * Le demi-profil gauche n'est JAMAIS redessine a la main : chaque meridien
  * ci-dessous n'est que ce meme chemin, mis a l'echelle par le sinus de son
  * angle (negatif a gauche de l'axe x = CENTRE_X), voir `<use>` plus bas.
  */
@@ -32,7 +32,7 @@ const PROFIL_DROIT =
  * Silhouette fermee du dome, pour le voile de fond (l'interstice) et pour
  * l'ecretage de l'occlusion sous le bord (`Ampoule`, qui l'importe). C'est
  * exactement PROFIL_DROIT, reflechi autour de x = 88 (x' = 176 - x) et
- * parcouru en sens inverse pour refermer le contour — jamais redessine a la
+ * parcouru en sens inverse pour refermer le contour, jamais redessine a la
  * main, seulement reflechi et inverse.
  */
 export const SILHOUETTE_FERMEE =
@@ -247,7 +247,7 @@ export function Maille({ id }: { id: string }) {
 
         {/* Rasterisation unique de la maille filtree (voir `idSymboleMaille`
             plus haut) : `overflow: visible` desamorce le viewport imbrique
-            qu'un `<symbol>` etablirait sinon par defaut — sans ca, le
+            qu'un `<symbol>` etablirait sinon par defaut : sans ca, le
             navigateur ecreterait la maille a sa boite englobante native.
             Le filtre `feTurbulence`/`feDisplacementMap` ci-dessus n'est
             applique qu'ici, une seule fois ; les deux `<use>` qui suivent
@@ -257,7 +257,7 @@ export function Maille({ id }: { id: string }) {
         <symbol id={idSymbole} style={{ overflow: "visible" }}>
           <g filter={filtreActif ? `url(#${idFiltre})` : undefined}>
             {/* Interstice : voile de fond visible entre les brins. Opacite
-                plate, jamais un degrade — c'est la densite du tressage
+                plate, jamais un degrade : c'est la densite du tressage
                 par-dessus qui assombrit les bords, pas cette couche. */}
             <path
               d={SILHOUETTE_FERMEE}

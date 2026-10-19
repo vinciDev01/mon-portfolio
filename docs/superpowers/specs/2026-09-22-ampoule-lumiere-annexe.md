@@ -1,4 +1,4 @@
-# Spécification d'exécution — Suspension rotin / commutateur de thème
+# Spécification d'exécution : Suspension rotin / commutateur de thème
 
 Portfolio Next.js 16 · React 19 · Tailwind v4
 Référence visuelle : suspension hémisphérique en rotin tressé, ampoule chaude, mur terracotta.
@@ -31,8 +31,8 @@ Point d'ancrage au bord haut de l'écran : **(88, 0)**.
 
 | Élément | Valeur |
 |---|---|
-| Ancrage | (88, 0) — sort du bord haut de la fenêtre, pas de rosace visible |
-| Point d'arrivée | (88, 178) — apex du dôme |
+| Ancrage | (88, 0), sort du bord haut de la fenêtre, pas de rosace visible |
+| Point d'arrivée | (88, 178), apex du dôme |
 | Longueur développée | **178,4 px** |
 | Épaisseur (`stroke-width`) | **1,5 px** |
 | `stroke-linecap` | `round` |
@@ -53,7 +53,7 @@ Entièrement contenue dans le dôme, visible uniquement par transparence du tres
 | Bague de serrage | Rectangle x ∈ [79, 97], y ∈ [197, 200,5] → **18 × 3,5 px**, `rx = 1` |
 | Culot vissé (3 filets) | 3 traits horizontaux de 12 px, y = 202 / 205 / 208, épaisseur 1 px |
 
-### 1.3 L'abat-jour — profil exact
+### 1.3 L'abat-jour : profil exact
 
 Le profil n'est **pas un demi-cercle**. C'est une **superellipse** (courbe de Lamé) : flancs quasi verticaux près du bord, calotte surbaissée au sommet. C'est ce qui donne la silhouette « cloche évasée » de la référence.
 
@@ -200,9 +200,9 @@ Chaque cercle est une **ellipse** (`<ellipse>`), pas un chemin. Coordonnées exa
 | **C17** | 83,93 | 11,99 | 248,58 | 7,41 |
 | **C18 (ourlet)** | 84,00 | 12,00 | 256,00 | 7,42 |
 
-**Observation à exploiter :** l'écart vertical projeté passe de 0,05 px (C1→C2) à 7,42 px (C17→C18). Les cercles C1 à C4 se **chevauchent en projection** : ne pas les dessiner séparément, les remplacer par une **calotte pleine** — ellipse `rx 30 / ry 4,3` centrée (88 ; 180,1), remplie à 100 % de la couleur de brin dense. C'est exactement le « bouchon » sombre qu'on voit au sommet de la suspension de référence.
+**Observation à exploiter :** l'écart vertical projeté passe de 0,05 px (C1→C2) à 7,42 px (C17→C18). Les cercles C1 à C4 se **chevauchent en projection** : ne pas les dessiner séparément, les remplacer par une **calotte pleine** : ellipse `rx 30 / ry 4,3` centrée (88 ; 180,1), remplie à 100 % de la couleur de brin dense. C'est exactement le « bouchon » sombre qu'on voit au sommet de la suspension de référence.
 
-### 2.3 Irrégularité — obligatoire
+### 2.3 Irrégularité : obligatoire
 
 Une maille parfaitement régulière est immédiatement lue comme synthétique. Appliquer sur le groupe `#maille` un filtre unique :
 
@@ -215,7 +215,7 @@ Une maille parfaitement régulière est immédiatement lue comme synthétique. A
 </filter>
 ```
 
-`baseFrequency` fortement anisotrope (0,85 en x contre 0,035 en y) : le bruit déforme **le long** des brins, jamais en travers — sinon la maille se délite. `scale = 0,7 px` : en dessous de 0,4 px l'effet est invisible, au-dessus de 1,2 px le tressage part en filasse.
+`baseFrequency` fortement anisotrope (0,85 en x contre 0,035 en y) : le bruit déforme **le long** des brins, jamais en travers, sinon la maille se délite. `scale = 0,7 px` : en dessous de 0,4 px l'effet est invisible, au-dessus de 1,2 px le tressage part en filasse.
 
 Ce filtre est **calculé une fois** puis mis en cache : le groupe ne bouge jamais, seules ses couleurs changent.
 
@@ -259,21 +259,21 @@ Seul correctif admis : un masque radial de correction, `radial-gradient` blanc �
 
 ---
 
-## 3. La lumière — état allumé
+## 3. La lumière : état allumé
 
 Six couches, empilées de l'arrière vers l'avant. Chacune est un `<g>` distinct, avec sa propre variable CSS d'opacité pour la transition du §5.
 
 Ordre de peinture (du fond vers l'écran) :
 `L5 halo de fond` → `L6 moucheture` → `L4 faisceau` → `L2 lueur du tressage` → `maille` → `L1 filament`
 
-### 3.1 L1 — Filament et halo immédiat
+### 3.1 L1 : Filament et halo immédiat
 
 | Sous-couche | Géométrie | Couleur | Opacité | Flou |
 |---|---|---|---|---|
-| Cœur | ellipse (88 ; 233) rx 2,2 ry 1,4 | `#FFFDF6` — `hsl(46 100% 98%)` | 1,00 | 0,5 px |
-| Boucle | ellipse (88 ; 233) rx 6 ry 3,5, `stroke 1,4` | `#FFF3D6` — `hsl(43 100% 92%)` | 0,95 | 1,2 px |
+| Cœur | ellipse (88 ; 233) rx 2,2 ry 1,4 | `#FFFDF6`, `hsl(46 100% 98%)` | 1,00 | 0,5 px |
+| Boucle | ellipse (88 ; 233) rx 6 ry 3,5, `stroke 1,4` | `#FFF3D6`, `hsl(43 100% 92%)` | 0,95 | 1,2 px |
 | Halo serré | cercle (88 ; 233) r 20 | dégradé radial ci-dessous | 1,00 | 3 px |
-| Globe éclairé | cercle (88 ; 232) r 21 | `#FFE6B0` — `hsl(38 100% 84%)` | 0,42 | 4 px |
+| Globe éclairé | cercle (88 ; 232) r 21 | `#FFE6B0`, `hsl(38 100% 84%)` | 0,42 | 4 px |
 
 **Dégradé du halo serré** (`<radialGradient>` centre 50/50, r = 100 %) :
 
@@ -288,24 +288,24 @@ Ordre de peinture (du fond vers l'écran) :
 **Loi de décroissance : quadratique**, `I(d) = I₀ · (1 − d/20)²`, sur **20 px**.
 `mix-blend-mode: screen`.
 
-### 3.2 L2 — Lueur à travers le tressage
+### 3.2 L2 : Lueur à travers le tressage
 
 Peinte **sous la maille**, écrêtée (`clip-path`) au contour du dôme du §1.3.
 
 | Paramètre | Valeur |
 |---|---|
 | Type | dégradé radial |
-| Centre | **(88 ; 236)** — décalé de 3 px sous le filament (le flux remonte moins qu'il ne descend) |
+| Centre | **(88 ; 236)**, décalé de 3 px sous le filament (le flux remonte moins qu'il ne descend) |
 | Rayon | **96 px** |
 | Blend | `screen` |
 | Flou | **6 px** |
 
 | Position | Couleur | Opacité |
 |---|---|---|
-| 0 % | `hsl(38 100% 82%)` — `#FFDFAD` | 0,58 |
-| 30 % | `hsl(35 92% 72%)` — `#F6C176` | 0,42 |
-| 58 % | `hsl(31 82% 63%)` — `#E7A257` | 0,24 |
-| 82 % | `hsl(27 70% 54%)` — `#D08337` | 0,09 |
+| 0 % | `hsl(38 100% 82%)`, `#FFDFAD` | 0,58 |
+| 30 % | `hsl(35 92% 72%)`, `#F6C176` | 0,42 |
+| 58 % | `hsl(31 82% 63%)`, `#E7A257` | 0,24 |
+| 82 % | `hsl(27 70% 54%)`, `#D08337` | 0,09 |
 | 100 % | `hsl(25 65% 48%)` | 0,00 |
 
 **Loi de décroissance : quadratique**, `I(d) = 0,58 · (1 − d/96)²` sur **96 px**.
@@ -319,7 +319,7 @@ Peinte **sous la maille**, écrêtée (`clip-path`) au contour du dôme du §1.3
 | 233 (niveau filament) | `#D6A96B` |
 | 256 (bord) | `#9C7A4E` |
 
-### 3.3 L4 — Faisceau direct vers le bas
+### 3.3 L4 : Faisceau direct vers le bas
 
 Cône partant du plan du bord.
 
@@ -337,7 +337,7 @@ Cône partant du plan du bord.
 
 | Position (y) | Couleur | Opacité |
 |---|---|---|
-| 256 (0 %) | `hsl(37 97% 76%)` — `#FDD599` | 0,36 |
+| 256 (0 %) | `hsl(37 97% 76%)`, `#FDD599` | 0,36 |
 | 302 (15 %) | `hsl(35 94% 73%)` | 0,26 |
 | 393 (45 %) | `hsl(33 90% 70%)` | 0,13 |
 | 484 (75 %) | `hsl(31 85% 66%)` | 0,05 |
@@ -346,9 +346,9 @@ Cône partant du plan du bord.
 **Loi de décroissance : inverse du carré**, `I(d) = 0,36 / (1 + d/120)²`, sur **304 px**.
 Ce n'est pas une décroissance linéaire : un faisceau conique perd son intensité en 1/d², et c'est précisément ce qui rend le sol/le contenu sous la lampe crédible. Les stops du tableau ci-dessus sont l'échantillonnage de cette loi ; les utiliser tels quels.
 
-**Bords du cône.** Pénombre de **18 px** de chaque côté : un second dégradé, horizontal cette fois, appliqué en masque — 0 % opaque 0, 12 % opaque 1, 88 % opaque 1, 100 % opaque 0. C'est ce qui produit la transition « très douce vers l'ombre » décrite dans la référence, au lieu d'un cône à arête franche.
+**Bords du cône.** Pénombre de **18 px** de chaque côté : un second dégradé, horizontal cette fois, appliqué en masque : 0 % opaque 0, 12 % opaque 1, 88 % opaque 1, 100 % opaque 0. C'est ce qui produit la transition « très douce vers l'ombre » décrite dans la référence, au lieu d'un cône à arête franche.
 
-### 3.4 L5 — Halo projeté sur le fond
+### 3.4 L5 : Halo projeté sur le fond
 
 Le plus large et le moins intense. **Ne pas l'implémenter comme une forme floutée** (coût prohibitif, cf. §8) : c'est un `background-image` en `radial-gradient` sur un pseudo-élément plein écran.
 
@@ -358,7 +358,7 @@ Le plus large et le moins intense. **Ne pas l'implémenter comme une forme flout
 | Centre | `calc(100% - 136px)` en x, `250px` en y |
 | Rayons | **rx 540 px / ry 620 px** (ellipse verticale : la lumière descend plus qu'elle ne remonte) |
 | Blend | `soft-light` puis une seconde passe `screen` à 40 % de l'opacité |
-| Flou | **aucun** — un dégradé radial est déjà continu |
+| Flou | **aucun** : un dégradé radial est déjà continu |
 
 | Position | Couleur | Opacité |
 |---|---|---|
@@ -370,7 +370,7 @@ Le plus large et le moins intense. **Ne pas l'implémenter comme une forme flout
 
 **Loi de décroissance : quadratique**, `I(d) = 0,30 · (1 − d/540)²`, sur **540 px horizontalement / 620 px verticalement**.
 
-### 3.5 L6 — Moucheture texturée du tressage
+### 3.5 L6 : Moucheture texturée du tressage
 
 Les « marbrures lumineuses » de la référence : l'ombre de la maille projetée sur le fond.
 
@@ -380,7 +380,7 @@ Les « marbrures lumineuses » de la référence : l'ombre de la maille projeté
 | Transformation | `translate(88,250) scale(2.35) translate(-88,-250)` puis `skewY(4deg)` |
 | Centre de projection | (88 ; 250) |
 | Étendue résultante | **395 × 183 px** |
-| Flou | **5 px** (la projection est nette près de la source, floue au loin — voir dégradé de flou ci-dessous) |
+| Flou | **5 px** (la projection est nette près de la source, floue au loin ; voir dégradé de flou ci-dessous) |
 | Blend | `overlay` |
 | Couleur des brins projetés | `hsl(28 55% 38%)` opacité **0,16** (micro-ombres) |
 | Couleur des interstices projetés | `hsl(36 82% 68%)` opacité **0,20** (marbrures claires) |
@@ -395,7 +395,7 @@ Linéaire et non quadratique : c'est une modulation de texture, pas une source. 
 
 ---
 
-## 4. La lumière — état éteint
+## 4. La lumière : état éteint
 
 L'objet reste **pleinement lisible**. C'est une contrainte d'accessibilité autant qu'esthétique : c'est un commutateur, il doit se voir.
 
@@ -429,7 +429,7 @@ L'objet reste **pleinement lisible**. C'est une contrainte d'accessibilité auta
 
 ### 4.3 Ce qui subsiste du volume
 
-Sans source interne, le volume est rendu par **trois indices seulement** — pas davantage, sous peine de bavardage graphique :
+Sans source interne, le volume est rendu par **trois indices seulement**, pas davantage, sous peine de bavardage graphique :
 
 1. **Occlusion ambiante sous le bord.** Dégradé linéaire vertical, de `#0B0D0F` à l'opacité 0,55 en y = 256, jusqu'à transparent en y = 226 (**30 px**). Écrêté au contour du dôme.
 2. **Liseré d'incidence haut-gauche.** La page a une ambiance diffuse : un arc de 1 px, `#9AA096` à l'opacité **0,22**, suivant le profil gauche du dôme de y = 178 à y = 212, avec un dégradé d'opacité 0,22 → 0 sur ce parcours.
@@ -437,7 +437,7 @@ Sans source interne, le volume est rendu par **trois indices seulement** — pas
 
 ### 4.4 Ce qui subsiste de la texture
 
-**Tout.** La maille reste dessinée à l'identique — même nombre de brins, même filtre d'irrégularité, même loi de resserrement. Seules les couleurs changent. C'est ce qui rend l'extinction crédible : l'objet ne se simplifie pas, il cesse d'émettre.
+**Tout.** La maille reste dessinée à l'identique : même nombre de brins, même filtre d'irrégularité, même loi de resserrement. Seules les couleurs changent. C'est ce qui rend l'extinction crédible : l'objet ne se simplifie pas, il cesse d'émettre.
 
 L'ampoule éteinte conserve **une braise résiduelle nulle** : opacité 0 sur toutes les couches L1/L2/L4/L5/L6.
 
@@ -447,11 +447,11 @@ L'ampoule éteinte conserve **une braise résiduelle nulle** : opacité 0 sur to
 
 Une ampoule à incandescence a une **inertie thermique**. Le filament met ~150 ms à atteindre sa couleur de régime et ~600 ms à se refroidir. Les deux sens ne sont donc **pas symétriques**.
 
-### 5.1 Allumage (éteint → allumé) — **900 ms**
+### 5.1 Allumage (éteint → allumé) : **900 ms**
 
 | Phase | Fenêtre | Ce qui bouge | Courbe |
 |---|---|---|---|
-| Inertie | **0 → 40 ms** | rien (délai de contact) | — |
+| Inertie | **0 → 40 ms** | rien (délai de contact) | sans objet |
 | Préchauffage | **40 → 130 ms** | filament `#3A3128` → `#A8431A`, opacité 0 → 0,45 | `cubic-bezier(0.33, 0, 0.67, 0.35)` |
 | Montée | **130 → 420 ms** | filament → `#FFFDF6` ; L1 halo serré 0 → 1 ; L2 lueur 0 → 0,92 | `cubic-bezier(0.22, 1, 0.36, 1)` |
 | Dépassement | **380 → 520 ms** | L1 monte à **1,08** puis revient à 1,00 | `cubic-bezier(0.34, 1.40, 0.64, 1)` |
@@ -464,7 +464,7 @@ Une ampoule à incandescence a une **inertie thermique**. Le filament met ~150 m
 **Ordre d'apparition : filament → lueur du tressage → faisceau → halo de fond → moucheture.**
 Le décalage de 130 ms entre filament et faisceau est ce qui rend l'allumage lisible : on voit la lumière « sortir » de l'abat-jour au lieu d'apparaître partout d'un coup.
 
-**Rampe chromatique du filament** (à interpoler en **oklch**, pas en sRGB — l'interpolation sRGB traverse un brun sale) :
+**Rampe chromatique du filament** (à interpoler en **oklch**, pas en sRGB : l'interpolation sRGB traverse un brun sale) :
 
 | t | couleur |
 |---|---|
@@ -475,14 +475,14 @@ Le décalage de 130 ms entre filament et faisceau est ce qui rend l'allumage lis
 | 420 ms | `#FFF3D6` |
 | 520 ms | `#FFFDF6` |
 
-### 5.2 Extinction (allumé → éteint) — **1100 ms**
+### 5.2 Extinction (allumé → éteint) : **1100 ms**
 
 Plus lente que l'allumage. Le filament refroidit.
 
 | Phase | Fenêtre | Ce qui bouge | Courbe |
 |---|---|---|---|
 | Coupure | **0 → 90 ms** | L1 opacité 1 → 0,42, chute brutale | `cubic-bezier(0.4, 0, 1, 1)` |
-| Faisceau | **0 → 260 ms** | L4 1 → 0 — **part le premier** | `cubic-bezier(0.5, 0, 0.9, 0.4)` |
+| Faisceau | **0 → 260 ms** | L4 1 → 0, **part le premier** | `cubic-bezier(0.5, 0, 0.9, 0.4)` |
 | Halo / texture | **0 → 340 ms** | L5 et L6 → 0 | `cubic-bezier(0.5, 0, 0.9, 0.4)` |
 | Lueur du tressage | **60 → 420 ms** | L2 0,92 → 0 | `cubic-bezier(0.45, 0, 0.7, 0.3)` |
 | Rougeoiement | **90 → 560 ms** | filament `#FFFDF6` → `#FFB768` → `#E0631E` → `#7A2408`, opacité 0,42 → 0,07 | `cubic-bezier(0.37, 0, 0.63, 1)` |
@@ -534,7 +534,7 @@ Toutes les valeurs ci-dessous sont dérivées d'un unique point source déclaré
 | Ombre portée des cartes (niveau 1) | `-5px 9px 20px -8px hsl(28 42% 34% / 0.16)` |
 | Ombre portée des cartes (niveau 2, survol) | `-9px 16px 34px -10px hsl(28 42% 34% / 0.22)` |
 | Ombre portée des boutons | `-2px 4px 10px -3px hsl(28 42% 34% / 0.18)` |
-| Température des ombres | **teinte 28°, saturation 42 %** — les ombres ne sont jamais grises |
+| Température des ombres | **teinte 28°, saturation 42 %**, les ombres ne sont jamais grises |
 
 **Direction des ombres.** La source est en haut à droite : tout décalage d'ombre va **vers le bas-gauche**, `offset-x` négatif. Cette règle est absolue sur les six sections. Une seule ombre décalée vers la droite détruit la cohérence de l'éclairage.
 
@@ -560,7 +560,7 @@ Loi : `f(n) = 0,615^(n−1)`, décroissance **exponentielle**. La lampe étant `
 | Vignette | `radial-gradient(150% 128% at 50% 38%, transparent 30%, #0A0C0E 100%)`, opacité **0,50** |
 | Ombre portée des cartes (niveau 1) | `0 2px 8px hsl(210 22% 4% / 0.55)` |
 | Ombre portée des cartes (niveau 2) | `0 6px 18px hsl(210 22% 4% / 0.65)` |
-| Température des ombres | **teinte 210°, saturation 22 %** — froides, neutres, sans direction |
+| Température des ombres | **teinte 210°, saturation 22 %**, froides, neutres, sans direction |
 | Portée des ombres | **réduite de 60 %** : sans source ponctuelle, l'ombre est courte et diffuse |
 
 **Le basculement de direction des ombres** (diagonale bas-gauche → verticale pure) fait partie de la transition du §5. Il s'anime sur 400 ms avec la palette.
@@ -578,7 +578,7 @@ La nappe et la vignette vivent sur `body::before` / `body::after`, déclarés en
 
 ## 7. Les deux palettes
 
-### 7.1 Palette claire — ampoule allumée
+### 7.1 Palette claire : ampoule allumée
 
 | Rôle | Jeton | Hex | HSL |
 |---|---|---|---|
@@ -600,11 +600,11 @@ La nappe et la vignette vivent sur `body::before` / `body::after`, déclarés en
 | Accent `#456040` sur fond `#F6F1E8` | **6,22 : 1** | ✅ |
 | Accent `#456040` sur surface `#FCF8F1` | **6,61 : 1** | ✅ |
 | Fond `#F6F1E8` sur accent `#456040` (bouton plein) | **6,22 : 1** | ✅ |
-| Bordure `#DCD1BF` sur fond `#F6F1E8` | 1,34 : 1 | décorative — doubler par un décalage de surface |
+| Bordure `#DCD1BF` sur fond `#F6F1E8` | 1,34 : 1 | décorative, doubler par un décalage de surface |
 
-⚠️ **La bordure à 1,34 : 1 ne satisfait pas 1.4.11.** Pour toute bordure **porteuse de sens** (champ de formulaire, état de focus, séparation active), utiliser **`#948263`** — **3,31 : 1 sur le fond** et **3,52 : 1 sur la surface**. La bordure décorative `#DCD1BF` reste admise pour les séparations non signifiantes.
+⚠️ **La bordure à 1,34 : 1 ne satisfait pas 1.4.11.** Pour toute bordure **porteuse de sens** (champ de formulaire, état de focus, séparation active), utiliser **`#948263`** : **3,31 : 1 sur le fond** et **3,52 : 1 sur la surface**. La bordure décorative `#DCD1BF` reste admise pour les séparations non signifiantes.
 
-### 7.2 Palette sombre — ampoule éteinte
+### 7.2 Palette sombre : ampoule éteinte
 
 Conserve l'identité existante du projet (`frontend/lib/design/tokens.ts`), avec un seul ajustement.
 
@@ -632,7 +632,7 @@ Conserve l'identité existante du projet (`frontend/lib/design/tokens.ts`), avec
 
 **Ajustement recommandé :** le jeton actuel `--texte-secondaire: #8b8f8a` donne **5,15 : 1 sur la surface** `#1A1D21`. C'est conforme AA, mais sans marge. Le porter à **`#9AA096` (6,32 : 1)** offre une réserve confortable face aux couches de blend du §6, qui peuvent rogner 0,3 à 0,5 point de ratio.
 
-⚠️ Même remarque que §7.1 : `#3B4149` ne donne que **1,78 : 1** et `#565D66` que **2,75 : 1** — tous deux insuffisants. Pour tout contour porteur de sens, utiliser **`#707780`** : **4,04 : 1 sur le fond** et **3,74 : 1 sur la surface**.
+⚠️ Même remarque que §7.1 : `#3B4149` ne donne que **1,78 : 1** et `#565D66` que **2,75 : 1**, tous deux insuffisants. Pour tout contour porteur de sens, utiliser **`#707780`** : **4,04 : 1 sur le fond** et **3,74 : 1 sur la surface**.
 
 ### 7.3 Incidence des couches de blend sur les contrastes
 
@@ -644,7 +644,7 @@ Les couches `soft-light` / `screen` du §6 modifient la luminance réelle du fon
 
 ## 8. Accessibilité et coût
 
-### 8.1 Coût de rendu — le compte honnête
+### 8.1 Coût de rendu : le compte honnête
 
 | Poste | Coût | Verdict |
 |---|---|---|
@@ -667,14 +667,14 @@ Les couches `soft-light` / `screen` du §6 modifient la luminance réelle du fon
 
 ### 8.2 `prefers-reduced-motion: reduce`
 
-Le **changement de thème reste instantané et complet** — on ne prive personne de la fonction.
+Le **changement de thème reste instantané et complet** : on ne prive personne de la fonction.
 
 | Désactivé | Conservé |
 |---|---|
 | La séquence de 900 / 1100 ms du §5 | l'état final des 6 couches |
 | Le dépassement de 1,08 sur L1 (§5.1) | le halo, le faisceau, la moucheture, **statiques** |
 | Les rampes chromatiques du filament | la couleur de régime |
-| Le décalage de 130 ms faisceau/filament | — |
+| Le décalage de 130 ms faisceau/filament | sans objet |
 | Tout mouvement du fil | le fil (courbe statique) |
 
 **Remplacement :** un unique fondu d'opacité de **120 ms**, `linear`, sur toutes les couches simultanément, y compris la palette de page.
@@ -707,9 +707,9 @@ L'élément interactif est un `<button>` **réel**, jamais un `div`.
 | `role` | `switch` |
 | `aria-checked` | `true` en thème clair (allumée), `false` en thème sombre |
 | `aria-label` | `« Éclairage de la page »` |
-| Libellé d'état (`<span class="sr-only">`) | `« Allumé — thème clair »` / `« Éteint — thème sombre »` |
+| Libellé d'état (`<span class="sr-only">`) | `« Allumé, thème clair »` / `« Éteint, thème sombre »` |
 | `aria-live` sur ce span | `polite` |
-| Ordre de tabulation | **premier élément focusable du document**, avant le lien d'évitement — c'est le seul contrôle global de la page |
+| Ordre de tabulation | **premier élément focusable du document**, avant le lien d'évitement : c'est le seul contrôle global de la page |
 | Touches | `Entrée` et `Espace` (natif `<button>`) |
 | Zone cliquable | **44 × 44 px minimum** (WCAG 2.5.8), centrée sur le dôme, jamais sur le fil |
 
@@ -752,21 +752,21 @@ Contraste de l'anneau : `#456040` sur `#F6F1E8` = **6,22 : 1** ; `#7E9B76` sur `
 
 ### 9.3 Ce qui est préservé
 
-- **La grille de 8 px** : toutes les cotes de positionnement (`right`, marges, zone de clic) en sont des multiples. Les cotes internes du dôme ne le sont pas — c'est de la géométrie, pas de la mise en page, et c'est légitime.
+- **La grille de 8 px** : toutes les cotes de positionnement (`right`, marges, zone de clic) en sont des multiples. Les cotes internes du dôme ne le sont pas : c'est de la géométrie, pas de la mise en page, et c'est légitime.
 - **Le plafond de 66 caractères** : intact, l'objet est en `position: fixed` hors flux.
 - **Les six sections en zigzag** : intactes, elles reçoivent seulement une variable `--intensite`.
 - **La palette d'accent `#7E9B76`** : conservée en sombre, déclinée en `#456040` pour le clair.
-- **Le registre « calme, leader, professionnel »** : la lumière est **chaude mais basse** — l'opacité maximale d'une couche de fond est 0,30. Rien ne brille. C'est un éclairage d'ambiance, pas un effet néon.
+- **Le registre « calme, leader, professionnel »** : la lumière est **chaude mais basse** : l'opacité maximale d'une couche de fond est 0,30. Rien ne brille. C'est un éclairage d'ambiance, pas un effet néon.
 
 ### 9.4 Alternative dégradée, si l'abandon est jugé trop coûteux
 
-Conserver l'objet et son tressage (§1, §2, §4) — qui sont du trait pur, compatibles avec la charte d'origine — et **ne garder de §3 que L1 et L2** (filament + lueur du tressage), sans faisceau, sans halo de fond, sans moucheture. Coût : ~0,8 ms/frame, un seul dégradé, un seul flou de 3 px. On perd le zonage et les marbrures de la référence, on garde l'objet et le commutateur.
+Conserver l'objet et son tressage (§1, §2, §4), qui sont du trait pur, compatibles avec la charte d'origine, et **ne garder de §3 que L1 et L2** (filament + lueur du tressage), sans faisceau, sans halo de fond, sans moucheture. Coût : ~0,8 ms/frame, un seul dégradé, un seul flou de 3 px. On perd le zonage et les marbrures de la référence, on garde l'objet et le commutateur.
 
 C'est la version à retenir si la contrainte « pas de dégradés » est structurante pour la marque.
 
 ---
 
-## Annexe — Récapitulatif des grandeurs clefs
+## Annexe : Récapitulatif des grandeurs clefs
 
 | Grandeur | Valeur |
 |---|---|

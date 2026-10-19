@@ -42,7 +42,7 @@ export class CvGeneratorController {
   }
 
   /**
-   * Word, publiquement telechargeable — mais seulement si la case
+   * Word, publiquement telechargeable, mais seulement si la case
    * « CV telechargeable » est cochee dans les reglages du site.
    *
    * Le refus est un 404 et non un 403 : quand la section est desactivee, la

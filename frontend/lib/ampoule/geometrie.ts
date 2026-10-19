@@ -3,8 +3,8 @@
  *
  * Le point cardinal de la specification : l'assombrissement des bords du dome
  * ne doit JAMAIS etre simule par un degrade. Il emerge du fait que les
- * meridiens se resserrent en projection — leur pas local suit une loi en
- * cosinus — et donc que la densite de brins opaques augmente vers le bord.
+ * meridiens se resserrent en projection (leur pas local suit une loi en
+ * cosinus) et donc que la densite de brins opaques augmente vers le bord.
  * Peindre la lueur SOUS la maille et la maille par-dessus suffit : le rapport
  * de transmission 0,484 au centre contre 0,145 au bord se produit tout seul.
  */
@@ -23,14 +23,14 @@ export const PAS_ANGULAIRE_DEG = 5;
 
 /**
  * Identifiant du `<symbol>` qui rasterise la maille filtree (annexe §2.3,
- * `feTurbulence` + `feDisplacementMap`) une seule fois — `maille.tsx`
+ * `feTurbulence` + `feDisplacementMap`) une seule fois : `maille.tsx`
  * l'utilise pour son propre rendu (le dome visible), `couches-lumiere.tsx`
  * le reutilise pour L6 la moucheture (tache 9) via un second `<use>` :
  * jamais un second filtre, qui doublerait le cout du premier rendu (annexe
  * §8.1). Vit ici plutot que dans `maille.tsx` : ce dernier porte
  * `"use client"`, et un export de fonction « plate » d'un module client ne
  * peut pas etre appele depuis un composant serveur (`Ampoule` et
- * `couches-lumiere.tsx` n'en portent pas) — seuls des composants JSX
+ * `couches-lumiere.tsx` n'en portent pas) : seuls des composants JSX
  * peuvent traverser cette frontiere. `geometrie.ts` n'a pas cette
  * contrainte.
  */
@@ -110,7 +110,7 @@ const INCLINAISON = 12 / 84;
 /**
  * Nervures de structure : aux tiers du parcours, plus celle qui precede
  * l'ourlet. Exprimees en fraction d'arc et non en indices figes, sinon elles
- * se deplacent des que le cardinal change — a 11 cercles, l'ancien indice 6
+ * se deplacent des que le cardinal change : a 11 cercles, l'ancien indice 6
  * tombait au milieu du dome au lieu du premier tiers.
  */
 function estRenforce(indice: number, nombre: number): boolean {
@@ -192,12 +192,12 @@ function abscisses(nombre: number): number[] {
 }
 
 /**
- * Les 18 cercles, a pas d'arc CONSTANT — et non a pas vertical constant.
+ * Les 18 cercles, a pas d'arc CONSTANT, et non a pas vertical constant.
  *
  * Chaque cercle est place en inversant la longueur d'arc par dichotomie :
  * le cercle i est a l'abscisse curviligne i * ARC_TOTAL / 18. C'est ce qui
  * produit le resserrement au sommet, ou les premiers cercles se chevauchent
- * en projection — la specification impose de les remplacer par une calotte
+ * en projection : la specification impose de les remplacer par une calotte
  * pleine au rendu.
  */
 export function cercles(nombre = 18): Cercle[] {

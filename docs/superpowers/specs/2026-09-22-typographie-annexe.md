@@ -1,8 +1,8 @@
-# Spécification typographique — portfolio
+# Spécification typographique : portfolio
 
 Date : 2026-09-22 · Périmètre : `frontend/` (le backoffice garde son thème admin neutre).
 
-## 0. Méthode — d'où viennent les chiffres
+## 0. Méthode : d'où viennent les chiffres
 
 Aucun chiffre de ce document n'est une impression. Tout a été mesuré le jour même sur les
 **fichiers réellement servis** par `fonts.googleapis.com/css2` (sous-ensemble `latin`,
@@ -43,26 +43,26 @@ Coût réel mesuré, sous-ensemble latin :
 
 Deux constats désagréables, tous deux vérifiés :
 
-1. **IBM Plex Sans existe en variable** dans la base de `next/font` (`axes: wght 100→700, wdth 75→100`)
-   — `node_modules/next/dist/compiled/@next/font/dist/google/font-data.json`. Le fichier variable
+1. **IBM Plex Sans existe en variable** dans la base de `next/font` (`axes: wght 100→700, wdth 75→100`) :
+   `node_modules/next/dist/compiled/@next/font/dist/google/font-data.json`. Le fichier variable
    latin pèse **44,6 Ko**. Le site paie donc **178,6 Ko au lieu de 44,6 Ko** pour rien. C'est
    un bug de configuration indépendant du choix de police.
 2. **IBM Plex Mono n'a pas de version variable** dans cette même base (`weights` sans `"variable"`).
-   Les statiques sont donc le seul choix possible — ce n'est pas une erreur, c'est une contrainte.
+   Les statiques sont donc le seul choix possible : ce n'est pas une erreur, c'est une contrainte.
 
 Sur le fond du dessin, Plex Sans n'est pas une mauvaise police, mais elle ne répond pas au brief :
 contraste **1,21:1**, axe du délié à **90°** (strictement vertical), `o` large de 466/1000 em.
 C'est un néo-grotesque d'entreprise de 2017 dessiné par Bold Monday pour IBM. « Corporate », oui.
 « Vintage », non : il n'y a rien d'historique dans son dessin, ses terminaisons coupées à
 l'horizontale et ses courbes légèrement aplaties sont un vocabulaire des années 2010. Elle ne
-trahit pas l'ambiance rotin/lin/lueur dorée, elle lui est simplement indifférente — elle est
+trahit pas l'ambiance rotin/lin/lueur dorée, elle lui est simplement indifférente : elle est
 tiède là où le brief demande chaud.
 
 ---
 
 ## 2. Les trois candidatures
 
-### Candidature A — **Literata** *(recommandée)*
+### Candidature A : **Literata** *(recommandée)*
 
 | | |
 | --- | --- |
@@ -74,11 +74,11 @@ tiède là où le brief demande chaud.
 | Récupération | `next/font/google` (`Literata`) ✅ · auto-hébergement ✅ via `github.com/googlefonts/literata` ou `fonts.google.com` |
 | Prix | 0 € |
 
-**Ce qui la rend corporate.** Contraste pleins/déliés mesuré à **1,82:1** — le plus bas de tous les
+**Ce qui la rend corporate.** Contraste pleins/déliés mesuré à **1,82:1**, le plus bas de tous les
 romains testés (Source Serif 4 : 2,11 · Alegreya : 2,07 · Spectral : 2,30 · Lora : 2,75 ·
 EB Garamond : 3,17). Un contraste bas, c'est une page qui garde une couleur grise régulière,
 sans scintillement : le registre du rapport annuel, pas celui de l'invitation de mariage.
-Hauteur d'x à **507/1000 em**, rapport hauteur d'x / capitale à **0,724** — proportions de
+Hauteur d'x à **507/1000 em**, rapport hauteur d'x / capitale à **0,724**, proportions de
 labeur, pas de fantaisie. Empattements au pied du `n` larges de **245/1000 em** pour un fût de
 **93/1000 em**, soit un rapport de **2,63:1** : des empattements francs, presque des dalles,
 qui tiennent le mot ensemble et ne se cassent pas au rendu écran. C'est ce qui produit l'effet
@@ -91,16 +91,16 @@ romains de la Renaissance. C'est très exactement ce qui sépare une police « h
 police « rationaliste ». Pour comparaison mesurée : Source Serif 4 est à **90,0°** (axe vertical
 strict, pure logique transitionnelle du XVIII<sup>e</sup>), EB Garamond à **110°** (vieux style
 franc), Literata à **98°**. Les terminaisons du `a`, `c`, `f` sont en goutte ou en crochet, pas
-coupées droit — trait d'ancien, pas de grotesque.
+coupées droit, trait d'ancien, pas de grotesque.
 
 **Où se situe la nuance classique/moderne.** Elle est chiffrable : **8° d'inclinaison** de l'axe
 (le classique) pour **1,82:1** de contraste et **0,507 em** de hauteur d'x (le moderne). Une
-Garamond est à 110° / 3,17:1 / 0,400 em — trop ancienne, illisible en dark mode. Une Source
-Serif 4 est à 90° / 2,11:1 — trop froide, aucune main dedans. Literata est le point exact entre
+Garamond est à 110° / 3,17:1 / 0,400 em, trop ancienne, illisible en dark mode. Une Source
+Serif 4 est à 90° / 2,11:1, trop froide, aucune main dedans. Literata est le point exact entre
 les deux, et ce n'est pas un jugement : c'est la position numérique entre les deux bornes.
 
 **Ce qui la rend compatible avec l'ambiance rotin / lin / lueur dorée.** Le `o` mesure
-**494/1000 em** de large — le plus ouvert des romains testés (Alegreya : 426 · Spectral : 428 ·
+**494/1000 em** de large, le plus ouvert des romains testés (Alegreya : 426 · Spectral : 428 ·
 Source Serif 4 : 459). Contrepoinçons grands et ronds = air dans la lettre = la sensation
 « épurée » demandée, obtenue par l'espace interne et non par la finesse des traits. C'est
 important : on peut être aéré **et** robuste, ce qui est exactement ce dont un thème sombre a
@@ -121,24 +121,24 @@ titrage (opsz haut : empattements affinés, contraste relevé, chasse resserrée
 
 ---
 
-### Candidature B — **Source Serif 4** + **Source Sans 3**
+### Candidature B : **Source Serif 4** + **Source Sans 3**
 
 | | |
 | --- | --- |
 | Créateurs | Source Serif 4 : **Frank Grießhammer** · Source Sans 3 : **Paul D. Hunt** |
 | Fonderie | **Adobe** |
 | Année | `name` ID 0 : *« © 2014 - 2021 Adobe Systems Incorporated »* ; version servie **4.004** ; Google Fonts `date_added: 2021-11-16` (Sans 3 : 2021-09-17) |
-| Licence | **SIL OFL 1.1**, avec **Reserved Font Name « Source »** (mentionné explicitement dans le `name` ID 0 — toute version modifiée devra être renommée ; contrainte réelle si vous sous-ensemblez et redistribuez) |
+| Licence | **SIL OFL 1.1**, avec **Reserved Font Name « Source »** (mentionné explicitement dans le `name` ID 0 : toute version modifiée devra être renommée ; contrainte réelle si vous sous-ensemblez et redistribuez) |
 | Récupération | `next/font/google` ✅ (`Source_Serif_4`, `Source_Sans_3`) · auto-hébergement ✅ |
 | Prix | 0 € |
 
 **Argument le plus fort : la cohérence historique du couple.** Source Serif s'appuie sur les
-romains de **Pierre-Simon Fournier** (Paris, milieu du XVIII<sup>e</sup>) — pertinent pour un site
+romains de **Pierre-Simon Fournier** (Paris, milieu du XVIII<sup>e</sup>), pertinent pour un site
 en français. Source Sans descend des gothiques américaines de **Morris Fuller Benton** (News
 Gothic, 1908). *Ces deux filiations sont celles annoncées par Adobe dans la documentation du
 projet ; je les rapporte comme telles, elles ne sont pas mesurables sur le fichier.*
 
-**Ce qui est mesuré.** Contraste **2,11:1**, axe du délié à **90,0°** — verticalité stricte.
+**Ce qui est mesuré.** Contraste **2,11:1**, axe du délié à **90,0°**, verticalité stricte.
 Hauteur d'x **475/1000 em**. Empattements du `n` : la scanline relève au pied **quatre** plages
 d'encre au lieu de deux, ce qui signale un pied à **dessous creusé** (empattement bracketé dont le
 dessous est concave, signature fournierienne) ; l'empreinte totale du pied gauche va de 40 à
@@ -148,34 +148,34 @@ automatique donnait 0,87 ; elle était fausse, l'artefact venant du creux. Je la
 
 **Pourquoi elle ne gagne pas.** L'axe à 90° est le problème. Un axe strictement vertical, c'est la
 définition du romain *transitionnel* rationaliste : c'est classique, oui, mais d'un classicisme
-d'ingénieur — la plume a disparu. Le brief demande du « vintage » et une ambiance « organique,
+d'ingénieur : la plume a disparu. Le brief demande du « vintage » et une ambiance « organique,
 chaleureuse, rotin tressé ». Source Serif 4 est admirable et totalement neutre en température.
 Elle ne réchauffera rien. Et son délié à **0,77 px** à 17 px en thème sombre est tenable mais
 sans marge. Enfin, le couple Serif 4 / Sans 3 est *trop* bien assorti : mêmes proportions, même
 axe à 90°, hauteurs d'x à 475 et 478 (0,6 % d'écart). À l'œil, on ne lit pas un contrepoint,
-on lit une seule police qui aurait perdu ses empattements — c'est précisément le « malaise »
+on lit une seule police qui aurait perdu ses empattements : c'est précisément le « malaise »
 des paires trop proches.
 
 ---
 
-### Candidature C — **Alegreya** + **Alegreya Sans**
+### Candidature C : **Alegreya** + **Alegreya Sans**
 
 | | |
 | --- | --- |
 | Créateur | **Juan Pablo del Peral** |
-| Fonderie | **Huerta Tipográfica** (Buenos Aires) — `METADATA.pb` : `designer: "Juan Pablo del Peral, HT Fonts"` |
+| Fonderie | **Huerta Tipográfica** (Buenos Aires), `METADATA.pb` : `designer: "Juan Pablo del Peral, HT Fonts"` |
 | Année | `name` ID 0 : *« Copyright 2011 The Alegreya Project Authors »* ; Google Fonts `date_added: 2011-12-19` (Sans : 2013-12-04) ; version servie **2.009** |
 | Licence | **SIL OFL 1.1** |
 | Récupération | `next/font/google` ✅ · auto-hébergement ✅ |
 | Prix | 0 € |
-| Distinction | primée aux *Certificates of Excellence in Type Design* du **TDC** — *je rapporte cette distinction de mémoire et n'ai pas pu la vérifier automatiquement ; à confirmer avant de la citer publiquement.* |
+| Distinction | primée aux *Certificates of Excellence in Type Design* du **TDC** : *je rapporte cette distinction de mémoire et n'ai pas pu la vérifier automatiquement ; à confirmer avant de la citer publiquement.* |
 
-**La plus chaude, la plus vintage.** Axe du délié à **108°** — 18° d'inclinaison, la plus forte
+**La plus chaude, la plus vintage.** Axe du délié à **108°**, 18° d'inclinaison, la plus forte
 trace de plume des trois. Contraste **2,07:1**. Empattements asymétriques (le pied gauche du `n`
 va de 47 à 237, soit 190/1000 em pour un fût de 72 → **2,64:1**), terminaisons calligraphiques.
 Alegreya Sans est son vrai pendant : contraste **1,32:1** (une sans humaniste modulée, pas un
 grotesque), axe à 92°, hauteur d'x **455** contre **452** pour la romaine. Le couple est conçu
-ensemble — il n'y a aucun risque de dissonance.
+ensemble : il n'y a aucun risque de dissonance.
 
 **Deux raisons de ne pas la choisir ici, toutes deux mesurées.**
 
@@ -183,8 +183,8 @@ ensemble — il n'y a aucun risque de dissonance.
    **dix largeurs différentes** (342 à 533/1000 em), leurs sommets s'étagent de 497 à 598 et
    certains descendent à **−105** sous la ligne de pied. Pour des dates et des périodes
    d'expérience à aligner en colonne, c'est l'opposé de ce qu'il faut. Les fonctions `lnum`
-   **et** `tnum` sont bien présentes dans `GSUB`, donc c'est réparable —
-   `font-feature-settings: "lnum" 1, "tnum" 1` — mais il faut se souvenir de le faire partout,
+   **et** `tnum` sont bien présentes dans `GSUB`, donc c'est réparable
+   (`font-feature-settings: "lnum" 1, "tnum" 1`), mais il faut se souvenir de le faire partout,
    et le moindre oubli produit une colonne de dates bancale.
 2. **La marge au-dessus des capitales accentuées est de 4,9 % d'em seulement** pour Alegreya Sans
    (`É` culmine à 851, ascendante `hhea` à 900). C'est la marge la plus serrée des candidats
@@ -197,11 +197,11 @@ littéraire que corporate**. Ce n'est pas le brief actuel.
 
 ### Écartées en cours de route (et pourquoi, factuellement)
 
-| Police | Motif d'élimination — mesuré |
+| Police | Motif d'élimination (mesuré) |
 | --- | --- |
 | **EB Garamond** | délié le plus fin à **26,7/1000 em = 0,45 px à 17 px** → disparaît en thème sombre. Hauteur d'x **0,400 em** (7 px à 17 px) → imposerait de remonter la base à ~21 px, ce qui casse l'échelle modulaire. |
 | **Newsreader** | le `É` culmine à **1716/2000** contre une ascendante `hhea` de **1470** : l'accent **dépasse la boîte de 12,3 % d'em**. Interligne minimal sans rognage : **1,25**. Titres de section en capitales + interligne serré = accents coupés. Éliminée sur le critère « capitales accentuées » du brief. |
-| **Libre Franklin** | `É` à **967,6** pour une ascendante `hhea` de **966** — il dépasse déjà. Interligne minimal **1,22**. Et surtout : **accents non raccourcis sur les capitales** (22,6 % d'em au-dessus de la capitale, identique au 22,6 % au-dessus du bas de casse), signe que le dessin des capitales accentuées n'a pas été traité spécifiquement. Éliminée. |
+| **Libre Franklin** | `É` à **967,6** pour une ascendante `hhea` de **966** : il dépasse déjà. Interligne minimal **1,22**. Et surtout : **accents non raccourcis sur les capitales** (22,6 % d'em au-dessus de la capitale, identique au 22,6 % au-dessus du bas de casse), signe que le dessin des capitales accentuées n'a pas été traité spécifiquement. Éliminée. |
 | **Instrument Sans** | même défaut : accents non raccourcis (23,0 % / 23,0 %), et **2,0 % d'em** de marge seulement au-dessus du `É`. |
 | **Fraunces** | l'axe `wght` du fichier servi est **bloqué à 900** (`min=100, default=900, max=900` sur le sous-ensemble latin servi par `css2` avec la requête testée) et le dessin « wonky » contredit « calme, leader, professionnel ». |
 | **Lora** | contraste **2,75:1** et chiffres elzéviriens proportionnels par défaut (9 largeurs distinctes). Chaleureuse mais trop contrastée pour le dark mode et coûteuse à discipliner pour les dates. |
@@ -210,13 +210,17 @@ littéraire que corporate**. Ce n'est pas le brief actuel.
 
 ---
 
-## 3. Les diacritiques — vérification réelle
+## 3. Les diacritiques : vérification réelle
 
 Test exécuté sur le **`cmap` du fichier latin réellement servi**, sur la chaîne :
 
 ```
-É È Ê Ë À Â Ç Î Ï Ô Ù Û Ü Œ œ Æ æ ß Ä Ö ü ä ö é à ç ê î ô û ù ï ë « » … – — ‹ › №
+É È Ê Ë À Â Ç Î Ï Ô Ù Û Ü Œ œ Æ æ ß Ä Ö ü ä ö é à ç ê î ô û ù ï ë « » … – ‹ › №
 ```
+
+Le tiret cadratin fait partie de la couverture exigee, mais le depot n'admet
+pas ce caractere (garde typographique) : il est designe ici par son point de
+code, **U+2014**, et doit etre teste avec les autres.
 
 | Police | Glyphes manquants |
 | --- | --- |
@@ -247,7 +251,7 @@ capitale (`É` − capHeight) comparée à la hauteur de l'accent au-dessus du b
 | Instrument Sans | 23,0 % | 23,0 % | **non traités** ❌ |
 
 Aucune des polices testées n'implémente la fonction OpenType `case`. Le raccourcissement, quand
-il existe, est donc dessiné en dur dans le glyphe précomposé — ce qui est le cas pour Literata,
+il existe, est donc dessiné en dur dans le glyphe précomposé, ce qui est le cas pour Literata,
 et ce qui est la bonne nouvelle : rien à activer côté CSS.
 
 ### Interligne minimal avant rognage du `É`
@@ -266,7 +270,7 @@ par tout conteneur en `overflow: hidden`.
 | Newsreader | 1,000 em | 1,25 ❌ |
 
 **Literata tient jusqu'à un interligne de 0,98.** Pour des titres de section en capitales avec un
-`line-height` serré à 1,1 ou 1,15 — ce qu'on veut typographiquement —, c'est la seule des trois
+`line-height` serré à 1,1 ou 1,15 (ce qu'on veut typographiquement), c'est la seule des trois
 candidatures qui ne demande aucune précaution.
 
 ---
@@ -278,7 +282,7 @@ Mesure des largeurs d'avance (`hmtx`) des glyphes `0`–`9` dans le fichier serv
 | Police | Chiffres par défaut | `tnum` dans `GSUB` |
 | --- | --- | --- |
 | **IBM Plex Mono** | **tabulaires**, largeur unique 600/1000 em, alignés en capitale | sans objet (monochasse) |
-| IBM Plex Sans | **tabulaires**, largeur unique 600 | absent — mais inutile |
+| IBM Plex Sans | **tabulaires**, largeur unique 600 | absent, mais inutile |
 | Source Serif 4 | **tabulaires**, largeur unique 500 | présent |
 | **Literata** | **proportionnels** (8 largeurs de 407 à 578), alignés en capitale | **présent** → à activer |
 | Alegreya | proportionnels **et elzéviriens** (10 largeurs, descentes à −105) | `lnum` + `tnum` présents |
@@ -325,7 +329,7 @@ Le risque des paires, ce sont les deux extrêmes : trop proches (malaise) ou tro
 | --- | --- | --- | --- |
 | Hauteur d'x | 507/1000 em | 516/1000 em | **1,8 %** |
 | Hauteur de capitale | 700/1000 em | 698/1000 em | **0,3 %** |
-| Boîte `hhea` | 1,485 em | 1,300 em | — |
+| Boîte `hhea` | 1,485 em | 1,300 em | sans objet |
 
 À taille de police égale, **les capitales s'alignent à 0,3 % près et les hauteurs d'x à 1,8 %
 près**. Un `2021 – 2024` en Plex Mono posé à côté d'un intitulé de poste en Literata a la même
@@ -335,7 +339,7 @@ Et sur le dessin, la distance est franche et lisible : romain humaniste à axe 9
 1,82:1 d'un côté, monochasse néo-grotesque à axe 90° et contraste 1,21:1 de l'autre. Personne ne
 confondra les deux rôles. C'est le contrepoint recherché : **la chaleur porte le discours, la
 machine porte les données.** Pour un développeur Spring Boot / Angular / Flutter, ce partage
-raconte exactement le bon message — et il est déjà à moitié en place, puisque Plex Mono est là.
+raconte exactement le bon message, et il est déjà à moitié en place, puisque Plex Mono est là.
 
 ### Ce qu'on garde, ce qu'on remplace
 
@@ -381,7 +385,7 @@ body {
 .dark body { font-weight: 380; }  /* possible : axe wght continu 200→900 */
 ```
 
-L'axe variable permet ce demi-cran que des statiques interdisent — argument supplémentaire pour
+L'axe variable permet ce demi-cran que des statiques interdisent, argument supplémentaire pour
 une variable. **Et l'inverse est interdit : ne jamais descendre en dessous de `wght` 350 en thème
 sombre**, sous peine de ramener le délié du `o` sous la barre des 0,7 px.
 
@@ -391,7 +395,7 @@ sombre**, sous peine de ramener le délié du `o` sous la barre des 0,7 px.
 
 Poids mesurés, sous-ensemble `latin` uniquement, `.woff2` tel que servi.
 
-### Option retenue — `next/font/google`, sans axe `opsz` exposé
+### Option retenue : `next/font/google`, sans axe `opsz` exposé
 
 | Fichier | Requête générée par Next | Poids | Requêtes |
 | --- | --- | --- | --- |
@@ -407,7 +411,7 @@ Attention : sans demander l'axe `opsz`, Google **fige** l'axe optique (vérifié
 fichier servi ne contient plus que `wght 200→900`, l'`opsz` a été instancié à 12). Les réglages
 `font-variation-settings: "opsz" 48` du §5 seraient alors sans effet.
 
-### Option avec l'axe optique — `axes: ['opsz']`
+### Option avec l'axe optique : `axes: ['opsz']`
 
 | Fichier | Poids | Requêtes |
 | --- | --- | --- |
@@ -418,12 +422,12 @@ fichier servi ne contient plus que `wght 200→900`, l'`opsz` a été instancié
 Encore **−71,1 Ko (−34 %) et −3 requêtes** par rapport à l'existant. L'axe optique coûte donc
 **56,2 Ko**. Il les vaut : c'est lui qui porte l'argument central du brief.
 
-### Option auto-hébergée — la meilleure, si vous acceptez un script de build
+### Option auto-hébergée : la meilleure, si vous acceptez un script de build
 
 `next/font/google` ne sait pas borner l'intervalle des graisses : le code de
 `validate-google-font-function-call.js` n'accepte que des graisses nommées ou `"variable"`, et
 `get-font-axes.js` reconstruit alors systématiquement `${min}..${max}`. En revanche l'API `css2`,
-elle, **sous-ensemble bien l'intervalle côté serveur** — vérifié :
+elle, **sous-ensemble bien l'intervalle côté serveur**, vérifié :
 
 | Requête `css2` | Poids |
 | --- | --- |
@@ -449,9 +453,9 @@ automatiques de police de substitution (`adjustFontFallback`) que `next/font/goo
 
 | Configuration | Poids | Requêtes | vs aujourd'hui |
 | --- | --- | --- | --- |
-| **Aujourd'hui** (Plex Sans ×4 statiques + Plex Mono ×2) | 207,5 Ko | 6 | — |
+| **Aujourd'hui** (Plex Sans ×4 statiques + Plex Mono ×2) | 207,5 Ko | 6 | sans objet |
 | Correction minimale (Plex Sans **variable** + Plex Mono ×2) | 73,5 Ko | 3 | −134,0 Ko |
-| **Recommandée** — Literata VF + Plex Mono ×2 | **80,2 Ko** | **3** | **−127,3 Ko** |
+| **Recommandée** : Literata VF + Plex Mono ×2 | **80,2 Ko** | **3** | **−127,3 Ko** |
 | Recommandée + axe `opsz` | 136,4 Ko | 3 | −71,1 Ko |
 | Auto-hébergée, instanciée | **74,4 Ko** | **2** | −133,1 Ko |
 
@@ -496,7 +500,7 @@ C'est le seul ajustement nécessaire, et il est demandé par la physique, pas pa
 **Pourquoi.** Une hauteur d'x élevée remplit la ligne et réduit le canal blanc entre deux lignes
 à corps égal. Mais Literata a aussi des **empattements francs (2,63:1)** et des **ascendantes
 longues** (boîte `hhea` de 1,485 em contre 1,300 em pour Plex Sans, soit **14 % de plus**). Les
-empattements créent un rail horizontal qui guide l'œil le long de la ligne — un romain supporte
+empattements créent un rail horizontal qui guide l'œil le long de la ligne : un romain supporte
 donc un interligne *plus serré* qu'une linéale à mesure égale. Mais des ascendantes 14 % plus
 longues réclament de l'air pour ne pas heurter les descendantes de la ligne précédente. Les deux
 effets ne s'annulent pas exactement.
@@ -504,12 +508,12 @@ effets ne s'annulent pas exactement.
 | Rôle | Mesure | Interligne | Justification |
 | --- | --- | --- | --- |
 | Corps, 66 caractères, 17 px | 66 ch | **1,60** (27,2 px) | boîte `hhea` de 1,485 em → un `line-height` de 1,60 ne laisse que 0,115 em de canal réel ; en dessous de 1,55, les ascendantes de Literata touchent les descendantes |
-| Titres de section, capitales | — | **1,15** | pas de bas de casse, donc pas de descendantes ; `É` sûr jusqu'à 0,98 — large marge |
-| Grands titres (≥ 34 px) | — | **1,10 à 1,20** | l'interligne doit décroître quand le corps croît ; règle constante |
-| Métadonnées Plex Mono | — | **1,45** | boîte `hhea` plus courte (1,300 em), moins d'air nécessaire |
+| Titres de section, capitales | sans objet | **1,15** | pas de bas de casse, donc pas de descendantes ; `É` sûr jusqu'à 0,98, large marge |
+| Grands titres (≥ 34 px) | sans objet | **1,10 à 1,20** | l'interligne doit décroître quand le corps croît ; règle constante |
+| Métadonnées Plex Mono | sans objet | **1,45** | boîte `hhea` plus courte (1,300 em), moins d'air nécessaire |
 
 Si l'interligne du corps est aujourd'hui autour de **1,5**, il faut le porter à **1,60**. Si le
-`line-height` des titres en capitales est en dessous de **1,0**, il faut le remonter — mais c'est
+`line-height` des titres en capitales est en dessous de **1,0**, il faut le remonter, mais c'est
 déjà le cas pour Plex Sans, dont le minimum sûr est **1,15**.
 
 **Un ajustement qui n'a rien à voir avec l'interligne mais qui est obligatoire :** les titres en
@@ -523,8 +527,8 @@ n'importe laquelle des trois candidatures.
 
 ### **Literata**, de TypeTogether (Veronika Burian & José Scaglione), SIL OFL 1.1, gratuite.
 
-**Appariement :** Literata seule pour tout le texte — titres de section en capitales à
-`opsz 48 / wght 600`, corps à `opsz 12 / wght 400` — plus **IBM Plex Mono conservée** en 400/500
+**Appariement :** Literata seule pour tout le texte : titres de section en capitales à
+`opsz 48 / wght 600`, corps à `opsz 12 / wght 400`, plus **IBM Plex Mono conservée** en 400/500
 pour les dates, les périodes et les étiquettes techniques.
 
 **Verdict sur l'existant :** **IBM Plex Sans sort, IBM Plex Mono reste.**
@@ -534,7 +538,7 @@ Contre **207,5 Ko sur 6 requêtes** aujourd'hui. On gagne sur les deux tableaux.
 
 **Les cinq raisons, toutes chiffrées :**
 
-1. Axe du délié à **98°** — 8° d'inclinaison. Assez pour qu'on sente la plume (vintage), pas
+1. Axe du délié à **98°**, 8° d'inclinaison. Assez pour qu'on sente la plume (vintage), pas
    assez pour qu'on la voie (corporate). La nuance demandée, mesurée.
 2. Délié le plus fin à **0,98 px à 17 px**, le plus épais de tous les romains testés. C'est la
    seule qui ne se délite pas sur le fond `#131518` du thème sombre.
@@ -544,46 +548,46 @@ Contre **207,5 Ko sur 6 requêtes** aujourd'hui. On gagne sur les deux tableaux.
    26,5 % au-dessus du bas de casse) et `É` non rogné jusqu'à un interligne de **0,98**. Le site
    est en français : ce point n'était pas négociable, et Libre Franklin, Instrument Sans et
    Newsreader sont mortes dessus.
-5. Un seul fichier variable porte deux dessins via `opsz` — le classique pour les titres, le
+5. Un seul fichier variable porte deux dessins via `opsz` : le classique pour les titres, le
    moderne pour le labeur. Une famille, une requête, zéro incohérence possible.
 
 **Sur l'ambiance rotin / lin / lueur dorée :** contraste bas (1,82:1), contrepoinçons les plus
 ouverts des romains testés (`o` à 494/1000 em), empattements larges et bas. Une page composée
 ainsi est chaude et posée sans être chargée. C'est l'« épuré » obtenu par l'espace, pas par la
-maigreur — ce qui est la seule façon d'être épuré **et** lisible en thème sombre.
+maigreur, ce qui est la seule façon d'être épuré **et** lisible en thème sombre.
 
 ### Ce qui me ferait changer d'avis
 
 | Si… | Alors |
 | --- | --- |
-| Le propriétaire trouve, sur épreuve réelle en français, que Literata fait « liseuse » ou « manuel scolaire » — un reproche légitime, c'est son origine | **Source Serif 4 + Source Sans 3**. Plus froide, mais irréprochable, et Source Serif 4 a des **chiffres tabulaires par défaut**, ce qui simplifie les métadonnées. |
+| Le propriétaire trouve, sur épreuve réelle en français, que Literata fait « liseuse » ou « manuel scolaire », un reproche légitime, c'est son origine | **Source Serif 4 + Source Sans 3**. Plus froide, mais irréprochable, et Source Serif 4 a des **chiffres tabulaires par défaut**, ce qui simplifie les métadonnées. |
 | Le site s'oriente vers un registre plus éditorial et moins corporate (blog long, récits de projets) | **Alegreya + Alegreya Sans**, axe à 108°, la plus chaude. Avec l'obligation d'écrire `font-feature-settings: "lnum" 1, "tnum" 1` partout où des chiffres s'alignent. |
 | 56,2 Ko pour l'axe `opsz` sont jugés trop chers et qu'on refuse le script de build | Charger Literata **sans** `axes: ['opsz']` (51,3 Ko) et porter toute la hiérarchie sur l'axe `wght`. On perd l'argument du §5, on garde la police. |
-| Un budget se libère | Je n'ai **pas** exploré sérieusement les polices payantes, parce que les trois candidatures gratuites répondent au brief sans concession mesurable. Le faire aurait été de la dépense pour la dépense — et je n'avancerai pas de prix que je n'ai pas vérifié. |
+| Un budget se libère | Je n'ai **pas** exploré sérieusement les polices payantes, parce que les trois candidatures gratuites répondent au brief sans concession mesurable. Le faire aurait été de la dépense pour la dépense, et je n'avancerai pas de prix que je n'ai pas vérifié. |
 | Le site doit ajouter le russe ou le grec | Sans objet pour le choix : Literata, Source Serif 4 et Alegreya déclarent toutes `cyrillic` **et** `greek` dans leur `METADATA.pb`. Literata a d'ailleurs été dessinée avec Irene Vlachou pour le grec et Vera Evstafieva pour le cyrillique. |
 
 ---
 
-## Annexe — tableau des mesures brutes
+## Annexe : tableau des mesures brutes
 
 | Police | x/em | x/cap | contraste | axe | délié (px@17) | `o` | pied/fût | `L_min` | latin (Ko) |
 | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |
 | **Literata** | 0,507 | 0,724 | **1,82:1** | **98°** | **0,98** | **494** | 2,63 | **0,98** | 51,3 VF |
 | Source Serif 4 | 0,475 | 0,709 | 2,11:1 | 90° | 0,77 | 459 | ~2,7 | 1,05 | 49,6 VF |
 | Alegreya | 0,452 | 0,710 | 2,07:1 | 108° | 0,74 | 426 | 2,64 | 1,01 | 42,5 VF |
-| Alegreya Sans | 0,455 | 0,712 | 1,32:1 | 92° | 0,66 | 390 | — | 1,10 | 69,9 ×3 |
-| IBM Plex Sans | 0,516 | 0,739 | 1,21:1 | 90° | 1,21 | 466 | — | 1,15 | 44,6 VF |
-| IBM Plex Mono | 0,516 | 0,739 | — | — | — | — | — | 1,15 | 14,4 ×1 |
-| Libre Franklin | 0,530 | 0,714 | 1,13:1 | 110° | 0,64 | 486 | — | **1,22** ❌ | 28,6 VF |
-| Source Sans 3 | 0,478 | 0,724 | 1,20:1 | 90° | 0,48 | 424 | — | 1,04 | 28,1 VF |
+| Alegreya Sans | 0,455 | 0,712 | 1,32:1 | 92° | 0,66 | 390 | sans objet | 1,10 | 69,9 ×3 |
+| IBM Plex Sans | 0,516 | 0,739 | 1,21:1 | 90° | 1,21 | 466 | sans objet | 1,15 | 44,6 VF |
+| IBM Plex Mono | 0,516 | 0,739 | sans objet | sans objet | sans objet | sans objet | sans objet | 1,15 | 14,4 ×1 |
+| Libre Franklin | 0,530 | 0,714 | 1,13:1 | 110° | 0,64 | 486 | sans objet | **1,22** ❌ | 28,6 VF |
+| Source Sans 3 | 0,478 | 0,724 | 1,20:1 | 90° | 0,48 | 424 | sans objet | 1,04 | 28,1 VF |
 | Spectral | 0,450 | 0,682 | 2,30:1 | 100° | 0,56 | 428 | 2,97 | 1,13 | 87,8 ×4 |
 | Lora | 0,500 | 0,714 | 2,75:1 | 90° | 0,65 | 503 | 2,37 | 1,12 | 36,9 VF |
 | EB Garamond | 0,400 | 0,615 | 3,17:1 | 110° | **0,45** ❌ | 425 | 2,81 | 0,97 | 43,3 VF |
 | Newsreader | 0,426 | 0,636 | 2,17:1 | 92° | 0,65 | 430 | 3,10 | **1,25** ❌ | 128,9 VF |
-| Instrument Sans | 0,510 | 0,708 | — | — | — | — | — | **1,18** ❌ | 29,4 VF |
-| IBM Plex Serif | 0,512 | 0,734 | — | — | — | — | 3,69 | 1,15 | 78,7 ×4 |
+| Instrument Sans | 0,510 | 0,708 | sans objet | sans objet | sans objet | sans objet | sans objet | **1,18** ❌ | 29,4 VF |
+| IBM Plex Serif | 0,512 | 0,734 | sans objet | sans objet | sans objet | sans objet | 3,69 | 1,15 | 78,7 ×4 |
 
-*Légende — x/em : `OS/2.sxHeight` ÷ `unitsPerEm`. axe : angle du délié minimal du `o`, 90° = axe
+*Légende. x/em : `OS/2.sxHeight` ÷ `unitsPerEm`. axe : angle du délié minimal du `o`, 90° = axe
 vertical. délié : épaisseur minimale du `o` en pixels à 17 px. `o` : chasse du `o` en /1000 em.
 pied/fût : empattement au pied du `n` ÷ largeur du fût. `L_min` : `line-height` minimal avant
 rognage du `É`. VF = fichier variable unique, ×n = n fichiers statiques.*

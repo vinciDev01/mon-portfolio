@@ -175,7 +175,7 @@ describe("basculerAnimation, aucune bascule de jeu en pleine transition (ronde d
  * seul objet propriete -> valeur. Necessaire depuis la ronde de
  * correction 2 : un offset partage par plusieurs proprietes aux courbes
  * DIFFERENTES est scinde en plusieurs objets de keyframe consecutifs (la
- * WAAPI n'autorise qu'un seul `easing` par objet) — un offset donne n'est
+ * WAAPI n'autorise qu'un seul `easing` par objet) : un offset donne n'est
  * donc plus forcement porte par une seule entree du tableau.
  */
 function valeursAOffset(jeu: Keyframe[], offset: number): Record<string, unknown> {
@@ -406,7 +406,7 @@ describe("basculerAnimation, reentrance", () => {
   it("un double clic sur le meme etat, a la meme position limite, ne joue qu une seule fois", () => {
     // Jeu d'extinction charge, position en fin de course (1100) : etat de
     // repos "eteinte" (borne opposee au debut du jeu d'extinction, qui
-    // represente "allumee" — voir etatDeRepos dans animation.ts). Deux
+    // represente "allumee", voir etatDeRepos dans animation.ts). Deux
     // demandes d'extinction identiques de suite ne doivent produire aucun
     // appel a play(), ni au premier ni au second essai.
     const anim = animationFactice(DUREE_EXTINCTION, 1, DUREE_EXTINCTION);

@@ -17,7 +17,7 @@ import { DUREE_ALLUMAGE } from "@/lib/ampoule/animation";
  *   1. le serveur rend le HTML SANS `document` (il ignore l'heure locale et
  *      le stockage du visiteur) ;
  *   2. le script en ligne (`script-initial.ts`) pose la classe reelle sur
- *      <html> avant le premier trace — de nuit, « clair » ;
+ *      <html> avant le premier trace (de nuit, « clair ») ;
  *   3. React hydrate ce HTML dans ce DOM-la.
  *
  * Le premier rendu client doit rendre EXACTEMENT ce que le serveur a rendu

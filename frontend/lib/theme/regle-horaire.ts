@@ -14,7 +14,7 @@ const HEURE_NUIT = 19;
  *
  * La regle suit la logique de l'objet, pas celle de l'ecran : on allume une
  * lampe le soir, pas au reveil. Le site est donc SOMBRE en journee et CLAIR
- * la nuit — l'inverse de la convention courante. C'est voulu ; ne pas
+ * la nuit, l'inverse de la convention courante. C'est voulu ; ne pas
  * « corriger » ce sens sans revenir a la specification.
  *
  * Toute entree aberrante retombe sur le sombre, qui est l'identite

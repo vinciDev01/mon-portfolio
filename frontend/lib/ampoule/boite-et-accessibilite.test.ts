@@ -149,7 +149,7 @@ describe("interrupteur (annexe §8.5)", () => {
     // `suppressHydrationWarning` a ete retire : le premier rendu client
     // rend desormais le meme etat que le serveur (etat initial deterministe
     // du fournisseur de theme, voir lib/theme/hydratation.test.ts), donc il
-    // n'y a plus de divergence a declarer legitime — et en masquer une
+    // n'y a plus de divergence a declarer legitime. En masquer une
     // laisserait le libelle du serveur en place, donc faux.
     expect(src).toMatch(/<span className="sr-only" aria-live="polite">/);
     expect(src).toContain("Allumé, thème clair");

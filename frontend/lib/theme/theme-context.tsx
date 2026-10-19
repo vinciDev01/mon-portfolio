@@ -51,7 +51,7 @@ export function ThemeProvider({
 }) {
   // Etat initial DETERMINISTE : exactement ce que le serveur a rendu.
   // L'ancien initialiseur lisait la classe posee sur <html> par le script
-  // initial, en supposant que le serveur avait rendu la meme — premisse
+  // initial, en supposant que le serveur avait rendu la meme. Premisse
   // fausse : le serveur rend toujours `themeDeterministe` (« sombre » en
   // strategie auto), alors que le script pose « clair » des que le
   // stockage ou l'heure le demandent. Le premier rendu client divergeait
@@ -111,7 +111,7 @@ export function ThemeProvider({
       animationRef.current = null;
     };
     // Volontairement [] : on ne veut creer/positionner cet objet qu'une
-    // fois au montage, jamais a chaque changement de `theme` — c'est
+    // fois au montage, jamais a chaque changement de `theme` : c'est
     // l'effet sur `theme` ci-dessous qui fait ensuite evoluer sa position.
     // Depuis que la position se lit sur `themeDuDocument()` et non sur
     // `theme`, ce corps ne depend plus d'aucune valeur de rendu : [] est

@@ -27,8 +27,8 @@ export function Interrupteur() {
           du fournisseur de theme), et c'est l'effet d'alignement qui
           remplace ensuite ce texte par l'etat reel, par un vrai rendu.
           Le laisser masquerait une divergence future au lieu de la
-          reparer — et une divergence masquee laisse le libelle du serveur
-          en place, donc un lecteur d'ecran qui annonce l'inverse. */}
+          reparer. Une divergence masquee laisse le libelle du serveur en
+          place, donc un lecteur d'ecran qui annonce l'inverse. */}
       <span className="sr-only" aria-live="polite">
         {allumee ? "Allumé, thème clair" : "Éteint, thème sombre"}
       </span>

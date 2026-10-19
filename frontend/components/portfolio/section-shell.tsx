@@ -1,14 +1,10 @@
 "use client";
 
-import { useBeamTarget, useBiaisLampe } from "@/lib/lamp/lamp-context";
-import { useReveal } from "@/lib/use-reveal";
 import { useTranslation } from "@/lib/i18n/i18n-context";
 
 /**
  * Coquille commune a toutes les sections : place le bloc dans la grille selon
- * la parite de `index`, declare sa zone eclairable, et rend le titre en
- * `var(--texte)`. Le contraste hors faisceau vient du scrim de la lampe
- * (assombrissement de la page hors zone eclairee), pas d'un double titre.
+ * la parite de `index` et rend le titre en `var(--texte)`.
  *
  * `page.tsx` est un composant serveur : il ne peut pas appeler `useTranslation`
  * (hook client). C'est donc `SectionShell`, deja "use client", qui recoit une
@@ -18,46 +14,34 @@ import { useTranslation } from "@/lib/i18n/i18n-context";
  * `app/layout.tsx` et transmise via la prop `defaultLocale`), donc le premier
  * rendu client produit exactement le meme texte que le rendu serveur. Un
  * `useEffect` ne bascule vers la langue sauvegardee en `localStorage` qu'apres
- * le montage — une mise a jour d'etat normale, pas un ecart d'hydratation.
+ * le montage : une mise a jour d'etat normale, pas un ecart d'hydratation.
  * C'est le meme mecanisme que celui deja utilise par `Header` et les autres
  * composants clients traduits du site.
  */
 export function SectionShell({
-  id,
   cleTitre,
   index,
   children,
 }: {
-  id: string;
   cleTitre: string;
   index: number;
   children: React.ReactNode;
 }) {
-  const cible = useBeamTarget();
-  const reveal = useReveal();
-  const { survolTitre, relacher } = useBiaisLampe();
   const { t } = useTranslation();
   const titre = t(cleTitre);
   const aGauche = index % 2 === 1;
 
   return (
     <section
-      id={id}
-      className="grid grid-cols-12 pl-8 lg:pl-16"
+      tabIndex={-1}
+      className="grid grid-cols-12 gouttiere-parcours"
       style={{
         paddingTop: "var(--espace-section)",
         paddingBottom: 0,
-        // Style inline, et non une classe : les utilitaires Tailwind vivent
-        // dans @layer utilities et l'emporteraient sur une regle en couche.
-        paddingRight: "var(--marge-droite-lampe)",
       }}
     >
       <div
-        ref={(el) => {
-          cible(el);
-          reveal(el);
-        }}
-        className="col-span-12 mesure zigzag"
+        className="col-span-12 bloc-parcours"
         // L'amplitude vient du reglage `zigzagAmplitude`, normalise entre 0 et 1
         // par app/layout.tsx. A 0 les deux cotes se confondent : colonne unique.
         data-cote={aGauche ? "gauche" : "droite"}
@@ -66,11 +50,7 @@ export function SectionShell({
           {String(index).padStart(2, "0")}
         </p>
 
-        <h2
-          style={{ marginBottom: "var(--espace-4)" }}
-          onMouseEnter={(e) => survolTitre(e.currentTarget)}
-          onMouseLeave={relacher}
-        >
+        <h2 style={{ marginBottom: "var(--espace-4)" }}>
           {titre}
         </h2>
 

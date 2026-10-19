@@ -14,7 +14,7 @@ model SiteSettings {
   bgColor     String   @default("#131518") @map("bg_color")
   textColor   String   @default("#E4E5E3") @map("text_color")
   fontSize    Int      @default(17) @map("font_size")
-  fontFamily  String   @default("IBM Plex Sans") @map("font_family")
+  fontFamily  String   @default("Literata") @map("font_family")
   toastMessage String? @map("toast_message")
   toastDelayMs Int     @default(180000) @map("toast_delay_ms")
   cvFilePath  String?  @map("cv_file_path")
@@ -40,12 +40,14 @@ model SiteSettings {
   seoImagePath        String? @map("seo_image_path")
   notificationEmail   String? @map("notification_email")
 
-  // Lampe d'atelier
-  lampEnabled       Boolean @default(true)  @map("lamp_enabled")
-  lampOnByDefault   Boolean @default(false) @map("lamp_on_by_default")
-  lampBeamAngle     Int     @default(28)    @map("lamp_beam_angle")
-  lampIntensity     Int     @default(70)    @map("lamp_intensity")
-  lampDimLevel      Int     @default(40)    @map("lamp_dim_level")
+  /**
+   * Theme applique a un visiteur sans preference enregistree.
+   * « auto » applique la regle horaire : sombre de 07h00 a 18h59,
+   * clair de 19h00 a 06h59. Cette regle inverse volontairement la
+   * convention courante : elle suit la logique de l'objet, on allume
+   * une lampe le soir.
+   */
+  themeParDefaut    String  @default("auto") @map("theme_par_defaut")
 
   // Visibilité manquante : StatsSection était rendue sans condition
   showStats         Boolean @default(true)  @map("show_stats")
@@ -217,6 +219,7 @@ model Project {
   photo1Path     String?   @map("photo1_path")
   photo2Path     String?   @map("photo2_path")
   demoUrl        String?   @map("demo_url")
+  projectUrl     String?   @map("project_url")
   targetAudience String?   @map("target_audience")
   startDate      DateTime? @map("start_date")
   endDate        DateTime? @map("end_date")

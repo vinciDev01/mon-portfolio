@@ -26,6 +26,11 @@ function PresentationCard({ item, index }: { item: PresentationDto; index: numbe
   );
 }
 
+/**
+ * Les cartes de presentation seules. Le portrait n'est plus d'ici : il appartient
+ * a la section d'ouverture, qui est inconditionnelle, alors que ces cartes
+ * dependent de `showPresentations`.
+ */
 export function PresentationSection({ presentations }: PresentationSectionProps) {
   if (!presentations.length) return null;
 

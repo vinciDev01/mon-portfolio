@@ -12,7 +12,7 @@ const dictionaries: Record<Locale, Record<string, string>> = { fr, en, de };
 interface I18nContextValue {
   locale: Locale;
   setLocale: (locale: Locale) => void;
-  t: (key: string) => string;
+  t: (key: string, params?: Record<string, string>) => string;
 }
 
 const I18nContext = createContext<I18nContextValue | null>(null);
@@ -37,7 +37,7 @@ export function I18nProvider({
   }, []);
 
   // Garde `lang` sur `<html>` synchronise avec la locale courante (assainie,
-  // jamais la valeur brute) a chaque changement — WCAG 3.1.2. S'execute apres
+  // jamais la valeur brute) a chaque changement, WCAG 3.1.2. S'execute apres
   // le montage, donc le rendu serveur et le premier rendu client restent
   // identiques : aucune divergence d'hydratation.
   useEffect(() => {
@@ -50,8 +50,10 @@ export function I18nProvider({
   }, []);
 
   const t = useCallback(
-    (key: string): string => {
-      return dictionaries[locale][key] ?? dictionaries.fr[key] ?? key;
+    (key: string, params?: Record<string, string>): string => {
+      const brut = dictionaries[locale][key] ?? dictionaries.fr[key] ?? key;
+      if (!params) return brut;
+      return brut.replace(/\{(\w+)\}/g, (_, nom: string) => params[nom] ?? `{${nom}}`);
     },
     [locale],
   );

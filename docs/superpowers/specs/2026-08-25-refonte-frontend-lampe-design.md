@@ -1,4 +1,4 @@
-# Refonte du frontend — système visuel sobre et lampe d'atelier
+# Refonte du frontend : système visuel sobre et lampe d'atelier
 
 Date : 2026-08-25
 Statut : design validé, en attente du plan d'implémentation
@@ -34,26 +34,26 @@ Noir doux légèrement bleuté, jamais `#000`. Cinq valeurs.
 
 | Rôle | Valeur | Contraste sur fond |
 |---|---|---|
-| Fond | `#131518` | — |
+| Fond | `#131518` | sans objet |
 | Surface | `#1A1D21` | 1.08:1 |
 | Bordure | `#22262B` | 1.20:1 |
-| Texte secondaire | `#8B8F8A` | 5.57:1 — AA |
-| Texte principal | `#E4E5E3` | 14.47:1 — AAA |
-| Accent vert lichen | `#7E9B76` | 5.95:1 — AA |
+| Texte secondaire | `#8B8F8A` | 5.57:1 (AA) |
+| Texte principal | `#E4E5E3` | 14.47:1 (AAA) |
+| Accent vert lichen | `#7E9B76` | 5.95:1 (AA) |
 
 Surface et bordure sont volontairement à très faible écart : ce sont des
 séparations décoratives, pas des éléments porteurs d'information. Toute frontière
 qui identifie un composant interactif utilise l'accent (5.95:1), afin de
 satisfaire le critère WCAG 1.4.11 sur les composants non textuels.
 
-Le vert est `#6DB33F` (Spring Boot) ramené à 16 % de saturation. En HSL, `#7E9B76` vaut exactement `hsl(107 16% 54%)` — ce sont les valeurs par défaut de `accentHue` et `accentSaturation`, et les deux définitions doivent rester d'accord. Il ne sert qu'à
+Le vert est `#6DB33F` (Spring Boot) ramené à 16 % de saturation. En HSL, `#7E9B76` vaut exactement `hsl(107 16% 54%)` : ce sont les valeurs par défaut de `accentHue` et `accentSaturation`, et les deux définitions doivent rester d'accord. Il ne sert qu'à
 trois usages : l'anneau de la lampe, l'état actif de la navigation, le
 soulignement des liens au survol. Aucun aplat coloré, aucun dégradé.
 
 ### Typographie
 
-- **IBM Plex Sans** — texte courant.
-- **IBM Plex Mono** — métadonnées : dates, versions, étiquettes techniques.
+- **IBM Plex Sans** : texte courant.
+- **IBM Plex Mono**, métadonnées : dates, versions, étiquettes techniques.
 
 Remplace Figtree. Support complet des diacritiques français, chiffres tabulaires.
 Les deux restent surchargeables depuis le backoffice.
@@ -120,7 +120,7 @@ Le composant `Confetti` est retiré du parcours.
 ### Zigzag
 
 Grille de 12 colonnes. Le bras de la lampe occupe un rail fixe de 48 px au bord
-droit, hors grille — le contenu ne passe jamais dessous.
+droit, hors grille : le contenu ne passe jamais dessous.
 
 - Sections impaires : colonnes 1 à 7.
 - Sections paires : colonnes 6 à 12.
@@ -133,10 +133,10 @@ droit, hors grille — le contenu ne passe jamais dessous.
 
 Deux mouvements sur tout le site, pas un de plus.
 
-1. **Entrée d'un bloc** — opacité 0 → 1, translation 8 px vers le haut, 400 ms,
+1. **Entrée d'un bloc** : opacité 0 → 1, translation 8 px vers le haut, 400 ms,
    `cubic-bezier(0.22, 1, 0.36, 1)`. Décalage de 60 ms entre frères, plafonné à
    trois éléments.
-2. **La lampe** — voir section 3.
+2. **La lampe** : voir section 3.
 
 Exclus : parallaxe, agrandissement au survol, rotation, compteurs incrémentaux,
 apparition lettre par lettre.
@@ -182,9 +182,9 @@ Deux groupes SVG, parce que seuls deux éléments bougent.
 
 Groupe fixe :
 - Bras tubulaire vertical, `#16191D`, noir mat, sort du cadre.
-- Bouton moleté à 14 crans, `#1E2126` — le pivot visuel.
+- Bouton moleté à 14 crans, `#1E2126` : le pivot visuel.
 - Levier de verrouillage.
-- Anneau guide-câble, `#7E9B76` — le seul point coloré de l'objet.
+- Anneau guide-câble, `#7E9B76` : le seul point coloré de l'objet.
 
 Groupe tête, pivotant autour du bouton moleté :
 - Corps, `#16191D`, noir mat.
@@ -217,7 +217,7 @@ SVG, ce qui produit les fuites strictes sans calcul d'intersection.
 
 ### Physique
 
-Aucune interpolation linéaire — un `lerp` donne un mouvement mou, sans poids.
+Aucune interpolation linéaire : un `lerp` donne un mouvement mou, sans poids.
 Chaque angle est intégré par un ressort amorti :
 
 ```
@@ -238,7 +238,7 @@ aucun rebond visible.
 Les deux dernières valeurs font **changer le trapèze de forme** pendant la
 transition au lieu de le translater. C'est ce qui donne l'illusion du poids.
 
-L'anneau vert glisse de ±3 px dans son guide, indexé sur la vitesse angulaire —
+L'anneau vert glisse de ±3 px dans son guide, indexé sur la vitesse angulaire :
 il ne bouge que pendant le mouvement, jamais à l'arrêt.
 
 ### Micro-interactions
@@ -271,9 +271,9 @@ d'écran ne lit que la première copie.
 
 ```
 LampProvider          état : allumée, section active, géométrie   (contexte)
-├── WorkLamp          le SVG de l'objet, groupe tête animé
-├── BeamLayer         le scrim masqué + le glow
-└── LampSwitch        l'interrupteur, aria-pressed, focus visible
+|-- WorkLamp          le SVG de l'objet, groupe tête animé
+|-- BeamLayer         le scrim masqué + le glow
+`-- LampSwitch        l'interrupteur, aria-pressed, focus visible
 
 useBeamTarget(ref)    chaque section déclare sa zone éclairable
 useLampEngine()       la boucle rAF, les trois ressorts
@@ -325,7 +325,7 @@ Les défauts existants basculent : `bgColor` → `#131518`, `textColor` →
 `#E4E5E3`, `fontFamily` → `IBM Plex Sans`, `fontSize` → `17`.
 
 La migration met à jour la ligne existante par un `UPDATE`, elle ne se contente
-pas de changer les `@default` — sinon l'enregistrement en base garde ses valeurs
+pas de changer les `@default`, sinon l'enregistrement en base garde ses valeurs
 kaki.
 
 ### Sémantique des réglages
@@ -367,7 +367,7 @@ Le plafond de saturation à 30 est la garantie structurelle de la contrainte
 ### Propagation
 
 Les champs traversent `PortfolioData` via `packages/shared-types`, puis sont
-injectés en variables CSS au rendu serveur, **sur l'element `<html>`** — donc
+injectés en variables CSS au rendu serveur, **sur l'element `<html>`**, donc
 aucun flash au chargement.
 
 L'element porteur n'est pas un detail : `globals.css` declare ses regles
@@ -386,7 +386,7 @@ calculé en direct.
 
 ## 5. Accessibilité
 
-**Plancher de contraste.** À 40 % d'assombrissement — la valeur par défaut — le
+**Plancher de contraste.** À 40 % d'assombrissement (la valeur par défaut), le
 texte hors faisceau reste à 5.74:1, au-dessus du seuil AA de 4.5:1 : il devient
 `#8E8F8F` sur un fond `#111315`. Au-delà de 40 %, le backoffice affiche le ratio
 calculé et prévient quand il passe sous le seuil. Le curseur monte jusqu'à 65 %,
@@ -411,13 +411,13 @@ Le frontend n'a aucun harnais aujourd'hui. Ajout de **Vitest**, ciblé sur ce qu
 a une valeur de vérification réelle plutôt que sur les composants de
 présentation.
 
-1. **Géométrie du faisceau** — fonction pure `(P, T, φ, viewport) → 4 sommets`.
+1. **Géométrie du faisceau** : fonction pure `(P, T, φ, viewport) → 4 sommets`.
    Cas limites : cible au-dessus du pivot, en dessous, alignée, hors écran.
-2. **Intégration du ressort** — fonction pure
+2. **Intégration du ressort** : fonction pure
    `(x, v, cible, ω₀, ζ, dt) → (x', v')`. Vérifie la convergence, un dépassement
    inférieur à 2 % avec ζ = 0.9, et l'immobilisation sous le seuil d'arrêt. Sans
    ce test, une boucle rAF qui ne s'arrête jamais passe inaperçue.
-3. **Contraste de la palette** — recalcule les ratios depuis les jetons de
+3. **Contraste de la palette** : recalcule les ratios depuis les jetons de
    couleur et échoue si l'un passe sous son seuil.
 4. **Bornes des DTO** côté backend, avec le harnais Jest existant.
 

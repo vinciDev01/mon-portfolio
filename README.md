@@ -10,7 +10,7 @@ Monorepo de trois applications et d'un paquet de types partagés.
 | `backend/` | API REST NestJS + Prisma + PostgreSQL | 4000 |
 | `frontend/` | Le site public, Next.js | 3000 |
 | `backoffice/` | L'administration, Next.js | 3001 |
-| `packages/shared-types/` | Types TypeScript partagés, sans étape de build | — |
+| `packages/shared-types/` | Types TypeScript partagés, sans étape de build | sans objet |
 
 ---
 
@@ -73,7 +73,7 @@ correspond à une valeur de gabarit connue.
 
 Ce refus est délibéré. Un repli silencieux signifierait qu'un déploiement ayant
 oublié la variable tourne avec un secret que n'importe quel lecteur du dépôt
-peut retrouver — et fabriquer un jeton administrateur devient alors trivial. Un
+peut retrouver, et fabriquer un jeton administrateur devient alors trivial. Un
 serveur qui ne démarre pas se remarque en quelques secondes ; un serveur ouvert
 ne se remarque jamais.
 
@@ -96,7 +96,7 @@ N'y mettez jamais de secret.
 Trois terminaux, depuis la racine :
 
 ```bash
-npm run dev:backend      # http://localhost:4000  — Swagger sur /api/docs
+npm run dev:backend      # http://localhost:4000  (Swagger sur /api/docs)
 npm run dev:frontend     # http://localhost:3000
 npm run dev:backoffice   # http://localhost:3001
 ```
@@ -178,7 +178,7 @@ Ne mettez jamais dans un fichier suivi par git :
 
 Un secret commité reste dans l'historique même après correction : un commit
 ultérieur n'efface pas les précédents. Si cela arrive, il faut réécrire
-l'historique **avant** de pousser — et, une fois poussé, considérer le secret
+l'historique **avant** de pousser ; une fois poussé, considérer le secret
 comme compromis et le remplacer.
 
 ---

@@ -32,10 +32,34 @@ export class CreateProjectDto {
   @IsString()
   photo2Path?: string;
 
-  @ApiPropertyOptional()
+  /**
+   * L'adresse de la DEMONSTRATION : une video, un bac a sable, une maquette
+   * jouable. Ce n'est pas le projet lui-meme, voir `projectUrl`.
+   */
+  @ApiPropertyOptional({
+    description: "Adresse de la demonstration (video, bac a sable, maquette)",
+  })
   @IsOptional()
   @IsUrl()
   demoUrl?: string;
+
+  /**
+   * L'adresse du projet LUI-MEME, son site en ligne. Distincte de `demoUrl`,
+   * qui ne montre qu'une demonstration.
+   *
+   * Obligatoirement declaree ICI : le `ValidationPipe` global de `main.ts`
+   * tourne avec `whitelist: true`, donc toute propriete du corps de requete
+   * qui n'est pas decoree dans ce DTO est SILENCIEUSEMENT retiree avant
+   * d'atteindre le service. Le service, lui, n'enumere rien : il etale
+   * `...projectData` vers Prisma. Un champ absent d'ici ne serait donc jamais
+   * enregistre, sans la moindre erreur.
+   */
+  @ApiPropertyOptional({
+    description: "Adresse du projet en ligne (le projet lui-meme)",
+  })
+  @IsOptional()
+  @IsUrl()
+  projectUrl?: string;
 
   @ApiPropertyOptional()
   @IsOptional()

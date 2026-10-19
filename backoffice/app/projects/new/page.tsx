@@ -29,6 +29,9 @@ export default function NewProjectPage() {
   const [photo1Path, setPhoto1Path] = useState<string | null>(null);
   const [photo2Path, setPhoto2Path] = useState<string | null>(null);
   const [demoUrl, setDemoUrl] = useState("");
+  // Deux adresses DISTINCTES : `demoUrl` est celle de la demonstration
+  // (video, bac a sable), `projectUrl` celle du projet lui-meme en ligne.
+  const [projectUrl, setProjectUrl] = useState("");
   const [targetAudience, setTargetAudience] = useState("");
   const [startDate, setStartDate] = useState("");
   const [endDate, setEndDate] = useState("");
@@ -82,6 +85,7 @@ export default function NewProjectPage() {
         photo1Path,
         photo2Path,
         demoUrl: demoUrl || null,
+        projectUrl: projectUrl || null,
         targetAudience: targetAudience || null,
         startDate: startDate || null,
         endDate: endDate || null,
@@ -136,13 +140,33 @@ export default function NewProjectPage() {
           />
         </div>
         <div>
-          <label className="block text-sm font-medium mb-1">Lien démo</label>
+          <label className="block text-sm font-medium mb-1">
+            Adresse du projet en ligne
+          </label>
+          <input
+            type="url"
+            value={projectUrl}
+            onChange={(e) => setProjectUrl(e.target.value)}
+            className="w-full px-3 py-2 border border-border rounded-md text-sm"
+          />
+          <p className="text-xs text-muted-foreground mt-1">
+            Le projet lui-même, son site en ligne (ex : https://mon-projet.fr)
+          </p>
+        </div>
+        <div>
+          <label className="block text-sm font-medium mb-1">
+            Adresse de la démonstration
+          </label>
           <input
             type="url"
             value={demoUrl}
             onChange={(e) => setDemoUrl(e.target.value)}
             className="w-full px-3 py-2 border border-border rounded-md text-sm"
           />
+          <p className="text-xs text-muted-foreground mt-1">
+            Une vidéo, un bac à sable, une maquette jouable : pas le projet
+            lui-même
+          </p>
         </div>
         <div>
           <label className="block text-sm font-medium mb-1">

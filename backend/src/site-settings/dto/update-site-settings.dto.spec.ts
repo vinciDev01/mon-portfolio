@@ -14,12 +14,6 @@ describe('UpdateSiteSettingsDto', () => {
       // champ, valeur, doitPasser
       ['accentSaturation', 30, true],
       ['accentSaturation', 31, false],
-      ['lampDimLevel', 65, true],
-      ['lampDimLevel', 66, false],
-      ['lampBeamAngle', 8, true],
-      ['lampBeamAngle', 45, true],
-      ['lampBeamAngle', 7, false],
-      ['lampBeamAngle', 46, false],
       ['lineHeight', 1.3, true],
       ['lineHeight', 2.0, true],
       ['lineHeight', 1.29, false],
@@ -28,10 +22,6 @@ describe('UpdateSiteSettingsDto', () => {
       ['animationSpeed', 2.0, true],
       ['animationSpeed', 0.49, false],
       ['animationSpeed', 2.01, false],
-      ['lampIntensity', 0, true],
-      ['lampIntensity', 100, true],
-      ['lampIntensity', -1, false],
-      ['lampIntensity', 101, false],
       ['zigzagAmplitude', 0, true],
       ['zigzagAmplitude', 100, true],
       ['zigzagAmplitude', -1, false],
@@ -76,5 +66,21 @@ describe('cvFontFamily', () => {
 
   it('refuse une police inconnue', async () => {
     expect(await erreursSur('cvFontFamily', 'comic')).toContain('cvFontFamily');
+  });
+});
+
+describe('themeParDefaut', () => {
+  it('accepte les trois strategies prevues', async () => {
+    for (const s of ['auto', 'clair', 'sombre']) {
+      expect(await erreursSur('themeParDefaut', s)).toEqual([]);
+    }
+  });
+
+  it('refuse une strategie inconnue', async () => {
+    expect(await erreursSur('themeParDefaut', 'auto-nuit')).toContain('themeParDefaut');
+  });
+
+  it('refuse une valeur vide', async () => {
+    expect(await erreursSur('themeParDefaut', '')).toContain('themeParDefaut');
   });
 });

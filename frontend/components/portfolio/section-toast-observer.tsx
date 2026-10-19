@@ -3,42 +3,8 @@
 import { useEffect, useRef } from "react";
 import { useTranslation } from "@/lib/i18n/i18n-context";
 
-// Cles alignees sur les identifiants francais rendus par SectionShell dans
-// app/page.tsx (voir Task 14). "certifications" n'a plus d'entree : ce n'est
-// plus une section propre, mais un sous-bloc de "experience". "stats" est
-// nouveau : la section dormante n'avait jamais eu de toast avant Task 14.
-const sectionIcons: Record<string, string> = {
-  ouverture:
-    '<path d="M15 10l-4 4l6 6l4 -16l-18 7l4 2l2 6l3 -4" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round"/>',
-  competences:
-    '<path d="M13 10V3L4 14h7v7l9-11h-7z" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round"/>',
-  experience:
-    '<rect x="2" y="7" width="20" height="14" rx="2" ry="2" stroke="currentColor" stroke-width="2" fill="none"/><path d="M16 7V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v2" stroke="currentColor" stroke-width="2" fill="none"/>',
-  projets:
-    '<path d="M22 11.08V12a10 10 0 1 1-5.93-9.14" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round"/><path d="M22 4L12 14.01l-3-3" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round"/>',
-  services:
-    '<path d="M14.7 6.3a1 1 0 0 0 0 1.4l1.6 1.6a1 1 0 0 0 1.4 0l3.77-3.77a6 6 0 0 1-7.94 7.94l-6.91 6.91a2.12 2.12 0 0 1-3-3l6.91-6.91a6 6 0 0 1 7.94-7.94l-3.76 3.76z" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round"/>',
-  "a-propos":
-    '<path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2" stroke="currentColor" stroke-width="2" fill="none"/><circle cx="12" cy="7" r="4" stroke="currentColor" stroke-width="2" fill="none"/>',
-  temoignages:
-    '<path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round"/>',
-  contact:
-    '<rect width="20" height="16" x="2" y="4" rx="2" stroke="currentColor" stroke-width="2" fill="none"/><path d="m22 7-8.97 5.7a1.94 1.94 0 0 1-2.06 0L2 7" stroke="currentColor" stroke-width="2" fill="none"/>',
-  stats:
-    '<path d="M4 20V10M12 20V4M20 20v-6" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round"/>',
-};
-
-const sectionTKeys: Record<string, string> = {
-  ouverture: "section.ouverture",
-  competences: "section.skills",
-  experience: "section.experience",
-  projets: "section.projects",
-  services: "section.services",
-  "a-propos": "section.about",
-  temoignages: "section.testimonials",
-  contact: "section.contact",
-  stats: "section.stats",
-};
+import { PICTOS, SECTIONS } from "@/lib/parcours/sections";
+import { creerAnnonceur } from "@/lib/parcours/toast-section";
 
 export function SectionToastObserver() {
   const currentToastRef = useRef<HTMLDivElement | null>(null);
@@ -48,8 +14,8 @@ export function SectionToastObserver() {
 
   useEffect(() => {
     function showToast(sectionId: string) {
-      const icon = sectionIcons[sectionId];
-      const tKey = sectionTKeys[sectionId];
+      const icon = PICTOS[sectionId];
+      const tKey = SECTIONS.find((s) => s.id === sectionId)?.cleTitre;
       if (!icon || !tKey) return;
 
       if (currentToastRef.current) {
@@ -86,26 +52,38 @@ export function SectionToastObserver() {
       }, 2000);
     }
 
-    const observer = new IntersectionObserver(
-      (entries) => {
-        for (const entry of entries) {
-          if (entry.isIntersecting) {
-            const id = entry.target.id;
-            if (id && id !== lastSectionRef.current) {
-              lastSectionRef.current = id;
-              showToast(id);
-            }
-          }
-        }
-      },
-      { threshold: 0.3 },
-    );
+    // Avec la pagination, aucune section ne defile dans la fenetre : celle qui
+    // compte est celle que le conteneur marque `data-active`. On observe donc
+    // cet attribut et non l'intersection, qui verrait toutes les sections
+    // superposees comme visibles. Chaque changement est signale a l'annonceur,
+    // qui annule l'annonce en attente : seule la section ou l'on se stabilise
+    // est annoncee (rafale de molette, ou saut initial depuis un fragment).
+    const annonceur = creerAnnonceur((id) => {
+      if (id === lastSectionRef.current) return;
+      lastSectionRef.current = id;
+      showToast(id);
+    });
+    const annoncer = (el: Element) => {
+      const id = el.getAttribute("id");
+      if (id) annonceur.signaler(id);
+    };
+    const actives = () =>
+      document.querySelectorAll('.parcours-pagine > [data-active="true"]');
 
-    const sections = document.querySelectorAll("section[id]");
-    sections.forEach((section) => observer.observe(section));
+    const observer = new MutationObserver(() => actives().forEach(annoncer));
+    const zone = document.querySelector(".parcours-pagine");
+    if (zone) {
+      observer.observe(zone, {
+        attributes: true,
+        attributeFilter: ["data-active"],
+        subtree: true,
+      });
+    }
+    actives().forEach(annoncer);
 
     return () => {
       observer.disconnect();
+      annonceur.arreter();
       if (timeoutRef.current) clearTimeout(timeoutRef.current);
       if (currentToastRef.current) currentToastRef.current.remove();
     };

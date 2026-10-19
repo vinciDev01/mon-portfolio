@@ -21,7 +21,10 @@ export interface ProjectDto {
   description: string | null;
   photo1Path: string | null;
   photo2Path: string | null;
+  /** L'adresse de la DEMONSTRATION : une video, un bac a sable, une maquette. */
   demoUrl: string | null;
+  /** L'adresse du projet LUI-MEME, son site en ligne. Nullable en base. */
+  projectUrl: string | null;
   targetAudience: string | null;
   startDate: string | null;
   endDate: string | null;
@@ -37,7 +40,10 @@ export interface ProjectRawDto {
   description: string | null;
   photo1Path: string | null;
   photo2Path: string | null;
+  /** L'adresse de la DEMONSTRATION : une video, un bac a sable, une maquette. */
   demoUrl: string | null;
+  /** L'adresse du projet LUI-MEME, son site en ligne. Nullable en base. */
+  projectUrl: string | null;
   targetAudience: string | null;
   startDate: string | null;
   endDate: string | null;

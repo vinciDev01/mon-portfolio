@@ -7,7 +7,8 @@ import { useTranslation } from "@/lib/i18n/i18n-context";
  * Bandeau de reperes chiffres.
  *
  * Volontairement sans compteur anime : la contrainte du projet n'admet que
- * deux mouvements sur tout le site, l'entree d'un bloc et la lampe. Et sur des
+ * deux mouvements sur tout le site, l'entree d'un bloc et la bascule de l'ampoule
+ * suspendue (la lampe d'atelier de la refonte precedente est deposee). Et sur des
  * nombres a un ou deux chiffres, un compteur qui defile jusqu'a « 2 » dessert
  * le propos qu'il pretend servir. On informe, on ne cherche pas a impressionner.
  *

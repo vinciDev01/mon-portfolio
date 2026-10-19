@@ -90,7 +90,7 @@ export function ExperienceSection({
                     href={c.credentialUrl}
                     target="_blank"
                     rel="noopener noreferrer"
-                    aria-label={`${t("certifications.viewCert")} — ${c.name}`}
+                    aria-label={`${t("certifications.viewCert")} : ${c.name}`}
                     className="meta underline underline-offset-2"
                     style={{ color: "var(--accent)", marginTop: "var(--espace-1)", display: "inline-block" }}
                   >

@@ -21,10 +21,15 @@ export function Interrupteur() {
       onClick={basculer}
       className="ampoule-interrupteur"
     >
-      {/* Libelle d'etat, annonce au changement (annexe §8.5). Son texte
-          depend de l'etat reel du theme, que le serveur ignore : divergence
-          legitime avec le rendu serveur, donc `suppressHydrationWarning`. */}
-      <span className="sr-only" aria-live="polite" suppressHydrationWarning>
+      {/* Libelle d'etat, annonce au changement (annexe §8.5). Plus de
+          `suppressHydrationWarning` ici : le premier rendu client rend
+          desormais le meme etat que le serveur (etat initial deterministe
+          du fournisseur de theme), et c'est l'effet d'alignement qui
+          remplace ensuite ce texte par l'etat reel, par un vrai rendu.
+          Le laisser masquerait une divergence future au lieu de la
+          reparer — et une divergence masquee laisse le libelle du serveur
+          en place, donc un lecteur d'ecran qui annonce l'inverse. */}
+      <span className="sr-only" aria-live="polite">
         {allumee ? "Allumé, thème clair" : "Éteint, thème sombre"}
       </span>
     </button>

@@ -374,7 +374,8 @@ describe("le menu porte pictogramme et libelle", () => {
     expect(courante).not.toMatch(/border|background|outline/);
     expect(courante).toMatch(/color:\s*var\(--texte\)/);
     const libelle = bloc(/\.entree-parcours\[aria-current="true"\] \.entree-nom\s*\{/);
-    expect(libelle).toMatch(/text-decoration:\s*underline/);
+    // De petits traits, pas un trait continu.
+    expect(libelle).toMatch(/text-decoration:\s*underline dashed/);
     expect(valeur(libelle, "text-decoration-thickness")).toBe("1px");
   });
 

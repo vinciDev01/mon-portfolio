@@ -663,8 +663,8 @@ html {
     color: var(--texte-secondaire);
   }
 
-  /* La section courante : son texte fonce, son libelle souligne d'un trait
-     fin, l'icone non. Au palier reduit, ou le libelle est masque, le trait
+  /* La section courante : son texte fonce, son libelle souligne de petits
+     traits fins, l'icone non. Au palier reduit, ou le libelle est masque, le trait
      epaissi de l'icone reste seul a la designer. Soulignement et epaisseur
      sont des formes, pas seulement des couleurs (WCAG 1.4.1). */
   .entree-parcours[aria-current="true"] {
@@ -677,7 +677,7 @@ html {
 
   .entree-parcours[aria-current="true"] .entree-nom {
     font-weight: 600;
-    text-decoration: underline;
+    text-decoration: underline dashed;
     text-decoration-thickness: 1px;
     text-underline-offset: 4px;
   }

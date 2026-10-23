@@ -72,10 +72,20 @@ pures d'un cote, testables sans DOM, le rendu de l'autre.
 
 | Fichier | Responsabilite | Nature |
 |---|---|---|
+| `frontend/lib/parcours/liens.ts` | la regle `https:` et celle du blanc, partagees | pur, sans React |
 | `frontend/lib/parcours/contact.ts` | quels canaux existent, comment chacun devient un `href` | pur, sans React |
 | `frontend/components/portfolio/coordonnees.tsx` | le volet des canaux directs | rendu |
 | `frontend/components/portfolio/formulaire-contact.tsx` | le formulaire, son etat, ses annonces | client |
 | `frontend/components/portfolio/contact-section.tsx` | la coquille et les deux volets | rendu |
+
+**Pourquoi un CINQUIEME fichier, ajoute apres l'approbation de cette spec.**
+`renseigne` et `lienSur` sont aujourd'hui PRIVES au module `parchemin.ts`
+(lignes 8 et 45) : la section contact ne peut donc pas les importer. Les
+recopier donnerait deux exemplaires d'une regle de securite, soit exactement
+l'asymetrie qui a laisse passer un lien non filtre sur une page publique au
+chantier precedent. Et les exporter depuis `parchemin.ts` ferait dependre le
+contact du parchemin, ce qui n'a aucun sens. Elles sont donc extraites dans un
+module neutre que les deux chantiers partagent.
 
 **Le module pur est le point d'appui.** `canaux(infos)` rend les canaux
 presents dans l'ordre de lecture, chacun en `{ cle, libelle, valeur, href }`,

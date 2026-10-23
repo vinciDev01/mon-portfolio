@@ -8,7 +8,7 @@ import { bloc, corpsDepuis, css, cssNu, lire, PALIERS, px, racine, tableDesConte
 function tousActifs(): SiteSettingsDto {
   return {
     showPresentations: true, showStats: true, showSkills: true,
-    showExperiences: true, showProjects: true, showServices: true,
+    showExperiences: true, showCertifications: true, showProjects: true, showServices: true,
     showAbout: true, showTestimonials: true, showContact: true,
   } as unknown as SiteSettingsDto;
 }
@@ -17,7 +17,7 @@ describe("entrees de la colonne", () => {
   it("rend une entree par section activee, dans l'ordre du parcours", () => {
     const e = sectionsActives(tousActifs());
     expect(e.map((x) => x.id)).toEqual([
-      "ouverture", "stats", "competences", "experience",
+      "ouverture", "stats", "competences", "experience", "certifications",
       "projets", "a-propos", "contact", "services", "temoignages",
     ]);
   });
@@ -349,10 +349,13 @@ describe("le menu porte pictogramme et libelle", () => {
   it("ne masque les libelles et le nom qu au palier reduit, sans les retirer", () => {
     // Un masquage hors de toute `@media` cacherait les libelles a tous les
     // paliers, ce que le proprietaire a refuse.
-    for (const sel of [/\.entree-nom\s*[,{]/g, /\.identite-nom\s*[,{]/g]) {
-      const positions = [...cssNu.matchAll(sel)].map((m) => m.index!);
-      expect(positions, `${sel} introuvable`).toHaveLength(1);
-      expect(dansUneMedia(cssNu, positions[0]!), `${sel} hors du palier reduit`).toBe(true);
+    // Toute regle qui masque (`clip-path`) un nom doit vivre dans une @media.
+    const masquages = [...cssNu.matchAll(/([^{}]*)\{([^{}]*)\}/g)].filter(
+      (m) => /\.(?:entree|identite)-nom\b/.test(m[1]!) && /clip-path/.test(m[2]!),
+    );
+    expect(masquages.length, "aucun masquage de nom trouve").toBeGreaterThan(0);
+    for (const m of masquages) {
+      expect(dansUneMedia(cssNu, m.index!), `${m[1]!.trim()} hors du palier reduit`).toBe(true);
     }
     expect(bloc1023).toMatch(/\.identite-nom,\s*\.entree-nom\s*\{/);
     expect(bloc1023).toMatch(/clip-path:\s*inset\(50%\)/);
@@ -366,12 +369,35 @@ describe("le menu porte pictogramme et libelle", () => {
     expect(px(valeur(r, "height"))).toBeLessThanOrEqual(CIBLE);
   });
 
-  it("dit la section courante par un cadre, pas par la seule couleur", () => {
-    expect(bloc(/\.entree-parcours\[aria-current="true"\]\s*\{/)).toMatch(
-      /border-color:\s*var\(--bordure-signifiante\)/,
+  it("souligne le libelle de la section courante d un trait fin, sans cadre", () => {
+    const courante = bloc(/\.entree-parcours\[aria-current="true"\]\s*\{/);
+    expect(courante).not.toMatch(/border|background|outline/);
+    expect(courante).toMatch(/color:\s*var\(--texte\)/);
+    const libelle = bloc(/\.entree-parcours\[aria-current="true"\] \.entree-nom\s*\{/);
+    expect(libelle).toMatch(/text-decoration:\s*underline/);
+    expect(valeur(libelle, "text-decoration-thickness")).toBe("1px");
+  });
+
+  it("ne souligne pas l icone", () => {
+    // Le soulignement est pose sur le libelle seul : aucune regle de la
+    // section courante ne le pose sur l'entree entiere ni sur le pictogramme.
+    expect(cssNu).not.toMatch(/aria-current="true"\][^{]*\{[^}]*border-block-end/);
+    expect(
+      bloc(/\.entree-parcours\[aria-current="true"\] \.picto-section > \*\s*\{/),
+    ).not.toMatch(/text-decoration/);
+  });
+
+  it("la dit par l epaisseur du trait, pas par la seule couleur (WCAG 1.4.1)", () => {
+    // Ancre en debut de ligne : sans quoi la regle de la section courante,
+    // qui se termine par le meme selecteur, serait prise pour celle du repos.
+    const repos = px(valeur(bloc(/^\s*\.picto-section > \*\s*\{/m), "stroke-width") + "px");
+    const courant = px(
+      valeur(bloc(/\.entree-parcours\[aria-current="true"\] \.picto-section > \*\s*\{/), "stroke-width") + "px",
     );
-    // Le cadre est reserve sur toutes les entrees : rien ne bouge quand il parait.
-    expect(bloc(/\.entree-parcours\s*\{/)).toMatch(/border:\s*1px solid transparent/);
+    expect(courant).toBeGreaterThan(repos);
+    expect(bloc(/\.entree-parcours\[aria-current="true"\] \.entree-nom\s*\{/)).toMatch(
+      /font-weight:\s*600/,
+    );
   });
 });
 

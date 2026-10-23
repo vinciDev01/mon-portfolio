@@ -44,8 +44,6 @@ describe("la section des experiences liste les projets de chacune", () => {
         { defaultLocale: "fr" },
         createElement(ExperienceSection, {
           experiences: [experience("x"), experience("y")],
-          certifications: [],
-          afficherCertifications: false,
           projets,
         }),
       ),

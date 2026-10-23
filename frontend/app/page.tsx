@@ -9,6 +9,7 @@ import { SectionShell } from "@/components/portfolio/section-shell";
 import { PresentationSection } from "@/components/portfolio/presentation-section";
 import { SkillsSection } from "@/components/portfolio/skills-section";
 import { ExperienceSection } from "@/components/portfolio/experience-section";
+import { CertificationsSection } from "@/components/portfolio/certifications-section";
 import { JournalProjets } from "@/components/parcours/journal-projets";
 import { AboutSection } from "@/components/portfolio/about-section";
 import { ContactSection } from "@/components/portfolio/contact-section";
@@ -63,12 +64,12 @@ export default async function Page() {
     ),
     experience: (
       <SectionShell cleTitre="nav.experience" index={rang("experience")}>
-        <ExperienceSection
-          experiences={data.experiences}
-          certifications={data.certifications}
-          afficherCertifications={s.showCertifications}
-          projets={data.projects}
-        />
+        <ExperienceSection experiences={data.experiences} projets={data.projects} />
+      </SectionShell>
+    ),
+    certifications: (
+      <SectionShell cleTitre="nav.certifications" index={rang("certifications")}>
+        <CertificationsSection certifications={data.certifications} />
       </SectionShell>
     ),
     projets: (

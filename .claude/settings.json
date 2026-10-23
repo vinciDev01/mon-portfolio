@@ -1,0 +1,8 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(wc -l /tmp/next-panic-52027e977bd3a7981ed7521a91f62249.log)",
+      "Read(//tmp/**)"
+    ]
+  }
+}

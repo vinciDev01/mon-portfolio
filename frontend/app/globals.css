@@ -660,19 +660,26 @@ html {
     min-height: 24px;
     padding: 2px;
     border: 1px solid transparent;
-    border-radius: 4px;
     color: var(--texte-secondaire);
   }
 
-  /* La section courante se dit par une forme, un cadre, et pas seulement par
-     sa couleur (WCAG 1.4.1). `--bordure-signifiante` donne 3,31:1 en clair et
-     4,04:1 en sombre, au-dela du seuil de 3:1 des composants d'interface. Le
-     cadre transparent des autres entrees lui reserve sa place : rien ne
-     bouge quand il parait. */
+  /* La section courante : son texte fonce, son libelle souligne d'un trait
+     fin, l'icone non. Au palier reduit, ou le libelle est masque, le trait
+     epaissi de l'icone reste seul a la designer. Soulignement et epaisseur
+     sont des formes, pas seulement des couleurs (WCAG 1.4.1). */
   .entree-parcours[aria-current="true"] {
     color: var(--texte);
-    border-color: var(--bordure-signifiante);
-    background: var(--surface);
+  }
+
+  .entree-parcours[aria-current="true"] .picto-section > * {
+    stroke-width: 2.75;
+  }
+
+  .entree-parcours[aria-current="true"] .entree-nom {
+    font-weight: 600;
+    text-decoration: underline;
+    text-decoration-thickness: 1px;
+    text-underline-offset: 4px;
   }
 
   /* Le signal : arrive en butee, la molette ou le balayage designent la
@@ -701,11 +708,18 @@ html {
   }
 
   /* Pictogramme de section : traits seuls, sur `currentColor` comme ceux du
-     pied, mais dans la boite 24 x 24 de leurs traces, rendue a 20 px. */
+     pied, mais dans la boite 24 x 24 de leurs traces, rendue a 20 px. Posee
+     sur les traces elles-memes, la propriete l'emporte sur leur attribut
+     `stroke-width` ; posee sur le `<svg>`, elle ne ferait qu'heriter, et
+     l'attribut gagnerait. C'est elle que la section courante epaissit. */
   .picto-section {
     flex: 0 0 auto;
     width: 20px;
     height: 20px;
+  }
+
+  .picto-section > * {
+    stroke-width: 1.5;
   }
 
 
@@ -1900,16 +1914,12 @@ html {
     color: HighlightText;
   }
 
-  /* Le cadre de la section courante. Le mode force ramene les bordures a
-     CanvasText, transparentes comprises : toutes les entrees seraient
-     encadrees et plus rien n'indiquerait la position. Les autres entrees
-     perdent donc leur cadre, la courante garde le sien. */
+  /* Le mode force ramene les bordures a CanvasText, transparentes comprises :
+     toutes les entrees paraitraient encadrees. Le cadre reserve se fond donc
+     dans le fond ; la section courante se lit a son trait epaissi, que le
+     mode force ne touche pas. */
   .entree-parcours {
     border-color: Canvas;
-  }
-
-  .entree-parcours[aria-current="true"] {
-    border-color: CanvasText;
   }
 
   /* Le parchemin en couleurs forcees : une paire systeme pour les bandes et

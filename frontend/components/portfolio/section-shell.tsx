@@ -37,7 +37,9 @@ export function SectionShell({
       className="grid grid-cols-12 gouttiere-parcours"
       style={{
         paddingTop: "var(--espace-section)",
-        paddingBottom: 0,
+        // La fin du contenu ne colle pas au bord de l ecran, la ou le visiteur
+        // arrive en butee pour passer a la section suivante.
+        paddingBottom: "var(--espace-5)",
       }}
     >
       <div

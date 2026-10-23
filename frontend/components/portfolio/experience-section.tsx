@@ -1,14 +1,12 @@
 "use client";
 
-import type { ExperienceDto, CertificationDto, ProjectDto } from "@portfolio/shared-types";
+import type { ExperienceDto, ProjectDto } from "@portfolio/shared-types";
 import { SeeMoreList } from "./see-more-button";
 import { useTranslation } from "@/lib/i18n/i18n-context";
 import { projetsParExperience } from "@/lib/portfolio/experience-projets";
 
 interface ExperienceSectionProps {
   experiences: ExperienceDto[];
-  certifications: CertificationDto[];
-  afficherCertifications: boolean;
   /** Tous les projets : chaque carte ne garde que ceux de son experience. */
   projets: ProjectDto[];
 }
@@ -75,62 +73,23 @@ function ExperienceCard({
 
 export function ExperienceSection({
   experiences,
-  certifications,
-  afficherCertifications,
   projets,
 }: ExperienceSectionProps) {
-  const { t } = useTranslation();
   if (!experiences.length) return null;
   const parExperience = projetsParExperience(projets);
 
   return (
-    <>
-      <SeeMoreList
-        items={experiences}
-        initialCount={3}
-        renderItem={(experience) => (
-          <ExperienceCard
-            key={experience.id}
-            experience={experience}
-            projets={parExperience.get(experience.id) ?? []}
-          />
-        )}
-        className="flex flex-col"
-      />
-
-      {afficherCertifications && certifications.length > 0 && (
-        <div style={{ marginTop: "var(--espace-5)" }}>
-          <h3 style={{ marginBottom: "var(--espace-3)" }}>{t("section.certifications")}</h3>
-          <ul className="mesure space-y-4">
-            {certifications.map((c) => (
-              <li key={c.id}>
-                <p>{c.name}</p>
-                <p className="meta">
-                  {c.organization?.label}
-                  {c.issueDate ? ` · ${new Date(c.issueDate).getFullYear()}` : ""}
-                </p>
-                {c.description && (
-                  <p className="text-sm text-muted-foreground leading-relaxed" style={{ marginTop: "var(--espace-1)" }}>
-                    {c.description}
-                  </p>
-                )}
-                {c.credentialUrl && (
-                  <a
-                    href={c.credentialUrl}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    aria-label={`${t("certifications.viewCert")} : ${c.name}`}
-                    className="meta underline underline-offset-2"
-                    style={{ color: "var(--accent)", marginTop: "var(--espace-1)", display: "inline-block" }}
-                  >
-                    {t("certifications.viewCert")}
-                  </a>
-                )}
-              </li>
-            ))}
-          </ul>
-        </div>
+    <SeeMoreList
+      items={experiences}
+      initialCount={3}
+      renderItem={(experience) => (
+        <ExperienceCard
+          key={experience.id}
+          experience={experience}
+          projets={parExperience.get(experience.id) ?? []}
+        />
       )}
-    </>
+      className="flex flex-col"
+    />
   );
 }

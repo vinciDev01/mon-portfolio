@@ -15,11 +15,18 @@ function reglages(actifs: string[]): SiteSettingsDto {
 }
 
 describe("la liste des sections (spec section 2.2)", () => {
-  it("porte les neuf sections dans l ordre du parcours", () => {
+  it("porte les dix sections dans l ordre du parcours", () => {
     expect(SECTIONS.map((s) => s.id)).toEqual([
-      "ouverture", "stats", "competences", "experience", "projets",
-      "a-propos", "contact", "services", "temoignages",
+      "ouverture", "stats", "competences", "experience", "certifications",
+      "projets", "a-propos", "contact", "services", "temoignages",
     ]);
+  });
+
+  it("les certifications ont leur entree, sous leur propre reglage", () => {
+    const c = SECTIONS.find((s) => s.id === "certifications");
+    expect(c?.reglage).toBe("showCertifications");
+    expect(sectionsActives(reglages(["certifications"])).map((s) => s.id))
+      .toEqual(["ouverture", "certifications"]);
   });
 
   it("ne garde que les sections dont le reglage est vrai", () => {
@@ -145,17 +152,17 @@ describe("source unique : aucune autre declaration (spec section 7.1)", () => {
 
 describe("les cles de titre existent dans les trois langues", () => {
   for (const langue of ["fr", "en", "de"]) {
-    it(`${langue}.json porte les neuf cles`, () => {
+    it(`${langue}.json porte les dix cles`, () => {
       const dict = JSON.parse(lire(`lib/i18n/${langue}.json`));
       for (const s of SECTIONS) expect(dict[s.cleTitre], s.cleTitre).toBeTruthy();
     });
   }
 
   for (const langue of ["fr", "en", "de"]) {
-    it(`${langue}.json : aucune cle section.* hors section.certifications`, () => {
+    it(`${langue}.json : aucune cle section.*, les certifications comprises`, () => {
       const dict = JSON.parse(lire(`lib/i18n/${langue}.json`));
       const cles = Object.keys(dict).filter((k) => k.startsWith("section."));
-      expect(cles).toEqual(["section.certifications"]);
+      expect(cles).toEqual([]);
     });
 
     it(`${langue}.json : aucun libelle de navigation ne finit par un point`, () => {

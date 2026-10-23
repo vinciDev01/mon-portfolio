@@ -1639,6 +1639,43 @@ html {
     inline-size: 16px;
     block-size: 16px;
   }
+
+  /* Le volet des coordonnees. Chaque canal est un lien de bloc : le libelle
+     au-dessus de la valeur, la cible couvre au moins 24 x 24 px (WCAG 2.5.8).
+     Le soulignement garde le lien reconnaissable sans la couleur (1.4.1). */
+  .coordonnees-titre {
+    margin-block-end: var(--espace-2);
+  }
+
+  .coordonnees-liste {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+  }
+
+  .coordonnee-lien {
+    display: block;
+    min-inline-size: 24px;
+    min-block-size: 24px;
+    padding-block: var(--espace-1);
+    color: inherit;
+    text-decoration: underline;
+    overflow-wrap: anywhere;
+  }
+
+  .coordonnee-lien:focus-visible {
+    outline: 2px solid var(--accent);
+    outline-offset: 3px;
+  }
+
+  .coordonnee-libelle {
+    display: block;
+    color: var(--texte-secondaire);
+  }
+
+  .coordonnee-valeur {
+    display: block;
+  }
 }
 
 /* -----------------------------------------------------------

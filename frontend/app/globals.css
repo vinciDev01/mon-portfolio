@@ -824,6 +824,144 @@ html {
     max-width: 66ch;
   }
 
+  /* -----------------------------------------------------------
+     Les certifications : un registre par organisme, son sceau a gauche.
+     Le sceau est un dessin, sans mouvement ni couleur propre : son trait
+     suit `--bordure-signifiante` par `currentColor`, son fond `--surface`.
+     ----------------------------------------------------------- */
+  .registres-certifs {
+    display: flex;
+    flex-direction: column;
+    gap: var(--espace-5);
+  }
+
+  .registre-certifs {
+    display: grid;
+    grid-template-columns: 64px minmax(0, 1fr);
+    column-gap: var(--espace-3);
+    align-items: start;
+  }
+
+  .registre-liste {
+    grid-column: 2;
+  }
+
+  .sceau-boite {
+    position: relative;
+    display: grid;
+    place-items: center;
+    width: 64px;
+    height: 64px;
+  }
+
+  .sceau {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    color: var(--bordure-signifiante);
+  }
+
+  .sceau-bord {
+    fill: var(--surface);
+    stroke: currentColor;
+    stroke-width: 1;
+  }
+
+  /* L'anneau interieur, en petits traits : ceux du soulignement de la
+     section courante dans la colonne. */
+  .sceau-anneau {
+    fill: none;
+    stroke: currentColor;
+    stroke-width: 0.75;
+    stroke-dasharray: 1.5 2.5;
+  }
+
+  .sceau-initiales {
+    fill: var(--texte);
+    font-size: 15px;
+    font-weight: 600;
+    letter-spacing: 0.04em;
+    font-variation-settings: "opsz" 48;
+  }
+
+  .sceau-logo {
+    position: relative;
+    border-radius: 50%;
+    object-fit: contain;
+  }
+
+  /* Le nom de l'organisme se pose a hauteur du coeur du sceau. */
+  .registre-certifs h3 {
+    margin-block: 18px var(--espace-2);
+  }
+
+  /* Le filet relie les certifications a leur organisme, comme les lignes d'un
+     registre sous leur en-tete. */
+  .registre-liste {
+    display: flex;
+    flex-direction: column;
+    gap: var(--espace-3);
+    list-style: none;
+    margin: 0;
+    padding: 0 0 0 var(--espace-2);
+    border-inline-start: 1px solid var(--bordure);
+  }
+
+  .registre-nom {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: baseline;
+    gap: var(--espace-1);
+    font-weight: 500;
+  }
+
+  .registre-annee {
+    color: var(--texte-secondaire);
+    font-size: var(--meta);
+    font-variant-numeric: tabular-nums;
+  }
+
+  .registre-description {
+    margin-block-start: 4px;
+    color: var(--texte-secondaire);
+    font-size: 0.875rem;
+    line-height: 1.6;
+  }
+
+  .registre-lien {
+    display: inline-block;
+    margin-block-start: var(--espace-1);
+    color: var(--accent);
+    font-size: var(--meta);
+    text-decoration: underline;
+    text-underline-offset: 3px;
+  }
+
+  /* Palier etroit : le sceau se reduit pour laisser sa mesure au texte. */
+  @media (max-width: 599px) {
+    .registre-certifs {
+      grid-template-columns: 48px minmax(0, 1fr);
+      column-gap: var(--espace-2);
+    }
+
+    .sceau-boite {
+      width: 48px;
+      height: 48px;
+    }
+
+    .registre-certifs h3 {
+      align-self: center;
+      margin-block: 0;
+    }
+
+    /* La liste passe sous le sceau et reprend toute la largeur. */
+    .registre-liste {
+      grid-column: 1 / -1;
+      margin-block-start: var(--espace-2);
+    }
+  }
+
   /* Metadonnees : dates, versions, etiquettes techniques. */
   .meta {
     font-family: var(--font-mono);
@@ -1920,6 +2058,16 @@ html {
      mode force ne touche pas. */
   .entree-parcours {
     border-color: Canvas;
+  }
+
+  /* Le sceau des certifications : `fill` n'est pas force, la paire systeme
+     le remplace. */
+  .sceau-bord {
+    fill: Canvas;
+  }
+
+  .sceau-initiales {
+    fill: CanvasText;
   }
 
   /* Le parchemin en couleurs forcees : une paire systeme pour les bandes et

@@ -247,20 +247,20 @@ describe("mouvement reduit (spec section 2.5)", () => {
 });
 
 describe("budget de mouvement (spec section 4)", () => {
-  it("les deux toasts ne glissent plus, ils paraissent", () => {
-    for (const nom of ["toast-enter", "toast-exit"]) {
-      const corps = blocs(new RegExp(`@keyframes ${nom}\\s*\\{`), css);
-      expect(corps.length, `${nom} a disparu`).toBe(1);
-      for (const c of corps) {
-        expect(c, nom).not.toMatch(/translate|scale\(|transform/);
-      }
+  it("le toast de section est retire, avec ses trois jeux d images-cles", () => {
+    expect(() => lire("components/portfolio/section-toast-observer.tsx")).toThrow();
+    expect(lire("app/page.tsx")).not.toContain("SectionToastObserver");
+    for (const nom of ["toast-enter", "toast-exit", "toast-progress"]) {
+      expect(blocs(new RegExp(`@keyframes ${nom}\\s*\\{`), css), nom).toHaveLength(0);
     }
+    expect(css).not.toMatch(/\.section-toast/);
   });
 
-  it("la barre de progression garde son scaleX, seule exception nommee", () => {
-    const corps = blocs(/@keyframes toast-progress\s*\{/, css);
-    expect(corps.length, "toast-progress a disparu").toBe(1);
-    expect(corps[0]).toMatch(/scaleX/);
+  it("le signal de la colonne ne bat que par l opacite", () => {
+    const corps = blocs(/@keyframes signal-entree\s*\{/, css);
+    expect(corps).toHaveLength(1);
+    expect(corps[0]).toMatch(/opacity/);
+    expect(corps[0]).not.toMatch(/translate|scale|transform/);
   });
 
   it("le composant du toast configurable ne glisse plus", () => {

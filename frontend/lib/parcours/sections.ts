@@ -9,8 +9,8 @@ export type Section = {
 };
 
 /**
- * Les pictogrammes, DEPLACES tels quels depuis `sectionIcons` de
- * `section-toast-observer.tsx`. Leurs cles sont les identifiants de section.
+ * Les pictogrammes des entrees de la colonne de passage, en boite 24 x 24.
+ * Leurs cles sont les identifiants de section.
  */
 export const PICTOS: Record<string, string> = {
   ouverture:

@@ -406,125 +406,6 @@ html {
 }
 
 /*
-   SECTION TOAST - Polished navigation indicator
-   */
-
-.section-toast {
-  position: fixed;
-  bottom: 28px;
-  right: 28px;
-  z-index: 100;
-  display: flex;
-  align-items: center;
-  gap: 14px;
-  padding: 14px 22px 14px 16px;
-  border-radius: 16px;
-  background: var(--card);
-  border: 1px solid var(--border);
-  box-shadow:
-    var(--ombre-lointaine),
-    var(--ombre-moyenne),
-    inset 0 1px 0 oklch(1 0 0 / 0.06);
-  pointer-events: none;
-  backdrop-filter: blur(16px) saturate(1.2);
-}
-
-.section-toast-enter {
-  animation: toast-enter 0.45s cubic-bezier(0.22, 1, 0.36, 1) both;
-}
-
-.section-toast-exit {
-  animation: toast-exit 0.3s cubic-bezier(0.55, 0, 1, 0.45) both;
-}
-
-.section-toast-icon {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  flex-shrink: 0;
-  width: 36px;
-  height: 36px;
-  border-radius: 10px;
-  background: var(--foreground);
-  color: var(--background);
-}
-
-.section-toast-icon svg {
-  width: 18px;
-  height: 18px;
-}
-
-.section-toast-content {
-  display: flex;
-  flex-direction: column;
-  gap: 2px;
-}
-
-.section-toast-label {
-  font-size: 0.6rem;
-  font-weight: 600;
-  text-transform: uppercase;
-  letter-spacing: 0.08em;
-  color: var(--muted-foreground);
-}
-
-.section-toast-title {
-  font-size: 0.875rem;
-  font-weight: 700;
-  color: var(--foreground);
-  letter-spacing: -0.01em;
-}
-
-/* Progress bar at the bottom of the toast */
-.section-toast-progress {
-  position: absolute;
-  bottom: 0;
-  left: 16px;
-  right: 16px;
-  height: 2px;
-  border-radius: 0 0 16px 16px;
-  overflow: hidden;
-}
-
-.section-toast-progress-bar {
-  height: 100%;
-  background: var(--foreground);
-  opacity: 0.25;
-  animation: toast-progress 2s linear both;
-  transform-origin: left;
-}
-
-@keyframes toast-enter {
-  from {
-    opacity: 0;
-  }
-
-  to {
-    opacity: 1;
-  }
-}
-
-@keyframes toast-exit {
-  from {
-    opacity: 1;
-  }
-
-  to {
-    opacity: 0;
-  }
-}
-
-@keyframes toast-progress {
-  from {
-    transform: scaleX(1);
-  }
-
-  to {
-    transform: scaleX(0);
-  }
-}
-
-/*
    REDUCED MOTION - Accessibility
    */
 
@@ -544,15 +425,6 @@ html {
   .see-more-item-enter {
     animation: none !important;
     opacity: 1 !important;
-  }
-
-  .section-toast-enter,
-  .section-toast-exit {
-    animation: none !important;
-  }
-
-  .section-toast-progress-bar {
-    animation: none !important;
   }
 }
 
@@ -786,29 +658,56 @@ html {
     gap: var(--espace-1);
     min-width: 24px;
     min-height: 24px;
+    padding: 2px;
+    border: 1px solid transparent;
+    border-radius: 4px;
     color: var(--texte-secondaire);
   }
 
+  /* La section courante se dit par une forme, un cadre, et pas seulement par
+     sa couleur (WCAG 1.4.1). `--bordure-signifiante` donne 3,31:1 en clair et
+     4,04:1 en sombre, au-dela du seuil de 3:1 des composants d'interface. Le
+     cadre transparent des autres entrees lui reserve sa place : rien ne
+     bouge quand il parait. */
   .entree-parcours[aria-current="true"] {
     color: var(--texte);
+    border-color: var(--bordure-signifiante);
+    background: var(--surface);
   }
 
-  /* Le repere est ce qui reste de l'entree quand son nom est masque, sous
-     1024 px : il doit donc etre visible par lui-meme. `--bordure-signifiante`
-     donne 3,31:1 en clair et 4,04:1 en sombre, au-dela du seuil de 3:1 des
-     composants d'interface. */
-  .entree-repere {
+  /* Le signal : arrive en butee, la molette ou le balayage designent la
+     section suivante, dont l'entree clignote au lieu que la page y aille.
+     Trois battements d'opacite, soit `DUREE_SIGNAL_MS` (1500 ms) cote
+     composant, a deux battements par seconde, loin du seuil de trois
+     eclairs par seconde de WCAG 2.3.1. */
+  .entree-parcours[data-signal="true"] {
+    color: var(--accent);
+    animation: signal-entree 500ms ease-in-out 3;
+  }
+
+  @keyframes signal-entree {
+    50% {
+      opacity: 0.2;
+    }
+  }
+
+  /* Mouvement reduit : plus de battement, l'entree reste designee par
+     l'accent et le cadre le temps du signal. */
+  @media (prefers-reduced-motion: reduce) {
+    :root:not([data-mouvement="force"]) .entree-parcours[data-signal="true"] {
+      animation: none;
+      border-color: var(--accent);
+    }
+  }
+
+  /* Pictogramme de section : traits seuls, sur `currentColor` comme ceux du
+     pied, mais dans la boite 24 x 24 de leurs traces, rendue a 20 px. */
+  .picto-section {
     flex: 0 0 auto;
-    width: 7px;
-    height: 7px;
-    border: 1px solid var(--bordure-signifiante);
-    border-radius: 50%;
+    width: 20px;
+    height: 20px;
   }
 
-  .entree-parcours[aria-current="true"] .entree-repere {
-    background: var(--accent);
-    border-color: var(--accent);
-  }
 
   .identite-logo {
     flex: 0 0 auto;
@@ -838,9 +737,10 @@ html {
     gap: var(--espace-1);
   }
 
-  /* Sous 1024 px la colonne se reduit : le nom et les noms de sections n'ont
-     plus la place d'etre lus, seuls les reperes subsistent. Le nom reste le
-     nom accessible du lien d'identite. */
+  /* Sous 1024 px la colonne se reduit : le nom et les libelles des entrees
+     n'ont plus la place d'etre lus, seuls le logo et les pictogrammes
+     subsistent. Chaque nom reste le nom accessible de son lien, et `title`
+     le montre au survol. */
   @media (max-width: 1023px) {
 
     .identite-nom,
@@ -853,8 +753,8 @@ html {
       white-space: nowrap;
     }
 
-    /* Le nom parti, le repere ou le pictogramme reste seul : il se centre
-       dans la cible de 24 px plutot que de se coller a son bord. */
+    /* La colonne etroite : le pictogramme se centre dans sa cible plutot que
+       de se coller a son bord. */
     .entree-parcours {
       justify-content: center;
     }
@@ -2000,16 +1900,15 @@ html {
     color: HighlightText;
   }
 
-  /* Le repere de la section courante. Hors contraste force, le point plein se
-     distingue du creux par la forme et non par la seule couleur (WCAG 1.4.1).
-     Le mode force `background-color` : plein et creux deviendraient identiques
-     et plus rien n'indiquerait la position. Pastille sans texte : CanvasText,
-     que son contour creux partage deja, plutot que Highlight dont le contraste
-     n'est garanti qu'avec HighlightText. La distinction reste celle de la
-     forme, plein contre creux. */
-  .entree-parcours[aria-current="true"] .entree-repere {
-    forced-color-adjust: none;
-    background: CanvasText;
+  /* Le cadre de la section courante. Le mode force ramene les bordures a
+     CanvasText, transparentes comprises : toutes les entrees seraient
+     encadrees et plus rien n'indiquerait la position. Les autres entrees
+     perdent donc leur cadre, la courante garde le sien. */
+  .entree-parcours {
+    border-color: Canvas;
+  }
+
+  .entree-parcours[aria-current="true"] {
     border-color: CanvasText;
   }
 

@@ -46,6 +46,19 @@ export function useChangerSurcouche(): (ouverte: boolean) => void {
   return useContext(ContexteChangerSurcouche);
 }
 
+/** Duree du signal, en millisecondes : trois battements de 500 ms, que la
+ *  feuille declare aussi sur `.entree-parcours[data-signal]`. */
+export const DUREE_SIGNAL_MS = 1500;
+
+/** Identifiant de la section que la colonne fait clignoter, ou `null`. Arrive
+ *  en butee, la molette ou le balayage ne changent plus de section : ils
+ *  designent la suivante, et c'est le visiteur qui decide d'y aller. */
+const ContexteSignal = createContext<string | null>(null);
+const ContexteSignaler = createContext<(id: string) => void>(() => {});
+export function useSectionSignalee(): string | null {
+  return useContext(ContexteSignal);
+}
+
 /**
  * Pose le contexte AU-DESSUS de la colonne et de `<main>`, que `page.tsx`
  * garde freres : la colonne est la navigation du site, elle ne doit pas
@@ -60,19 +73,39 @@ export function FournisseurSectionActive({
 }) {
   const [id, setId] = useState<string | null>(initial);
   const [surcouche, setSurcouche] = useState(false);
+  const [signal, setSignal] = useState<string | null>(null);
+  const minuterie = useRef<ReturnType<typeof setTimeout> | undefined>(undefined);
+  // Le setter est stable : le conteneur l'installe une fois avec ses ecouteurs.
+  const [signaler] = useState(() => (cible: string) => {
+    // Un signal en cours sur la meme cible n'est pas relance : une rafale de
+    // molette en butee ferait sinon repartir l'animation a chaque cran, et
+    // le clignotement paraitrait fige.
+    setSignal((courant) => {
+      if (courant === cible) return courant;
+      clearTimeout(minuterie.current);
+      minuterie.current = setTimeout(() => setSignal(null), DUREE_SIGNAL_MS);
+      return cible;
+    });
+  });
+  useEffect(() => () => clearTimeout(minuterie.current), []);
   return (
     <ContexteChangerSection.Provider value={setId}>
       <ContexteSectionActive.Provider value={id}>
         <ContexteChangerSurcouche.Provider value={setSurcouche}>
-          <ContexteSurcouche.Provider value={surcouche}>{children}</ContexteSurcouche.Provider>
+          <ContexteSurcouche.Provider value={surcouche}>
+            <ContexteSignaler.Provider value={signaler}>
+              <ContexteSignal.Provider value={signal}>{children}</ContexteSignal.Provider>
+            </ContexteSignaler.Provider>
+          </ContexteSurcouche.Provider>
         </ContexteChangerSurcouche.Provider>
       </ContexteSectionActive.Provider>
     </ContexteChangerSection.Provider>
   );
 }
 
-/** Origine d'un changement. */
-type Origine = "clic" | "clavier" | "molette" | "tactile" | "historique";
+/** Origine d'un changement. La molette et le balayage n'en sont plus : ils
+ *  signalent la section suivante sans y aller. */
+type Origine = "clic" | "clavier" | "historique";
 
 /**
  * Duree de la sortie, lue sur la feuille et non recopiee. On interroge un
@@ -123,6 +156,8 @@ export function ParcoursPagine({
   const { t } = useTranslation();
   const changerSection = useContext(ContexteChangerSection);
   const changerSectionRef = useRef(changerSection);
+  const signaler = useContext(ContexteSignaler);
+  const signalerRef = useRef(signaler);
   const surcoucheOuverte = useSurcoucheOuverte();
   // Les gestionnaires sont installes une fois : ils lisent le drapeau par une
   // ref, sans quoi ils garderaient la valeur du premier rendu.
@@ -140,6 +175,7 @@ export function ParcoursPagine({
   useEffect(() => {
     tRef.current = t;
     changerSectionRef.current = changerSection;
+    signalerRef.current = signaler;
     surcoucheRef.current = surcoucheOuverte;
     sectionsRef.current = sections;
   });
@@ -228,6 +264,14 @@ export function ParcoursPagine({
       sequenceur.aller(cible);
     };
 
+    // En butee, la molette et le balayage designent la section voisine au lieu
+    // d'y aller. Aux extremites il n'y a pas de voisine : rien ne clignote.
+    const designer = (direction: Direction) => {
+      const cible = prochainIndex(indexRef.current, ids().length, direction, true);
+      const s = sectionsRef.current[cible];
+      if (cible !== indexRef.current && s) signalerRef.current(s.id);
+    };
+
     const butee = (direction: Direction) => {
       const el = elements.current[indexRef.current];
       return el ? estEnButee(el, direction) : true;
@@ -268,8 +312,7 @@ export function ParcoursPagine({
         enButee: butee,
         verrouille: () => sequenceur.verrouille,
         pousser: (delta) => accumulateur.pousser(delta),
-        aller: (sens) =>
-          aller(prochainIndex(indexRef.current, ids().length, sens, true), "molette"),
+        aller: designer,
       });
     };
 
@@ -303,11 +346,8 @@ export function ParcoursPagine({
       if (!depart || !doigt) return;
       const direction = directionTactile(depart.x - doigt.clientX, depart.y - doigt.clientY);
       depart = null;
-      if (direction === null) return;
-      aller(
-        prochainIndex(indexRef.current, ids().length, direction, butees[direction]),
-        "tactile",
-      );
+      if (direction === null || !butees[direction]) return;
+      designer(direction);
     };
 
     const surTouche = (e: KeyboardEvent) => {

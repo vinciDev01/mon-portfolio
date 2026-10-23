@@ -4,25 +4,35 @@ import { act, createElement, type ComponentType } from "react";
 import { createRoot, type Root } from "react-dom/client";
 import { I18nProvider } from "../i18n/i18n-context";
 import {
+  DUREE_SIGNAL_MS,
   FournisseurSectionActive,
   ParcoursPagine,
 } from "@/components/parcours/parcours-pagine";
-import { SectionToastObserver } from "@/components/portfolio/section-toast-observer";
 import { ColonnePassage } from "@/components/parcours/colonne-passage";
 import type { PersonalInfoDto, SiteSettingsDto } from "@portfolio/shared-types";
 import { SECTIONS } from "./sections";
-import { DELAI_STABILISATION } from "./toast-section";
 import { VERROU_APRES_MS } from "./sequence";
 
-/* Les deux cablages du chantier sont ici exercices dans un DOM, la ou les
-   tests de source ne font que compter des chaines : l'observateur du toast
-   (`data-active` -> annonce) et le sequencement du conteneur (jamais deux
-   sections actives, toujours un passage par le fond). */
+/* Les cablages du conteneur sont ici exercices dans un DOM, la ou les tests
+   de source ne font que compter des chaines : le sequencement (jamais deux
+   sections actives, toujours un passage par le fond) et le signal (en butee,
+   la molette et le balayage font clignoter l'entree de la section voisine
+   dans la colonne, sans y aller). */
 
 (globalThis as { IS_REACT_ACT_ENVIRONMENT?: boolean }).IS_REACT_ACT_ENVIRONMENT = true;
 
 const Fournisseur = I18nProvider as ComponentType<{ defaultLocale: string }>;
 const IDS = ["ouverture", "projets", "contact"];
+/** Reglages qui allument exactement les sections de `IDS`. */
+const REGLAGES = {
+  showProjects: true,
+  showContact: true,
+  showCvDownload: false,
+  logoPath: null,
+  availabilityStatus: "available",
+  availabilityLabel: null,
+} as unknown as SiteSettingsDto;
+const INFOS = { name: "Bertrand", surname: "Fanuel", avatarPath: null } as unknown as PersonalInfoDto;
 /** Duree injectee dans la feuille du test. Volontairement differente de
  *  `SORTIE_REPLI_MS` (180) : si le conteneur se rabattait sur le repli, les
  *  durees observees ne coincideraient plus et le test echouerait. */
@@ -44,7 +54,7 @@ function monter() {
         createElement(
           FournisseurSectionActive as ComponentType<{ initial: string | null }>,
           { initial: IDS[0]! },
-          createElement(SectionToastObserver),
+          createElement(ColonnePassage, { reglages: REGLAGES, infos: INFOS }),
           createElement(ParcoursPagine, { sections, enfants, pied: "PIED" }),
         ),
       ),
@@ -54,16 +64,34 @@ function monter() {
 
 const actives = () =>
   [...document.querySelectorAll('.parcours-pagine > [data-active="true"]')].map((e) => e.id);
-const toasts = () => document.querySelectorAll(".section-toast:not(.section-toast-exit)");
+/** Les entrees de la colonne qui clignotent, par leur ancre. */
+const signalees = () =>
+  [...document.querySelectorAll('.entree-parcours[data-signal="true"]')].map((e) =>
+    e.getAttribute("href"),
+  );
 const avancer = (ms: number) => act(() => void vi.advanceTimersByTime(ms));
-/** `MutationObserver` livre ses enregistrements en micro-tache. */
-const laisserObserver = () => act(async () => {});
-const molette = () =>
+const molette = (deltaY = 120) =>
   act(() => {
     window.dispatchEvent(
-      new WheelEvent("wheel", { deltaY: 120, bubbles: true, cancelable: true }),
+      new WheelEvent("wheel", { deltaY, bubbles: true, cancelable: true }),
     );
   });
+/** La touche Page suivante pagine toujours : c'est elle qui sert ici de
+ *  declencheur aux tests du sequencement. */
+const pageSuivante = () =>
+  act(() => {
+    window.dispatchEvent(
+      new KeyboardEvent("keydown", { key: "PageDown", bubbles: true, cancelable: true }),
+    );
+  });
+/** jsdom expose `TouchEvent` mais pas `Touch` : un point est un simple objet. */
+function balayer(dy: number) {
+  const point = (y: number) => [{ clientX: 10, clientY: y } as unknown as Touch];
+  act(() => {
+    window.dispatchEvent(new TouchEvent("touchstart", { touches: point(300) }));
+    window.dispatchEvent(new TouchEvent("touchend", { changedTouches: point(300 - dy) }));
+  });
+}
 
 beforeEach(() => {
   vi.useFakeTimers();
@@ -89,32 +117,92 @@ afterEach(() => {
   vi.useRealTimers();
 });
 
-describe("le toast de section suit `data-active` (spec section 3)", () => {
-  it("annonce la section d'arrivee une seule fois, apres la stabilisation", async () => {
+describe("en butee, la molette et le balayage signalent sans changer de section", () => {
+  it("une molette en butee fait clignoter l entree suivante, la section reste", () => {
     monter();
-    avancer(DELAI_STABILISATION);
-    expect(toasts()).toHaveLength(1);
+    expect(signalees()).toEqual([]);
+    molette();
+    expect(signalees()).toEqual(["#projets"]);
+    avancer(SORTIE_MS + VERROU_APRES_MS + 400);
+    expect(actives()).toEqual(["ouverture"]);
+  });
 
-    // Bascule a la main, comme le ferait le conteneur.
-    const sortante = document.getElementById("ouverture")!;
-    const entrante = document.getElementById("projets")!;
-    sortante.removeAttribute("data-active");
-    await laisserObserver();
-    avancer(10);
-    entrante.setAttribute("data-active", "true");
-    await laisserObserver();
-    avancer(DELAI_STABILISATION - 1);
-    expect(document.querySelectorAll(".section-toast-title")).toHaveLength(1);
-
+  it("le signal s eteint apres sa duree, que la feuille declare aussi", () => {
+    monter();
+    molette();
+    avancer(DUREE_SIGNAL_MS - 1);
+    expect(signalees()).toEqual(["#projets"]);
     avancer(1);
-    const titres = [...document.querySelectorAll(".section-toast-title")].map((e) => e.textContent);
-    expect(titres).toHaveLength(2); // l'ancien finit de sortir, le nouveau est la
-    expect(toasts()).toHaveLength(1);
-    expect(toasts()[0]!.textContent).toContain("Projets");
+    expect(signalees()).toEqual([]);
+  });
 
-    // Rien de plus ne tombe tant que rien ne change.
-    avancer(5000);
-    expect(document.querySelectorAll(".section-toast")).toHaveLength(0);
+  it("une rafale sur la meme cible ne relance pas le signal", () => {
+    monter();
+    molette();
+    // Plus long que la fenetre de l'accumulateur : le second cran franchit le
+    // seuil de lui-meme, PENDANT le signal.
+    avancer(1000);
+    molette();
+    expect(signalees()).toEqual(["#projets"]);
+    avancer(DUREE_SIGNAL_MS - 1000);
+    expect(signalees(), "le signal a ete relance et paraitrait fige").toEqual([]);
+  });
+
+  it("vers le haut, c est la section precedente qui clignote", () => {
+    window.history.replaceState(null, "", "#projets");
+    monter();
+    avancer(50);
+    expect(actives()).toEqual(["projets"]);
+    molette(-120);
+    expect(signalees()).toEqual(["#ouverture"]);
+  });
+
+  it("aux extremites, rien ne clignote", () => {
+    monter();
+    molette(-120);
+    expect(signalees()).toEqual([]);
+  });
+
+  it("un balayage en butee fait clignoter l entree suivante, la section reste", () => {
+    monter();
+    balayer(200);
+    expect(signalees()).toEqual(["#projets"]);
+    avancer(SORTIE_MS + VERROU_APRES_MS + 400);
+    expect(actives()).toEqual(["ouverture"]);
+  });
+
+  it("un balayage trop court ne signale rien", () => {
+    monter();
+    balayer(10);
+    expect(signalees()).toEqual([]);
+  });
+
+  it("une molette hors butee laisse la section defiler, sans signal", () => {
+    monter();
+    const ouverture = document.getElementById("ouverture")!;
+    for (const [k, v] of Object.entries({ scrollHeight: 900, clientHeight: 500, scrollTop: 0 })) {
+      Object.defineProperty(ouverture, k, { value: v, configurable: true });
+    }
+    molette();
+    expect(signalees()).toEqual([]);
+  });
+
+  it("un balayage parti hors butee ne signale rien, meme s il y finit", () => {
+    monter();
+    const ouverture = document.getElementById("ouverture")!;
+    for (const [k, v] of Object.entries({ scrollHeight: 900, clientHeight: 500, scrollTop: 0 })) {
+      Object.defineProperty(ouverture, k, { value: v, configurable: true });
+    }
+    balayer(200);
+    expect(signalees()).toEqual([]);
+  });
+
+  it("le clavier, lui, pagine toujours", () => {
+    monter();
+    pageSuivante();
+    avancer(SORTIE_MS + VERROU_APRES_MS);
+    expect(actives()).toEqual(["projets"]);
+    expect(signalees()).toEqual([]);
   });
 });
 
@@ -133,7 +221,7 @@ describe("le conteneur ne fait jamais de fondu croise (spec section 2)", () => {
     monter();
     expect(actives()).toEqual(["ouverture"]);
     const avant = actives();
-    molette();
+    pageSuivante();
     const releves = [avant, ...enregistrer(SORTIE_MS + VERROU_APRES_MS + 50)];
 
     // Sequence compressee des etats distincts successifs.
@@ -147,22 +235,29 @@ describe("le conteneur ne fait jamais de fondu croise (spec section 2)", () => {
     for (const r of releves) expect(r.length).toBeLessThanOrEqual(1);
   });
 
-  it("la molette est inerte pendant le changement, vive ensuite", () => {
+  it("la pagination est inerte pendant le changement, vive ensuite", () => {
     monter();
-    molette();
+    pageSuivante();
     avancer(SORTIE_MS / 2);
-    molette(); // verrouille : ignoree
+    pageSuivante(); // verrouille : ignoree
     avancer(SORTIE_MS + VERROU_APRES_MS);
     expect(actives()).toEqual(["projets"]);
-    avancer(400); // vide l'accumulateur
-    molette();
+    pageSuivante();
     avancer(SORTIE_MS + VERROU_APRES_MS);
     expect(actives()).toEqual(["contact"]);
   });
 
-  it("le focus suit la section d'arrivee meme pour une molette", () => {
+  it("la molette ne signale rien pendant le changement", () => {
     monter();
+    pageSuivante();
+    avancer(SORTIE_MS / 2);
     molette();
+    expect(signalees()).toEqual([]);
+  });
+
+  it("le focus suit la section d'arrivee", () => {
+    monter();
+    pageSuivante();
     avancer(SORTIE_MS + VERROU_APRES_MS);
     expect(document.activeElement).toBe(document.getElementById("projets"));
   });
@@ -185,27 +280,24 @@ describe("le conteneur ne fait jamais de fondu croise (spec section 2)", () => {
     return e;
   };
 
-  it("une colonne qui ne defile pas laisse paginer (zone morte corrigee)", () => {
+  it("une colonne qui ne defile pas laisse signaler (zone morte corrigee)", () => {
     monter();
     const e = rouler(poserColonne(500, 500));
     expect(e.defaultPrevented).toBe(true);
-    avancer(SORTIE_MS + VERROU_APRES_MS);
-    expect(actives()).toEqual(["projets"]);
+    expect(signalees()).toEqual(["#projets"]);
   });
 
   it("une colonne qui defile garde son evenement", () => {
     monter();
     const e = rouler(poserColonne(900, 500));
     expect(e.defaultPrevented).toBe(false);
-    avancer(SORTIE_MS + VERROU_APRES_MS);
-    expect(actives()).toEqual(["ouverture"]);
+    expect(signalees()).toEqual([]);
   });
 
-  it("une colonne au bout de son defilement laisse paginer dans ce sens", () => {
+  it("une colonne au bout de son defilement laisse signaler dans ce sens", () => {
     monter();
     rouler(poserColonne(900, 500, 400));
-    avancer(SORTIE_MS + VERROU_APRES_MS);
-    expect(actives()).toEqual(["projets"]);
+    expect(signalees()).toEqual(["#projets"]);
   });
 });
 
@@ -215,10 +307,10 @@ describe("le quota de l'historique ne tue pas la navigation (Safari)", () => {
     vi.spyOn(window.history, "replaceState").mockImplementation(() => {
       throw new DOMException("quota", "SecurityError");
     });
-    molette();
+    pageSuivante();
     avancer(SORTIE_MS + VERROU_APRES_MS + 400);
     expect(actives()).toEqual(["projets"]);
-    molette();
+    pageSuivante();
     avancer(SORTIE_MS + VERROU_APRES_MS);
     expect(actives()).toEqual(["contact"]);
   });
@@ -227,7 +319,7 @@ describe("le quota de l'historique ne tue pas la navigation (Safari)", () => {
 describe("le filet de visibilite", () => {
   it("au retour de l'onglet, la cible en attente est activee tout de suite", () => {
     monter();
-    molette();
+    pageSuivante();
     avancer(20);
     expect(actives()).toEqual([]);
     act(() => {
@@ -273,6 +365,22 @@ describe("la colonne declare son defilement propre (spec du parchemin, section 5
       );
     });
   }
+
+  it("chaque entree de section porte son pictogramme, son nom et son infobulle", () => {
+    monterColonne();
+    const entrees = [...hote.querySelectorAll<HTMLAnchorElement>('a.entree-parcours[href^="#"]')];
+    expect(entrees.map((a) => a.getAttribute("href"))).toEqual(["#ouverture", "#projets"]);
+    for (const a of entrees) {
+      const href = a.getAttribute("href")!;
+      const picto = a.querySelector("svg.picto-section");
+      expect(picto, `${href} sans pictogramme`).not.toBeNull();
+      expect(picto!.getAttribute("aria-hidden")).toBe("true");
+      expect(picto!.querySelector("path, rect, circle"), `${href} : pictogramme vide`).not.toBeNull();
+      const nom = a.querySelector(".entree-nom")?.textContent ?? "";
+      expect(nom, `${href} sans nom accessible`).not.toBe("");
+      expect(a.title, `${href} : l infobulle ne dit pas le nom`).toBe(nom);
+    }
+  });
 
   it("le nav rendu porte data-defilement-propre", () => {
     monterColonne();

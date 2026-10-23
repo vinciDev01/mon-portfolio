@@ -81,10 +81,7 @@ describe("source unique : aucune autre declaration (spec section 7.1)", () => {
   // Categorique et non orthographique : on ne liste pas les consommateurs, on
   // balaie tout le code source. Trois declarations divergentes existaient
   // avant cette tache.
-  const CONSOMMATEURS = [
-    "components/parcours/colonne-passage.tsx",
-    "components/portfolio/section-toast-observer.tsx",
-  ];
+  const CONSOMMATEURS = ["components/parcours/colonne-passage.tsx"];
 
   it("chaque consommateur importe le module", () => {
     for (const f of CONSOMMATEURS) {

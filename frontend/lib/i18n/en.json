@@ -37,6 +37,8 @@
   "contact.headline": "Have a project? Let's talk!",
   "contact.subtitle": "Feel free to reach out for any collaboration or inquiry.",
   "contact.error": "An error occurred. Please try again.",
+  "contact.errorFallback": "You can also write to me directly.",
+  "contact.directTitle": "Reach me",
 
   "testimonials.leaveOne": "Leave a testimonial",
   "testimonials.thanks": "Thank you for your testimonial!",

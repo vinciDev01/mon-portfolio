@@ -4,6 +4,7 @@ import { act, createElement, type ComponentType } from "react";
 import { createRoot } from "react-dom/client";
 import type { PersonalInfoDto } from "@portfolio/shared-types";
 import { Coordonnees } from "@/components/portfolio/coordonnees";
+import { FormulaireContact } from "@/components/portfolio/formulaire-contact";
 import { I18nProvider } from "../i18n/i18n-context";
 import { corpsDepuis, cssNu, lire, px, valeur } from "./feuille-test";
 import { ratioContraste } from "@/lib/color/contrast";
@@ -270,6 +271,487 @@ describe("la feuille du volet des coordonnees", () => {
       expect(jeton, "la couleur de l anneau n est pas un jeton connu").toBeDefined();
       for (const dessous of [p.fond, p.surface]) {
         expect(ratioContraste(p[jeton!], dessous)).toBeGreaterThanOrEqual(3);
+      }
+    });
+  }
+});
+
+/* -----------------------------------------------------------------------
+   Le formulaire de contact : son etat et ses annonces (spec 3.2, 4 et 5).
+   ----------------------------------------------------------------------- */
+
+/** Les cinq champs, et de quoi remplir chacun. */
+const SAISIE: Record<string, string> = {
+  firstName: "Ada",
+  lastName: "Lovelace",
+  email: "ada@exemple.test",
+  subject: "Une machine analytique",
+  message: "Bonjour, j aimerais parler de la machine analytique.",
+};
+
+/**
+ * Ecrit dans un champ controle par React. Le passage par le descripteur du
+ * PROTOTYPE est indispensable : React remplace le `value` de chaque noeud par
+ * un accesseur qui tient son propre suivi, et une affectation directe
+ * mettrait ce suivi a jour, donc React croirait la valeur inchangee et
+ * n'appellerait jamais le gestionnaire.
+ */
+function ecrire(nom: string, v: string) {
+  const champ = document.querySelector<HTMLInputElement | HTMLTextAreaElement>(
+    `[name="${nom}"]`,
+  );
+  expect(champ, `champ ${nom} absent`).not.toBeNull();
+  const proto =
+    champ!.tagName === "TEXTAREA" ? HTMLTextAreaElement.prototype : HTMLInputElement.prototype;
+  const poseur = Object.getOwnPropertyDescriptor(proto, "value")!.set!;
+  act(() => {
+    poseur.call(champ!, v);
+    champ!.dispatchEvent(new Event("input", { bubbles: true }));
+  });
+}
+
+type Pendante = {
+  resoudre: (r: { ok: boolean }) => void;
+  rejeter: (e: Error) => void;
+};
+
+/**
+ * Un `fetch` sous controle : chaque appel reste PENDANT jusqu'a ce que le test
+ * decide comment il se termine. Sans cela l'etat « envoi en cours » ne serait
+ * jamais observable, et le garde du double envoi n'aurait rien a attraper.
+ */
+function fetchSousControle() {
+  const appels: Array<{ url: string; corps: Record<string, string> }> = [];
+  const pendantes: Pendante[] = [];
+  const original = globalThis.fetch;
+  globalThis.fetch = ((url: unknown, init: { body?: unknown }) => {
+    appels.push({
+      url: String(url),
+      corps: JSON.parse(String(init?.body ?? "{}")) as Record<string, string>,
+    });
+    return new Promise<{ ok: boolean }>((resoudre, rejeter) =>
+      pendantes.push({ resoudre, rejeter }),
+    );
+  }) as unknown as typeof fetch;
+  return {
+    appels,
+    restaurer: () => {
+      globalThis.fetch = original;
+    },
+    /** Termine le dernier appel par une reponse HTTP. */
+    repondre: async (ok: boolean) => {
+      const p = pendantes.at(-1)!;
+      await act(async () => {
+        p.resoudre({ ok });
+      });
+    },
+    /** Termine le dernier appel par un rejet reseau : l autre chemin d echec. */
+    rompre: async () => {
+      const p = pendantes.at(-1)!;
+      await act(async () => {
+        p.rejeter(new Error("reseau coupe"));
+      });
+    },
+  };
+}
+
+const formulaire = () => document.querySelector("form")!;
+/** La region d etat. Son absence est NOMMEE : sans cela, chaque garde qui la
+ *  lit tomberait sur un `null` illisible au lieu de dire ce qui manque. */
+const region = () => {
+  const r = document.querySelector("[aria-live]");
+  expect(r, "aucune region aria-live dans le document").not.toBeNull();
+  return r!;
+};
+const bouton = () => document.querySelector<HTMLButtonElement>("button[type=submit]")!;
+
+/** Remplit les cinq champs puis soumet le formulaire. */
+function remplirEtSoumettre() {
+  for (const [nom, v] of Object.entries(SAISIE)) ecrire(nom, v);
+  act(() => {
+    formulaire().dispatchEvent(new Event("submit", { bubbles: true, cancelable: true }));
+  });
+}
+
+describe("le formulaire de contact (spec sections 3.2, 4 et 5)", () => {
+  let faux: ReturnType<typeof fetchSousControle>;
+
+  beforeEach(() => {
+    faux = fetchSousControle();
+  });
+
+  afterEach(() => {
+    faux.restaurer();
+  });
+
+  it("envoie les cinq champs au point d envoi attendu", async () => {
+    monter(createElement(FormulaireContact));
+    remplirEtSoumettre();
+    expect(faux.appels).toHaveLength(1);
+    expect(faux.appels[0]!.url).toMatch(/\/api\/contact-messages$/);
+    // La fixture porte bien les cinq valeurs : sans elles, les gardes
+    // suivantes exerceraient un envoi vide et ne prouveraient rien.
+    expect(faux.appels[0]!.corps).toEqual(SAISIE);
+    await faux.repondre(true);
+  });
+
+  // Defaut 1 du diagnostic : le succes remplacait tout le formulaire.
+  it("le formulaire SURVIT a un envoi reussi, et le message parait AU-DESSUS de lui", async () => {
+    monter(createElement(FormulaireContact));
+    remplirEtSoumettre();
+    await faux.repondre(true);
+
+    for (const nom of Object.keys(SAISIE)) {
+      expect(document.querySelector(`[name="${nom}"]`), `${nom} a disparu`).not.toBeNull();
+    }
+    expect(bouton(), "le bouton d envoi a disparu sous le focus").not.toBeNull();
+    // Et il est pret pour un second message : la saisie est rendue, non figee.
+    for (const nom of Object.keys(SAISIE)) {
+      expect(
+        document.querySelector<HTMLInputElement>(`[name="${nom}"]`)!.value,
+        `${nom} garde son ancienne valeur`,
+      ).toBe("");
+    }
+    expect(region().textContent).toContain(fr["contact.success"]!);
+    expect(region().textContent).toContain(fr["contact.successDetail"]!);
+    // Au-dessus, et pas seulement present : la region PRECEDE le formulaire.
+    expect(
+      region().compareDocumentPosition(formulaire()) & Node.DOCUMENT_POSITION_FOLLOWING,
+      "le message ne precede pas le formulaire",
+    ).toBeTruthy();
+  });
+
+  // Defaut 2 du diagnostic : aucun changement d etat n etait annonce.
+  it("annonce l etat dans une region aria-live polie qui recoit le focus", async () => {
+    monter(createElement(FormulaireContact));
+    remplirEtSoumettre();
+    await faux.repondre(true);
+
+    expect(region().getAttribute("aria-live")).toBe("polite");
+    expect(document.activeElement, "le focus n est pas porte sur la region").toBe(region());
+    // Une region focalisable mais hors tabulation : on ne l insere pas dans le
+    // parcours du clavier.
+    expect(region().getAttribute("tabindex")).toBe("-1");
+  });
+
+  // Point de vigilance A : l echec HTTP et l echec RESEAU sont deux chemins.
+  it.each([
+    ["un code HTTP d echec", (f: ReturnType<typeof fetchSousControle>) => f.repondre(false)],
+    ["un rejet reseau", (f: ReturnType<typeof fetchSousControle>) => f.rompre()],
+  ])("donne l etat d erreur ET le recours pour %s", async (_etiquette, terminer) => {
+    monter(createElement(FormulaireContact));
+    remplirEtSoumettre();
+    await terminer(faux);
+
+    expect(region().textContent).toContain(fr["contact.error"]!);
+    // Sans le recours, un envoi qui echoue laisse le visiteur sans rien.
+    expect(region().textContent).toContain(fr["contact.errorFallback"]!);
+    expect(region().textContent).not.toContain(fr["contact.success"]!);
+    expect(document.activeElement).toBe(region());
+    // La saisie n est pas perdue : on peut reessayer sans tout retaper.
+    expect(document.querySelector<HTMLInputElement>('[name="email"]')!.value).toBe(
+      SAISIE.email,
+    );
+  });
+
+  // Point de vigilance B : un double envoi rapide ne fait qu une requete.
+  it("deux soumissions rapides ne produisent qu une requete", () => {
+    monter(createElement(FormulaireContact));
+    for (const [nom, v] of Object.entries(SAISIE)) ecrire(nom, v);
+    // Soumis DEUX fois sans passer par le bouton : la touche Entree dans un
+    // champ soumet le formulaire sans toucher au bouton desactive, donc le
+    // `disabled` ne protege rien. Seul un drapeau dans la logique le fait.
+    act(() => {
+      const f = formulaire();
+      f.dispatchEvent(new Event("submit", { bubbles: true, cancelable: true }));
+      f.dispatchEvent(new Event("submit", { bubbles: true, cancelable: true }));
+    });
+    expect(faux.appels).toHaveLength(1);
+  });
+
+  // Defaut 3 du diagnostic : aucune saisie automatique n etait possible.
+  it("porte les trois attributs d auto-remplissage", () => {
+    monter(createElement(FormulaireContact));
+    const attendus: Record<string, string> = {
+      firstName: "given-name",
+      lastName: "family-name",
+      email: "email",
+    };
+    for (const [nom, valeurAttendue] of Object.entries(attendus)) {
+      const champ = document.querySelector(`[name="${nom}"]`)!;
+      expect(champ.getAttribute("autocomplete"), nom).toBe(valeurAttendue);
+    }
+  });
+
+  // Spec section 5 : le bouton ne devient pas une roue muette.
+  it("le bouton d envoi reste identifiable et annonce son etat pendant l envoi", () => {
+    monter(createElement(FormulaireContact));
+    expect(bouton().textContent!.trim()).toBe(fr["contact.send"]!);
+    remplirEtSoumettre();
+    // Pendant l envoi : un nom accessible NON VIDE, et qui a change.
+    expect(bouton().textContent!.trim()).toBe(fr["contact.sending"]!);
+    expect(bouton().textContent!.trim().length).toBeGreaterThan(0);
+    expect(bouton().getAttribute("aria-busy")).toBe("true");
+    expect(bouton().disabled).toBe(true);
+  });
+
+  // Defaut 4 du diagnostic, et critere 1.4.1.
+  it("marque les champs obligatoires autrement que par la couleur", () => {
+    monter(createElement(FormulaireContact));
+    const noms = Object.keys(SAISIE);
+    for (const nom of noms) {
+      const champ = document.querySelector<HTMLInputElement>(`[name="${nom}"]`)!;
+      expect(champ.required, `${nom} n est pas obligatoire`).toBe(true);
+      const etiquette = document.querySelector<HTMLLabelElement>(
+        `label[for="${champ.id}"]`,
+      );
+      expect(etiquette, `${nom} sans etiquette liee`).not.toBeNull();
+      const marque = etiquette!.querySelector(".formulaire-requis");
+      expect(marque, `${nom} sans marque d obligation`).not.toBeNull();
+      // La marque est un CARACTERE : elle survit a la perte de la couleur.
+      expect(marque!.textContent!.trim().length, `${nom} : marque vide`).toBeGreaterThan(0);
+    }
+    expect(noms).toHaveLength(5);
+  });
+
+  // Spec section 4 : la forme et le mot, jamais la couleur.
+  it("les glyphes d etat sont dessines, muets, et distinguent le succes de l echec", async () => {
+    const dessins = async (terminer: () => Promise<void>) => {
+      monter(createElement(FormulaireContact));
+      remplirEtSoumettre();
+      await terminer();
+      const svg = region().querySelector("svg")!;
+      expect(svg, "aucun glyphe dessine").not.toBeNull();
+      expect(svg.getAttribute("aria-hidden"), "le glyphe n est pas muet").toBe("true");
+      // Teinte par l encre : en couleurs forcees il suit le navigateur.
+      expect(svg.getAttribute("stroke")).toBe("currentColor");
+      expect(svg.hasAttribute("forced-color-adjust")).toBe(false);
+      const traces = [...svg.querySelectorAll("path")].map((p) => p.getAttribute("d"));
+      expect(traces.length).toBeGreaterThan(0);
+      for (const d of traces) expect(d).toBeTruthy();
+      const bloc = region().querySelector(".formulaire-etat-bloc")!;
+      const classes = [...bloc.classList].sort().join(" ");
+      act(() => racine!.unmount());
+      racine = null;
+      return { traces: traces.join("|"), classes };
+    };
+    const succes = await dessins(() => faux.repondre(true));
+    const echec = await dessins(() => faux.repondre(false));
+    // Deux dessins DIFFERENTS : la forme porte le sens.
+    expect(succes.traces).not.toBe(echec.traces);
+    // Et la MEME enveloppe : aucune couleur ne distingue les deux etats.
+    expect(succes.classes).toBe(echec.classes);
+  });
+
+  it("n emploie aucune classe de couleur hors palette dans le DOM rendu", async () => {
+    monter(createElement(FormulaireContact));
+    remplirEtSoumettre();
+    await faux.repondre(false);
+    const classes = [...document.querySelectorAll("[class]")].flatMap((el) => [
+      ...el.classList,
+    ]);
+    expect(classes.length).toBeGreaterThan(0);
+    for (const c of classes) {
+      expect(c, "classe hors palette").not.toMatch(
+        /green|red|muted-foreground|border-border|bg-background/,
+      );
+    }
+  });
+
+  it("les deux cles neuves existent, non vides, en parite dans les trois dictionnaires", () => {
+    for (const d of [fr, en, de]) {
+      for (const k of ["contact.errorFallback", "contact.directTitle"]) {
+        expect(d[k], k).toBeTruthy();
+      }
+      // Le titre du volet n est PAS l accroche de la section : sans quoi la
+      // meme phrase paraitrait deux fois.
+      expect(d["contact.directTitle"]).not.toBe(d["contact.headline"]);
+    }
+  });
+});
+
+/** Chaque regle de la feuille dont un selecteur nomme une classe du formulaire. */
+function reglesDuFormulaire(): Array<{ entete: string; corps: string }> {
+  const regles: Array<{ entete: string; corps: string }> = [];
+  for (const m of cssNu.matchAll(/([^{}]*\.formulaire[^{}]*)\{/g)) {
+    regles.push({
+      entete: m[1]!.trim(),
+      corps: corpsDepuis(cssNu, m.index! + m[0].length - 1),
+    });
+  }
+  return regles;
+}
+
+/** Le corps de la regle du formulaire dont l en-tete est EXACTEMENT ce selecteur. */
+function regleF(entete: string): string {
+  const trouvees = reglesDuFormulaire().filter((r) => r.entete === entete);
+  expect(trouvees, `regle ${entete}`).toHaveLength(1);
+  return trouvees[0]!.corps;
+}
+
+/** Le jeton de palette qu une variable CSS designe, cote formulaire. */
+const JETON_FORMULAIRE: Record<string, keyof typeof PALETTE_CLAIRE> = {
+  "var(--texte)": "textePrincipal",
+  "var(--texte-secondaire)": "texteSecondaire",
+  "var(--accent)": "accent",
+  "var(--bordure-signifiante)": "bordureSignifiante",
+  "var(--fond)": "fond",
+  "var(--surface)": "surface",
+};
+
+describe("la feuille du formulaire de contact", () => {
+  let faux: ReturnType<typeof fetchSousControle>;
+
+  beforeEach(() => {
+    faux = fetchSousControle();
+  });
+  afterEach(() => {
+    faux.restaurer();
+  });
+
+  it("chaque classe du DOM rendu a sa regle de base, et aucune regle du formulaire ne vise une classe non rendue", async () => {
+    const rendues = new Set<string>();
+    const recolter = () => {
+      for (const el of document.querySelectorAll("[class]")) {
+        el.classList.forEach((c) => rendues.add(c));
+      }
+    };
+    // Les quatre etats : au repos, en envoi, au succes, a l echec.
+    monter(createElement(FormulaireContact));
+    recolter();
+    remplirEtSoumettre();
+    recolter();
+    await faux.repondre(true);
+    recolter();
+    act(() => racine!.unmount());
+    racine = null;
+
+    monter(createElement(FormulaireContact));
+    remplirEtSoumettre();
+    await faux.repondre(false);
+    recolter();
+
+    expect(rendues.size).toBeGreaterThan(0);
+    const entetes = reglesDuFormulaire().map((r) => r.entete);
+    for (const c of rendues) expect(entetes, c).toContain(`.${c}`);
+    for (const e of entetes) {
+      const nom = /\.(formulaire[\w-]*)/.exec(e)![1]!;
+      expect(rendues.has(nom), `${e} vise une classe jamais rendue`).toBe(true);
+    }
+  });
+
+  // Defaut 5 du diagnostic, et point de vigilance C.
+  it("la zone de message grandit a la saisie mais sa hauteur est bornee, et c est la zone qui defile", () => {
+    const corps = regleF(".formulaire-zone");
+    // Elle grandit : plus de `resize: none`, et la hauteur suit le contenu.
+    expect(valeur(corps, "field-sizing")).toBe("content");
+    expect(valeur(corps, "resize")).not.toBe("none");
+    // Bornee : la decision « le formulaire tient dans l ecran » ne se perd pas
+    // sous un message tres long.
+    const borne = px(valeur(corps, "max-block-size"));
+    expect(borne).toBeGreaterThan(0);
+    expect(borne).toBeLessThanOrEqual(400);
+    // Au-dela, c est la ZONE qui defile, pas la section.
+    expect(valeur(corps, "overflow-y")).toBe("auto");
+    // Trois lignes au depart, et non cinq.
+    expect(px(valeur(corps, "min-block-size"))).toBeLessThan(borne);
+  });
+
+  it("les cibles du formulaire font au moins 24 x 24 px, le display rendant les tailles operantes", () => {
+    for (const selecteur of [".formulaire-saisie", ".formulaire-zone", ".formulaire-envoyer"]) {
+      const corps = regleF(selecteur);
+      expect(
+        ["block", "inline-block", "flex", "inline-flex", "grid"],
+        `${selecteur} : display`,
+      ).toContain(valeur(corps, "display"));
+      expect(px(valeur(corps, "min-block-size")), selecteur).toBeGreaterThanOrEqual(24);
+      expect(px(valeur(corps, "min-inline-size")), selecteur).toBeGreaterThanOrEqual(24);
+    }
+  });
+
+  it("aucune regle du formulaire ne porte de mouvement, de degrade ni de couleur hors palette", () => {
+    const regles = reglesDuFormulaire();
+    expect(regles.length).toBeGreaterThanOrEqual(8);
+    const SHADCN =
+      /var\(--(?:background|foreground|muted|border|input|ring|card|popover|primary|secondary|destructive)[\w-]*\)/;
+    const LITTERALE = /#[0-9a-fA-F]{3}|rgba?\(|hsla?\(|\b(?:green|red|lime|crimson|tomato)\b/;
+    /* La sonde se verifie avant de servir : un balayage trop large bloquerait
+       la palette du site, dont `--bordure` n est PAS le `--border` de shadcn. */
+    expect("var(--bordure)", "la sonde confond --bordure et --border").not.toMatch(SHADCN);
+    expect("var(--bordure-signifiante)").not.toMatch(SHADCN);
+    expect("var(--border)", "la sonde ne voit pas le jeton de shadcn").toMatch(SHADCN);
+    expect("var(--muted-foreground)").toMatch(SHADCN);
+    expect("inherited", "la sonde confond `inherited` et `red`").not.toMatch(LITTERALE);
+    expect("red").toMatch(LITTERALE);
+    for (const { entete, corps } of regles) {
+      for (const { prop, val } of declarations(corps)) {
+        expect(prop, `${entete} : ${prop}`).not.toMatch(MOUVEMENT);
+        expect(prop, `${entete} : ${prop}`).not.toMatch(IMAGE);
+        expect(prop, `${entete} : ${prop}`).not.toBe("forced-color-adjust");
+        expect(val, `${entete} : ${prop}`).not.toMatch(/gradient|var\(--degrade/);
+        expect(val, `${entete} : ${prop}`).not.toMatch(SHADCN);
+        expect(val, `${entete} : ${prop}`).not.toMatch(LITTERALE);
+        if (prop === "will-change") expect(val).not.toMatch(/transform|translate|rotate|scale|offset/);
+      }
+    }
+  });
+
+  // L intention de hierarchie, epinglee a part du calcul de contraste.
+  it("le bloc d etat se distingue par une bordure signifiante, la meme aux deux etats", () => {
+    const corps = regleF(".formulaire-etat-bloc");
+    const bordure = valeur(corps, "border");
+    const m = /^(\d+(?:\.\d+)?)px\s+(solid|dashed|double)\s+(var\(--[a-z-]+\))$/.exec(bordure);
+    expect(m, `bordure illisible : ${bordure}`).not.toBeNull();
+    expect(Number(m![1])).toBeGreaterThanOrEqual(1);
+    expect(m![3]).toBe("var(--bordure-signifiante)");
+  });
+
+  for (const [nom, p] of [["clair", PALETTE_CLAIRE], ["sombre", PALETTE_SOMBRE]] as const) {
+    it(`${nom} : le texte du formulaire atteint 4,5:1, calcule depuis ses jetons`, () => {
+      /* Le fond de chaque texte se LIT dans sa propre regle : une paire dont
+         le dessous serait suppose mesurerait un contraste imaginaire. */
+      const fondDe = (selecteur: string) => {
+        const j = JETON_FORMULAIRE[valeur(regleF(selecteur), "background-color")];
+        expect(j, `${selecteur} : fond hors palette`).toBeDefined();
+        return j!;
+      };
+      const paires: Array<[string, keyof typeof PALETTE_CLAIRE]> = [
+        [valeur(regleF(".formulaire-saisie"), "color"), fondDe(".formulaire-saisie")],
+        [valeur(regleF(".formulaire-envoyer"), "color"), fondDe(".formulaire-envoyer")],
+        [valeur(regleF(".formulaire-etat-titre"), "color"), fondDe(".formulaire-etat-bloc")],
+        [valeur(regleF(".formulaire-etat-detail"), "color"), fondDe(".formulaire-etat-bloc")],
+        // L etiquette est posee sur le fond de page, non sur une surface.
+        [valeur(regleF(".formulaire-etiquette"), "color"), "fond"],
+      ];
+      for (const [devant, dessous] of paires) {
+        const jeton = JETON_FORMULAIRE[devant];
+        expect(jeton, `couleur inconnue : ${devant}`).toBeDefined();
+        expect(
+          ratioContraste(p[jeton!], p[dessous]),
+          `${devant} sur ${dessous}`,
+        ).toBeGreaterThanOrEqual(4.5);
+      }
+    });
+
+    it(`${nom} : les bordures signifiantes et l anneau de focus atteignent 3:1 sur le fond ET sur la surface`, () => {
+      const bords = [
+        valeur(regleF(".formulaire-saisie"), "border"),
+        valeur(regleF(".formulaire-etat-bloc"), "border"),
+        valeur(regleF(".formulaire-saisie:focus-visible"), "outline"),
+        valeur(regleF(".formulaire-envoyer:focus-visible"), "outline"),
+      ];
+      for (const b of bords) {
+        const m = /^(\d+(?:\.\d+)?)px\s+(solid|dashed|double)\s+(var\(--[a-z-]+\))$/.exec(b);
+        expect(m, `contour illisible : ${b}`).not.toBeNull();
+        const jeton = JETON_FORMULAIRE[m![3]!];
+        expect(jeton, `couleur de contour inconnue : ${b}`).toBeDefined();
+        for (const dessous of [p.fond, p.surface]) {
+          expect(ratioContraste(p[jeton!], dessous), b).toBeGreaterThanOrEqual(3);
+        }
+      }
+      // Les anneaux font au moins 2 px, comme ceux du volet.
+      for (const s of [".formulaire-saisie:focus-visible", ".formulaire-envoyer:focus-visible"]) {
+        expect(Number(/^(\d+(?:\.\d+)?)px/.exec(valeur(regleF(s), "outline"))![1])).toBeGreaterThanOrEqual(2);
       }
     });
   }

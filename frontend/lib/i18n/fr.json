@@ -37,6 +37,8 @@
   "contact.headline": "Vous avez un projet ? Discutons-en !",
   "contact.subtitle": "N'hésitez pas à me contacter pour toute collaboration ou demande d'information.",
   "contact.error": "Une erreur est survenue. Veuillez réessayer.",
+  "contact.errorFallback": "Vous pouvez aussi m'écrire directement.",
+  "contact.directTitle": "Me joindre",
 
   "testimonials.leaveOne": "Laisser un témoignage",
   "testimonials.thanks": "Merci pour votre témoignage !",

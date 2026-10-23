@@ -1676,6 +1676,140 @@ html {
   .coordonnee-valeur {
     display: block;
   }
+
+  /* Le formulaire de contact. Il reste monte apres un envoi reussi : son
+     message parait au-dessus de lui, dans la region d'etat, et c'est elle qui
+     recoit le focus. Aucune couleur neuve n'entre ici : le succes et l'echec
+     se disent par une bordure signifiante, un glyphe dessine et un texte. */
+  .formulaire-etat {
+    display: block;
+  }
+
+  /* La meme enveloppe pour les deux etats : rien ne les distingue par la
+     couleur, seuls le glyphe et le mot changent. 2 px de bordure signifiante,
+     qui tient 3:1 sur le fond comme sur la surface dans les deux palettes. */
+  .formulaire-etat-bloc {
+    display: flex;
+    align-items: flex-start;
+    gap: var(--espace-1);
+    padding: var(--espace-2);
+    margin-block-end: var(--espace-2);
+    border: 2px solid var(--bordure-signifiante);
+    border-radius: 4px;
+    background-color: var(--surface);
+    color: var(--texte);
+  }
+
+  /* Le glyphe suit l'encre par currentColor : en couleurs forcees il prend
+     celle du navigateur, ce qui est le comportement voulu. Aucun
+     forced-color-adjust, donc. */
+  .formulaire-etat-glyphe {
+    display: block;
+    flex: none;
+    inline-size: 24px;
+    block-size: 24px;
+  }
+
+  .formulaire-etat-texte {
+    display: grid;
+    gap: 4px;
+  }
+
+  .formulaire-etat-titre {
+    margin: 0;
+    font-weight: 600;
+    color: var(--texte);
+  }
+
+  .formulaire-etat-detail {
+    margin: 0;
+    color: var(--texte-secondaire);
+  }
+
+  .formulaire-contact {
+    display: grid;
+    gap: var(--espace-2);
+  }
+
+  /* Prenom et nom cote a cote des que la place le permet, empiles sinon :
+     aucune requete de media, la rangee se replie d'elle-meme. */
+  .formulaire-rangee {
+    display: grid;
+    gap: var(--espace-2);
+    grid-template-columns: repeat(auto-fit, minmax(10rem, 1fr));
+  }
+
+  .formulaire-champ {
+    display: grid;
+    gap: 4px;
+  }
+
+  .formulaire-etiquette {
+    display: block;
+    font-weight: 600;
+    color: var(--texte);
+  }
+
+  /* La marque d'obligation est un caractere : elle ne porte aucune couleur,
+     donc l'information ne se perd pas avec la teinte (critere 1.4.1). */
+  .formulaire-requis {
+    font-weight: 700;
+  }
+
+  /* Les champs quittent les jetons de shadcn pour la palette du site. Le
+     display est declare AVEC les tailles : en `inline` les min-*-size
+     resteraient inoperantes sans que leur declaration bouge. */
+  .formulaire-saisie {
+    display: block;
+    inline-size: 100%;
+    min-inline-size: 24px;
+    min-block-size: 44px;
+    padding: var(--espace-1);
+    font: inherit;
+    color: var(--texte);
+    background-color: var(--surface);
+    border: 1px solid var(--bordure-signifiante);
+    border-radius: 4px;
+  }
+
+  .formulaire-saisie:focus-visible {
+    outline: 2px solid var(--accent);
+    outline-offset: 2px;
+  }
+
+  /* Trois lignes au depart, et la hauteur suit le contenu. Bornee, pour que
+     la decision « le formulaire tient dans l'ecran » ne se perde pas sous un
+     message tres long : au-dela, c'est la ZONE qui defile, pas la section. */
+  .formulaire-zone {
+    display: block;
+    min-inline-size: 24px;
+    min-block-size: 72px;
+    max-block-size: 240px;
+    field-sizing: content;
+    overflow-y: auto;
+    resize: vertical;
+  }
+
+  .formulaire-envoyer {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-inline-size: 24px;
+    min-block-size: 44px;
+    padding-inline: var(--espace-2);
+    font: inherit;
+    font-weight: 600;
+    color: var(--fond);
+    background-color: var(--accent);
+    border: 1px solid var(--accent);
+    border-radius: 4px;
+    cursor: pointer;
+  }
+
+  .formulaire-envoyer:focus-visible {
+    outline: 2px solid var(--texte);
+    outline-offset: 3px;
+  }
 }
 
 /* -----------------------------------------------------------

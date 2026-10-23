@@ -37,6 +37,8 @@
   "contact.headline": "Haben Sie ein Projekt? Lassen Sie uns reden!",
   "contact.subtitle": "Kontaktieren Sie mich gerne für jede Zusammenarbeit oder Anfrage.",
   "contact.error": "Ein Fehler ist aufgetreten. Bitte versuchen Sie es erneut.",
+  "contact.errorFallback": "Sie können mir auch direkt schreiben.",
+  "contact.directTitle": "Mich erreichen",
 
   "testimonials.leaveOne": "Referenz hinterlassen",
   "testimonials.thanks": "Vielen Dank für Ihre Referenz!",

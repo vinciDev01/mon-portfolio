@@ -91,13 +91,15 @@ describe("la gouttiere du parcours", () => {
 
 describe("les elements hors de SectionShell", () => {
   it("la page a bien des enfants directs a examiner", () => {
-    expect(enfants.length).toBeGreaterThan(2);
+    // Le conteneur et le toast configurable : sans eux la boucle suivante
+    // n'examinerait rien.
+    expect(enfants.length).toBeGreaterThanOrEqual(2);
   });
 
   it("chaque enfant direct de <main> est une SectionShell, porte la gouttiere, ou est fixe", () => {
     // Un quatrieme element ajoute hors SectionShell reproduirait le defaut : il
-    // echoue ici en etant nomme. Un composant qui ne rend rien (l'observateur
-    // de toast) n'a pas de boite et n'a donc rien a reserver.
+    // echoue ici en etant nomme. Un composant qui ne rend rien n'a pas de
+    // boite et n'a donc rien a reserver.
     for (const { balise, attributs } of enfants) {
       let ok: boolean;
       if (/^[a-z]/.test(balise)) {

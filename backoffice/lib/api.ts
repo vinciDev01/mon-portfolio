@@ -1,3 +1,5 @@
+import { getToken, removeToken } from "@/lib/auth";
+
 const API_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:4000";
 
 export function getApiUrl(): string {
@@ -12,43 +14,54 @@ export function getFileUrl(path: string | null): string | null {
 
 function getAuthHeaders(): Record<string, string> {
   const headers: Record<string, string> = {};
-  const token = typeof window !== "undefined" ? localStorage.getItem("portfolio-admin-token") : null;
+  const token = typeof window !== "undefined" ? getToken() : null;
   if (token) headers["Authorization"] = `Bearer ${token}`;
   return headers;
 }
 
-export async function fetchEntities<T>(entity: string): Promise<T[]> {
-  const res = await fetch(`${API_URL}/api/${entity}`, {
-    headers: { ...getAuthHeaders() },
+/**
+ * Appelle l'API avec le jeton de l'administrateur. Le garde du backoffice ne
+ * verifie que la PRESENCE du jeton : un jeton expire (7 jours) ou signe avec
+ * un ancien `JWT_SECRET` laissait les pages s'ouvrir, puis chaque appel
+ * echouait en « Erreur de chargement ». Un 401 efface donc le jeton et renvoie
+ * a la connexion.
+ */
+export async function appelerApi(chemin: string, init: RequestInit = {}): Promise<Response> {
+  const res = await fetch(`${API_URL}${chemin}`, {
+    ...init,
+    headers: { ...(init.headers as Record<string, string> | undefined), ...getAuthHeaders() },
   });
+  if (res.status === 401 && typeof window !== "undefined") {
+    removeToken();
+    if (window.location.pathname !== "/login") window.location.replace("/login");
+  }
+  return res;
+}
+
+export async function fetchEntities<T>(entity: string): Promise<T[]> {
+  const res = await appelerApi(`/api/${entity}`);
   if (!res.ok) throw new Error(`Failed to fetch ${entity}`);
   return res.json();
 }
 
 export async function fetchEntity<T>(entity: string, id: string): Promise<T> {
-  const res = await fetch(`${API_URL}/api/${entity}/${id}`, {
-    headers: { ...getAuthHeaders() },
-  });
+  const res = await appelerApi(`/api/${entity}/${id}`);
   if (!res.ok) throw new Error(`Failed to fetch ${entity}/${id}`);
   return res.json();
 }
 
 export async function fetchSingleton<T>(entity: string): Promise<T> {
-  const res = await fetch(`${API_URL}/api/${entity}`, {
-    headers: { ...getAuthHeaders() },
-  });
+  const res = await appelerApi(`/api/${entity}`);
   if (!res.ok) throw new Error(`Failed to fetch ${entity}`);
   return res.json();
 }
 
 export async function createEntity<T>(entity: string, data: FormData | Record<string, unknown>): Promise<T> {
   const isFormData = data instanceof FormData;
-  const res = await fetch(`${API_URL}/api/${entity}`, {
+  const res = await appelerApi(`/api/${entity}`, {
     method: "POST",
     body: isFormData ? data : JSON.stringify(data),
-    headers: isFormData
-      ? { ...getAuthHeaders() }
-      : { "Content-Type": "application/json", ...getAuthHeaders() },
+    headers: isFormData ? {} : { "Content-Type": "application/json" },
   });
   if (!res.ok) {
     const err = await res.json().catch(() => ({}));
@@ -59,12 +72,10 @@ export async function createEntity<T>(entity: string, data: FormData | Record<st
 
 export async function updateEntity<T>(entity: string, id: string, data: FormData | Record<string, unknown>): Promise<T> {
   const isFormData = data instanceof FormData;
-  const res = await fetch(`${API_URL}/api/${entity}/${id}`, {
+  const res = await appelerApi(`/api/${entity}/${id}`, {
     method: "PATCH",
     body: isFormData ? data : JSON.stringify(data),
-    headers: isFormData
-      ? { ...getAuthHeaders() }
-      : { "Content-Type": "application/json", ...getAuthHeaders() },
+    headers: isFormData ? {} : { "Content-Type": "application/json" },
   });
   if (!res.ok) {
     const err = await res.json().catch(() => ({}));
@@ -75,12 +86,10 @@ export async function updateEntity<T>(entity: string, id: string, data: FormData
 
 export async function updateSingleton<T>(entity: string, data: FormData | Record<string, unknown>): Promise<T> {
   const isFormData = data instanceof FormData;
-  const res = await fetch(`${API_URL}/api/${entity}`, {
+  const res = await appelerApi(`/api/${entity}`, {
     method: "PATCH",
     body: isFormData ? data : JSON.stringify(data),
-    headers: isFormData
-      ? { ...getAuthHeaders() }
-      : { "Content-Type": "application/json", ...getAuthHeaders() },
+    headers: isFormData ? {} : { "Content-Type": "application/json" },
   });
   if (!res.ok) {
     const err = await res.json().catch(() => ({}));
@@ -90,9 +99,8 @@ export async function updateSingleton<T>(entity: string, data: FormData | Record
 }
 
 export async function deleteEntity(entity: string, id: string): Promise<void> {
-  const res = await fetch(`${API_URL}/api/${entity}/${id}`, {
+  const res = await appelerApi(`/api/${entity}/${id}`, {
     method: "DELETE",
-    headers: { ...getAuthHeaders() },
   });
   if (!res.ok) throw new Error(`Failed to delete ${entity}/${id}`);
 }
@@ -101,10 +109,9 @@ export async function uploadFile(file: File, category: string): Promise<string> 
   const formData = new FormData();
   formData.append("file", file);
   formData.append("category", category);
-  const res = await fetch(`${API_URL}/api/upload`, {
+  const res = await appelerApi(`/api/upload`, {
     method: "POST",
     body: formData,
-    headers: { ...getAuthHeaders() },
   });
   if (!res.ok) throw new Error("Failed to upload file");
   const result = await res.json();

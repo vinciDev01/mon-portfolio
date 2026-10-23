@@ -5,9 +5,9 @@ import Link from "next/link";
 import type { SiteSettingsDto, PersonalInfoDto } from "@portfolio/shared-types";
 import { getFileUrl } from "@/lib/api";
 import { useTranslation } from "@/lib/i18n/i18n-context";
-import { sectionsActives } from "@/lib/parcours/sections";
+import { PICTOS, sectionsActives } from "@/lib/parcours/sections";
 import { initialesDe } from "@/lib/parcours/identite";
-import { useSectionActive } from "@/components/parcours/parcours-pagine";
+import { useSectionActive, useSectionSignalee } from "@/components/parcours/parcours-pagine";
 import { DrapeauDisponibilite } from "@/components/parcours/drapeau-disponibilite";
 import { LanguageSwitcher } from "@/components/portfolio/language-switcher";
 
@@ -31,6 +31,21 @@ function Picto({ chemin }: { chemin: string }) {
   );
 }
 
+/** Le pictogramme d'une section. Les traces viennent de `PICTOS`, une table
+ *  du depot et non une saisie du backoffice : l'injection ne recoit rien
+ *  d'exterieur. */
+function PictoSection({ id }: { id: string }) {
+  return (
+    <svg
+      className="picto-section"
+      viewBox="0 0 24 24"
+      aria-hidden="true"
+      focusable="false"
+      dangerouslySetInnerHTML={{ __html: PICTOS[id] ?? "" }}
+    />
+  );
+}
+
 /**
  * La colonne de passage : seul morceau de chrome du site depuis la depose de
  * l'en-tete collant. De haut en bas : l'identite au sommet du mat, le drapeau
@@ -38,6 +53,10 @@ function Picto({ chemin }: { chemin: string }) {
  *
  * L'ampoule occupe le coin haut droit et l'horizon viendra en bas droite : la
  * gauche reste le seul endroit ou l'on agit.
+ *
+ * Chaque entree porte son pictogramme et son libelle. Sous 1024 px le
+ * libelle est masque a l'oeil mais reste le nom du lien, et `title` le montre
+ * au survol a qui ne reconnait pas le signe.
  */
 export function ColonnePassage({
   reglages,
@@ -49,6 +68,7 @@ export function ColonnePassage({
   const { t } = useTranslation();
   const entrees = sectionsActives(reglages);
   const idActif = useSectionActive();
+  const idSignale = useSectionSignalee();
   const logo = getFileUrl(reglages.logoPath);
   const nomComplet = `${infos.name} ${infos.surname}`.trim();
   const initiales = initialesDe(infos);
@@ -78,9 +98,11 @@ export function ColonnePassage({
               <a
                 href={`#${e.id}`}
                 className="entree-parcours"
+                title={t(e.cleTitre)}
                 aria-current={idActif === e.id ? "true" : undefined}
+                data-signal={idSignale === e.id ? "true" : undefined}
               >
-                <span className="entree-repere" aria-hidden="true" />
+                <PictoSection id={e.id} />
                 <span className="entree-nom">{t(e.cleTitre)}</span>
               </a>
             </li>
@@ -95,13 +117,14 @@ export function ColonnePassage({
             download
             className="entree-parcours"
             aria-label={t("nav.downloadCv")}
+            title={t("nav.downloadCv")}
           >
             <Picto chemin={PICTO_CV} />
             <span className="entree-nom">{t("nav.downloadCv")}</span>
           </a>
         )}
         <LanguageSwitcher />
-        <Link href="/blog" className="entree-parcours" aria-label={t("nav.blog")}>
+        <Link href="/blog" className="entree-parcours" aria-label={t("nav.blog")} title={t("nav.blog")}>
           <Picto chemin={PICTO_BLOG} />
           <span className="entree-nom">{t("nav.blog")}</span>
         </Link>

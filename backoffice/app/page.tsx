@@ -2,11 +2,10 @@
 
 import { useEffect, useState } from "react";
 import Link from "next/link";
-import { fetchEntities } from "@/lib/api";
+import { appelerApi, fetchEntities } from "@/lib/api";
 import { toast } from "sonner";
 import type { BlogPostDto } from "@portfolio/shared-types";
 
-const API_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:4000";
 
 const sections = [
   { href: "/site-settings", label: "Paramètres du site", desc: "Logo, couleurs, police, toast, CV" },
@@ -74,11 +73,7 @@ export default function DashboardPage() {
 
   async function handleExportData() {
     try {
-      const token = typeof window !== "undefined" ? localStorage.getItem("portfolio-admin-token") : null;
-      const headers: Record<string, string> = {};
-      if (token) headers["Authorization"] = `Bearer ${token}`;
-
-      const res = await fetch(`${API_URL}/api/export/data`, { headers });
+      const res = await appelerApi("/api/export/data");
       if (!res.ok) throw new Error("Export failed");
 
       const blob = await res.blob();
@@ -96,11 +91,7 @@ export default function DashboardPage() {
 
   async function handleGenerateCv() {
     try {
-      const token = typeof window !== "undefined" ? localStorage.getItem("portfolio-admin-token") : null;
-      const headers: Record<string, string> = {};
-      if (token) headers["Authorization"] = `Bearer ${token}`;
-
-      const res = await fetch(`${API_URL}/api/cv-generator/generate`, { headers });
+      const res = await appelerApi("/api/cv-generator/generate");
       if (!res.ok) throw new Error("CV generation failed");
 
       const blob = await res.blob();

@@ -3,6 +3,7 @@ import { PrismaClient } from '@prisma/client';
 import { PrismaService } from '../prisma/prisma.service';
 import { CreateProjectDto } from './dto/create-project.dto';
 import { UpdateProjectDto } from './dto/update-project.dto';
+import { datesDuProjet } from './dates';
 
 const projectInclude = {
   technologies: {
@@ -39,6 +40,7 @@ export class ProjectsService {
     return this.prisma.project.create({
       data: {
         ...projectData,
+        ...datesDuProjet(projectData),
         technologies: technologyIds?.length
           ? {
               create: technologyIds.map((technologyId) => ({ technologyId })),
@@ -85,6 +87,7 @@ export class ProjectsService {
           where: { id },
           data: {
             ...projectData,
+            ...datesDuProjet(projectData),
             technologies:
               technologyIds !== undefined
                 ? {

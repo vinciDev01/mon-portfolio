@@ -42,6 +42,7 @@ export function LanguageSwitcher() {
         onClick={() => setOpen(!open)}
         className="entree-parcours cursor-pointer"
         aria-label={`${t("parcours.langue")} : ${current!.short}`}
+        title={`${t("parcours.langue")} : ${current!.short}`}
         aria-expanded={open}
       >
         <svg

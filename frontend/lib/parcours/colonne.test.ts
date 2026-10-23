@@ -1,7 +1,8 @@
 import { describe, it, expect } from "vitest";
 import { sectionsActives } from "./sections";
 import type { SiteSettingsDto } from "@portfolio/shared-types";
-import { bloc, corpsDepuis, css, lire, PALIERS, px, racine, tableDesContenus, valeur } from "./feuille-test";
+import { DUREE_SIGNAL_MS } from "@/components/parcours/parcours-pagine";
+import { bloc, corpsDepuis, css, cssNu, lire, PALIERS, px, racine, tableDesContenus, valeur } from "./feuille-test";
 
 /** Reglages ou tout est actif, pour partir d'une base connue. */
 function tousActifs(): SiteSettingsDto {
@@ -274,17 +275,13 @@ describe("defaut 3 : la taille des cibles de la colonne", () => {
     expect(px(valeur(regle, "min-height"))).toBeGreaterThanOrEqual(CIBLE);
   });
 
-  it("montre que le repere seul ne suffirait pas", () => {
-    // Sous 1024 px le nom est masque : sans minimum, l'entree se reduit a son
-    // repere, bordure comprise.
-    const repere = bloc(/\.entree-repere\s*\{/);
-    const cote =
-      px(valeur(repere, "width")) + 2 * px(/border:\s*([\d.]+px)/.exec(repere)![1]!);
-    expect(cote).toBeLessThan(CIBLE);
+  it("montre que le pictogramme du pied seul ne suffirait pas", () => {
+    // Le nom est masque a tous les paliers : sans minimum, une commande du
+    // pied se reduirait a son pictogramme de 16 px.
+    expect(PICTO).toBeLessThan(CIBLE);
   });
 
-  it("centre le repere dans la cible quand le nom est masque", () => {
-    expect(bloc1023).toMatch(/\.entree-nom/);
+  it("centre le pictogramme dans la cible au palier reduit", () => {
     expect(bloc(/\.entree-parcours\s*\{/, bloc1023)).toMatch(/justify-content:\s*center/);
   });
 
@@ -327,6 +324,79 @@ describe("defaut 4 : le nom accessible du selecteur de langue", () => {
         `${d} : dictionnaire non plat`,
       ).toBe(true);
     }
+  });
+});
+
+/* -------------------------------------------------------------------------
+   Le menu en pictogrammes, et le signal de la section voisine.
+   ------------------------------------------------------------------------- */
+
+/** Vrai si `debut` tombe a l'interieur d'une `@media` encore ouverte : son
+ *  accolade ne s'est pas refermee avant `debut`. Un `@layer` ouvert plus loin
+ *  ne compte pas. */
+function dansUneMedia(source: string, debut: number): boolean {
+  return [...source.slice(0, debut).matchAll(/@media[^{]*\{/g)].some((m) => {
+    let profondeur = 0;
+    for (const c of source.slice(m.index!, debut)) {
+      if (c === "{") profondeur++;
+      else if (c === "}" && --profondeur === 0) return false;
+    }
+    return true;
+  });
+}
+
+describe("le menu porte pictogramme et libelle", () => {
+  it("ne masque les libelles et le nom qu au palier reduit, sans les retirer", () => {
+    // Un masquage hors de toute `@media` cacherait les libelles a tous les
+    // paliers, ce que le proprietaire a refuse.
+    for (const sel of [/\.entree-nom\s*[,{]/g, /\.identite-nom\s*[,{]/g]) {
+      const positions = [...cssNu.matchAll(sel)].map((m) => m.index!);
+      expect(positions, `${sel} introuvable`).toHaveLength(1);
+      expect(dansUneMedia(cssNu, positions[0]!), `${sel} hors du palier reduit`).toBe(true);
+    }
+    expect(bloc1023).toMatch(/\.identite-nom,\s*\.entree-nom\s*\{/);
+    expect(bloc1023).toMatch(/clip-path:\s*inset\(50%\)/);
+    // `display: none` retirerait aussi le nom accessible.
+    expect(bloc1023).not.toMatch(/display:\s*none/);
+  });
+
+  it("donne au pictogramme de section une boite qui tient dans la cible", () => {
+    const r = bloc(/\.picto-section\s*\{/);
+    expect(px(valeur(r, "width"))).toBeLessThanOrEqual(CIBLE);
+    expect(px(valeur(r, "height"))).toBeLessThanOrEqual(CIBLE);
+  });
+
+  it("dit la section courante par un cadre, pas par la seule couleur", () => {
+    expect(bloc(/\.entree-parcours\[aria-current="true"\]\s*\{/)).toMatch(
+      /border-color:\s*var\(--bordure-signifiante\)/,
+    );
+    // Le cadre est reserve sur toutes les entrees : rien ne bouge quand il parait.
+    expect(bloc(/\.entree-parcours\s*\{/)).toMatch(/border:\s*1px solid transparent/);
+  });
+});
+
+describe("le signal de la section voisine", () => {
+  const regle = bloc(/\.entree-parcours\[data-signal="true"\]\s*\{/);
+  const animation = valeur(regle, "animation");
+
+  it("bat aussi longtemps que le composant tient le signal", () => {
+    const m = /signal-entree\s+(\d+)ms\s+[\w-]+\s+(\d+)/.exec(animation);
+    expect(m, `animation illisible : ${animation}`).not.toBeNull();
+    expect(Number(m![1]) * Number(m![2])).toBe(DUREE_SIGNAL_MS);
+  });
+
+  it("reste sous trois eclairs par seconde (WCAG 2.3.1)", () => {
+    const m = /signal-entree\s+(\d+)ms/.exec(animation)!;
+    expect(1000 / Number(m[1])).toBeLessThan(3);
+  });
+
+  it("ne bat plus en mouvement reduit, mais designe encore l entree", () => {
+    const reduit = bloc(
+      /@media \(prefers-reduced-motion: reduce\)\s*\{(?=\s*:root:not\(\[data-mouvement="force"\]\) \.entree-parcours)/,
+    );
+    const r = bloc(/\.entree-parcours\[data-signal="true"\]\s*\{/, reduit);
+    expect(r).toMatch(/animation:\s*none/);
+    expect(r).toMatch(/border-color:\s*var\(--accent\)/);
   });
 });
 

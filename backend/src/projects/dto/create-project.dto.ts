@@ -76,6 +76,14 @@ export class CreateProjectDto {
   @IsDateString()
   endDate?: string;
 
+  @ApiPropertyOptional({
+    description: "Experience dans laquelle le projet a ete mene ; null le detache",
+    nullable: true,
+  })
+  @IsOptional()
+  @IsString()
+  experienceId?: string | null;
+
   @ApiPropertyOptional({ default: 0 })
   @IsOptional()
   @Type(() => Number)

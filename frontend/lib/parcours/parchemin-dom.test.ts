@@ -12,6 +12,7 @@ import {
   FournisseurSectionActive,
   ParcoursPagine,
   useChangerSurcouche,
+  useSectionSignalee,
 } from "@/components/parcours/parcours-pagine";
 import { SECTIONS } from "./sections";
 
@@ -33,6 +34,20 @@ function Bascule({ ouverte }: { ouverte: boolean }) {
     changer(ouverte);
   }, [changer, ouverte]);
   return null;
+}
+
+/** Rend la section que la colonne ferait clignoter : depuis que la molette et
+ *  le balayage ne changent plus de section, c'est ce signal qui dit qu'un
+ *  geste a ete pris par la pagination. */
+function SondeSignal() {
+  return createElement("i", { "data-sonde-signal": useSectionSignalee() ?? "" });
+}
+
+/** La section signalee, ou `null`. */
+function signale(): string | null {
+  const sonde = hote.querySelector("[data-sonde-signal]");
+  if (!sonde) throw new Error("sonde du signal absente : l assertion serait vide");
+  return sonde.getAttribute("data-sonde-signal") || null;
 }
 
 let racine: ReturnType<typeof createRoot> | null = null;
@@ -77,6 +92,7 @@ function monter(ids: string[], ouverte = false) {
           FournisseurSectionActive as ComponentType<{ initial: string | null }>,
           { initial: sections[0]?.id ?? null },
           createElement(Bascule, { ouverte }),
+          createElement(SondeSignal),
           createElement(ParcoursPagine, { sections, enfants, pied: "PIED" }),
         ),
       ),
@@ -105,8 +121,8 @@ describe("la garde est generique (spec section 5.3)", () => {
         new WheelEvent("wheel", { deltaY: 300, bubbles: true, cancelable: true }),
       );
     });
-    expect(actif(), "la pagination a vole le defilement du proprietaire")
-      .toBe("ouverture");
+    expect(signale(), "la pagination a vole le defilement du proprietaire")
+      .toBeNull();
   });
 
   it("ne sort pas pour un proprietaire deja en butee dans ce sens", () => {
@@ -124,20 +140,22 @@ describe("la garde est generique (spec section 5.3)", () => {
         new WheelEvent("wheel", { deltaY: 300, bubbles: true, cancelable: true }),
       );
     });
-    // En butee vers le bas : la pagination reprend la main.
-    expect(actif()).not.toBe("ouverture");
+    // En butee vers le bas : la pagination reprend la main et designe la
+    // section suivante, sans y aller.
+    expect(signale()).toBe("projets");
+    expect(actif()).toBe("ouverture");
   });
 });
 
 describe("la pagination se suspend sous une surcouche (spec section 5.2)", () => {
-  it("une molette ne change pas de section quand la surcouche est ouverte", () => {
+  it("une molette ne signale rien quand la surcouche est ouverte", () => {
     monter(["ouverture", "projets"], true);
     act(() => {
       window.dispatchEvent(
         new WheelEvent("wheel", { deltaY: 300, bubbles: true, cancelable: true }),
       );
     });
-    expect(actif()).toBe("ouverture");
+    expect(signale()).toBeNull();
   });
 
   it("une touche de pagination ne change pas de section non plus", () => {
@@ -350,6 +368,7 @@ function rendreAvecConteneur(projet: ProjectDto | null) {
       createElement(
         FournisseurSectionActive as ComponentType<{ initial: string | null }>,
         { initial: sections[0]?.id ?? null },
+        createElement(SondeSignal),
         createElement(ParcoursPagine, { sections, enfants, pied: "PIED" }),
         createElement(ParcheminProjet, {
           projet,
@@ -378,6 +397,7 @@ function rendreBascule(ids: string[], ouverte: boolean) {
         FournisseurSectionActive as ComponentType<{ initial: string | null }>,
         { initial: sections[0]?.id ?? null },
         createElement(Bascule, { ouverte }),
+        createElement(SondeSignal),
         createElement(ParcoursPagine, { sections, enfants, pied: "PIED" }),
       ),
     ),
@@ -1103,12 +1123,12 @@ describe("le contrat de structure de la feuille", () => {
    le conteneur. Tout ce qui suit est monte DANS le fournisseur : hors de lui le
    drapeau ne se leve jamais et ces tests seraient verts pour rien. */
 describe("le parchemin et la pagination (spec sections 5.2 et 5.4)", () => {
-  it("le parchemin ouvert leve le drapeau : la molette ne pagine plus", () => {
+  it("le parchemin ouvert leve le drapeau : la molette ne signale plus", () => {
     monterAvecConteneur(projetComplet());
     expect(actif()).toBe("ouverture");
     molette();
-    expect(actif(), "la pagination a bouge sous un parchemin ouvert")
-      .toBe("ouverture");
+    expect(signale(), "la pagination a reagi sous un parchemin ouvert")
+      .toBeNull();
   });
 
   // Le defaut le plus couteux de la branche : un parchemin demonte par une
@@ -1118,8 +1138,7 @@ describe("le parchemin et la pagination (spec sections 5.2 et 5.4)", () => {
     act(() => rendreAvecConteneur(null));
     expect(hote.querySelector("dialog"), "le parchemin n est pas demonte").toBeNull();
     molette();
-    await laisserRetomber();
-    expect(actif(), "la pagination est restee MORTE apres le demontage du parchemin")
+    expect(signale(), "la pagination est restee MORTE apres le demontage du parchemin")
       .toBe("projets");
   });
 
@@ -1181,7 +1200,7 @@ describe("les quatre gardes de surcouche du conteneur", () => {
     act(() => {
       window.dispatchEvent(tactile("touchend", 10, 100));
     });
-    expect(actif(), "un geste commence sous surcouche a pagine").toBe("ouverture");
+    expect(signale(), "un geste commence sous surcouche a signale").toBeNull();
   });
 
   /* La QUATRIEME garde, celle de `surFinTactile`. Pour l'isoler il faut
@@ -1199,7 +1218,7 @@ describe("les quatre gardes de surcouche du conteneur", () => {
     act(() => {
       window.dispatchEvent(tactile("touchend", 10, 100));
     });
-    expect(actif(), "un geste acheve sous surcouche a pagine").toBe("ouverture");
+    expect(signale(), "un geste acheve sous surcouche a signale").toBeNull();
   });
 
   it("un touchstart parti d un proprietaire du defilement n arme pas le geste", () => {
@@ -1218,7 +1237,7 @@ describe("les quatre gardes de surcouche du conteneur", () => {
     act(() => {
       window.dispatchEvent(tactile("touchend", 10, 100));
     });
-    expect(actif(), "la pagination a vole le geste du proprietaire du defilement")
-      .toBe("ouverture");
+    expect(signale(), "la pagination a vole le geste du proprietaire du defilement")
+      .toBeNull();
   });
 });

@@ -2,12 +2,10 @@
 
 import { useEffect, useState } from "react";
 import { useRouter, useParams } from "next/navigation";
-import { updateEntity } from "@/lib/api";
+import { appelerApi, updateEntity } from "@/lib/api";
 import { ImageUpload } from "@/components/image-upload";
 import { toast } from "sonner";
 import type { BlogPostDto } from "@portfolio/shared-types";
-
-const API_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:4000";
 
 export default function EditBlogPostPage() {
   const router = useRouter();
@@ -25,11 +23,7 @@ export default function EditBlogPostPage() {
   const [saving, setSaving] = useState(false);
 
   useEffect(() => {
-    const token = typeof window !== "undefined" ? localStorage.getItem("portfolio-admin-token") : null;
-    const headers: Record<string, string> = {};
-    if (token) headers["Authorization"] = `Bearer ${token}`;
-
-    fetch(`${API_URL}/api/blog/${slug}`, { headers })
+    appelerApi(`/api/blog/${slug}`)
       .then(async (res) => {
         if (!res.ok) throw new Error("Not found");
         return res.json() as Promise<BlogPostDto>;

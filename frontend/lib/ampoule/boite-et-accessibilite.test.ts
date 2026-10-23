@@ -91,10 +91,13 @@ describe("forced-colors: active (annexe §8.4)", () => {
       expect(regleAvec(sel), sel).not.toMatch(/forced-color-adjust/);
     }
   });
-  it("garde un indicateur de position : le repere courant plein, en CanvasText", () => {
-    const r = regleAvec('.entree-parcours[aria-current="true"] .entree-repere');
-    expect(r).toMatch(/background:\s*CanvasText\s*;/);
-    expect(r).toMatch(/border-color:\s*CanvasText\s*;/);
+  it("garde un indicateur de position : seule l entree courante est encadree", () => {
+    // Le mode force rendrait CanvasText les cadres transparents eux-memes :
+    // toutes les entrees seraient encadrees, la position ne se lirait plus.
+    expect(regleAvec(".entree-parcours")).toMatch(/border-color:\s*Canvas\s*;/);
+    expect(regleAvec('.entree-parcours[aria-current="true"]')).toMatch(
+      /border-color:\s*CanvasText\s*;/,
+    );
   });
   it("ne depend d'aucune classe de theme", () => expect(corps).not.toMatch(/\.clair|\.sombre/));
 });

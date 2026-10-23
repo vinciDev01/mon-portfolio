@@ -5,7 +5,9 @@ import { createRoot } from "react-dom/client";
 import type { PersonalInfoDto } from "@portfolio/shared-types";
 import { Coordonnees } from "@/components/portfolio/coordonnees";
 import { I18nProvider } from "../i18n/i18n-context";
-import { bloc, lire, px, valeur, cssNu } from "./feuille-test";
+import { corpsDepuis, cssNu, lire, px, valeur } from "./feuille-test";
+import { ratioContraste } from "@/lib/color/contrast";
+import { PALETTE_CLAIRE, PALETTE_SOMBRE } from "@/lib/design/tokens";
 
 (globalThis as { IS_REACT_ACT_ENVIRONMENT?: boolean }).IS_REACT_ACT_ENVIRONMENT = true;
 
@@ -67,8 +69,8 @@ describe("le volet des coordonnees (spec section 3.1)", () => {
   it("rend un lien par canal present, dans l ordre, et aucun pour un canal absent", () => {
     monter(createElement(Coordonnees, { infos: mixte }));
     expect(liens().map((a) => a.textContent)).toEqual([
-      fr["contact.email"] + "ada@exemple.test",
-      fr["contact.github"] + "GitHub",
+      fr["contact.email"] + " ada@exemple.test",
+      "GitHub",
     ]);
     expect(document.querySelectorAll("li")).toHaveLength(2);
   });
@@ -82,8 +84,11 @@ describe("le volet des coordonnees (spec section 3.1)", () => {
         githubUrl: "https://github.test/a",
       }),
     }));
-    expect(liens().map((a) => a.querySelector(".coordonnee-libelle")!.textContent)).toEqual([
-      fr["contact.email"], fr["contact.phone"], fr["contact.linkedin"], fr["contact.github"],
+    expect(liens().map((a) => a.textContent)).toEqual([
+      `${fr["contact.email"]} a@exemple.test`,
+      `${fr["contact.phone"]} +33 6 12`,
+      fr["contact.linkedin"],
+      fr["contact.github"],
     ]);
   });
 
@@ -121,18 +126,20 @@ describe("le volet des coordonnees (spec section 3.1)", () => {
     expect(document.querySelectorAll("ul")).toHaveLength(1);
   });
 
-  it("le nom accessible de chaque lien contient son libelle ET sa valeur", () => {
+  it("le nom accessible contient le libelle ET la valeur quand ils different", () => {
     monter(createElement(Coordonnees, { infos: mixte }));
-    const attendus = [
-      [fr["contact.email"], "ada@exemple.test"],
-      [fr["contact.github"], "GitHub"],
-    ];
-    liens().forEach((a, i) => {
-      const nom = a.textContent!;
-      expect(nom).toContain(attendus[i]![0]);
-      expect(nom).toContain(attendus[i]![1]);
-      expect(a.hasAttribute("aria-label")).toBe(false);
-    });
+    const courriel = liens()[0]!;
+    expect(fr["contact.email"]).not.toBe("ada@exemple.test");
+    expect(courriel.textContent).toBe(`${fr["contact.email"]} ada@exemple.test`);
+    expect(courriel.hasAttribute("aria-label")).toBe(false);
+  });
+
+  it("le nom accessible dit le canal une seule fois quand libelle et valeur sont identiques", () => {
+    monter(createElement(Coordonnees, { infos: mixte }));
+    const github = liens()[1]!;
+    expect(github.textContent).toBe(fr["contact.github"]);
+    expect(github.textContent).toBe("GitHub");
+    expect(github.hasAttribute("aria-label")).toBe(false);
     // Jamais deux liens de meme nom (2.4.4).
     expect(new Set(liens().map((a) => a.textContent)).size).toBe(liens().length);
   });
@@ -152,28 +159,118 @@ describe("le volet des coordonnees (spec section 3.1)", () => {
   });
 });
 
+/** Chaque regle de la feuille dont un selecteur nomme une classe du volet. */
+function reglesDuVolet(): Array<{ entete: string; corps: string }> {
+  const regles: Array<{ entete: string; corps: string }> = [];
+  for (const m of cssNu.matchAll(/([^{}]*\.coordonnee[^{}]*)\{/g)) {
+    regles.push({
+      entete: m[1]!.trim(),
+      corps: corpsDepuis(cssNu, m.index! + m[0].length - 1),
+    });
+  }
+  return regles;
+}
+
+/** Les declarations d'un corps : nom ENTIER en minuscules, valeur rognee. */
+function declarations(corps: string): Array<{ prop: string; val: string }> {
+  return corps
+    .split(";")
+    .map((d) => /^\s*(-?[A-Za-z][A-Za-z0-9-]*)\s*:\s*([\s\S]*?)\s*$/.exec(d))
+    .filter((m): m is RegExpExecArray => m !== null)
+    .map((m) => ({ prop: m[1]!.toLowerCase(), val: m[2]! }));
+}
+
+/** Le corps de la regle dont l'en-tete est EXACTEMENT ce selecteur. */
+function regle(entete: string): string {
+  const trouvees = reglesDuVolet().filter((r) => r.entete === entete);
+  expect(trouvees, `regle ${entete}`).toHaveLength(1);
+  return trouvees[0]!.corps;
+}
+
+const MOUVEMENT =
+  /^(?:-(?:webkit|moz|ms|o)-)?(?:transition|animation|transform|translate|rotate|scale|skew|scroll-behavior|offset|zoom)(?:-[a-z-]+)?$/;
+const IMAGE = /^(?:background-image|border-image(?:-source)?|mask-image|list-style-image)$/;
+
+/** Le jeton de palette qu'une variable CSS designe, lu dans les palettes. */
+const JETON: Record<string, "texteSecondaire" | "textePrincipal" | "accent"> = {
+  "var(--texte-secondaire)": "texteSecondaire",
+  "var(--texte)": "textePrincipal",
+  "var(--accent)": "accent",
+};
+
 describe("la feuille du volet des coordonnees", () => {
-  it("chaque classe posee par le composant est declaree dans la feuille", () => {
-    const src = lire("components/portfolio/coordonnees.tsx");
-    const classes = [...src.matchAll(/className="([^"]+)"/g)].flatMap((m) => m[1]!.split(/\s+/));
-    expect(classes.length).toBeGreaterThan(0);
-    for (const c of classes) expect(cssNu, c).toMatch(new RegExp(`\\.${c}\\s*[{,:]`));
+  it("chaque classe du DOM rendu a sa regle de base, et aucune regle du volet ne vise une classe non rendue", () => {
+    const toutes = fiche({
+      email: "a@exemple.test", phone: "+33 6 12",
+      linkedinUrl: "https://linkedin.test/in/a", githubUrl: "https://github.test/a",
+    });
+    const rendues = new Set<string>();
+    for (const infos of [mixte, toutes]) {
+      monter(createElement(Coordonnees, { infos }));
+      for (const el of document.querySelectorAll("[class]")) {
+        el.classList.forEach((c) => rendues.add(c));
+      }
+      act(() => racine!.unmount());
+      racine = null;
+    }
+    expect(rendues.size).toBeGreaterThan(0);
+    const entetes = reglesDuVolet().map((r) => r.entete);
+    for (const c of rendues) expect(entetes, c).toContain(`.${c}`);
+    for (const e of entetes) {
+      const nom = /\.(coordonnee[\w-]*)/.exec(e)![1]!;
+      expect(rendues.has(nom), `${e} vise une classe jamais rendue`).toBe(true);
+    }
   });
 
-  it("la cible d un canal couvre au moins 24 x 24 px", () => {
-    const corps = bloc(/\.coordonnee-lien\s*\{/);
+  it("la cible d un canal est un bloc d au moins 24 x 24 px : le display rend les tailles operantes", () => {
+    const corps = regle(".coordonnee-lien");
+    expect(["block", "inline-block", "flex", "inline-flex", "grid"]).toContain(valeur(corps, "display"));
     expect(px(valeur(corps, "min-block-size"))).toBeGreaterThanOrEqual(24);
     expect(px(valeur(corps, "min-inline-size"))).toBeGreaterThanOrEqual(24);
   });
 
   it("le lien reste souligne : la couleur n est pas le seul porteur", () => {
-    expect(valeur(bloc(/\.coordonnee-lien\s*\{/), "text-decoration")).toContain("underline");
+    expect(valeur(regle(".coordonnee-lien"), "text-decoration")).toContain("underline");
   });
 
-  it("aucun mouvement, aucun degrade dans les regles du volet", () => {
-    for (const re of [/\.coordonnees-titre\s*\{/, /\.coordonnees-liste\s*\{/, /\.coordonnee-lien\s*\{/,
-      /\.coordonnee-lien:focus-visible\s*\{/, /\.coordonnee-libelle\s*\{/, /\.coordonnee-valeur\s*\{/]) {
-      expect(bloc(re), String(re)).not.toMatch(/transform|transition|animation|gradient/);
+  it("aucune regle du volet ne porte de mouvement ni de degrade, quel que soit son selecteur", () => {
+    const regles = reglesDuVolet();
+    expect(regles.length).toBeGreaterThanOrEqual(5);
+    for (const { entete, corps } of regles) {
+      for (const { prop, val } of declarations(corps)) {
+        expect(prop, `${entete} : ${prop}`).not.toMatch(MOUVEMENT);
+        expect(prop, `${entete} : ${prop}`).not.toMatch(IMAGE);
+        expect(val, `${entete} : ${prop}`).not.toMatch(/gradient|var\(--degrade/);
+        if (prop === "will-change") expect(val).not.toMatch(/transform|translate|rotate|scale|offset/);
+      }
     }
   });
+
+  it("le lien herite la couleur du texte, le libelle prend le texte secondaire", () => {
+    expect(valeur(regle(".coordonnee-lien"), "color")).toBe("inherit");
+    expect(valeur(regle(".coordonnee-libelle"), "color")).toBe("var(--texte-secondaire)");
+  });
+
+  for (const [nom, p] of [["clair", PALETTE_CLAIRE], ["sombre", PALETTE_SOMBRE]] as const) {
+    it(`${nom} : le libelle atteint 4,5:1 sur le fond ET sur la surface, calcule depuis son jeton`, () => {
+      const jeton = JETON[valeur(regle(".coordonnee-libelle"), "color")];
+      expect(jeton, "la couleur du libelle n est pas un jeton connu").toBeDefined();
+      for (const dessous of [p.fond, p.surface]) {
+        expect(ratioContraste(p[jeton!], dessous)).toBeGreaterThanOrEqual(4.5);
+      }
+    });
+
+    it(`${nom} : l anneau de focus est plein, d au moins 2 px, et atteint 3:1 sur le fond ET sur la surface`, () => {
+      const corps = regle(".coordonnee-lien:focus-visible");
+      const outline = valeur(corps, "outline");
+      const m = /^(\d+(?:\.\d+)?)px\s+(solid|dashed|double)\s+(var\(--[a-z-]+\))$/.exec(outline);
+      expect(m, `outline illisible : ${outline}`).not.toBeNull();
+      expect(Number(m![1])).toBeGreaterThanOrEqual(2);
+      const jeton = JETON[m![3]!];
+      expect(jeton, "la couleur de l anneau n est pas un jeton connu").toBeDefined();
+      for (const dessous of [p.fond, p.surface]) {
+        expect(ratioContraste(p[jeton!], dessous)).toBeGreaterThanOrEqual(3);
+      }
+    });
+  }
 });

@@ -20,14 +20,23 @@ export function Coordonnees({ infos }: { infos: PersonalInfoDto }) {
     <div>
       <h3 className="coordonnees-titre">{t("contact.headline")}</h3>
       <ul className="coordonnees-liste">
-        {liste.map((c) => (
-          <li key={c.cle}>
-            <a className="coordonnee-lien" href={c.href}>
-              <span className="coordonnee-libelle">{t(c.cleLibelle)}</span>
-              <span className="coordonnee-valeur">{c.valeur}</span>
-            </a>
-          </li>
-        ))}
+        {liste.map((c) => {
+          const libelle = t(c.cleLibelle);
+          return (
+            <li key={c.cle}>
+              <a className="coordonnee-lien" href={c.href}>
+                {/* Libelle et valeur identiques (GitHub, LinkedIn) : le dire
+                    une fois, sinon le nom accessible serait « GitHub GitHub ». */}
+                {libelle !== c.valeur && (
+                  <>
+                    <span className="coordonnee-libelle">{libelle}</span>{" "}
+                  </>
+                )}
+                <span className="coordonnee-valeur">{c.valeur}</span>
+              </a>
+            </li>
+          );
+        })}
       </ul>
     </div>
   );

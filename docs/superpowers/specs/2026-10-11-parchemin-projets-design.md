@@ -107,7 +107,8 @@ Un parchemin se lit de haut en bas. L'ordre est donc :
 4. La description.
 5. Le public cible, `targetAudience`.
 6. Les technologies.
-7. Les collaborateurs, chacun avec son lien LinkedIn.
+7. Les collaborateurs : le nom en texte simple, et le logo LinkedIn a sa droite
+   quand il y a un lien.
 8. L'adresse du projet en ligne, `projectUrl`.
 9. Le lien de demonstration, `demoUrl`, en cloture, comme l'action finale.
 
@@ -127,7 +128,8 @@ page publique, et un bloc titre sans lien dessous est un bloc vide.
 
 **Degradation champ par champ.** Chaque bloc disparait quand sa donnee est
 absente, sans laisser d'espace ni de titre vide. Un collaborateur dont
-`linkedinUrl` est nul rend son nom **sans lien**, et non un lien mort. Les
+`linkedinUrl` est nul rend son nom **sans lien ni logo**, et non un lien mort ni
+un logo inerte. Les
 courriels des collaborateurs ne sont pas affiches : la demande ne porte que sur
 LinkedIn, et exposer une adresse en clair invite les moissonneurs.
 
@@ -213,8 +215,16 @@ Ce qui reste a notre charge :
   visible.
 - Les deux photos portent un `alt` vide, le nom du projet etant lu juste a cote,
   comme la photo du journal.
-- Chaque lien LinkedIn porte le nom de la personne dans son nom accessible, et
-  non « LinkedIn » seul repete N fois, ce que WCAG 2.4.4 demande.
+- Le nom du collaborateur est du texte simple, et le lien LinkedIn est porte par
+  un logo a sa droite. Ce logo est un SVG inline monochrome, teinte par
+  `currentColor` (la palette ne porte aucune couleur de marque), masque aux
+  lecteurs d'ecran par `aria-hidden`. Le lien porte un `aria-label`
+  « Profil LinkedIn de {nom} » (cle `projects.collaboratorLinkedin`, dans les
+  trois langues), de sorte que chaque lien nomme la personne et non
+  « LinkedIn » seul repete N fois, ce que WCAG 2.4.4 demande. La lettre
+  change (le nom n'est plus le texte du lien), l'esprit est tenu (le nom reste
+  le nom accessible). La cible fait au moins 24 par 24 px, posee par la feuille
+  (WCAG 2.5.8).
 - Les liens externes portent `rel="noopener noreferrer"`.
 - Le parchemin a son propre defilement interne, et son contenu reste atteignable
   au clavier.
@@ -243,7 +253,8 @@ une **categorie**.
 | Le budget de mouvement | **Aucune** regle du parchemin ne porte `transition`, `transform`, `translate`, `scale` ni `animate` |
 | Les contrastes | Calcules depuis les jetons et compares aux seuils, jamais epingles en dur |
 | L'absence d'interactif imbrique | Le bouton du titre ne contient **aucun** element interactif, verifie sur le rendu |
-| Un collaborateur sans LinkedIn | Son nom est rendu sans balise de lien, verifie sur le rendu |
+| Un collaborateur sans LinkedIn | Son nom est rendu sans balise de lien ni logo, verifie sur le rendu |
+| Le logo LinkedIn | Il est le seul lien du credit, son `aria-label` contient le nom de la personne, et sa cible fait au moins 24 px, verifie sur le rendu et la feuille |
 | La garde generique | Un parchemin ouvert empeche la pagination, verifie sous jsdom |
 | La precedence de l'historique | `popstate` avec un parchemin ouvert le ferme et ne change pas de section, verifie sous jsdom |
 

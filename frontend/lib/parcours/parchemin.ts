@@ -1,13 +1,9 @@
 import type { ProjectDto, ProjectCollaboratorDto } from "@portfolio/shared-types";
+import { lienSur, renseigne } from "./liens";
 
 export type BlocParchemin =
   | "photos" | "description" | "public"
   | "technologies" | "collaborateurs" | "adresseProjet" | "demonstration";
-
-/** Vrai quand la chaine porte autre chose que des blancs. */
-function renseigne(v: string | null | undefined): boolean {
-  return typeof v === "string" && v.trim() !== "";
-}
 
 /**
  * Les blocs du parchemin, dans l'ordre de lecture de la section 4 de la spec.
@@ -40,17 +36,6 @@ export function blocsPresents(projet: ProjectDto): BlocParchemin[] {
 }
 
 export type Credit = { cle: string; nom: string; lien: string | null };
-
-/** Le lien n'est rendu que s'il est une adresse https: valide, sinon null. */
-function lienSur(v: string | null | undefined): string | null {
-  if (!renseigne(v)) return null;
-  const url = v!.trim();
-  try {
-    return new URL(url).protocol === "https:" ? url : null;
-  } catch {
-    return null;
-  }
-}
 
 /**
  * Le lien de demonstration, soumis a la MEME regle que les liens des credits :

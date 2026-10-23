@@ -14,7 +14,7 @@ const projet = (id: string, name: string, photo1Path: string | null = null): Pro
   ({
     id, name, description: null, photo1Path, photo2Path: null,
     demoUrl: null, projectUrl: null, targetAudience: null,
-    startDate: null, endDate: null,
+    startDate: null, endDate: null, experienceId: null,
     technologies: [], collaborators: [], sortOrder: 0,
   }) as ProjectDto;
 

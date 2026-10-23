@@ -14,7 +14,6 @@ import { AboutSection } from "@/components/portfolio/about-section";
 import { ContactSection } from "@/components/portfolio/contact-section";
 import { ToastNotification } from "@/components/portfolio/toast-notification";
 import { LigneDisponibilite } from "@/components/parcours/drapeau-disponibilite";
-import { SectionToastObserver } from "@/components/portfolio/section-toast-observer";
 import { MaintenancePage } from "@/components/portfolio/maintenance-page";
 import { StatsSection } from "@/components/portfolio/stats-section";
 import { ServicesSection } from "@/components/portfolio/services-section";
@@ -68,6 +67,7 @@ export default async function Page() {
           experiences={data.experiences}
           certifications={data.certifications}
           afficherCertifications={s.showCertifications}
+          projets={data.projects}
         />
       </SectionShell>
     ),
@@ -107,7 +107,6 @@ export default async function Page() {
       <Ampoule />
       <ColonnePassage reglages={s} infos={data.personalInfo} />
       <main className="min-h-screen">
-        <SectionToastObserver />
         <ParcoursPagine
           sections={sections}
           enfants={enfants}

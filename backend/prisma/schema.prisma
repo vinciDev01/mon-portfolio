@@ -193,6 +193,8 @@ model Experience {
   createdAt   DateTime  @default(now()) @map("created_at")
   updatedAt   DateTime  @updatedAt @map("updated_at")
 
+  projects Project[]
+
   @@map("experiences")
 }
 
@@ -226,6 +228,12 @@ model Project {
   sortOrder      Int       @default(0) @map("sort_order")
   createdAt      DateTime  @default(now()) @map("created_at")
   updatedAt      DateTime  @updatedAt @map("updated_at")
+
+  /// L'experience professionnelle dans laquelle le projet a ete mene. Nul
+  /// pour un projet personnel ; supprimer l'experience detache le projet
+  /// sans le supprimer.
+  experienceId String?     @map("experience_id")
+  experience   Experience? @relation(fields: [experienceId], references: [id], onDelete: SetNull)
 
   technologies  ProjectTechnology[]
   collaborators ProjectCollaborator[]

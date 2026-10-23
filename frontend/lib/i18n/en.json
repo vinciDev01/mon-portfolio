@@ -54,6 +54,7 @@
 
   "experience.ongoing": "Ongoing",
   "experience.today": "Today",
+  "experience.projects": "Projects delivered",
 
   "certifications.viewCert": "View certification",
 
@@ -62,7 +63,6 @@
 
   "footer.allRights": "All rights reserved.",
 
-  "toast.section": "Section",
 
   "meta.description": "My professional portfolio",
 

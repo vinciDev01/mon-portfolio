@@ -5,7 +5,7 @@ import { useRouter, useParams } from "next/navigation";
 import { fetchEntity, updateEntity, fetchEntities } from "@/lib/api";
 import { ImageUpload } from "@/components/image-upload";
 import { toast } from "sonner";
-import type { ProjectRawDto, TechnologyDto } from "@portfolio/shared-types";
+import type { ExperienceDto, ProjectRawDto, TechnologyDto } from "@portfolio/shared-types";
 
 interface CollaboratorRow {
   firstName: string;
@@ -37,6 +37,9 @@ export default function EditProjectPage() {
   const [startDate, setStartDate] = useState("");
   const [endDate, setEndDate] = useState("");
   const [technologyIds, setTechnologyIds] = useState<string[]>([]);
+  const [experiences, setExperiences] = useState<ExperienceDto[]>([]);
+  // Chaine vide : aucune experience, envoyee `null` a l'API.
+  const [experienceId, setExperienceId] = useState("");
   const [collaborators, setCollaborators] = useState<CollaboratorRow[]>([]);
   const [sortOrder, setSortOrder] = useState(0);
   const [loading, setLoading] = useState(true);
@@ -46,8 +49,11 @@ export default function EditProjectPage() {
     Promise.all([
       fetchEntity<ProjectRawDto>("projects", id),
       fetchEntities<TechnologyDto>("technologies"),
+      fetchEntities<ExperienceDto>("experiences"),
     ])
-      .then(([project, technologies]) => {
+      .then(([project, technologies, listeExperiences]) => {
+        setExperiences(listeExperiences);
+        setExperienceId(project.experienceId ?? "");
         setName(project.name);
         setDescription(project.description || "");
         setPhoto1Path(project.photo1Path);
@@ -126,6 +132,7 @@ export default function EditProjectPage() {
         targetAudience: targetAudience || null,
         startDate: startDate || null,
         endDate: endDate || null,
+        experienceId: experienceId || null,
         technologyIds,
         collaborators: collabs,
         sortOrder,
@@ -244,6 +251,27 @@ export default function EditProjectPage() {
               className="w-full px-3 py-2 border border-border rounded-md text-sm"
             />
           </div>
+        </div>
+        <div>
+          <label htmlFor="projet-experience" className="block text-sm font-medium mb-1">
+            Expérience professionnelle
+          </label>
+          <select
+            id="projet-experience"
+            value={experienceId}
+            onChange={(e) => setExperienceId(e.target.value)}
+            className="w-full px-3 py-2 border border-border rounded-md text-sm bg-background"
+          >
+            <option value="">Aucune (projet personnel)</option>
+            {experiences.map((x) => (
+              <option key={x.id} value={x.id}>
+                {x.role} · {x.company}
+              </option>
+            ))}
+          </select>
+          <p className="text-xs text-muted-foreground mt-1">
+            Le projet paraîtra aussi sous cette expérience, dans la section Expériences
+          </p>
         </div>
         <div>
           <label className="block text-sm font-medium mb-2">Technologies</label>

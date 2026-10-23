@@ -28,6 +28,9 @@ export interface ProjectDto {
   targetAudience: string | null;
   startDate: string | null;
   endDate: string | null;
+  /** L'experience professionnelle du projet, ou `null` pour un projet
+   *  personnel. */
+  experienceId: string | null;
   technologies: TechnologyDto[];
   collaborators: ProjectCollaboratorDto[];
   sortOrder: number;
@@ -47,6 +50,9 @@ export interface ProjectRawDto {
   targetAudience: string | null;
   startDate: string | null;
   endDate: string | null;
+  /** L'experience professionnelle du projet, ou `null` pour un projet
+   *  personnel. */
+  experienceId: string | null;
   technologies: ProjectTechnologyDto[];
   collaborators: ProjectCollaboratorDto[];
   sortOrder: number;

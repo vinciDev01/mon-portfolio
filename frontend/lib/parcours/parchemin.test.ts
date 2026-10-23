@@ -684,3 +684,12 @@ describe("les contrastes du parchemin, calcules et non epingles", () => {
     expect(luminanceRelative(PALETTE_SOMBRE.fond)).toBeLessThan(luminanceRelative(PALETTE_SOMBRE.surface));
   });
 });
+
+describe("le parchemin est centre dans la fenetre", () => {
+  it("rend au dialog le margin: auto que le preflight de Tailwind lui retire", () => {
+    // Le preflight pose `margin: 0` sur tout element, ce qui ecrase le
+    // `margin: auto` par lequel le navigateur centre un dialog modal : la
+    // feuille se collait en haut a gauche.
+    expect(valeur(bloc(/^\s*\.parchemin\s*\{/m), "margin")).toBe("auto");
+  });
+});

@@ -1570,6 +1570,10 @@ html {
   .parchemin {
     border: 0;
     padding: 0;
+    /* Le preflight de Tailwind pose `margin: 0` sur tout element, et ecrase
+       ainsi le `margin: auto` par lequel le navigateur centre un dialog
+       modal : la feuille se collait en haut a gauche. */
+    margin: auto;
     max-width: min(110ch, calc(100vw - 2 * var(--espace-3)));
     max-height: calc(100dvh - 2 * var(--espace-3));
     background: transparent;

@@ -83,7 +83,7 @@ export default async function Page() {
     ),
     contact: (
       <SectionShell cleTitre="nav.contact" index={rang("contact")}>
-        <ContactSection />
+        <ContactSection personalInfo={data.personalInfo} />
       </SectionShell>
     ),
     // Sections dormantes, reactivables depuis le backoffice.

@@ -1609,6 +1609,273 @@ html {
     padding: 0;
     margin: 0;
   }
+
+  /* Le nom, puis le logo a sa droite sur la meme ligne. */
+  .parchemin-credit {
+    display: flex;
+    align-items: center;
+    gap: var(--espace-1);
+  }
+
+  /* Un lien a icone seule : la cible de 24 px (WCAG 2.5.8) vient d'ici et non
+     de classes utilitaires, sinon il devient trop petit a viser. Le logo suit
+     l'encre par currentColor, y compris en couleurs forcees. */
+  .parchemin-credit-lien {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-inline-size: 24px;
+    min-block-size: 24px;
+    color: inherit;
+  }
+
+  .parchemin-credit-lien:focus-visible {
+    outline: 2px solid var(--accent);
+    outline-offset: 3px;
+  }
+
+  .parchemin-credit-lien svg {
+    display: block;
+    inline-size: 16px;
+    block-size: 16px;
+  }
+
+  /* Le volet des coordonnees. Chaque canal est un lien de bloc : le libelle
+     au-dessus de la valeur, la cible couvre au moins 24 x 24 px (WCAG 2.5.8).
+     Le soulignement garde le lien reconnaissable sans la couleur (1.4.1). */
+  .coordonnees-titre {
+    margin-block-end: var(--espace-2);
+  }
+
+  .coordonnees-liste {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+  }
+
+  .coordonnee-lien {
+    display: block;
+    min-inline-size: 24px;
+    min-block-size: 24px;
+    padding-block: var(--espace-1);
+    color: inherit;
+    text-decoration: underline;
+    overflow-wrap: anywhere;
+  }
+
+  .coordonnee-lien:focus-visible {
+    outline: 2px solid var(--accent);
+    outline-offset: 3px;
+  }
+
+  .coordonnee-libelle {
+    display: block;
+    color: var(--texte-secondaire);
+  }
+
+  .coordonnee-valeur {
+    display: block;
+  }
+
+  /* Le formulaire de contact. Il reste monte apres un envoi reussi : son
+     message parait au-dessus de lui, dans la region d'etat, et c'est elle qui
+     recoit le focus. Aucune couleur neuve n'entre ici : le succes et l'echec
+     se disent par une bordure signifiante, un glyphe dessine et un texte. */
+  .formulaire-etat {
+    display: block;
+  }
+
+  /* La meme enveloppe pour les deux etats : rien ne les distingue par la
+     couleur, seuls le glyphe et le mot changent. 2 px de bordure signifiante,
+     qui tient 3:1 sur le fond comme sur la surface dans les deux palettes. */
+  .formulaire-etat-bloc {
+    display: flex;
+    align-items: flex-start;
+    gap: var(--espace-1);
+    padding: var(--espace-2);
+    margin-block-end: var(--espace-2);
+    border: 2px solid var(--bordure-signifiante);
+    border-radius: 4px;
+    background-color: var(--surface);
+    color: var(--texte);
+  }
+
+  /* Le glyphe suit l'encre par currentColor : en couleurs forcees il prend
+     celle du navigateur, ce qui est le comportement voulu. Aucun
+     forced-color-adjust, donc. */
+  .formulaire-etat-glyphe {
+    display: block;
+    flex: none;
+    inline-size: 24px;
+    block-size: 24px;
+  }
+
+  .formulaire-etat-texte {
+    display: grid;
+    gap: 4px;
+  }
+
+  .formulaire-etat-titre {
+    margin: 0;
+    font-weight: 600;
+    color: var(--texte);
+  }
+
+  .formulaire-etat-detail {
+    margin: 0;
+    color: var(--texte-secondaire);
+  }
+
+  .formulaire-contact {
+    display: grid;
+    gap: var(--espace-2);
+  }
+
+  /* Prenom et nom cote a cote des que la place le permet, empiles sinon :
+     aucune requete de media, la rangee se replie d'elle-meme. */
+  .formulaire-rangee {
+    display: grid;
+    gap: var(--espace-2);
+    grid-template-columns: repeat(auto-fit, minmax(10rem, 1fr));
+  }
+
+  .formulaire-champ {
+    display: grid;
+    gap: 4px;
+  }
+
+  .formulaire-etiquette {
+    display: block;
+    font-weight: 600;
+    color: var(--texte);
+  }
+
+  /* La legende qui explique l'asterisque des cinq etiquettes. Elle prend
+     l'encre secondaire : c'est une indication de service, et non une partie du
+     message. Elle ne declare aucun fond, donc elle tient 4,5:1 sur le fond
+     comme sur la surface. */
+  .formulaire-legende {
+    margin: 0;
+    color: var(--texte-secondaire);
+  }
+
+  /* La marque d'obligation est un caractere : elle ne porte aucune couleur,
+     donc l'information ne se perd pas avec la teinte (critere 1.4.1). */
+  .formulaire-requis {
+    font-weight: 700;
+  }
+
+  /* Les champs quittent les jetons de shadcn pour la palette du site. Le
+     display est declare AVEC les tailles : en `inline` les min-*-size
+     resteraient inoperantes sans que leur declaration bouge. */
+  .formulaire-saisie {
+    display: block;
+    inline-size: 100%;
+    min-inline-size: 24px;
+    min-block-size: 44px;
+    padding: var(--espace-1);
+    font: inherit;
+    color: var(--texte);
+    background-color: var(--surface);
+    border: 1px solid var(--bordure-signifiante);
+    border-radius: 4px;
+  }
+
+  .formulaire-saisie:focus-visible {
+    outline: 2px solid var(--accent);
+    outline-offset: 2px;
+  }
+
+  /* Trois lignes au depart, et la hauteur suit le contenu. Bornee, pour que
+     la decision « le formulaire tient dans l'ecran » ne se perde pas sous un
+     message tres long : au-dela, c'est la ZONE qui defile, pas la section. */
+  .formulaire-zone {
+    display: block;
+    min-inline-size: 24px;
+    /* Trois lignes de texte, plus le rembourrage et la bordure. Dit en `lh`
+       et non en pixels : la hauteur suit le corps et l'interligne que le
+       visiteur regle. La ou `field-sizing` s'applique, `rows` ne gouverne plus
+       rien et c'est cette borne qui decide du depart. */
+    min-block-size: calc(3lh + 2 * var(--espace-1) + 2px);
+    /* Huit lignes au plus, et non 240px : un litteral ne suivrait pas le corps
+       que le visiteur regle, donc a tres gros corps la zone defilerait des la
+       quatrieme ligne et la saisie cesserait de grandir. Dit en `lh`, le
+       rapport entre le depart et la borne ne bouge plus : la zone grandit
+       toujours de trois lignes a huit, quel que soit le reglage. */
+    max-block-size: calc(8lh + 2 * var(--espace-1) + 2px);
+    field-sizing: content;
+    overflow-y: auto;
+    resize: vertical;
+  }
+
+  .formulaire-envoyer {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-inline-size: 24px;
+    min-block-size: 44px;
+    padding-inline: var(--espace-2);
+    font: inherit;
+    font-weight: 600;
+    color: var(--fond);
+    background-color: var(--accent);
+    border: 1px solid var(--accent);
+    border-radius: 4px;
+    cursor: pointer;
+  }
+
+  .formulaire-envoyer:focus-visible {
+    outline: 2px solid var(--texte);
+    outline-offset: 3px;
+  }
+
+  /* Pendant l'envoi le bouton reste focalisable et cliquable (`aria-disabled`
+     et non `disabled`, voir le composant) : le curseur dit l'attente, que le
+     mot du bouton dit deja. Aucune couleur ne change, donc rien ne se perd
+     en couleurs forcees. */
+  .formulaire-envoyer[aria-disabled="true"] {
+    cursor: progress;
+  }
+
+  /* -----------------------------------------------------------
+     La coquille de la section contact : l'accroche, puis les deux
+     volets. Les COORDONNEES viennent en premier dans l'ordre du
+     document, donc en premier sur telephone ou les volets
+     s'empilent : le canal direct se trouve avant le formulaire.
+     Aucun jeton de shadcn, aucune couleur de Tailwind, aucune
+     couleur d'alerte : la palette du site porte tout.
+     ----------------------------------------------------------- */
+  .contact-accroche {
+    margin-block-end: var(--espace-4);
+  }
+
+  .contact-accroche-titre {
+    margin: 0;
+    font-weight: 600;
+    color: var(--texte);
+  }
+
+  .contact-accroche-detail {
+    margin-block-start: var(--espace-1);
+    margin-block-end: 0;
+    color: var(--texte-secondaire);
+  }
+
+  /* Le `display: grid` et les deux paliers de colonnes viennent des classes
+     maison de Tailwind posees sur le meme noeud ; ici l'ecart entre les volets
+     et leur alignement, dans les jetons d'espacement du site. */
+  .contact-volets {
+    gap: var(--espace-4);
+    align-items: start;
+  }
+
+  /* Une cellule de grille vaut `min-width: auto` par defaut : sans cette
+     remise a zero, un mot long de la zone de message pousserait la colonne
+     au-dela de sa part. */
+  .contact-volet-formulaire {
+    display: block;
+    min-inline-size: 0;
+  }
 }
 
 /* -----------------------------------------------------------

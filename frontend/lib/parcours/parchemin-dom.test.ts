@@ -554,22 +554,97 @@ describe("le parchemin (spec sections 4, 5 et 6)", () => {
       "un projet termine est annonce « En cours »").not.toContain("En cours");
   });
 
-  it("un collaborateur sans LinkedIn est nomme sans lien", () => {
+  it("le nom d'un collaborateur est du texte simple, hors de tout lien", () => {
     const d = monterParchemin(projetAvecCredits());
-    const li = [...d.querySelectorAll("li")];
-    const sansLien = li.find((e) => e.textContent?.includes("Grace Hopper"));
-    expect(sansLien, "Grace n est pas nommee du tout").toBeDefined();
-    expect(sansLien?.querySelector("a")).toBeNull();
-    const avecLien = li.find((e) => e.textContent?.includes("Ada Lovelace"));
-    expect(avecLien?.querySelector("a")?.getAttribute("href"))
-      .toBe("https://linkedin.test/in/ada");
+    const liens = [...d.querySelectorAll(".parchemin-credits a")];
+    expect(liens.length, "aucun lien : l assertion serait vide").toBeGreaterThan(0);
+    for (const a of liens) {
+      expect(a.textContent, "le nom est reste derriere le lien").toBe("");
+    }
+    for (const nom of ["Ada Lovelace", "Grace Hopper"]) {
+      const li = [...d.querySelectorAll(".parchemin-credits li")]
+        .find((e) => e.textContent?.includes(nom));
+      expect(li, `${nom} n est pas nomme du tout`).toBeDefined();
+      expect(li!.textContent!.trim(), `${nom} : du texte en trop dans la ligne`).toBe(nom);
+      const porteur = [...li!.querySelectorAll("*")].find((e) => e.textContent === nom);
+      expect(porteur, `${nom} n a pas d element propre`).toBeDefined();
+      expect(porteur!.closest("a"), `${nom} est dans un lien`).toBeNull();
+    }
   });
 
-  it("chaque lien LinkedIn porte le nom de la personne, pas LinkedIn seul", () => {
+  it("le logo est un lien vers LinkedIn, et le nom le precede dans la ligne", () => {
     const d = monterParchemin(projetAvecCredits());
-    const a = d.querySelector("li a");
-    const nom = a?.getAttribute("aria-label") ?? a?.textContent ?? "";
-    expect(nom).toContain("Ada Lovelace");
+    const li = [...d.querySelectorAll(".parchemin-credits li")]
+      .find((e) => e.textContent?.includes("Ada Lovelace"))!;
+    const a = li.querySelector("a");
+    expect(a, "Ada n a pas de lien").not.toBeNull();
+    expect(a!.getAttribute("href")).toBe("https://linkedin.test/in/ada");
+    expect(a!.querySelector("svg"), "le logo n est pas dans le lien").not.toBeNull();
+    expect(a!.getAttribute("target")).toBe("_blank");
+    expect(a!.getAttribute("rel")).toBe("noopener noreferrer");
+    const svg = a!.querySelector("svg")!;
+    expect(svg.getAttribute("aria-hidden")).toBe("true");
+    expect(svg.getAttribute("fill"), "le logo n est pas teinte par currentColor")
+      .toBe("currentColor");
+    // Le logo est a DROITE : le lien suit le nom dans l'ordre du document.
+    const nom = [...li.children].find((e) => e.textContent === "Ada Lovelace")!;
+    expect(nom.compareDocumentPosition(a!) & Node.DOCUMENT_POSITION_FOLLOWING,
+      "le logo est a gauche du nom").toBeTruthy();
+  });
+
+  it("le nom accessible du logo est le nom de la personne, jamais LinkedIn seul", () => {
+    const d = monterParchemin(projetAvecCredits());
+    const a = d.querySelector(".parchemin-credits a")!;
+    const fr = JSON.parse(readFileSync(path.join(RACINE, "lib/i18n/fr.json"), "utf8")) as
+      Record<string, string>;
+    const attendu = fr["projects.collaboratorLinkedin"]!.replace("{nom}", "Ada Lovelace");
+    expect(a.getAttribute("aria-label")).toBe(attendu);
+    expect(a.getAttribute("aria-label")).toContain("Ada Lovelace");
+    expect(a.getAttribute("aria-label")).not.toContain("{nom}");
+  });
+
+  it("deux logos portent deux noms accessibles distincts", () => {
+    const d = monterParchemin(fabrique({
+      name: "Deux liens",
+      collaborators: [
+        { id: "c1", firstName: "Ada", lastName: "Lovelace", email: null,
+          linkedinUrl: "https://linkedin.test/in/ada", sortOrder: 0 },
+        { id: "c2", firstName: "Grace", lastName: "Hopper", email: null,
+          linkedinUrl: "https://linkedin.test/in/grace", sortOrder: 1 },
+      ],
+    }));
+    const noms = [...d.querySelectorAll(".parchemin-credits a")]
+      .map((a) => a.getAttribute("aria-label"));
+    expect(noms).toHaveLength(2);
+    expect(new Set(noms).size, "« LinkedIn » repete sans dire de qui").toBe(2);
+  });
+
+  it("un collaborateur sans LinkedIn garde son nom, sans lien ni logo", () => {
+    const d = monterParchemin(projetAvecCredits());
+    const sans = [...d.querySelectorAll(".parchemin-credits li")]
+      .find((e) => e.textContent?.includes("Grace Hopper"));
+    expect(sans, "Grace n est pas nommee du tout").toBeDefined();
+    expect(sans!.querySelector("a"), "un lien mort").toBeNull();
+    expect(sans!.querySelector("svg"), "un logo inerte").toBeNull();
+    expect(sans!.textContent!.trim()).toBe("Grace Hopper");
+    // La fixture porte bien les deux cas, sinon la garde serait vide.
+    expect(d.querySelectorAll(".parchemin-credits li")).toHaveLength(2);
+    expect(d.querySelectorAll(".parchemin-credits a")).toHaveLength(1);
+  });
+
+  it("les trois dictionnaires ont les memes cles, et la nouvelle porte {nom}", () => {
+    const lireDico = (l: string) =>
+      JSON.parse(readFileSync(path.join(RACINE, `lib/i18n/${l}.json`), "utf8")) as
+        Record<string, string>;
+    const fr = lireDico("fr");
+    const cles = Object.keys(fr).sort();
+    for (const l of ["en", "de"]) {
+      expect(Object.keys(lireDico(l)).sort(), `${l} diverge de fr`).toEqual(cles);
+    }
+    for (const l of ["fr", "en", "de"]) {
+      expect(lireDico(l)["projects.collaboratorLinkedin"],
+        `${l} : la cle ne porte pas {nom}`).toContain("{nom}");
+    }
   });
 
   it("les liens externes portent rel noopener noreferrer", () => {

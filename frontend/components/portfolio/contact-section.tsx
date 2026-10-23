@@ -1,97 +1,48 @@
 "use client";
 
-import { useState } from "react";
-import { Button } from "@/components/ui/button";
+import type { PersonalInfoDto } from "@portfolio/shared-types";
+import { Coordonnees } from "@/components/portfolio/coordonnees";
+import { FormulaireContact } from "@/components/portfolio/formulaire-contact";
 import { useTranslation } from "@/lib/i18n/i18n-context";
 
-const API_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:4000";
-
-export function ContactSection() {
-  const [form, setForm] = useState({
-    firstName: "",
-    lastName: "",
-    email: "",
-    subject: "",
-    message: "",
-  });
-  const [status, setStatus] = useState<"idle" | "loading" | "success" | "error">("idle");
+/**
+ * La coquille de la section contact : l'accroche, puis les deux volets.
+ *
+ * `SectionShell` porte deja le numero, le titre et le zigzag, donc cette
+ * section ne rend que son corps : aucun titre de niveau 2 ici.
+ *
+ * Trois decisions la tiennent :
+ *
+ * 1. Les COORDONNEES viennent en premier dans l'ordre du document. Sur
+ *    telephone les deux volets s'empilent, et c'est l'ordre du document qui
+ *    decide alors de l'ordre a l'ecran : un visiteur presse trouve le canal
+ *    direct avant d'avoir a remplir cinq champs.
+ * 2. L'accroche `contact.headline` appartient a la SECTION. Le volet des
+ *    coordonnees l'empruntait faute de cle propre ; il porte desormais
+ *    `contact.directTitle`, et la phrase ne parait plus qu'une fois.
+ * 3. Aucun jeton de shadcn et aucune couleur de Tailwind n'entre ici. Le vert,
+ *    le rouge, `text-muted-foreground`, `border-border` et `bg-background`
+ *    sont partis avec l'ancien corps du fichier : la palette du site porte
+ *    tout, et elle ne gagne aucune couleur d'alerte.
+ */
+export function ContactSection({ personalInfo }: { personalInfo: PersonalInfoDto }) {
   const { t } = useTranslation();
-
-  const handleChange = (
-    e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>,
-  ) => {
-    setForm((prev) => ({ ...prev, [e.target.name]: e.target.value }));
-  };
-
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    setStatus("loading");
-    try {
-      const res = await fetch(`${API_URL}/api/contact-messages`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(form),
-      });
-      if (!res.ok) throw new Error("Erreur");
-      setStatus("success");
-      setForm({ firstName: "", lastName: "", email: "", subject: "", message: "" });
-    } catch {
-      setStatus("error");
-    }
-  };
 
   return (
     <>
-      <div className="mesure">
-        <div className="text-center mb-8">
-          <p className="text-2xl font-bold mb-2">{t("contact.headline")}</p>
-          <p className="text-sm text-muted-foreground">{t("contact.subtitle")}</p>
+      <div className="contact-accroche mesure">
+        <p className="contact-accroche-titre">{t("contact.headline")}</p>
+        <p className="contact-accroche-detail">{t("contact.subtitle")}</p>
+      </div>
+
+      {/* Le motif maison : une colonne, puis deux des la tablette. */}
+      <div className="contact-volets grid grid-cols-1 md:grid-cols-2">
+        <Coordonnees infos={personalInfo} />
+        {/* Le formulaire rend deux freres, sa region d'etat et son `<form>` :
+            l'enveloppe en fait une seule cellule de la grille. */}
+        <div className="contact-volet-formulaire">
+          <FormulaireContact />
         </div>
-        {status === "success" ? (
-          <div className="text-center py-8">
-            <div className="size-12 mx-auto mb-4 rounded-full bg-green-100 dark:bg-green-900/30 flex items-center justify-center">
-              <svg className="size-6 text-green-600 dark:text-green-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-                <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
-              </svg>
-            </div>
-            <p className="font-semibold text-lg">{t("contact.success")}</p>
-            <p className="text-sm text-muted-foreground mt-1">{t("contact.successDetail")}</p>
-            <Button variant="outline" size="sm" className="mt-4" onClick={() => setStatus("idle")}>
-              {t("contact.sendAnother")}
-            </Button>
-          </div>
-        ) : (
-          <form onSubmit={handleSubmit} className="space-y-4">
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-              <div>
-                <label htmlFor="contact-firstName" className="block text-sm font-medium mb-1">{t("contact.firstName")}</label>
-                <input id="contact-firstName" name="firstName" type="text" required value={form.firstName} onChange={handleChange} className="w-full px-3 py-2 border border-border rounded-md text-sm bg-background" />
-              </div>
-              <div>
-                <label htmlFor="contact-lastName" className="block text-sm font-medium mb-1">{t("contact.lastName")}</label>
-                <input id="contact-lastName" name="lastName" type="text" required value={form.lastName} onChange={handleChange} className="w-full px-3 py-2 border border-border rounded-md text-sm bg-background" />
-              </div>
-            </div>
-            <div>
-              <label htmlFor="contact-email" className="block text-sm font-medium mb-1">{t("contact.email")}</label>
-              <input id="contact-email" name="email" type="email" required value={form.email} onChange={handleChange} className="w-full px-3 py-2 border border-border rounded-md text-sm bg-background" />
-            </div>
-            <div>
-              <label htmlFor="contact-subject" className="block text-sm font-medium mb-1">{t("contact.subject")}</label>
-              <input id="contact-subject" name="subject" type="text" required value={form.subject} onChange={handleChange} className="w-full px-3 py-2 border border-border rounded-md text-sm bg-background" />
-            </div>
-            <div>
-              <label htmlFor="contact-message" className="block text-sm font-medium mb-1">{t("contact.message")}</label>
-              <textarea id="contact-message" name="message" required rows={5} value={form.message} onChange={handleChange} className="w-full px-3 py-2 border border-border rounded-md text-sm bg-background resize-none" />
-            </div>
-            {status === "error" && (
-              <p className="text-sm text-red-500">{t("contact.error")}</p>
-            )}
-            <Button type="submit" disabled={status === "loading"} className="w-full">
-              {status === "loading" ? t("contact.sending") : t("contact.send")}
-            </Button>
-          </form>
-        )}
       </div>
     </>
   );

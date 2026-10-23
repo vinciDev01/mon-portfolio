@@ -17,6 +17,7 @@
   "projects.targetAudience": "Zielgruppe",
   "projects.technologies": "Technologien",
   "projects.collaborators": "Mitarbeiter",
+  "projects.collaboratorLinkedin": "LinkedIn-Profil von {nom}",
   "projects.viewDemo": "Demo ansehen",
   "projects.viewProject": "Projekt online ansehen",
 

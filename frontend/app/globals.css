@@ -1609,6 +1609,36 @@ html {
     padding: 0;
     margin: 0;
   }
+
+  /* Le nom, puis le logo a sa droite sur la meme ligne. */
+  .parchemin-credit {
+    display: flex;
+    align-items: center;
+    gap: var(--espace-1);
+  }
+
+  /* Un lien a icone seule : la cible de 24 px (WCAG 2.5.8) vient d'ici et non
+     de classes utilitaires, sinon il devient trop petit a viser. Le logo suit
+     l'encre par currentColor, y compris en couleurs forcees. */
+  .parchemin-credit-lien {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-inline-size: 24px;
+    min-block-size: 24px;
+    color: inherit;
+  }
+
+  .parchemin-credit-lien:focus-visible {
+    outline: 2px solid var(--accent);
+    outline-offset: 3px;
+  }
+
+  .parchemin-credit-lien svg {
+    display: block;
+    inline-size: 16px;
+    block-size: 16px;
+  }
 }
 
 /* -----------------------------------------------------------

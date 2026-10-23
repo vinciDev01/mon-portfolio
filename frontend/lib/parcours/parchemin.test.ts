@@ -610,6 +610,27 @@ describe("la forme du parchemin (spec section 2)", () => {
     });
   });
 
+  describe("le logo LinkedIn des credits", () => {
+    const lien = bloc(/\.parchemin-credit-lien\s*\{/, BASE);
+    const ligne = bloc(/\.parchemin-credit\s*\{/, BASE);
+
+    it("offre une cible d'au moins 24 px, par la feuille", () => {
+      expect(px(valeur(lien, "min-inline-size"))).toBeGreaterThanOrEqual(24);
+      expect(px(valeur(lien, "min-block-size"))).toBeGreaterThanOrEqual(24);
+    });
+
+    it("pose le nom et le logo sur une meme ligne", () => {
+      expect(valeur(ligne, "display")).toBe("flex");
+    });
+
+    it("ne bouge pas et ne coupe pas l'ajustement des couleurs", () => {
+      for (const corps of [lien, ligne]) {
+        expect(mouvements(corps)).toEqual([]);
+        expect(corps).not.toMatch(/forced-color-adjust|gradient/);
+      }
+    });
+  });
+
   describe("les bandes d enroulement", () => {
     const b = bloc(/\.parchemin-bande\s*\{/, BASE);
 

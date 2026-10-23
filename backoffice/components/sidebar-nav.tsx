@@ -72,12 +72,15 @@ export function SidebarNav() {
   }
 
   return (
-    <aside className="w-64 min-h-screen border-r border-border bg-card p-4 flex flex-col gap-1">
+    // Hauteur de l'ecran, et collee en haut : la barre ne s'etire plus avec
+    // une page longue, et la deconnexion reste visible en bas sans defiler.
+    // Seule la liste du menu defile si elle depasse.
+    <aside className="w-64 h-screen sticky top-0 shrink-0 border-r border-border bg-card p-4 flex flex-col gap-1">
       <div className="px-3 py-4 mb-4">
         <h1 className="text-lg font-bold">Portfolio Admin</h1>
         <p className="text-xs text-muted-foreground">Backoffice</p>
       </div>
-      <nav className="flex flex-col gap-1 flex-1">
+      <nav className="flex flex-col gap-1 flex-1 min-h-0 overflow-y-auto">
         {avantSections.map((item) => (
           <Lien key={item.href} item={item} pathname={pathname} />
         ))}

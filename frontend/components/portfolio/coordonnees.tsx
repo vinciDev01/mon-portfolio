@@ -9,6 +9,10 @@ import { useTranslation } from "@/lib/i18n/i18n-context";
  * proprietaire. La regle de ce qui s'affiche vit dans `canaux()` ; ici on
  * rend, sans second filtre. Quand aucun canal n'est exploitable, ni le titre
  * ni la liste ne paraissent : un titre sans rien dessous serait orphelin.
+ *
+ * Le titre est le SIEN (`contact.directTitle`) et non l'accroche de la
+ * section : la coquille rend deja `contact.headline`, et emprunter cette
+ * phrase ferait paraitre deux fois le meme texte dans la section assemblee.
  */
 export function Coordonnees({ infos }: { infos: PersonalInfoDto }) {
   const { t } = useTranslation();
@@ -18,7 +22,7 @@ export function Coordonnees({ infos }: { infos: PersonalInfoDto }) {
 
   return (
     <div>
-      <h3 className="coordonnees-titre">{t("contact.headline")}</h3>
+      <h3 className="coordonnees-titre">{t("contact.directTitle")}</h3>
       <ul className="coordonnees-liste">
         {liste.map((c) => {
           const libelle = t(c.cleLibelle);

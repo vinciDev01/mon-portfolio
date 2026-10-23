@@ -1750,6 +1750,15 @@ html {
     color: var(--texte);
   }
 
+  /* La legende qui explique l'asterisque des cinq etiquettes. Elle prend
+     l'encre secondaire : c'est une indication de service, et non une partie du
+     message. Elle ne declare aucun fond, donc elle tient 4,5:1 sur le fond
+     comme sur la surface. */
+  .formulaire-legende {
+    margin: 0;
+    color: var(--texte-secondaire);
+  }
+
   /* La marque d'obligation est un caractere : elle ne porte aucune couleur,
      donc l'information ne se perd pas avec la teinte (critere 1.4.1). */
   .formulaire-requis {
@@ -1788,7 +1797,12 @@ html {
        visiteur regle. La ou `field-sizing` s'applique, `rows` ne gouverne plus
        rien et c'est cette borne qui decide du depart. */
     min-block-size: calc(3lh + 2 * var(--espace-1) + 2px);
-    max-block-size: 240px;
+    /* Huit lignes au plus, et non 240px : un litteral ne suivrait pas le corps
+       que le visiteur regle, donc a tres gros corps la zone defilerait des la
+       quatrieme ligne et la saisie cesserait de grandir. Dit en `lh`, le
+       rapport entre le depart et la borne ne bouge plus : la zone grandit
+       toujours de trois lignes a huit, quel que soit le reglage. */
+    max-block-size: calc(8lh + 2 * var(--espace-1) + 2px);
     field-sizing: content;
     overflow-y: auto;
     resize: vertical;
@@ -1813,6 +1827,54 @@ html {
   .formulaire-envoyer:focus-visible {
     outline: 2px solid var(--texte);
     outline-offset: 3px;
+  }
+
+  /* Pendant l'envoi le bouton reste focalisable et cliquable (`aria-disabled`
+     et non `disabled`, voir le composant) : le curseur dit l'attente, que le
+     mot du bouton dit deja. Aucune couleur ne change, donc rien ne se perd
+     en couleurs forcees. */
+  .formulaire-envoyer[aria-disabled="true"] {
+    cursor: progress;
+  }
+
+  /* -----------------------------------------------------------
+     La coquille de la section contact : l'accroche, puis les deux
+     volets. Les COORDONNEES viennent en premier dans l'ordre du
+     document, donc en premier sur telephone ou les volets
+     s'empilent : le canal direct se trouve avant le formulaire.
+     Aucun jeton de shadcn, aucune couleur de Tailwind, aucune
+     couleur d'alerte : la palette du site porte tout.
+     ----------------------------------------------------------- */
+  .contact-accroche {
+    margin-block-end: var(--espace-4);
+  }
+
+  .contact-accroche-titre {
+    margin: 0;
+    font-weight: 600;
+    color: var(--texte);
+  }
+
+  .contact-accroche-detail {
+    margin-block-start: var(--espace-1);
+    margin-block-end: 0;
+    color: var(--texte-secondaire);
+  }
+
+  /* Le `display: grid` et les deux paliers de colonnes viennent des classes
+     maison de Tailwind posees sur le meme noeud ; ici l'ecart entre les volets
+     et leur alignement, dans les jetons d'espacement du site. */
+  .contact-volets {
+    gap: var(--espace-4);
+    align-items: start;
+  }
+
+  /* Une cellule de grille vaut `min-width: auto` par defaut : sans cette
+     remise a zero, un mot long de la zone de message pousserait la colonne
+     au-dela de sa part. */
+  .contact-volet-formulaire {
+    display: block;
+    min-inline-size: 0;
   }
 }
 

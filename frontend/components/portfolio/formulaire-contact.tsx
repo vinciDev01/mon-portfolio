@@ -82,9 +82,12 @@ export function FormulaireContact() {
     [],
   );
 
-  /* Le focus suit l'annonce, mais seulement quand l'envoi est termine :
-     le deplacer pendant l'envoi arracherait le focus au bouton que le
-     visiteur vient d'actionner. */
+  /* Le focus suit l'annonce, mais seulement quand l'envoi est termine : il
+     n'y a rien a annoncer avant, et porter le focus sur une region vide ne
+     dirait rien au visiteur. Pendant l'envoi le focus reste donc la ou il
+     est, et il y reste VRAIMENT : le bouton porte `aria-disabled` et non
+     `disabled`, parce qu'un bouton qui devient `disabled` sous le doigt perd
+     le focus au profit du `body`. */
   useEffect(() => {
     if (etat === "succes" || etat === "echec") regionEtat.current?.focus();
   }, [etat]);
@@ -164,6 +167,11 @@ export function FormulaireContact() {
       </div>
 
       <form className="formulaire-contact" onSubmit={envoyer}>
+        {/* L'asterisque des cinq etiquettes s'explique ICI, une fois. Repetee
+            dans chaque etiquette, la phrase alourdirait les cinq noms
+            accessibles sans rien apprendre de plus. */}
+        <p className="formulaire-legende">{t("contact.requiredLegend")}</p>
+
         {/* Prenom et nom sur une seule ligne des que la place le permet, sans
             requete de media : la rangee se replie d'elle-meme. */}
         <div className="formulaire-rangee">
@@ -241,11 +249,17 @@ export function FormulaireContact() {
         </Champ>
 
         {/* Le bouton reste identifiable pendant l'envoi : il change de mot,
-            jamais de nature. Pas de roue muette. */}
+            jamais de nature. Pas de roue muette.
+
+            `aria-disabled` et non `disabled` : un bouton desactive n'est plus
+            focalisable, donc le navigateur rend le focus au `body` et la
+            tabulation repart du haut de la page. Le bouton reste donc
+            cliquable, et c'est le drapeau `envoiEnCours` qui refuse le second
+            envoi, comme il refuse deja celui de la touche Entree. */}
         <button
           className="formulaire-envoyer"
           type="submit"
-          disabled={envoi}
+          aria-disabled={envoi}
           aria-busy={envoi}
         >
           {envoi ? t("contact.sending") : t("contact.send")}

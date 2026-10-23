@@ -5,6 +5,7 @@ import { createRoot } from "react-dom/client";
 import type { PersonalInfoDto } from "@portfolio/shared-types";
 import { Coordonnees } from "@/components/portfolio/coordonnees";
 import { FormulaireContact } from "@/components/portfolio/formulaire-contact";
+import { ContactSection } from "@/components/portfolio/contact-section";
 import { I18nProvider } from "../i18n/i18n-context";
 import { corpsDepuis, cssNu, declareeA, evaluer, lire, px, valeur } from "./feuille-test";
 import { ratioContraste } from "@/lib/color/contrast";
@@ -117,13 +118,17 @@ describe("le volet des coordonnees (spec section 3.1)", () => {
     }));
     expect(document.querySelectorAll("a")).toHaveLength(0);
     expect(document.querySelectorAll("h3, ul")).toHaveLength(0);
+    /* Les deux chaines sont celles que le volet rend VRAIMENT quand un canal
+       existe : le libelle du premier canal, et son titre propre. Nommer ici
+       `contact.headline`, que le volet n emprunte plus, rendrait l assertion
+       vide par construction et verte quoi qu on fasse. */
     expect(document.body.textContent).not.toContain(fr["contact.email"]);
-    expect(document.body.textContent).not.toContain(fr["contact.headline"]);
+    expect(document.body.textContent).not.toContain(fr["contact.directTitle"]);
   });
 
   it("rend le titre et la liste quand au moins un canal est exploitable", () => {
     monter(createElement(Coordonnees, { infos: mixte }));
-    expect(document.querySelector("h3")!.textContent).toBe(fr["contact.headline"]);
+    expect(document.querySelector("h3")!.textContent).toBe(fr["contact.directTitle"]);
     expect(document.querySelectorAll("ul")).toHaveLength(1);
   });
 
@@ -191,6 +196,12 @@ function regle(entete: string): string {
 const MOUVEMENT =
   /^(?:-(?:webkit|moz|ms|o)-)?(?:transition|animation|transform|translate|rotate|scale|skew|scroll-behavior|offset|zoom)(?:-[a-z-]+)?$/;
 const IMAGE = /^(?:background-image|border-image(?:-source)?|mask-image|list-style-image)$/;
+/** Les jetons de shadcn, et les couleurs ecrites hors palette. */
+const SHADCN =
+  /var\(--(?:background|foreground|muted|border|input|ring|card|popover|primary|secondary|destructive)[\w-]*\)/;
+const LITTERALE = /#[0-9a-fA-F]{3}|rgba?\(|hsla?\(|\b(?:green|red|lime|crimson|tomato)\b/;
+/** Les classes de Tailwind et de shadcn que plus aucun noeud ne doit porter. */
+const CLASSE_HORS_PALETTE = /green|red|muted-foreground|border-border|bg-background/;
 
 /** Le jeton de palette qu'une variable CSS designe, lu dans les palettes. */
 const JETON: Record<string, "texteSecondaire" | "textePrincipal" | "accent"> = {
@@ -532,7 +543,29 @@ describe("le formulaire de contact (spec sections 3.2, 4 et 5)", () => {
     expect(bouton().textContent!.trim()).toBe(fr["contact.sending"]!);
     expect(bouton().textContent!.trim().length).toBeGreaterThan(0);
     expect(bouton().getAttribute("aria-busy")).toBe("true");
-    expect(bouton().disabled).toBe(true);
+    /* Et il reste FOCALISABLE : `aria-disabled` et non `disabled`. Un bouton
+       qui devient `disabled` sous le doigt perd le focus au profit du `body`
+       dans les navigateurs, donc la tabulation repart du haut de la page.
+       MESURE : jsdom, lui, garde le focus sur un bouton desactive, donc ce
+       choix ne s observe ici que par ses attributs. */
+    expect(bouton().getAttribute("aria-disabled")).toBe("true");
+    expect(bouton().disabled, "le bouton desactive perdrait son focus").toBe(false);
+  });
+
+  /* Le corollaire : un bouton focalisable est aussi un bouton cliquable, donc
+     la protection du double envoi doit tenir sans le `disabled`. Elle tient
+     par le drapeau de la logique, et c est ce que cette garde exerce. */
+  it("un second clic pendant l envoi ne produit pas de seconde requete", () => {
+    monter(createElement(FormulaireContact));
+    for (const [nom, v] of Object.entries(SAISIE)) ecrire(nom, v);
+    act(() => {
+      bouton().click();
+    });
+    expect(faux.appels, "le premier clic ne soumet rien").toHaveLength(1);
+    act(() => {
+      bouton().click();
+    });
+    expect(faux.appels, "le second clic repart en requete").toHaveLength(1);
   });
 
   // Defaut 4 du diagnostic, et critere 1.4.1.
@@ -552,6 +585,34 @@ describe("le formulaire de contact (spec sections 3.2, 4 et 5)", () => {
       expect(marque!.textContent!.trim().length, `${nom} : marque vide`).toBeGreaterThan(0);
     }
     expect(noms).toHaveLength(5);
+  });
+
+  /* Les cinq etiquettes portent un `*` que rien n expliquait. La legende le
+     dit UNE fois, au-dessus des champs : repetee dans les cinq etiquettes elle
+     alourdirait chaque nom accessible sans rien apprendre de plus. */
+  it("explique l asterisque UNE fois, au-dessus des champs, et jamais dans les etiquettes", () => {
+    monter(createElement(FormulaireContact));
+    const legendes = document.querySelectorAll(".formulaire-legende");
+    expect(
+      legendes.length,
+      "la legende de l asterisque : il en faut une, et une seule",
+    ).toBe(1);
+    const legende = legendes[0]!;
+    expect(legende.textContent!.trim()).toBe(fr["contact.requiredLegend"]!);
+    // Au-dessus, et pas seulement presente : elle PRECEDE le premier champ.
+    const premier = document.querySelector('[name="firstName"]')!;
+    expect(
+      legende.compareDocumentPosition(premier) & Node.DOCUMENT_POSITION_FOLLOWING,
+      "la legende ne precede pas les champs",
+    ).toBeTruthy();
+    const etiquettes = [...document.querySelectorAll("label")];
+    expect(etiquettes).toHaveLength(5);
+    for (const e of etiquettes) {
+      expect(
+        e.textContent,
+        "une etiquette repete la legende",
+      ).not.toContain(fr["contact.requiredLegend"]!);
+    }
   });
 
   // Spec section 4 : la forme et le mot, jamais la couleur.
@@ -594,9 +655,7 @@ describe("le formulaire de contact (spec sections 3.2, 4 et 5)", () => {
     ]);
     expect(classes.length).toBeGreaterThan(0);
     for (const c of classes) {
-      expect(c, "classe hors palette").not.toMatch(
-        /green|red|muted-foreground|border-border|bg-background/,
-      );
+      expect(c, "classe hors palette").not.toMatch(CLASSE_HORS_PALETTE);
     }
   });
 
@@ -717,11 +776,16 @@ describe("la feuille du formulaire de contact", () => {
     // Elle grandit : plus de `resize: none`, et la hauteur suit le contenu.
     expect(valeur(corps, "field-sizing")).toBe("content");
     expect(valeur(corps, "resize")).not.toBe("none");
-    // Bornee : la decision « le formulaire tient dans l ecran » ne se perd pas
-    // sous un message tres long.
-    const borne = px(valeur(corps, "max-block-size"));
-    expect(borne).toBeGreaterThan(0);
-    expect(borne).toBeLessThanOrEqual(400);
+    /* Bornee : la decision « le formulaire tient dans l ecran » ne se perd pas
+       sous un message tres long. Bornee EN LIGNES, comme le depart : un
+       litteral en pixels ne suivrait pas le corps que le visiteur regle, et a
+       tres gros corps la zone defilerait des la quatrieme ligne. */
+    const brut = valeur(corps, "max-block-size");
+    expect(brut, "la borne haute ne suit pas le corps : elle n est pas dite en lh").toMatch(/\dlh/);
+    const borne = taille(brut);
+    expect(borne.pixels).toBeGreaterThan(0);
+    // Au reglage par defaut, elle reste sous le palier de 400 px d origine.
+    expect(borne.pixels).toBeLessThanOrEqual(400);
     // Au-dela, c est la ZONE qui defile, pas la section.
     expect(valeur(corps, "overflow-y")).toBe("auto");
     /* TROIS lignes au depart, et non cinq : la spec section 3.2 nomme ce
@@ -731,8 +795,14 @@ describe("la feuille du formulaire de contact", () => {
     const depart = taille(valeur(corps, "min-block-size"));
     expect(depart.lignes, "la zone ne part pas a trois lignes").toBeGreaterThanOrEqual(3);
     expect(depart.lignes, "la zone part a plus de trois lignes").toBeLessThan(4);
-    // Et elle grandit AVANT de defiler : la borne haute passe le depart.
-    expect(borne).toBeGreaterThan(depart.pixels);
+    /* Et elle grandit AVANT de defiler, d un facteur qui ne depend PAS du
+       corps : au moins deux fois le depart, et jamais plus de dix lignes,
+       sinon la section entiere cesserait de tenir dans l ecran. */
+    expect(borne.pixels).toBeGreaterThan(depart.pixels);
+    expect(borne.lignes, "la zone ne grandit pas assez avant de defiler").toBeGreaterThanOrEqual(
+      2 * depart.lignes,
+    );
+    expect(borne.lignes, "la zone grandit trop avant de defiler").toBeLessThanOrEqual(10);
   });
 
   // M1 de la revue : le chiffre de la spec se garde aussi sur le DOM, pour les
@@ -763,9 +833,6 @@ describe("la feuille du formulaire de contact", () => {
   it("aucune regle du formulaire ne porte de mouvement, de degrade ni de couleur hors palette", () => {
     const regles = reglesDuFormulaire();
     expect(regles.length).toBeGreaterThanOrEqual(8);
-    const SHADCN =
-      /var\(--(?:background|foreground|muted|border|input|ring|card|popover|primary|secondary|destructive)[\w-]*\)/;
-    const LITTERALE = /#[0-9a-fA-F]{3}|rgba?\(|hsla?\(|\b(?:green|red|lime|crimson|tomato)\b/;
     /* La sonde se verifie avant de servir : un balayage trop large bloquerait
        la palette du site, dont `--bordure` n est PAS le `--border` de shadcn. */
     expect("var(--bordure)", "la sonde confond --bordure et --border").not.toMatch(SHADCN);
@@ -812,10 +879,12 @@ describe("la feuille du formulaire de contact", () => {
         [valeur(regleF(".formulaire-etat-titre"), "color"), fondDe(".formulaire-etat-bloc")],
         [valeur(regleF(".formulaire-etat-detail"), "color"), fondDe(".formulaire-etat-bloc")],
       ];
-      /* L etiquette ne declare aucun fond : elle prend celui que la coquille
-         lui donne. On ne SUPPOSE donc pas lequel, on exige les deux. */
+      /* L etiquette et la legende ne declarent aucun fond : elles prennent
+         celui que la coquille leur donne. On ne SUPPOSE donc pas lequel, on
+         exige les deux. */
       for (const dessous of ["fond", "surface"] as const) {
         paires.push([valeur(regleF(".formulaire-etiquette"), "color"), dessous]);
+        paires.push([valeur(regleF(".formulaire-legende"), "color"), dessous]);
       }
       for (const [devant, dessous] of paires) {
         const jeton = JETON_FORMULAIRE[devant];
@@ -849,4 +918,237 @@ describe("la feuille du formulaire de contact", () => {
       }
     });
   }
+});
+
+/* -----------------------------------------------------------------------
+   La coquille de la section : les deux volets, et la migration des jetons.
+   ----------------------------------------------------------------------- */
+
+/** Chaque regle de la feuille dont un selecteur nomme une classe de la section. */
+function reglesDeLaSection(): Array<{ entete: string; corps: string }> {
+  const regles: Array<{ entete: string; corps: string }> = [];
+  for (const m of cssNu.matchAll(/([^{}]*\.contact-[^{}]*)\{/g)) {
+    regles.push({
+      entete: m[1]!.trim(),
+      corps: corpsDepuis(cssNu, m.index! + m[0].length - 1),
+    });
+  }
+  return regles;
+}
+
+/** Le corps de la regle de la section dont l en-tete est EXACTEMENT ce selecteur. */
+function regleS(entete: string): string {
+  const trouvees = reglesDeLaSection().filter((r) => r.entete === entete);
+  expect(trouvees, `regle ${entete}`).toHaveLength(1);
+  return trouvees[0]!.corps;
+}
+
+/**
+ * Les SEULES classes utilitaires que la section s autorise. Elles vivent dans
+ * la feuille generee par Tailwind et non dans `globals.css`, donc le balayage
+ * des classes maison ne peut pas les y trouver : elles sont nommees ici, et
+ * chacune est par ailleurs exigee sur le DOM, sans quoi cette liste servirait
+ * a cacher un retrait.
+ */
+const UTILITAIRES = ["grid", "grid-cols-1", "md:grid-cols-2"];
+
+const volets = () => {
+  const toutes = document.querySelectorAll(".contact-volets");
+  expect(toutes.length, "la grille des deux volets : il en faut une, et une seule").toBe(1);
+  return toutes[0]!;
+};
+
+describe("la section contact (spec sections 2 et 3)", () => {
+  let faux: ReturnType<typeof fetchSousControle>;
+
+  beforeEach(() => {
+    faux = fetchSousControle();
+  });
+  afterEach(() => {
+    faux.restaurer();
+  });
+
+  /** Monte la section avec la fiche mixte : un canal present, un absent. */
+  const section = (infos: PersonalInfoDto = mixte) =>
+    monter(createElement(ContactSection, { personalInfo: infos }));
+
+  it("rend les deux volets, les coordonnees AVANT le formulaire", () => {
+    section();
+    /* La fixture exerce les DEUX branches du volet : deux canaux presents
+       (courriel, GitHub) et deux absents (telephone blanc, LinkedIn en http).
+       Sans canal absent, le filtre ne serait jamais mis a l epreuve ici. */
+    expect(document.querySelectorAll("li")).toHaveLength(2);
+    const liste = document.querySelector("ul.coordonnees-liste");
+    expect(liste, "le volet des coordonnees n est pas rendu").not.toBeNull();
+    const formulaire = document.querySelector("form.formulaire-contact");
+    expect(formulaire, "le formulaire n est pas rendu").not.toBeNull();
+    // L ordre du DOCUMENT decide l ordre sur telephone, ou les volets
+    // s empilent : le canal direct se trouve avant le formulaire.
+    expect(
+      liste!.compareDocumentPosition(formulaire!) & Node.DOCUMENT_POSITION_FOLLOWING,
+      "le formulaire ne suit pas les coordonnees dans l ordre du document",
+    ).toBeTruthy();
+    // Et les deux sont bien DANS la grille : un volet pose a cote ne serait
+    // pas dispose par elle.
+    expect(volets().contains(liste!), "les coordonnees sont hors de la grille").toBe(true);
+    expect(volets().contains(formulaire!), "le formulaire est hors de la grille").toBe(true);
+  });
+
+  it("empile les volets sur telephone et les met cote a cote des la tablette", () => {
+    section();
+    const classes = [...volets().classList];
+    for (const u of UTILITAIRES) expect(classes, `classe ${u} absente`).toContain(u);
+  });
+
+  it("chaque classe maison du DOM rendu a sa regle, et aucune regle de la section ne vise une classe non rendue", async () => {
+    const rendues = new Set<string>();
+    const recolter = () => {
+      for (const el of document.querySelectorAll("[class]")) {
+        el.classList.forEach((c) => rendues.add(c));
+      }
+    };
+    // Les trois etats visibles de la section : au repos, au succes, a l echec.
+    section();
+    recolter();
+    remplirEtSoumettre();
+    await faux.repondre(true);
+    recolter();
+    act(() => racine!.unmount());
+    racine = null;
+
+    section();
+    remplirEtSoumettre();
+    await faux.repondre(false);
+    recolter();
+
+    expect(rendues.size).toBeGreaterThan(0);
+    /* Le balayage lit le DOM RENDU et non le source : une classe posee par une
+       expression que le source n ecrit pas telle quelle lui echapperait. */
+    for (const c of rendues) {
+      if (UTILITAIRES.includes(c)) continue;
+      expect(cssNu, `classe ${c} sans regle dans la feuille`).toContain(`.${c}`);
+    }
+    // La liste des utilitaires ne peut pas cacher un retrait : chacune y est
+    // bien posee sur le DOM.
+    for (const u of UTILITAIRES) expect([...rendues], `utilitaire ${u} jamais pose`).toContain(u);
+    const entetes = reglesDeLaSection().map((r) => r.entete);
+    expect(entetes.length).toBeGreaterThanOrEqual(4);
+    for (const e of entetes) {
+      const nom = /\.(contact-[\w-]*)/.exec(e)![1]!;
+      expect(rendues.has(nom), `${e} vise une classe jamais rendue`).toBe(true);
+    }
+  });
+
+  it("n emploie AUCUN jeton shadcn ni couleur Tailwind, ni dans la feuille ni sur le DOM rendu", async () => {
+    /* Les sondes se verifient avant de servir : `--bordure` est le jeton du
+       site et jamais le `--border` de shadcn, et `inherited` n est pas `red`. */
+    expect("var(--bordure-signifiante)", "la sonde confond --bordure et --border").not.toMatch(SHADCN);
+    expect("var(--muted-foreground)", "la sonde ne voit pas le jeton de shadcn").toMatch(SHADCN);
+    expect("border-radius: 4px", "la sonde confond border-radius et red").not.toMatch(LITTERALE);
+    expect("color: red").toMatch(LITTERALE);
+    expect("coordonnee-libelle", "la sonde de classes confond libelle et red").not.toMatch(
+      CLASSE_HORS_PALETTE,
+    );
+    expect("text-red-500").toMatch(CLASSE_HORS_PALETTE);
+
+    const regles = reglesDeLaSection();
+    expect(regles.length).toBeGreaterThanOrEqual(4);
+    for (const { entete, corps } of regles) {
+      for (const interdit of ["muted-foreground", "border-border", "bg-background", "green"]) {
+        expect(corps, `${entete} : ${interdit}`).not.toContain(interdit);
+      }
+      for (const { prop, val } of declarations(corps)) {
+        expect(val, `${entete} : ${prop}`).not.toMatch(SHADCN);
+        expect(val, `${entete} : ${prop}`).not.toMatch(LITTERALE);
+      }
+    }
+
+    /* Et sur le DOM rendu : une classe de Tailwind vit dans l attribut `class`
+       et jamais dans `globals.css`, donc le balayage de la feuille ne pourrait
+       pas la voir. L etat d echec est exerce : c est lui qui portait
+       `text-red-500` dans l ancienne section. */
+    section();
+    remplirEtSoumettre();
+    await faux.repondre(false);
+    const classes = [...document.querySelectorAll("[class]")].flatMap((el) => [...el.classList]);
+    expect(classes.length).toBeGreaterThan(0);
+    for (const c of classes) {
+      expect(c, `classe hors palette : ${c}`).not.toMatch(CLASSE_HORS_PALETTE);
+    }
+  });
+
+  it("n introduit aucun mouvement et aucun degrade", () => {
+    /* Faux positif ecarte : `text-transform` contient bien « transform » et ne
+       doit PAS declencher le balayage du mouvement, que la section emploie sur
+       des noms ENTIERS de propriete. */
+    expect("text-transform", "la sonde confond text-transform et transform").not.toMatch(MOUVEMENT);
+    expect("transition", "la sonde ne voit pas transition").toMatch(MOUVEMENT);
+    const regles = reglesDeLaSection();
+    expect(regles.length).toBeGreaterThanOrEqual(4);
+    for (const { entete, corps } of regles) {
+      for (const { prop, val } of declarations(corps)) {
+        expect(prop, `${entete} : ${prop}`).not.toMatch(MOUVEMENT);
+        expect(prop, `${entete} : ${prop}`).not.toMatch(IMAGE);
+        expect(val, `${entete} : ${prop}`).not.toMatch(/gradient|var\(--degrade/);
+        if (prop === "will-change") expect(val).not.toMatch(/transform|translate|rotate|scale|offset/);
+      }
+    }
+  });
+
+  it("l accroche de la section parait UNE fois, et le volet ne l emprunte plus", () => {
+    section();
+    const texte = document.body.textContent!;
+    expect(texte).toContain(fr["contact.subtitle"]!);
+    // Exactement une fois : le volet empruntait cette phrase pour son titre,
+    // donc elle paraissait deux fois dans la section assemblee.
+    expect(
+      texte.split(fr["contact.headline"]!).length - 1,
+      "l accroche ne parait pas exactement une fois",
+    ).toBe(1);
+    // Le volet porte son titre PROPRE, et les deux phrases different.
+    expect(document.querySelector("h3")!.textContent).toBe(fr["contact.directTitle"]!);
+    expect(fr["contact.directTitle"]).not.toBe(fr["contact.headline"]);
+  });
+
+  // L intention de hierarchie, epinglee a part du calcul de contraste.
+  it("l accroche prend l encre principale et son detail l encre secondaire", () => {
+    const titre = valeur(regleS(".contact-accroche-titre"), "color");
+    const detail = valeur(regleS(".contact-accroche-detail"), "color");
+    expect(titre).toBe("var(--texte)");
+    expect(detail).toBe("var(--texte-secondaire)");
+    expect(titre, "les deux niveaux se confondent").not.toBe(detail);
+  });
+
+  for (const [nom, p] of [["clair", PALETTE_CLAIRE], ["sombre", PALETTE_SOMBRE]] as const) {
+    it(`${nom} : les textes de la section atteignent 4,5:1, calcules depuis leurs jetons`, () => {
+      /* Aucune des deux regles ne declare de fond : la section prend celui de
+         la page. On ne SUPPOSE donc pas lequel, on exige les deux. */
+      for (const selecteur of [".contact-accroche-titre", ".contact-accroche-detail"]) {
+        const devant = valeur(regleS(selecteur), "color");
+        const jeton = JETON_FORMULAIRE[devant];
+        expect(jeton, `${selecteur} : couleur inconnue ${devant}`).toBeDefined();
+        for (const dessous of [p.fond, p.surface]) {
+          expect(ratioContraste(p[jeton!], dessous), `${selecteur} sur ${dessous}`)
+            .toBeGreaterThanOrEqual(4.5);
+        }
+      }
+    });
+  }
+
+  it("la cle neuve de la legende existe, non vide, en parite dans les trois dictionnaires", () => {
+    for (const d of [fr, en, de]) {
+      expect(d["contact.requiredLegend"], "contact.requiredLegend").toBeTruthy();
+      // Elle nomme bien le caractere qu elle explique.
+      expect(d["contact.requiredLegend"], "la legende ne nomme pas l asterisque").toContain("*");
+    }
+  });
+
+  it("la coquille recoit une DONNEE depuis le composant serveur, et jamais une fonction", () => {
+    const page = lire("app/page.tsx");
+    const m = /<ContactSection([^<]*?)\/>/.exec(page);
+    expect(m, "ContactSection n est pas rendue dans page.tsx").not.toBeNull();
+    expect(m![1], "personalInfo n est pas transmise").toContain("personalInfo={data.personalInfo}");
+    // Pas de fonction passee a un composant client depuis le serveur.
+    expect(m![1], "une fonction est passee a la coquille").not.toMatch(/=>|\bfunction\b/);
+  });
 });

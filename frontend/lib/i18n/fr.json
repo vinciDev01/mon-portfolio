@@ -39,6 +39,7 @@
   "contact.error": "Une erreur est survenue. Veuillez réessayer.",
   "contact.errorFallback": "Vous pouvez aussi m'écrire directement.",
   "contact.directTitle": "Me joindre",
+  "contact.requiredLegend": "* champ obligatoire",
 
   "testimonials.leaveOne": "Laisser un témoignage",
   "testimonials.thanks": "Merci pour votre témoignage !",

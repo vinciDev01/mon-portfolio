@@ -39,6 +39,7 @@
   "contact.error": "Ein Fehler ist aufgetreten. Bitte versuchen Sie es erneut.",
   "contact.errorFallback": "Sie können mir auch direkt schreiben.",
   "contact.directTitle": "Mich erreichen",
+  "contact.requiredLegend": "* Pflichtfeld",
 
   "testimonials.leaveOne": "Referenz hinterlassen",
   "testimonials.thanks": "Vielen Dank für Ihre Referenz!",

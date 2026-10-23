@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import { toast } from "sonner";
-import { getApiUrl } from "@/lib/api";
+import { appelerApi } from "@/lib/api";
 
 /**
  * Telechargement du CV depuis le backoffice.
@@ -22,10 +22,7 @@ export function TelechargementCv() {
   async function telecharger(chemin: string, repli: string) {
     setEnCours(chemin);
     try {
-      const token = localStorage.getItem("portfolio-admin-token");
-      const res = await fetch(`${getApiUrl()}/api/cv-generator/${chemin}`, {
-        headers: token ? { Authorization: `Bearer ${token}` } : {},
-      });
+      const res = await appelerApi(`/api/cv-generator/${chemin}`);
       if (!res.ok) throw new Error(String(res.status));
 
       const blob = await res.blob();

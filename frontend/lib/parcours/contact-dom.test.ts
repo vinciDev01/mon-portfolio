@@ -6,7 +6,7 @@ import type { PersonalInfoDto } from "@portfolio/shared-types";
 import { Coordonnees } from "@/components/portfolio/coordonnees";
 import { FormulaireContact } from "@/components/portfolio/formulaire-contact";
 import { I18nProvider } from "../i18n/i18n-context";
-import { corpsDepuis, cssNu, lire, px, valeur } from "./feuille-test";
+import { corpsDepuis, cssNu, declareeA, evaluer, lire, px, valeur } from "./feuille-test";
 import { ratioContraste } from "@/lib/color/contrast";
 import { PALETTE_CLAIRE, PALETTE_SOMBRE } from "@/lib/design/tokens";
 
@@ -356,21 +356,41 @@ function fetchSousControle() {
 }
 
 const formulaire = () => document.querySelector("form")!;
-/** La region d etat. Son absence est NOMMEE : sans cela, chaque garde qui la
- *  lit tomberait sur un `null` illisible au lieu de dire ce qui manque. */
+/**
+ * La region d etat DU FORMULAIRE. Ancree sur sa classe, et non sur le premier
+ * `[aria-live]` du document : la tache 5 montera la section entiere, qui peut
+ * en porter d autres, et `querySelector` rendrait alors le mauvais noeud. Son
+ * absence est NOMMEE, sans quoi chaque garde qui la lit tomberait sur un `null`
+ * illisible au lieu de dire ce qui manque.
+ */
 const region = () => {
-  const r = document.querySelector("[aria-live]");
-  expect(r, "aucune region aria-live dans le document").not.toBeNull();
-  return r!;
+  const toutes = document.querySelectorAll(".formulaire-etat[aria-live]");
+  expect(
+    toutes.length,
+    "la region aria-live du formulaire : il en faut une, et une seule",
+  ).toBe(1);
+  return toutes[0]!;
 };
 const bouton = () => document.querySelector<HTMLButtonElement>("button[type=submit]")!;
 
-/** Remplit les cinq champs puis soumet le formulaire. */
+/**
+ * Remplit les cinq champs puis soumet le formulaire, et constate que la
+ * soumission NATIVE a ete annulee. Sans ce constat, un `preventDefault`
+ * manquant passe inapercu : jsdom ne navigue pas, mais un navigateur
+ * rechargerait la page, le formulaire ne survivrait pas a l envoi et la region
+ * vivante n annoncerait jamais rien. Les defauts 1 et 2 du diagnostic
+ * reviendraient donc par la porte du chemin natif.
+ */
 function remplirEtSoumettre() {
   for (const [nom, v] of Object.entries(SAISIE)) ecrire(nom, v);
+  const evenement = new Event("submit", { bubbles: true, cancelable: true });
   act(() => {
-    formulaire().dispatchEvent(new Event("submit", { bubbles: true, cancelable: true }));
+    formulaire().dispatchEvent(evenement);
   });
+  expect(
+    evenement.defaultPrevented,
+    "la soumission native n est pas annulee : la page se rechargerait",
+  ).toBe(true);
 }
 
 describe("le formulaire de contact (spec sections 3.2, 4 et 5)", () => {
@@ -428,6 +448,8 @@ describe("le formulaire de contact (spec sections 3.2, 4 et 5)", () => {
     await faux.repondre(true);
 
     expect(region().getAttribute("aria-live")).toBe("polite");
+    // Le message est lu d un bloc, et non par le seul morceau qui a change.
+    expect(region().getAttribute("aria-atomic")).toBe("true");
     expect(document.activeElement, "le focus n est pas porte sur la region").toBe(region());
     // Une region focalisable mais hors tabulation : on ne l insere pas dans le
     // parcours du clavier.
@@ -454,6 +476,19 @@ describe("le formulaire de contact (spec sections 3.2, 4 et 5)", () => {
     );
   });
 
+  // Le geste principal : le clic. Les autres gardes soumettent le <form> pour
+  // exercer la LOGIQUE du double envoi ; celle-ci exerce le BOUTON, et c est la
+  // seule qui voie son rattachement au formulaire.
+  it("un clic sur le bouton d envoi produit une requete, et une seule", () => {
+    monter(createElement(FormulaireContact));
+    for (const [nom, v] of Object.entries(SAISIE)) ecrire(nom, v);
+    act(() => {
+      bouton().click();
+    });
+    expect(faux.appels, "le bouton clique ne soumet rien").toHaveLength(1);
+    expect(faux.appels[0]!.corps).toEqual(SAISIE);
+  });
+
   // Point de vigilance B : un double envoi rapide ne fait qu une requete.
   it("deux soumissions rapides ne produisent qu une requete", () => {
     monter(createElement(FormulaireContact));
@@ -461,12 +496,17 @@ describe("le formulaire de contact (spec sections 3.2, 4 et 5)", () => {
     // Soumis DEUX fois sans passer par le bouton : la touche Entree dans un
     // champ soumet le formulaire sans toucher au bouton desactive, donc le
     // `disabled` ne protege rien. Seul un drapeau dans la logique le fait.
+    const deux = [0, 1].map(() => new Event("submit", { bubbles: true, cancelable: true }));
     act(() => {
       const f = formulaire();
-      f.dispatchEvent(new Event("submit", { bubbles: true, cancelable: true }));
-      f.dispatchEvent(new Event("submit", { bubbles: true, cancelable: true }));
+      for (const e of deux) f.dispatchEvent(e);
     });
     expect(faux.appels).toHaveLength(1);
+    // La SECONDE soumission est annulee elle aussi : si `preventDefault` venait
+    // apres la garde, elle repartirait en navigation native.
+    for (const [i, e] of deux.entries()) {
+      expect(e.defaultPrevented, `soumission ${i + 1} non annulee`).toBe(true);
+    }
   });
 
   // Defaut 3 du diagnostic : aucune saisie automatique n etait possible.
@@ -525,7 +565,9 @@ describe("le formulaire de contact (spec sections 3.2, 4 et 5)", () => {
       expect(svg.getAttribute("aria-hidden"), "le glyphe n est pas muet").toBe("true");
       // Teinte par l encre : en couleurs forcees il suit le navigateur.
       expect(svg.getAttribute("stroke")).toBe("currentColor");
-      expect(svg.hasAttribute("forced-color-adjust")).toBe(false);
+      /* Le refus de `forced-color-adjust` ne se constate PAS ici :
+         c est une propriete CSS et jamais un attribut, donc l asserter sur le
+         noeud ne pourrait pas echouer. Le balayage de la feuille s en charge. */
       const traces = [...svg.querySelectorAll("path")].map((p) => p.getAttribute("d"));
       expect(traces.length).toBeGreaterThan(0);
       for (const d of traces) expect(d).toBeTruthy();
@@ -587,6 +629,35 @@ function regleF(entete: string): string {
   const trouvees = reglesDuFormulaire().filter((r) => r.entete === entete);
   expect(trouvees, `regle ${entete}`).toHaveLength(1);
   return trouvees[0]!.corps;
+}
+
+/* Les trois reglages typographiques de la feuille, lus et non recopies. Le
+   corps et l interligne sont reglables par le visiteur : `evaluer` resout leur
+   repli, qui est la valeur par defaut. */
+const SANS_VAR = { largeurPct: 0, ch: 0, vars: {} as Record<string, string | number> };
+const INTERLIGNE = evaluer(declareeA("--interligne", 1024)!, SANS_VAR);
+const CORPS = evaluer(declareeA("--corps", 1024)!, SANS_VAR);
+const ESPACE_1 = evaluer(declareeA("--espace-1", 1024)!, SANS_VAR);
+/** Hauteur d une ligne de texte, telle que la feuille la declare. */
+const LIGNE = INTERLIGNE * CORPS;
+
+/**
+ * Une taille declaree, rendue en pixels ET en lignes. L unite `lh` vaut une
+ * ligne, donc elle suit le corps et l interligne que le visiteur regle : une
+ * hauteur dite en lignes se MESURE, elle ne s epingle pas en pixels.
+ */
+function taille(decl: string): { pixels: number; lignes: number } {
+  const litteral = px(decl);
+  if (!Number.isNaN(litteral)) return { pixels: litteral, lignes: litteral / LIGNE };
+  const m = /(\d+(?:\.\d+)?)lh/.exec(decl);
+  expect(m, `taille illisible : ${decl}`).not.toBeNull();
+  const lignes = Number(m![1]);
+  // Le reste de l expression, les lignes mises a zero : padding et bordure.
+  const appoint = evaluer(decl.replace(/(\d+(?:\.\d+)?)lh/, "0px"), {
+    ...SANS_VAR,
+    vars: { "--espace-1": ESPACE_1 },
+  });
+  return { pixels: lignes * LIGNE + appoint, lignes };
 }
 
 /** Le jeton de palette qu une variable CSS designe, cote formulaire. */
@@ -653,8 +724,24 @@ describe("la feuille du formulaire de contact", () => {
     expect(borne).toBeLessThanOrEqual(400);
     // Au-dela, c est la ZONE qui defile, pas la section.
     expect(valeur(corps, "overflow-y")).toBe("auto");
-    // Trois lignes au depart, et non cinq.
-    expect(px(valeur(corps, "min-block-size"))).toBeLessThan(borne);
+    /* TROIS lignes au depart, et non cinq : la spec section 3.2 nomme ce
+       chiffre, et c est la borne BASSE qui le tient. La ou `field-sizing`
+       s applique, l attribut `rows` ne gouverne plus la hauteur, donc une borne
+       basse trop courte ferait partir la zone a deux lignes. */
+    const depart = taille(valeur(corps, "min-block-size"));
+    expect(depart.lignes, "la zone ne part pas a trois lignes").toBeGreaterThanOrEqual(3);
+    expect(depart.lignes, "la zone part a plus de trois lignes").toBeLessThan(4);
+    // Et elle grandit AVANT de defiler : la borne haute passe le depart.
+    expect(borne).toBeGreaterThan(depart.pixels);
+  });
+
+  // M1 de la revue : le chiffre de la spec se garde aussi sur le DOM, pour les
+  // moteurs qui ignorent `field-sizing` et dimensionnent encore par `rows`.
+  it("la zone de message part a trois lignes sur le DOM rendu", () => {
+    monter(createElement(FormulaireContact));
+    const zone = document.querySelector<HTMLTextAreaElement>('[name="message"]')!;
+    expect(zone.tagName).toBe("TEXTAREA");
+    expect(zone.rows, "la zone ne declare pas trois lignes").toBe(3);
   });
 
   it("les cibles du formulaire font au moins 24 x 24 px, le display rendant les tailles operantes", () => {
@@ -664,8 +751,12 @@ describe("la feuille du formulaire de contact", () => {
         ["block", "inline-block", "flex", "inline-flex", "grid"],
         `${selecteur} : display`,
       ).toContain(valeur(corps, "display"));
-      expect(px(valeur(corps, "min-block-size")), selecteur).toBeGreaterThanOrEqual(24);
-      expect(px(valeur(corps, "min-inline-size")), selecteur).toBeGreaterThanOrEqual(24);
+      expect(
+        taille(valeur(corps, "min-block-size")).pixels, selecteur,
+      ).toBeGreaterThanOrEqual(24);
+      expect(
+        taille(valeur(corps, "min-inline-size")).pixels, selecteur,
+      ).toBeGreaterThanOrEqual(24);
     }
   });
 
@@ -720,9 +811,12 @@ describe("la feuille du formulaire de contact", () => {
         [valeur(regleF(".formulaire-envoyer"), "color"), fondDe(".formulaire-envoyer")],
         [valeur(regleF(".formulaire-etat-titre"), "color"), fondDe(".formulaire-etat-bloc")],
         [valeur(regleF(".formulaire-etat-detail"), "color"), fondDe(".formulaire-etat-bloc")],
-        // L etiquette est posee sur le fond de page, non sur une surface.
-        [valeur(regleF(".formulaire-etiquette"), "color"), "fond"],
       ];
+      /* L etiquette ne declare aucun fond : elle prend celui que la coquille
+         lui donne. On ne SUPPOSE donc pas lequel, on exige les deux. */
+      for (const dessous of ["fond", "surface"] as const) {
+        paires.push([valeur(regleF(".formulaire-etiquette"), "color"), dessous]);
+      }
       for (const [devant, dessous] of paires) {
         const jeton = JETON_FORMULAIRE[devant];
         expect(jeton, `couleur inconnue : ${devant}`).toBeDefined();

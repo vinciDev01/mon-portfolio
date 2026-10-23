@@ -1783,7 +1783,11 @@ html {
   .formulaire-zone {
     display: block;
     min-inline-size: 24px;
-    min-block-size: 72px;
+    /* Trois lignes de texte, plus le rembourrage et la bordure. Dit en `lh`
+       et non en pixels : la hauteur suit le corps et l'interligne que le
+       visiteur regle. La ou `field-sizing` s'applique, `rows` ne gouverne plus
+       rien et c'est cette borne qui decide du depart. */
+    min-block-size: calc(3lh + 2 * var(--espace-1) + 2px);
     max-block-size: 240px;
     field-sizing: content;
     overflow-y: auto;

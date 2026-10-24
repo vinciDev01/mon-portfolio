@@ -885,9 +885,25 @@ html {
     font-variation-settings: "opsz" 48;
   }
 
-  .sceau-logo {
+  /* La pastille claire du logo, ronde, qui remplit le creux du feston. Claire
+     dans les deux themes : un logo est dessine pour un fond clair. */
+  .sceau-plaque {
     position: relative;
+    display: grid;
+    place-items: center;
+    width: 80%;
+    height: 80%;
     border-radius: 50%;
+    background: var(--surface-clair);
+  }
+
+  /* Le logo garde ses proportions et ses lettres : c'est la pastille qui est
+     ronde, pas lui. Ses bornes tiennent un logotype allonge dans le cercle. */
+  .sceau-logo {
+    width: auto;
+    height: auto;
+    max-width: 84%;
+    max-height: 70%;
     object-fit: contain;
   }
 

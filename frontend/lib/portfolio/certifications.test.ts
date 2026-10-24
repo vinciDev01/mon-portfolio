@@ -109,6 +109,27 @@ describe("la section des certifications", () => {
     expect(html).toMatch(/<section class="registre-certifs"[^>]*><span class="sceau-boite">[\s\S]*?<\/span><h3[^>]*>Oracle<\/h3><ul class="registre-liste">/);
   });
 
+  it("un logo remplace initiales et anneau, sur une pastille claire", () => {
+    const html = rendre([
+      certif("a", "Fortinet", {
+        organization: { id: "Fortinet", label: "Fortinet", logoPath: "organizations/f.webp", websiteUrl: null, sortOrder: 0 },
+      }),
+    ]);
+    expect(html).toMatch(/<span class="sceau-plaque"><img[^>]*class="sceau-logo"/);
+    expect(html).not.toContain("sceau-initiales");
+    expect(html).not.toContain("sceau-anneau");
+  });
+
+  it("le logo tient entier : contenu, jamais decoupe en rond", () => {
+    // Un logotype est allonge (Fortinet : 270 x 148). Arrondi, il perdait ses
+    // lettres aux extremites ; c'est la pastille qui est ronde, pas lui.
+    const logo = bloc(/\.sceau-logo\s*\{/);
+    expect(logo).not.toMatch(/border-radius/);
+    expect(valeur(logo, "object-fit")).toBe("contain");
+    expect(valeur(bloc(/\.sceau-plaque\s*\{/), "border-radius")).toBe("50%");
+    expect(valeur(bloc(/\.sceau-plaque\s*\{/), "background")).toBe("var(--surface-clair)");
+  });
+
   it("le trait du sceau suit la palette, sans couleur propre", () => {
     const bord = bloc(/\.sceau-bord\s*\{/);
     expect(valeur(bord, "stroke")).toBe("currentColor");

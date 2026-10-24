@@ -10,9 +10,11 @@ const BORD_SCEAU = cheminSceau();
 
 /**
  * Le sceau de l'organisme : un cercle festonne, comme un cachet appose sur un
- * document, portant le logo de l'organisme ou, a defaut, ses initiales. Un
- * dessin et non une animation : le site dit le sens par la forme. Il ne
- * double pas le nom de l'organisme, ecrit a cote : `aria-hidden`.
+ * document. Sans logo, il porte les initiales dans un anneau de petits traits.
+ * Avec un logo, l'anneau cede la place a une pastille claire qui remplit le
+ * feston : un logotype est allonge et dessine pour un fond clair, il y tient
+ * entier. Un dessin et non une animation, qui ne double pas le nom de
+ * l'organisme ecrit a cote : `alt` vide et `aria-hidden`.
  */
 function Sceau({ organisme }: { organisme: OrganizationDto }) {
   const logo = getFileUrl(organisme.logoPath);
@@ -20,14 +22,20 @@ function Sceau({ organisme }: { organisme: OrganizationDto }) {
     <span className="sceau-boite">
       <svg className="sceau" viewBox="0 0 64 64" aria-hidden="true" focusable="false">
         <path className="sceau-bord" d={BORD_SCEAU} />
-        <circle className="sceau-anneau" cx="32" cy="32" r="22" />
         {!logo && (
-          <text className="sceau-initiales" x="32" y="32" textAnchor="middle" dominantBaseline="central">
-            {initialesOrganisme(organisme.label)}
-          </text>
+          <>
+            <circle className="sceau-anneau" cx="32" cy="32" r="22" />
+            <text className="sceau-initiales" x="32" y="32" textAnchor="middle" dominantBaseline="central">
+              {initialesOrganisme(organisme.label)}
+            </text>
+          </>
         )}
       </svg>
-      {logo && <Image src={logo} alt="" width={28} height={28} className="sceau-logo" />}
+      {logo && (
+        <span className="sceau-plaque">
+          <Image src={logo} alt="" width={84} height={84} className="sceau-logo" />
+        </span>
+      )}
     </span>
   );
 }

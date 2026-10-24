@@ -1559,11 +1559,16 @@ html {
     margin-inline-start: 0;
   }
 
-  /* Une section large (experience, contact) : des cadres et des colonnes, pas
-     du texte courant. Son plafond passe a 88 caracteres ; la borne de
-     l'ampoule, elle, ne change pas. Les paragraphes gardent leur `.mesure`. */
-  .bloc-parcours[data-large="true"] {
+  /* Les sections larges : des cadres et des colonnes, pas du texte courant.
+     Leur plafond passe a 88 caracteres (presentation, experience) ou 100
+     (contact) ; la borne de l'ampoule, elle, ne change pas, et c'est souvent
+     elle qui decide. Les paragraphes gardent leur `.mesure`. */
+  .bloc-parcours[data-largeur="large"] {
     --mesure-courante: min(100%, max(41ch, min(88ch, var(--degagement))));
+  }
+
+  .bloc-parcours[data-largeur="tres-large"] {
+    --mesure-courante: min(100%, max(41ch, min(100ch, var(--degagement))));
   }
 
   @media (min-width: 900px) {

@@ -44,7 +44,7 @@ export default async function Page() {
     // au-dessus des sections prendrait de la hauteur aux sections calibrees
     // sur celle de la fenetre.
     ouverture: (
-      <SectionShell cleTitre="nav.presentation" index={rang("ouverture")}>
+      <SectionShell cleTitre="nav.presentation" index={rang("ouverture")} largeur="large">
         {/* Le portrait a cote du texte et non au-dessus : la section tient
             ainsi sur un ecran. */}
         <div className="ouverture-corps">
@@ -69,7 +69,7 @@ export default async function Page() {
       </SectionShell>
     ),
     experience: (
-      <SectionShell cleTitre="nav.experience" index={rang("experience")} large>
+      <SectionShell cleTitre="nav.experience" index={rang("experience")} largeur="large">
         <ExperienceSection experiences={data.experiences} projets={data.projects} />
       </SectionShell>
     ),
@@ -89,7 +89,7 @@ export default async function Page() {
       </SectionShell>
     ),
     contact: (
-      <SectionShell cleTitre="nav.contact" index={rang("contact")} large>
+      <SectionShell cleTitre="nav.contact" index={rang("contact")} largeur="tres-large">
         <ContactSection personalInfo={data.personalInfo} />
       </SectionShell>
     ),

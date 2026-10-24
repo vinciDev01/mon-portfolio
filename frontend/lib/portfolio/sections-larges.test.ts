@@ -6,32 +6,37 @@ import { SectionShell } from "@/components/portfolio/section-shell";
 import { bloc, cssNu, tableDesContenus, valeur } from "../parcours/feuille-test";
 
 const Fournisseur = I18nProvider as ComponentType<{ defaultLocale: string }>;
-const Coquille = SectionShell as ComponentType<{ cleTitre: string; index: number; large?: boolean }>;
-const rendre = (large?: boolean) =>
+const Coquille = SectionShell as ComponentType<{ cleTitre: string; index: number; largeur?: string }>;
+const rendre = (largeur?: string) =>
   renderToStaticMarkup(
-    createElement(Fournisseur, { defaultLocale: "fr" }, createElement(Coquille, { cleTitre: "nav.contact", index: 1, large }, "x")),
+    createElement(Fournisseur, { defaultLocale: "fr" }, createElement(Coquille, { cleTitre: "nav.contact", index: 1, largeur }, "x")),
   );
+const largeurDe = (id: string) =>
+  /<SectionShell[^>]*\blargeur="([a-z-]+)"/.exec(tableDesContenus().find((e) => e.id === id)!.texte)?.[1] ?? "normale";
 
-describe("les sections larges : experience et contact", () => {
-  it("la coquille marque son bloc quand la section est large, et seulement alors", () => {
-    expect(rendre(true)).toMatch(/class="col-span-12 bloc-parcours"[^>]*data-large="true"/);
-    expect(rendre()).not.toContain("data-large");
+describe("la largeur des sections", () => {
+  it("la coquille marque son bloc de sa largeur, sauf la largeur normale", () => {
+    expect(rendre("large")).toMatch(/class="col-span-12 bloc-parcours"[^>]*data-largeur="large"/);
+    expect(rendre("tres-large")).toContain('data-largeur="tres-large"');
+    expect(rendre()).not.toContain("data-largeur");
   });
 
-  it("experience et contact sont larges, pas les autres", () => {
-    const larges = tableDesContenus()
-      .filter((e) => /<SectionShell[^>]*\blarge\b/.test(e.texte))
-      .map((e) => e.id);
-    expect(larges.sort()).toEqual(["contact", "experience"]);
+  it("presentation et experience sont larges, contact tres large, les autres normales", () => {
+    expect(largeurDe("ouverture")).toBe("large");
+    expect(largeurDe("experience")).toBe("large");
+    expect(largeurDe("contact")).toBe("tres-large");
+    for (const id of ["stats", "competences", "certifications", "projets", "a-propos"]) {
+      expect(largeurDe(id), id).toBe("normale");
+    }
   });
 
-  it("un plafond plus large, mais toujours borne par l ampoule", () => {
-    const large = valeur(bloc(/\.bloc-parcours\[data-large="true"\]\s*\{/, cssNu), "--mesure-courante");
+  it("des plafonds plus larges, mais toujours bornes par l ampoule", () => {
     const normale = valeur(bloc(/^\s*\.bloc-parcours\s*\{/m, cssNu), "--mesure-courante");
+    const large = valeur(bloc(/\.bloc-parcours\[data-largeur="large"\]\s*\{/, cssNu), "--mesure-courante");
+    const tresLarge = valeur(bloc(/\.bloc-parcours\[data-largeur="tres-large"\]\s*\{/, cssNu), "--mesure-courante");
     expect(normale).toContain("66ch");
-    expect(large).toContain("88ch");
-    // La meme borne : le degagement de l'ampoule, jamais franchi.
-    expect(large).toContain("var(--degagement)");
+    // Seul le plafond change ; la borne de l'ampoule, `--degagement`, reste.
     expect(large.replace("88ch", "66ch")).toBe(normale);
+    expect(tresLarge.replace("100ch", "66ch")).toBe(normale);
   });
 });

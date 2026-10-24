@@ -21,14 +21,15 @@ import { useTranslation } from "@/lib/i18n/i18n-context";
 export function SectionShell({
   cleTitre,
   index,
-  large = false,
+  largeur = "normale",
   children,
 }: {
   cleTitre: string;
   index: number;
-  /** Plafond de largeur plus genereux, pour une section faite de cadres ou de
-   *  colonnes plutot que de texte courant : 88 caracteres au lieu de 66. */
-  large?: boolean;
+  /** Plafond de largeur du bloc : 66 caracteres (normale), 88 (large) ou 100
+   *  (tres large), pour une section faite de cadres ou de colonnes plutot que
+   *  de texte courant. La borne de l'ampoule s'applique a tous. */
+  largeur?: "normale" | "large" | "tres-large";
   children: React.ReactNode;
 }) {
   const { t } = useTranslation();
@@ -51,7 +52,7 @@ export function SectionShell({
         // L'amplitude vient du reglage `zigzagAmplitude`, normalise entre 0 et 1
         // par app/layout.tsx. A 0 les deux cotes se confondent : colonne unique.
         data-cote={aGauche ? "gauche" : "droite"}
-        data-large={large ? "true" : undefined}
+        data-largeur={largeur === "normale" ? undefined : largeur}
       >
         <p className="meta" style={{ marginBottom: "var(--espace-1)" }} aria-hidden="true">
           {String(index).padStart(2, "0")}

@@ -855,6 +855,192 @@ html {
   }
 
   /* -----------------------------------------------------------
+     Les chiffres : a la premiere arrivee sur la section, chaque nombre
+     compte jusqu'a sa valeur et son filet se trace de gauche a droite. Meme
+     declencheur que la decouverte des blocs : `data-decouverte`, pose une
+     seule fois. Hors de `[data-pagination]` pour la meme raison qu'elle.
+     ----------------------------------------------------------- */
+  .repere-chiffre {
+    position: relative;
+  }
+
+  /* Le filet du repere : un trait dessine, a la place d'une bordure, pour
+     pouvoir se tracer. */
+  .repere-chiffre::before {
+    content: "";
+    position: absolute;
+    inset-inline: 0;
+    inset-block-start: 0;
+    height: 1px;
+    background: var(--bordure);
+    transform-origin: left center;
+  }
+
+  /* Le nombre affiche : un compteur CSS nourri par un entier enregistre
+     (`@property --repere-n`, en fin de feuille). Sans animation, il vaut
+     `--cible`, la valeur finale. */
+  .repere-compte {
+    --repere-n: var(--cible);
+    counter-reset: repere var(--repere-n);
+  }
+
+  /* `/ ""` : texte alternatif vide, le compteur n'est pas lu en plus du
+     nombre, qui reste dans la page. */
+  .repere-compte::after {
+    content: counter(repere) / "";
+  }
+
+  /* Le nombre en texte, masque a l'oeil mais lu : le compteur le remplace a
+     l'ecran. Sans cette feuille, ni l'un ni l'autre ne s'applique, et le
+     texte reste visible. */
+  .repere-texte {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    overflow: hidden;
+    clip-path: inset(50%);
+    white-space: nowrap;
+  }
+
+  [data-decouverte="true"] .repere-compte {
+    animation: compte-repere 900ms var(--courbe) both;
+  }
+
+  [data-decouverte="true"] .repere-chiffre::before {
+    animation: trace-repere 700ms var(--courbe) both;
+  }
+
+  [data-decouverte="true"] .repere-chiffre:nth-child(2)::before {
+    animation-delay: 90ms;
+  }
+
+  [data-decouverte="true"] .repere-chiffre:nth-child(3)::before {
+    animation-delay: 180ms;
+  }
+
+  [data-decouverte="true"] .repere-chiffre:nth-child(4)::before {
+    animation-delay: 270ms;
+  }
+
+  @keyframes compte-repere {
+    from {
+      --repere-n: 0;
+    }
+  }
+
+  @keyframes trace-repere {
+    from {
+      scale: 0 1;
+    }
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    :root:not([data-mouvement="force"]) [data-decouverte="true"] .repere-compte,
+    :root:not([data-mouvement="force"]) [data-decouverte="true"] .repere-chiffre::before {
+      animation: none;
+    }
+  }
+
+  /* -----------------------------------------------------------
+     Les experiences : la date a gauche, hors du cadre, puis la frise, puis
+     le cadre. La date se lit avant le poste, comme sur une frise.
+     ----------------------------------------------------------- */
+  .experience-ligne {
+    display: grid;
+    /* La plus longue periode tient sur une ligne : « juillet 2025 a fevrier
+       2026 », et son equivalent allemand. */
+    grid-template-columns: 13.5rem 1px minmax(0, 1fr);
+    column-gap: var(--espace-3);
+    padding-block-end: var(--espace-4);
+  }
+
+  .experience-ligne:last-child {
+    padding-block-end: 0;
+  }
+
+  /* Alignee a droite, contre la frise, et a hauteur du titre du cadre. */
+  .experience-dates {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-end;
+    gap: 2px;
+    padding-block-start: 1.5rem;
+    text-align: end;
+    font-size: 0.8125rem;
+    line-height: 1.4;
+    color: var(--texte-secondaire);
+  }
+
+  /* La periode, d'un seul tenant : elle ne se coupe jamais entre ses deux
+     dates. */
+  .experience-periode {
+    white-space: nowrap;
+    color: var(--texte);
+    font-weight: 500;
+  }
+
+  .experience-en-cours {
+    margin-block-start: 6px;
+    padding: 1px 8px;
+    border-radius: 999px;
+    background: var(--texte);
+    color: var(--fond);
+    font-size: 0.6875rem;
+    font-weight: 500;
+  }
+
+  .experience-frise {
+    position: relative;
+    background: var(--bordure);
+  }
+
+  /* La pastille, a hauteur de la premiere date. */
+  .experience-point {
+    position: absolute;
+    inset-block-start: calc(1.5rem + 5px);
+    inset-inline-start: 50%;
+    translate: -50% 0;
+    width: 9px;
+    height: 9px;
+    border-radius: 50%;
+    background: var(--texte);
+    border: 2px solid var(--fond);
+  }
+
+  /* Palier etroit : la date passe au-dessus du cadre, sur une ligne ; la
+     frise reste a gauche des deux. */
+  @media (max-width: 599px) {
+    .experience-ligne {
+      grid-template-columns: 1px minmax(0, 1fr);
+      column-gap: var(--espace-2);
+    }
+
+    .experience-frise {
+      grid-column: 1;
+      grid-row: 1 / span 2;
+    }
+
+    .experience-dates {
+      grid-column: 2;
+      grid-row: 1;
+      flex-direction: row;
+      flex-wrap: wrap;
+      align-items: baseline;
+      gap: 0 6px;
+      padding-block: 0 var(--espace-1);
+      text-align: start;
+    }
+
+    .experience-point {
+      inset-block-start: 5px;
+    }
+
+    .experience-ligne > .animated-card {
+      grid-column: 2;
+    }
+  }
+
+  /* -----------------------------------------------------------
      Les certifications : un registre par organisme, son sceau a gauche.
      Le sceau est un dessin, sans mouvement ni couleur propre : son trait
      suit `--bordure-signifiante` par `currentColor`, son fond `--surface`.
@@ -2285,4 +2471,14 @@ html {
 /* Hors contraste force, le contour de dome du pictogramme n'existe pas. */
 .contour-dome-pictogramme {
   display: none;
+}
+
+/* L'entier que comptent les chiffres a leur decouverte. Enregistre pour
+   etre anime : sans `@property`, une propriete personnalisee saute d'une
+   valeur a l'autre au lieu de s'interpoler. Au premier niveau de la feuille,
+   seul endroit ou la regle est valide. */
+@property --repere-n {
+  syntax: "<integer>";
+  inherits: false;
+  initial-value: 0;
 }

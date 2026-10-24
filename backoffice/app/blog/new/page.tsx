@@ -4,6 +4,7 @@ import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { createEntity } from "@/lib/api";
 import { ImageUpload } from "@/components/image-upload";
+import { ChoixCategorie } from "@/components/choix-categorie";
 import { toast } from "sonner";
 
 function slugify(text: string): string {
@@ -25,6 +26,7 @@ export default function NewBlogPostPage() {
   const [coverImagePath, setCoverImagePath] = useState<string | null>(null);
   const [content, setContent] = useState("");
   const [excerpt, setExcerpt] = useState("");
+  const [categoryId, setCategoryId] = useState("");
   const [isPublished, setIsPublished] = useState(false);
   const [sortOrder, setSortOrder] = useState(0);
   const [saving, setSaving] = useState(false);
@@ -51,6 +53,7 @@ export default function NewBlogPostPage() {
         coverImagePath: coverImagePath || null,
         content,
         excerpt: excerpt || null,
+        categoryId: categoryId || null,
         isPublished,
         sortOrder,
       });
@@ -100,6 +103,8 @@ export default function NewBlogPostPage() {
           category="blog"
           onUpload={setCoverImagePath}
         />
+
+        <ChoixCategorie valeur={categoryId} surChangement={setCategoryId} />
 
         <div>
           <label className="block text-sm font-medium mb-1">Extrait</label>

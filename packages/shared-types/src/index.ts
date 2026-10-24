@@ -13,6 +13,7 @@ export type { AboutDto } from "./about";
 export type { ContactMessageDto } from "./contact-message";
 export type { TestimonialDto } from "./testimonial";
 export type { BlogPostDto } from "./blog-post";
+export type { BlogCategoryDto } from "./blog-category";
 export type { StatsDto } from "./stats";
 export type { PortfolioData } from "./portfolio";
 export * from "./variantes";

@@ -33,10 +33,13 @@ const apresSections: Item[] = [
   { href: "/contact-messages", label: "Messages de contact" },
   { href: "/cv-sections", label: "Sections du CV" },
   { href: "/blog", label: "Blog" },
+  { href: "/blog-categories", label: "Catégories du blog" },
 ];
 
 function estActif(href: string, pathname: string): boolean {
-  return href === "/" ? pathname === "/" : pathname.startsWith(href);
+  // Adresse exacte ou suivie d'un « / » : un simple prefixe marquerait aussi
+  // « Blog » actif sur « /blog-categories ».
+  return href === "/" ? pathname === "/" : pathname === href || pathname.startsWith(`${href}/`);
 }
 
 function Lien({ item, pathname, retrait = false }: { item: Item; pathname: string; retrait?: boolean }) {

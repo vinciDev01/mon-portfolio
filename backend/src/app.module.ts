@@ -11,6 +11,7 @@ import { ExperiencesModule } from './experiences/experiences.module';
 import { ExportModule } from './export/export.module';
 import { NotificationsModule } from './notifications/notifications.module';
 import { OrganizationsModule } from './organizations/organizations.module';
+import { BlogCategoriesModule } from './blog-categories/blog-categories.module';
 import { PersonalInfoModule } from './personal-info/personal-info.module';
 import { PortfolioModule } from './portfolio/portfolio.module';
 import { PresentationsModule } from './presentations/presentations.module';
@@ -34,6 +35,7 @@ import { JwtAuthGuard } from './auth/auth.guard';
     PersonalInfoModule,
     TechnologiesModule,
     OrganizationsModule,
+    BlogCategoriesModule,
     PresentationsModule,
     SkillsModule,
     ExperiencesModule,

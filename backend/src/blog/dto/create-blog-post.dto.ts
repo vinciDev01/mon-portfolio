@@ -30,6 +30,14 @@ export class CreateBlogPostDto {
   @IsBoolean()
   isPublished?: boolean;
 
+  @ApiPropertyOptional({
+    description: 'Categorie de l article ; null le laisse sans categorie',
+    nullable: true,
+  })
+  @IsOptional()
+  @IsString()
+  categoryId?: string | null;
+
   @ApiPropertyOptional({ default: 0 })
   @IsOptional()
   @Type(() => Number)

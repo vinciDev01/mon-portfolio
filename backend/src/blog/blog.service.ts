@@ -3,6 +3,10 @@ import { PrismaService } from '../prisma/prisma.service';
 import { CreateBlogPostDto } from './dto/create-blog-post.dto';
 import { UpdateBlogPostDto } from './dto/update-blog-post.dto';
 
+/** Chaque article porte sa categorie : la page du blog groupe par elle, dans
+ *  l'ordre `sortOrder` des categories. */
+const avecCategorie = { category: true } as const;
+
 @Injectable()
 export class BlogService {
   constructor(private readonly prisma: PrismaService) {}
@@ -11,23 +15,31 @@ export class BlogService {
     return this.prisma.blogPost.findMany({
       where: { isPublished: true },
       orderBy: { publishedAt: 'desc' },
+      include: avecCategorie,
     });
   }
 
   findAll() {
     return this.prisma.blogPost.findMany({
       orderBy: { createdAt: 'desc' },
+      include: avecCategorie,
     });
   }
 
   async findOne(id: string) {
-    const record = await this.prisma.blogPost.findUnique({ where: { id } });
+    const record = await this.prisma.blogPost.findUnique({
+      where: { id },
+      include: avecCategorie,
+    });
     if (!record) throw new NotFoundException(`BlogPost #${id} not found`);
     return record;
   }
 
   async findBySlug(slug: string) {
-    const record = await this.prisma.blogPost.findUnique({ where: { slug } });
+    const record = await this.prisma.blogPost.findUnique({
+      where: { slug },
+      include: avecCategorie,
+    });
     if (!record)
       throw new NotFoundException(`BlogPost with slug "${slug}" not found`);
     return record;

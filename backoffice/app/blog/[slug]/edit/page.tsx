@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 import { useRouter, useParams } from "next/navigation";
 import { appelerApi, updateEntity } from "@/lib/api";
 import { ImageUpload } from "@/components/image-upload";
+import { ChoixCategorie } from "@/components/choix-categorie";
 import { toast } from "sonner";
 import type { BlogPostDto } from "@portfolio/shared-types";
 
@@ -17,6 +18,7 @@ export default function EditBlogPostPage() {
   const [coverImagePath, setCoverImagePath] = useState<string | null>(null);
   const [content, setContent] = useState("");
   const [excerpt, setExcerpt] = useState("");
+  const [categoryId, setCategoryId] = useState("");
   const [isPublished, setIsPublished] = useState(false);
   const [sortOrder, setSortOrder] = useState(0);
   const [loading, setLoading] = useState(true);
@@ -35,6 +37,7 @@ export default function EditBlogPostPage() {
         setCoverImagePath(post.coverImagePath);
         setContent(post.content);
         setExcerpt(post.excerpt || "");
+        setCategoryId(post.categoryId ?? "");
         setIsPublished(post.isPublished);
         setSortOrder(post.sortOrder);
       })
@@ -53,6 +56,7 @@ export default function EditBlogPostPage() {
         coverImagePath: coverImagePath || null,
         content,
         excerpt: excerpt || null,
+        categoryId: categoryId || null,
         isPublished,
         sortOrder,
       });
@@ -102,6 +106,8 @@ export default function EditBlogPostPage() {
           category="blog"
           onUpload={setCoverImagePath}
         />
+
+        <ChoixCategorie valeur={categoryId} surChangement={setCategoryId} />
 
         <div>
           <label className="block text-sm font-medium mb-1">Extrait</label>

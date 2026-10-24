@@ -1,3 +1,5 @@
+import type { BlogCategoryDto } from "./blog-category";
+
 export interface BlogPostDto {
   id: string;
   title: string;
@@ -9,4 +11,7 @@ export interface BlogPostDto {
   publishedAt: string | null;
   sortOrder: number;
   createdAt: string;
+  /** La categorie de l'article, ou `null` : il parait sous « Sans categorie ». */
+  categoryId: string | null;
+  category: BlogCategoryDto | null;
 }

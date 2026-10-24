@@ -84,3 +84,14 @@ describe('themeParDefaut', () => {
     expect(await erreursSur('themeParDefaut', '')).toContain('themeParDefaut');
   });
 });
+
+describe('cvJobTitle', () => {
+  it('accepte un titre, vide compris (il efface la ligne)', async () => {
+    expect(await erreursSur('cvJobTitle', 'Developpeur Java Spring Boot')).toEqual([]);
+    expect(await erreursSur('cvJobTitle', '')).toEqual([]);
+  });
+
+  it('refuse plus de 120 caracteres', async () => {
+    expect(await erreursSur('cvJobTitle', 'x'.repeat(121))).toContain('cvJobTitle');
+  });
+});

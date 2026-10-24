@@ -98,3 +98,11 @@ export function hrefDeLien(valeur: string): string {
   if (/^[a-z][a-z0-9+.-]*:/i.test(v)) return v;
   return v.includes('@') ? `mailto:${v}` : `https://${v}`;
 }
+
+/**
+ * Le titre du poste vise, imprime sous le nom. Saisi au backoffice ; vide ou
+ * blanc, il n'y a pas de ligne du tout plutot qu'une ligne vide.
+ */
+export function titrePoste(saisi: string | null | undefined): string | null {
+  return renseigne(saisi) ? saisi.trim() : null;
+}

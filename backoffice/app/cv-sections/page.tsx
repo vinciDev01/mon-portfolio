@@ -7,11 +7,13 @@ import { fetchEntities, deleteEntity } from "@/lib/api";
 import { PageHeader } from "@/components/page-header";
 import { ConfirmDialog } from "@/components/confirm-dialog";
 import { RANGS_DE_LA_BASE } from "@/components/cv-section-form";
+import { ApercuCv } from "@/components/apercu-cv";
+import { TitrePosteCv } from "@/components/titre-poste-cv";
 import { toast } from "sonner";
 import type { CvSectionDto } from "@portfolio/shared-types";
 
 type Ligne =
-  | { genre: "base"; rang: number; titre: string }
+  | { genre: "base"; rang: number; titre: string; page: string }
   | { genre: "libre"; rang: number; section: CvSectionDto };
 
 export default function SectionsCvPage() {
@@ -19,6 +21,8 @@ export default function SectionsCvPage() {
   const [sections, setSections] = useState<CvSectionDto[]>([]);
   const [loading, setLoading] = useState(true);
   const [deleteId, setDeleteId] = useState<string | null>(null);
+  // Incremente a chaque changement des sections : l'apercu se regenere.
+  const [versionApercu, setVersionApercu] = useState(0);
 
   useEffect(() => {
     fetchEntities<CvSectionDto>("cv-sections")
@@ -32,6 +36,7 @@ export default function SectionsCvPage() {
     try {
       await deleteEntity("cv-sections", deleteId);
       setSections((prev) => prev.filter((s) => s.id !== deleteId));
+      setVersionApercu((v) => v + 1);
       toast.success("Section supprimée");
     } catch {
       toast.error("Erreur de suppression");
@@ -46,6 +51,7 @@ export default function SectionsCvPage() {
       genre: "base" as const,
       rang: s.rang,
       titre: s.titre,
+      page: s.page,
     })),
     ...sections.map((s) => ({
       genre: "libre" as const,
@@ -64,6 +70,13 @@ export default function SectionsCvPage() {
         addLabel="Nouvelle section"
       />
 
+      {/* La liste a gauche, l'apercu du document a droite des 1280 px ; en
+          dessous, l'apercu passe sous la liste. Colle en haut, il reste a
+          l'ecran pendant qu'on parcourt une longue liste. */}
+      <div className="grid gap-8 xl:grid-cols-[minmax(0,1fr)_minmax(420px,42%)] items-start">
+      <div>
+      <TitrePosteCv surEnregistrement={() => setVersionApercu((v) => v + 1)} />
+
       <p className="text-sm text-muted-foreground mb-6 max-w-2xl">
         Le CV téléchargeable est composé de deux sortes de sections. Celles
         issues de la base sont produites automatiquement et occupent un rang
@@ -71,7 +84,7 @@ export default function SectionsCvPage() {
         L&apos;ordre ci-dessous est celui du document final.
       </p>
 
-      <table className="w-full text-sm">
+      <table className="w-full text-sm [&_th]:pr-4 [&_td]:pr-4">
         <thead>
           <tr className="border-b border-border text-left">
             <th className="py-2 w-16">Rang</th>
@@ -102,6 +115,17 @@ export default function SectionsCvPage() {
                 )}
               </td>
               <td className="py-3">
+                {/* Une section de la base se modifie dans la page de ses
+                    donnees : le lien y mene. */}
+                {l.genre === "base" && (
+                  <Link
+                    href={l.page}
+                    className="text-primary hover:underline"
+                    title="Ses éléments se modifient dans leur propre page"
+                  >
+                    Modifier
+                  </Link>
+                )}
                 {l.genre === "libre" && (
                   <div className="flex gap-3">
                     <Link
@@ -123,6 +147,12 @@ export default function SectionsCvPage() {
           ))}
         </tbody>
       </table>
+      </div>
+
+      <aside className="xl:sticky xl:top-8 h-[80vh]">
+        <ApercuCv version={versionApercu} />
+      </aside>
+      </div>
 
       <ConfirmDialog
         open={!!deleteId}

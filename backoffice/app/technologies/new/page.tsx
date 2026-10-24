@@ -4,6 +4,7 @@ import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { createEntity } from "@/lib/api";
 import { ImageUpload } from "@/components/image-upload";
+import { ChampFamille } from "@/components/champ-famille";
 import { toast } from "sonner";
 
 export default function NewTechnologyPage() {
@@ -11,13 +12,16 @@ export default function NewTechnologyPage() {
   const [label, setLabel] = useState("");
   const [logoPath, setLogoPath] = useState<string | null>(null);
   const [sortOrder, setSortOrder] = useState(0);
+  // Cochee par defaut : une technologie nouvelle sort dans le CV.
+  const [showInCv, setShowInCv] = useState(true);
+  const [family, setFamily] = useState("");
   const [saving, setSaving] = useState(false);
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
     setSaving(true);
     try {
-      await createEntity("technologies", { label, logoPath, sortOrder });
+      await createEntity("technologies", { label, logoPath, sortOrder, showInCv, family: family.trim() || null });
       toast.success("Technologie créée");
       router.push("/technologies");
     } catch {
@@ -42,6 +46,7 @@ export default function NewTechnologyPage() {
           />
         </div>
         <ImageUpload currentPath={logoPath} category="technologies" onUpload={setLogoPath} label="Logo" />
+        <ChampFamille valeur={family} surChangement={setFamily} />
         <div>
           <label className="block text-sm font-medium mb-1">Ordre d&apos;affichage</label>
           <input
@@ -53,6 +58,21 @@ export default function NewTechnologyPage() {
           />
           <p className="text-xs text-muted-foreground mt-1">Entier positif ou nul</p>
         </div>
+        <label className="flex items-start gap-2 text-sm">
+          <input
+            type="checkbox"
+            checked={showInCv}
+            onChange={(e) => setShowInCv(e.target.checked)}
+            className="mt-0.5"
+          />
+          <span>
+            <span className="font-medium">Apparaît dans le CV</span>
+            <span className="block text-xs text-muted-foreground">
+              Décochée, la technologie reste sur le portfolio mais ne sort pas
+              dans le CV téléchargeable.
+            </span>
+          </span>
+        </label>
         <button
           type="submit"
           disabled={saving}

@@ -38,6 +38,8 @@ export interface SiteSettingsDto {
   respectReducedMotion: boolean;
   cvFontFamily: string;
   showCvDownload: boolean;
+  /** Le poste vise, imprime sous le nom en tete du CV ; `null` : pas de ligne. */
+  cvJobTitle: string | null;
   accentHue: number;
   accentSaturation: number;
 }

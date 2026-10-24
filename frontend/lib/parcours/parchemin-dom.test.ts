@@ -224,8 +224,8 @@ const projetComplet = () => fabrique({
   // DEUX technologies, et non une : avec une seule, le point median n'est
   // jamais rendu et toute assertion sur le separateur serait vide.
   technologies: [
-    { id: "t1", label: "Angular", logoPath: null, sortOrder: 0 },
-    { id: "t2", label: "NestJS", logoPath: null, sortOrder: 1 },
+    { id: "t1", label: "Angular", logoPath: null, sortOrder: 0, showInCv: true, family: null },
+    { id: "t2", label: "NestJS", logoPath: null, sortOrder: 1, showInCv: true, family: null },
   ],
   collaborators: [
     { id: "c1", firstName: "Ada", lastName: "Lovelace", email: null,

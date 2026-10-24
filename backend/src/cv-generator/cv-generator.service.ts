@@ -3,18 +3,28 @@ import PDFDocument from 'pdfkit';
 import { PrismaService } from '../prisma/prisma.service';
 import {
   AlignmentType,
+  BorderStyle,
   Document,
   ExternalHyperlink,
   HeadingLevel,
   Packer,
   Paragraph,
+  Tab,
+  TabStopType,
   TextRun,
 } from 'docx';
-import { ordonnerSections, type SectionBase } from './ordre-sections';
+import {
+  avecBrouillon,
+  ordonnerSections,
+  type SectionBase,
+  type SectionBrouillon,
+} from './ordre-sections';
+import { grouperTechnologies } from './technologies-cv';
 import {
   hrefDeLien,
   lignesContact,
   nomFichier,
+  titrePoste,
   type LigneContact,
 } from './en-tete';
 
@@ -31,13 +41,24 @@ const RANG = {
 const MARGE = 56;
 const CORPS = 10.5;
 const TITRE_SECTION = 11;
-const NOM = 13;
+const NOM = 20;
+/** Le poste vise, sous le nom : plus petit que lui, plus grand que le corps. */
+const POSTE = 12.5;
+/** Les coordonnees, sur une ligne, un cran sous le corps. */
+const CONTACT = 9.5;
 const INTERLIGNE = 3;
 /** Blanc avant un titre de section, en interlignes. */
-const AVANT_SECTION = 0.9;
+const AVANT_SECTION = 1.1;
+/** Largeur de la colonne des etiquettes (familles de technologies). */
+const COLONNE_ETIQUETTE = 108;
 
 const LIEN = '#1A0DAB';
 const ENCRE = '#000000';
+/** Gris du poste, des coordonnees et du filet : lisible, en retrait du nom. */
+const GRIS = '#4A4A4A';
+const FILET = '#9A9A9A';
+/** Separateur des coordonnees, encodable en WinAnsi. */
+const SEPARATEUR = '   |   ';
 
 type Polices = { normal: string; gras: string };
 
@@ -81,7 +102,7 @@ export class CvGeneratorService {
    * C'est ce qui garantit que le PDF et le Word ne divergeront pas : ajouter
    * une rubrique ici la fait apparaitre dans les deux formats.
    */
-  private async collecter() {
+  private async collecter(brouillon?: SectionBrouillon) {
     const [
       personalInfo,
       reglages,
@@ -95,7 +116,11 @@ export class CvGeneratorService {
       this.prisma.personalInfo.findFirst(),
       this.prisma.siteSettings.findFirst(),
       this.prisma.presentation.findMany({ orderBy: { sortOrder: 'asc' } }),
-      this.prisma.technology.findMany({ orderBy: { sortOrder: 'asc' } }),
+      // Une technologie decochee « dans le CV » reste au portfolio seulement.
+      this.prisma.technology.findMany({
+        where: { showInCv: true },
+        orderBy: { sortOrder: 'asc' },
+      }),
       this.prisma.certification.findMany({
         include: { organization: true },
         orderBy: { sortOrder: 'asc' },
@@ -116,13 +141,17 @@ export class CvGeneratorService {
           .map((p) => p.description ?? p.subtitle ?? p.title)
           .filter((l): l is string => Boolean(l)),
       },
-      {
-        titre: 'TECHNOLOGIES',
-        rang: RANG.technologies,
-        lignes: technologies.length
-          ? [technologies.map((t) => t.label).join(', ')]
-          : [],
-      },
+      (() => {
+        // Une ligne par famille, en deux colonnes ; les lignes en texte
+        // seul servent au filtre des sections vides et de repli.
+        const paires = grouperTechnologies(technologies);
+        return {
+          titre: 'TECHNOLOGIES',
+          rang: RANG.technologies,
+          lignes: paires.map((p) => (p.etiquette ? `${p.etiquette} : ${p.valeur}` : p.valeur)),
+          paires,
+        };
+      })(),
       {
         titre: 'CERTIFICATIONS',
         rang: RANG.certifications,
@@ -156,7 +185,7 @@ export class CvGeneratorService {
     return {
       personalInfo,
       reglages,
-      sections: ordonnerSections(base, sectionsLibres),
+      sections: ordonnerSections(base, avecBrouillon(sectionsLibres, brouillon)),
       contact: lignesContact(
         personalInfo
           ? {
@@ -170,6 +199,7 @@ export class CvGeneratorService {
             }
           : null,
       ),
+      titre: titrePoste(reglages?.cvJobTitle),
       nomComplet: personalInfo
         ? `${personalInfo.name} ${personalInfo.surname}`.trim()
         : 'Curriculum Vitae',
@@ -178,9 +208,10 @@ export class CvGeneratorService {
     };
   }
 
-  async generatePdf(): Promise<DocumentCv> {
-    const { reglages, sections, contact, nomComplet, nom, prenom } =
-      await this.collecter();
+  /** `brouillon` : la section du formulaire, pour l'apercu du backoffice. */
+  async generatePdf(brouillon?: SectionBrouillon): Promise<DocumentCv> {
+    const { reglages, sections, contact, titre, nomComplet, nom, prenom } =
+      await this.collecter(brouillon);
     const polices = choisirPolices(reglages?.cvFontFamily);
 
     const contenu = await new Promise<Buffer>((resolve, reject) => {
@@ -190,27 +221,39 @@ export class CvGeneratorService {
       doc.on('end', () => resolve(Buffer.concat(morceaux)));
       doc.on('error', reject);
 
-      const ligneSimple = (texte: string) =>
-        doc.font(polices.normal).fontSize(CORPS).fillColor(ENCRE).text(texte);
+      const largeur = doc.page.width - 2 * MARGE;
 
-      const lien = (etiquette: string, url: string) => {
-        doc
-          .font(polices.normal)
-          .fontSize(CORPS)
-          .fillColor(ENCRE)
-          .text(etiquette, { continued: true })
-          .fillColor(LIEN)
-          .text(url, { link: hrefDeLien(url), underline: true })
-          .fillColor(ENCRE);
-      };
-
-      // En-tete
+      // En-tete : le nom, le poste vise, puis les coordonnees sur une ligne.
       doc.font(polices.gras).fontSize(NOM).fillColor(ENCRE).text(nomComplet);
-      doc.moveDown(0.25);
+      // Le poste vise, sous le nom : c'est la premiere chose que lit un
+      // recruteur apres le nom.
+      if (titre) {
+        doc.moveDown(0.1);
+        doc.font(polices.normal).fontSize(POSTE).fillColor(GRIS).text(titre);
+      }
 
-      for (const l of contact) {
-        if (l.genre === 'texte') ligneSimple(l.texte);
-        else lien(l.etiquette, l.url);
+      if (contact.length) {
+        doc.moveDown(0.35);
+        doc.font(polices.normal).fontSize(CONTACT).fillColor(GRIS);
+        // Une seule ligne, coupee la ou il faut : chaque morceau est un
+        // `text` continu, les liens gardent leur adresse.
+        contact.forEach((l, i) => {
+          const dernier = i === contact.length - 1;
+          const suite = { continued: !dernier };
+          if (l.genre === 'texte') {
+            doc.fillColor(GRIS).text(l.texte + (dernier ? '' : SEPARATEUR), suite);
+          } else {
+            doc.fillColor(GRIS).text(l.etiquette, { continued: true });
+            // Dernier morceau : le lien clot la ligne lui-meme. Un `text('')`
+            // final serait ignore par PDFKit et laisserait la ligne ouverte,
+            // collant le titre de section suivant aux coordonnees.
+            doc.fillColor(LIEN).text(l.url, { link: hrefDeLien(l.url), underline: true, ...suite });
+            // Le separateur, hors du lien : sinon le soulignement le suit.
+            if (!dernier) {
+              doc.fillColor(GRIS).text(SEPARATEUR, { link: null, underline: false, continued: true });
+            }
+          }
+        });
       }
 
       // Sections
@@ -222,8 +265,40 @@ export class CvGeneratorService {
           .fillColor(ENCRE)
           // toUpperCase() preserve les accents ('é' -> 'É'), et normalise ce
           // qui est saisi au backoffice sans imposer la saisie en capitales.
-          .text(section.titre.toUpperCase());
-        doc.moveDown(0.2);
+          .text(section.titre.toUpperCase(), { characterSpacing: 0.6 });
+        // Un filet fin sous le titre, sur toute la largeur : il separe les
+        // sections sans les encadrer.
+        const yFilet = doc.y + 2;
+        doc
+          .moveTo(MARGE, yFilet)
+          .lineTo(MARGE + largeur, yFilet)
+          .lineWidth(0.5)
+          .strokeColor(FILET)
+          .stroke();
+        doc.y = yFilet + 5;
+
+        if (section.paires?.length) {
+          // Deux colonnes : l'etiquette en gras, sa valeur a droite. La ligne
+          // suivante part sous la plus haute des deux.
+          for (const p of section.paires) {
+            const y = doc.y;
+            if (p.etiquette === null) {
+              doc.font(polices.normal).fontSize(CORPS).fillColor(ENCRE).text(p.valeur, MARGE, y, { width: largeur });
+              continue;
+            }
+            doc.font(polices.gras).fontSize(CORPS).fillColor(ENCRE).text(p.etiquette, MARGE, y, {
+              width: COLONNE_ETIQUETTE - 8,
+            });
+            const basEtiquette = doc.y;
+            doc.font(polices.normal).text(p.valeur, MARGE + COLONNE_ETIQUETTE, y, {
+              width: largeur - COLONNE_ETIQUETTE,
+              lineGap: INTERLIGNE - 2,
+            });
+            doc.y = Math.max(doc.y, basEtiquette) + 2;
+          }
+          doc.x = MARGE;
+          continue;
+        }
 
         for (const entree of section.lignes) {
           // Les entrees deja numerotees (« 1. … ») gardent leur numero ;
@@ -235,8 +310,8 @@ export class CvGeneratorService {
             .font(polices.normal)
             .fontSize(CORPS)
             .fillColor(ENCRE)
-            .text(numerotee ? entree : `• ${entree}`, {
-              indent: numerotee ? 0 : 0,
+            .text(numerotee ? entree : `• ${entree}`, MARGE, doc.y, {
+              width: largeur,
               lineGap: INTERLIGNE - 2,
             });
         }
@@ -257,28 +332,44 @@ export class CvGeneratorService {
    * garde le fichier reellement modifiable.
    */
   async generateDocx(): Promise<DocumentCv> {
-    const { reglages, sections, contact, nomComplet, nom, prenom } =
+    const { reglages, sections, contact, titre, nomComplet, nom, prenom } =
       await this.collecter();
     const police = policeWord(reglages?.cvFontFamily);
 
-    const ligneDeContact = (l: LigneContact): Paragraph =>
-      new Paragraph({
-        spacing: { after: 0 },
-        children:
-          l.genre === 'texte'
-            ? [new TextRun(l.texte)]
-            : [
-                new TextRun(l.etiquette),
-                new ExternalHyperlink({
-                  link: hrefDeLien(l.url),
-                  children: [new TextRun({ text: l.url, style: 'Hyperlink' })],
-                }),
-              ],
-      });
+    // Gris du poste et des coordonnees, comme dans le PDF.
+    const gris = GRIS.slice(1);
+    const morceauxDeContact = (l: LigneContact, dernier: boolean) => [
+      ...(l.genre === 'texte'
+        ? [new TextRun({ text: l.texte, color: gris, size: 19 })]
+        : [
+            new TextRun({ text: l.etiquette, color: gris, size: 19 }),
+            new ExternalHyperlink({
+              link: hrefDeLien(l.url),
+              children: [new TextRun({ text: l.url, style: 'Hyperlink', size: 19 })],
+            }),
+          ]),
+      ...(dernier ? [] : [new TextRun({ text: SEPARATEUR, color: gris, size: 19 })]),
+    ];
 
     const corps: Paragraph[] = [
       new Paragraph({ text: nomComplet, heading: HeadingLevel.TITLE }),
-      ...contact.map(ligneDeContact),
+      ...(titre
+        ? [
+            new Paragraph({
+              spacing: { after: 80 },
+              children: [new TextRun({ text: titre, size: 25, color: gris })],
+            }),
+          ]
+        : []),
+      // Les coordonnees sur une ligne, comme dans le PDF.
+      ...(contact.length
+        ? [
+            new Paragraph({
+              spacing: { after: 0 },
+              children: contact.flatMap((l, i) => morceauxDeContact(l, i === contact.length - 1)),
+            }),
+          ]
+        : []),
     ];
 
     for (const section of sections) {
@@ -288,6 +379,23 @@ export class CvGeneratorService {
           heading: HeadingLevel.HEADING_1,
         }),
       );
+      if (section.paires?.length) {
+        // Deux colonnes par une tabulation : l'etiquette en gras, sa valeur
+        // alignee a droite d'elle. Une vraie tabulation, pas des espaces :
+        // le destinataire peut la deplacer.
+        for (const p of section.paires) {
+          corps.push(
+            new Paragraph({
+              spacing: { after: 20 },
+              tabStops: [{ type: TabStopType.LEFT, position: COLONNE_ETIQUETTE * 20 }],
+              children: p.etiquette
+                ? [new TextRun({ text: p.etiquette, bold: true }), new TextRun({ children: [new Tab(), p.valeur] })]
+                : [new TextRun(p.valeur)],
+            }),
+          );
+        }
+        continue;
+      }
       for (const entree of section.lignes) {
         // Les entrees deja numerotees gardent leur numero ; les autres
         // recoivent une puce Word, qui reste une vraie liste a puces.
@@ -310,12 +418,17 @@ export class CvGeneratorService {
             paragraph: { spacing: { after: 60 } },
           },
           title: {
-            run: { font: police, size: 26, bold: true, color: '000000' },
-            paragraph: { spacing: { after: 60 }, alignment: AlignmentType.LEFT },
+            run: { font: police, size: NOM * 2, bold: true, color: '000000' },
+            paragraph: { spacing: { after: 40 }, alignment: AlignmentType.LEFT },
           },
+          // Le titre de section porte son filet, comme dans le PDF : une
+          // bordure de paragraphe, que le destinataire peut restyler.
           heading1: {
-            run: { font: police, size: 22, bold: true, color: '000000' },
-            paragraph: { spacing: { before: 240, after: 80 } },
+            run: { font: police, size: 22, bold: true, color: '000000', characterSpacing: 12 },
+            paragraph: {
+              spacing: { before: 280, after: 100 },
+              border: { bottom: { style: BorderStyle.SINGLE, size: 4, color: FILET.slice(1), space: 2 } },
+            },
           },
         },
       },

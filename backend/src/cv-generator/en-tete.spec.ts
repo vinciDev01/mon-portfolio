@@ -1,4 +1,4 @@
-import { hrefDeLien, lignesContact, nomFichier } from './en-tete';
+import { hrefDeLien, lignesContact, nomFichier, titrePoste } from './en-tete';
 
 const complet = {
   nationalite: 'Togolais',
@@ -107,5 +107,18 @@ describe('hrefDeLien', () => {
 
   it('ne redouble pas un mailto deja present', () => {
     expect(hrefDeLien('mailto:a@b.c')).toBe('mailto:a@b.c');
+  });
+});
+
+describe('le titre du poste vise', () => {
+  it('est imprime tel que saisi, sans ses blancs de bord', () => {
+    expect(titrePoste('  Developpeur Java Spring Boot ')).toBe('Developpeur Java Spring Boot');
+  });
+
+  it('vide, blanc ou absent : pas de ligne du tout', () => {
+    expect(titrePoste('')).toBeNull();
+    expect(titrePoste('   ')).toBeNull();
+    expect(titrePoste(null)).toBeNull();
+    expect(titrePoste(undefined)).toBeNull();
   });
 });

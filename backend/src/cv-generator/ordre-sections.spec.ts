@@ -1,4 +1,4 @@
-import { ordonnerSections } from './ordre-sections';
+import { avecBrouillon, ordonnerSections } from './ordre-sections';
 
 const base = [
   { titre: 'PRESENTATION', lignes: ['Ingenieur logiciel'], rang: 10 },
@@ -68,5 +68,58 @@ describe('ordonnerSections', () => {
     ordonnerSections(b, l);
     expect(b).toEqual(base);
     expect(l[0].sortOrder).toBe(20);
+  });
+});
+
+describe('le brouillon de l apercu', () => {
+  const enBase = [
+    { id: 'a', titre: 'LANGUES', lignes: 'Francais', publique: true, sortOrder: 20 },
+    { id: 'b', titre: 'LOISIRS', lignes: 'Lecture', publique: true, sortOrder: 70 },
+  ];
+
+  it('remplace la section en cours de modification, par son id', () => {
+    const r = avecBrouillon(enBase, {
+      id: 'a', titre: 'LANGUES', lignes: 'Francais\nAnglais', publique: true, sortOrder: 20,
+    });
+    expect(r).toHaveLength(2);
+    expect(r.find((x) => x.id === 'a')?.lignes).toBe('Francais\nAnglais');
+  });
+
+  it('ajoute une nouvelle section, sans id', () => {
+    const r = avecBrouillon(enBase, { titre: 'BENEVOLAT', lignes: 'Croix-Rouge', publique: true, sortOrder: 65 });
+    expect(r.map((x) => x.titre)).toEqual(['LANGUES', 'LOISIRS', 'BENEVOLAT']);
+  });
+
+  it('sans brouillon, rend les sections telles quelles', () => {
+    expect(avecBrouillon(enBase, undefined)).toEqual(enBase);
+  });
+
+  it('ne modifie pas les sections enregistrees', () => {
+    const copie = enBase.map((x) => ({ ...x }));
+    avecBrouillon(enBase, { id: 'a', titre: 'X', lignes: 'y', publique: false, sortOrder: 1 });
+    expect(enBase).toEqual(copie);
+  });
+
+  it('un brouillon prive disparait du CV, comme il le fera une fois enregistre', () => {
+    const r = ordonnerSections([], avecBrouillon(enBase, {
+      id: 'a', titre: 'LANGUES', lignes: 'Francais', publique: false, sortOrder: 20,
+    }));
+    expect(r.map((x) => x.titre)).toEqual(['LOISIRS']);
+  });
+});
+
+describe('les lignes a deux colonnes', () => {
+  it('passent de la base au document, avec leurs lignes', () => {
+    const paires = [{ etiquette: 'Langages', valeur: 'Java' }];
+    const r = ordonnerSections(
+      [{ titre: 'TECHNOLOGIES', lignes: ['Langages : Java'], rang: 30, paires }],
+      [],
+    );
+    expect(r[0].paires).toEqual(paires);
+  });
+
+  it('une section sans paires n en porte pas', () => {
+    const r = ordonnerSections([{ titre: 'PRESENTATION', lignes: ['x'], rang: 10 }], []);
+    expect(r[0].paires).toBeUndefined();
   });
 });

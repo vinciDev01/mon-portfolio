@@ -1,10 +1,15 @@
+import type { Paire } from './technologies-cv';
+
 /**
- * Section prete a etre dessinee dans le CV.
+ * Section prete a etre dessinee dans le CV. `paires` : la meme matiere que
+ * `lignes`, en deux colonnes (etiquette, valeur), quand la section s'y prete ;
+ * le rendu la prefere alors aux lignes.
  */
 export type SectionCv = {
   titre: string;
   lignes: string[];
   rang: number;
+  paires?: Paire[];
 };
 
 /** Section alimentee par la base, avec son rang implicite. */
@@ -12,6 +17,7 @@ export type SectionBase = {
   titre: string;
   lignes: string[];
   rang: number;
+  paires?: Paire[];
 };
 
 /** Section libre saisie depuis le backoffice. */
@@ -56,6 +62,7 @@ export function ordonnerSections(
       titre: s.titre,
       lignes: s.lignes.map((l) => l.trim()).filter((l) => l.length > 0),
       rang: s.rang,
+      ...(s.paires ? { paires: s.paires } : {}),
     }));
 
   const depuisLibres: SectionCv[] = libres
@@ -68,4 +75,25 @@ export function ordonnerSections(
     .filter((s) => s.lignes.length > 0);
 
   return [...depuisBase, ...depuisLibres].sort((a, b) => a.rang - b.rang);
+}
+
+/** Une section libre telle que l'apercu la recoit : avec son `id` quand elle
+ *  existe deja, sans quand elle est en cours de creation. */
+export type SectionBrouillon = SectionLibre & { id?: string };
+
+/**
+ * Les sections libres enregistrees, avec le brouillon du formulaire a la
+ * place de la section qu'il modifie (meme `id`), ou en plus s'il est neuf.
+ * Sert a l'apercu : le visiteur du backoffice voit le CV tel qu'il sera
+ * apres enregistrement, sans rien enregistrer. Rien n'est modifie en place.
+ */
+export function avecBrouillon<T extends SectionBrouillon>(
+  enregistrees: readonly T[],
+  brouillon: SectionBrouillon | undefined,
+): SectionBrouillon[] {
+  if (!brouillon) return [...enregistrees];
+  const remplacee = brouillon.id !== undefined && enregistrees.some((s) => s.id === brouillon.id);
+  return remplacee
+    ? enregistrees.map((s) => (s.id === brouillon.id ? brouillon : s))
+    : [...enregistrees, brouillon];
 }

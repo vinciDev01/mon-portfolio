@@ -1,10 +1,11 @@
-import { Controller, Get, NotFoundException, Res } from '@nestjs/common';
+import { Body, Controller, Get, NotFoundException, Post, Res } from '@nestjs/common';
 import { ApiOperation, ApiTags } from '@nestjs/swagger';
 import type { Response } from 'express';
 import { PrismaService } from '../prisma/prisma.service';
 import { Public } from '../auth/auth.guard';
 import { CvGeneratorService } from './cv-generator.service';
 import type { DocumentCv } from './cv-generator.service';
+import { ApercuCvDto } from './dto/apercu-cv.dto';
 
 const TYPE_DOCX =
   'application/vnd.openxmlformats-officedocument.wordprocessingml.document';
@@ -30,6 +31,26 @@ export class CvGeneratorController {
     this.envoyer(
       res,
       await this.cvGeneratorService.generatePdf(),
+      'application/pdf',
+    );
+  }
+
+  /**
+   * L'apercu du backoffice : le PDF avec la section en cours de saisie, sans
+   * rien enregistrer. POST parce que la section voyage dans le corps.
+   */
+  @Post('apercu')
+  @ApiOperation({ summary: 'Apercu du CV PDF avec une section brouillon (administrateur)' })
+  async apercu(@Body() dto: ApercuCvDto, @Res() res: Response) {
+    this.envoyer(
+      res,
+      await this.cvGeneratorService.generatePdf({
+        id: dto.id,
+        titre: dto.titre,
+        lignes: dto.lignes,
+        publique: dto.publique ?? true,
+        sortOrder: dto.sortOrder ?? 0,
+      }),
       'application/pdf',
     );
   }

@@ -43,7 +43,9 @@ export default function TechnologiesPage() {
           <tr className="border-b border-border text-left">
             <th className="py-3 px-2">Logo</th>
             <th className="py-3 px-2">Libellé</th>
+            <th className="py-3 px-2">Famille</th>
             <th className="py-3 px-2">Ordre</th>
+            <th className="py-3 px-2">Dans le CV</th>
             <th className="py-3 px-2 text-right">Actions</th>
           </tr>
         </thead>
@@ -56,7 +58,9 @@ export default function TechnologiesPage() {
                 )}
               </td>
               <td className="py-3 px-2">{item.label}</td>
+              <td className="py-3 px-2 text-muted-foreground">{item.family ?? "Aucune"}</td>
               <td className="py-3 px-2">{item.sortOrder}</td>
+              <td className="py-3 px-2 text-muted-foreground">{item.showInCv ? "Oui" : "Non"}</td>
               <td className="py-3 px-2 text-right space-x-2">
                 <button
                   onClick={() => router.push(`/technologies/${item.id}/edit`)}

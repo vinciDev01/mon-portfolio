@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 import { useRouter, useParams } from "next/navigation";
 import { fetchEntity, updateEntity } from "@/lib/api";
 import { ImageUpload } from "@/components/image-upload";
+import { ChampFamille } from "@/components/champ-famille";
 import { toast } from "sonner";
 import type { TechnologyDto } from "@portfolio/shared-types";
 
@@ -31,6 +32,8 @@ export default function EditTechnologyPage() {
         label: data.label,
         logoPath: data.logoPath,
         sortOrder: data.sortOrder,
+        showInCv: data.showInCv,
+        family: data.family?.trim() || null,
       });
       toast.success("Technologie mise à jour");
       router.push("/technologies");
@@ -59,6 +62,7 @@ export default function EditTechnologyPage() {
           />
         </div>
         <ImageUpload currentPath={data.logoPath} category="technologies" onUpload={(p) => setData({ ...data, logoPath: p })} label="Logo" />
+        <ChampFamille valeur={data.family ?? ""} surChangement={(f) => setData({ ...data, family: f })} />
         <div>
           <label className="block text-sm font-medium mb-1">Ordre d&apos;affichage</label>
           <input
@@ -70,6 +74,21 @@ export default function EditTechnologyPage() {
           />
           <p className="text-xs text-muted-foreground mt-1">Entier positif ou nul</p>
         </div>
+        <label className="flex items-start gap-2 text-sm">
+          <input
+            type="checkbox"
+            checked={data.showInCv}
+            onChange={(e) => setData({ ...data, showInCv: e.target.checked })}
+            className="mt-0.5"
+          />
+          <span>
+            <span className="font-medium">Apparaît dans le CV</span>
+            <span className="block text-xs text-muted-foreground">
+              Décochée, la technologie reste sur le portfolio mais ne sort pas
+              dans le CV téléchargeable.
+            </span>
+          </span>
+        </label>
         <button
           type="submit"
           disabled={saving}

@@ -96,7 +96,7 @@ describe("blocsPresents (spec section 4)", () => {
   it("garde l ordre de lecture de la spec", () => {
     const tout = projet({
       photo1Path: "a.webp", description: "d", targetAudience: "p",
-      technologies: [{ id: "t", label: "Angular", logoPath: null, sortOrder: 0 }],
+      technologies: [{ id: "t", label: "Angular", logoPath: null, sortOrder: 0, showInCv: true, family: null }],
       collaborators: [qui({})],
       projectUrl: "https://exemple.test",
       demoUrl: "https://exemple.test/demo",

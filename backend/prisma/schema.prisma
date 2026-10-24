@@ -71,6 +71,8 @@ model SiteSettings {
    * l'administrateur. Faux par defaut : la publication est une decision.
    */
   showCvDownload    Boolean @default(false) @map("show_cv_download")
+  /// Le poste vise, imprime sous le nom en tete du CV. Nul : pas de ligne.
+  cvJobTitle        String? @map("cv_job_title")
 
   // Accent
   accentHue         Int     @default(107) @map("accent_hue")
@@ -151,6 +153,11 @@ model Technology {
   label     String
   logoPath  String?  @map("logo_path")
   sortOrder Int      @default(0) @map("sort_order")
+  /// Faux : la technologie reste au portfolio mais ne sort pas dans le CV.
+  showInCv  Boolean  @default(true) @map("show_in_cv")
+  /// Famille de la technologie (Langages, Frameworks, Outils...) : le CV
+  /// range les technologies par famille. Nulle : « Autres ».
+  family    String?
   createdAt DateTime @default(now()) @map("created_at")
   updatedAt DateTime @updatedAt @map("updated_at")
 

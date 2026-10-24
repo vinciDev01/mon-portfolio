@@ -4,6 +4,7 @@ import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { createEntity } from "@/lib/api";
 import { CvSectionForm, type ValeursSection } from "@/components/cv-section-form";
+import { ApercuCv } from "@/components/apercu-cv";
 import { toast } from "sonner";
 
 export default function NouvelleSectionCvPage() {
@@ -31,7 +32,9 @@ export default function NouvelleSectionCvPage() {
   }
 
   return (
-    <div className="max-w-lg">
+    // Le formulaire a gauche, le CV a droite : l'apercu suit la saisie.
+    <div className="grid gap-8 xl:grid-cols-[minmax(0,32rem)_minmax(420px,1fr)] items-start">
+      <div>
       <h1 className="text-2xl font-bold mb-8">Nouvelle section du CV</h1>
       <form onSubmit={handleSubmit} className="space-y-6">
         <CvSectionForm valeurs={valeurs} onChange={setValeurs} />
@@ -43,6 +46,10 @@ export default function NouvelleSectionCvPage() {
           {saving ? "Création…" : "Créer"}
         </button>
       </form>
+      </div>
+      <aside className="xl:sticky xl:top-8 h-[80vh]">
+        <ApercuCv brouillon={valeurs} />
+      </aside>
     </div>
   );
 }

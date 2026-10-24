@@ -8,6 +8,7 @@ import {
   IsOptional,
   IsString,
   Max,
+  MaxLength,
   Min,
 } from 'class-validator';
 
@@ -230,6 +231,15 @@ export class UpdateSiteSettingsDto {
   @IsOptional()
   @IsBoolean()
   showCvDownload?: boolean;
+
+  @ApiPropertyOptional({
+    example: 'Developpeur Java Spring Boot',
+    description: 'Poste vise, imprime sous le nom en tete du CV ; vide, pas de ligne',
+  })
+  @IsOptional()
+  @IsString()
+  @MaxLength(120)
+  cvJobTitle?: string | null;
 
   // --- Accent ---
 

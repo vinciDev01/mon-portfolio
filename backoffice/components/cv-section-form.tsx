@@ -11,11 +11,11 @@
 /** Les sections produites depuis la base, avec la page du backoffice qui
  *  edite leurs donnees : c'est la qu'on les modifie, pas ici. */
 export const RANGS_DE_LA_BASE = [
-  { rang: 10, titre: "PRÉSENTATION", page: "/presentations" },
-  { rang: 30, titre: "TECHNOLOGIES", page: "/technologies" },
-  { rang: 40, titre: "CERTIFICATIONS", page: "/certifications" },
-  { rang: 50, titre: "EXPÉRIENCES PROFESSIONNELLES", page: "/experiences" },
-  { rang: 60, titre: "PROJETS RÉALISÉS", page: "/projects" },
+  { cle: "presentation", rang: 10, titre: "PRÉSENTATION", page: "/presentations" },
+  { cle: "technologies", rang: 30, titre: "TECHNOLOGIES", page: "/technologies" },
+  { cle: "certifications", rang: 40, titre: "CERTIFICATIONS", page: "/certifications" },
+  { cle: "experiences", rang: 50, titre: "EXPÉRIENCES PROFESSIONNELLES", page: "/experiences" },
+  { cle: "projets", rang: 60, titre: "PROJETS RÉALISÉS", page: "/projects" },
 ] as const;
 
 export type ValeursSection = {

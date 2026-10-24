@@ -33,7 +33,7 @@ export default function EditTechnologyPage() {
         logoPath: data.logoPath,
         sortOrder: data.sortOrder,
         showInCv: data.showInCv,
-        family: data.family?.trim() || null,
+        familyId: data.familyId || null,
       });
       toast.success("Technologie mise à jour");
       router.push("/technologies");
@@ -62,7 +62,7 @@ export default function EditTechnologyPage() {
           />
         </div>
         <ImageUpload currentPath={data.logoPath} category="technologies" onUpload={(p) => setData({ ...data, logoPath: p })} label="Logo" />
-        <ChampFamille valeur={data.family ?? ""} surChangement={(f) => setData({ ...data, family: f })} />
+        <ChampFamille valeur={data.familyId ?? ""} surChangement={(f) => setData({ ...data, familyId: f || null })} />
         <div>
           <label className="block text-sm font-medium mb-1">Ordre d&apos;affichage</label>
           <input

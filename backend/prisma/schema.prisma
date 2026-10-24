@@ -73,6 +73,9 @@ model SiteSettings {
   showCvDownload    Boolean @default(false) @map("show_cv_download")
   /// Le poste vise, imprime sous le nom en tete du CV. Nul : pas de ligne.
   cvJobTitle        String? @map("cv_job_title")
+  /// Les sections de la base retirees du CV (presentation, technologies,
+  /// certifications, experiences, projets). Vide : toutes sont incluses.
+  cvBaseMasquees    String[] @default([]) @map("cv_base_masquees")
 
   // Accent
   accentHue         Int     @default(107) @map("accent_hue")
@@ -155,9 +158,11 @@ model Technology {
   sortOrder Int      @default(0) @map("sort_order")
   /// Faux : la technologie reste au portfolio mais ne sort pas dans le CV.
   showInCv  Boolean  @default(true) @map("show_in_cv")
-  /// Famille de la technologie (Langages, Frameworks, Outils...) : le CV
-  /// range les technologies par famille. Nulle : « Autres ».
-  family    String?
+  /// Famille de la technologie, choisie dans une liste geree : le CV range
+  /// les technologies par famille. Nulle : « Autres ». Supprimer la famille
+  /// detache ses technologies sans les supprimer.
+  familyId  String?           @map("family_id")
+  family    TechnologyFamily? @relation(fields: [familyId], references: [id], onDelete: SetNull)
   createdAt DateTime @default(now()) @map("created_at")
   updatedAt DateTime @updatedAt @map("updated_at")
 
@@ -165,6 +170,19 @@ model Technology {
   projectTechnologies ProjectTechnology[]
 
   @@map("technologies")
+}
+
+model TechnologyFamily {
+  id        String   @id @default(uuid())
+  name      String   @unique
+  /// Ordre des familles dans le CV.
+  sortOrder Int      @default(0) @map("sort_order")
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  technologies Technology[]
+
+  @@map("technology_families")
 }
 
 model Organization {

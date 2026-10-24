@@ -40,6 +40,9 @@ export interface SiteSettingsDto {
   showCvDownload: boolean;
   /** Le poste vise, imprime sous le nom en tete du CV ; `null` : pas de ligne. */
   cvJobTitle: string | null;
+  /** Les sections de la base retirees du CV (presentation, technologies,
+   *  certifications, experiences, projets). Vide : toutes incluses. */
+  cvBaseMasquees: string[];
   accentHue: number;
   accentSaturation: number;
 }

@@ -97,3 +97,25 @@ export function avecBrouillon<T extends SectionBrouillon>(
     ? enregistrees.map((s) => (s.id === brouillon.id ? brouillon : s))
     : [...enregistrees, brouillon];
 }
+
+/** Les cles des sections alimentees par la base, que le backoffice peut
+ *  retirer du CV une a une. */
+export const CLES_SECTIONS_BASE = [
+  'presentation',
+  'technologies',
+  'certifications',
+  'experiences',
+  'projets',
+] as const;
+export type CleSectionBase = (typeof CLES_SECTIONS_BASE)[number];
+
+/**
+ * Les sections de la base, sans celles que le backoffice a retirees du CV.
+ * Une cle inconnue ne retire rien. Rien n'est modifie en place.
+ */
+export function sansMasquees<T extends { cle: string }>(
+  base: readonly T[],
+  masquees: readonly string[],
+): T[] {
+  return base.filter((s) => !masquees.includes(s.cle));
+}

@@ -1,6 +1,8 @@
 import { ApiPropertyOptional } from '@nestjs/swagger';
 import { Type } from 'class-transformer';
+import { CLES_SECTIONS_BASE } from '../../cv-generator/ordre-sections';
 import {
+  IsArray,
   IsBoolean,
   IsIn,
   IsInt,
@@ -240,6 +242,15 @@ export class UpdateSiteSettingsDto {
   @IsString()
   @MaxLength(120)
   cvJobTitle?: string | null;
+
+  @ApiPropertyOptional({
+    example: ['technologies'],
+    description: 'Sections de la base retirees du CV ; vide : toutes incluses',
+  })
+  @IsOptional()
+  @IsArray()
+  @IsIn(CLES_SECTIONS_BASE, { each: true })
+  cvBaseMasquees?: string[];
 
   // --- Accent ---
 

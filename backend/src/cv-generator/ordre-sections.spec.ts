@@ -1,4 +1,4 @@
-import { avecBrouillon, ordonnerSections } from './ordre-sections';
+import { avecBrouillon, ordonnerSections, sansMasquees } from './ordre-sections';
 
 const base = [
   { titre: 'PRESENTATION', lignes: ['Ingenieur logiciel'], rang: 10 },
@@ -121,5 +121,24 @@ describe('les lignes a deux colonnes', () => {
   it('une section sans paires n en porte pas', () => {
     const r = ordonnerSections([{ titre: 'PRESENTATION', lignes: ['x'], rang: 10 }], []);
     expect(r[0].paires).toBeUndefined();
+  });
+});
+
+describe('les sections de la base masquees', () => {
+  const avecCles = [
+    { cle: 'presentation', titre: 'PRESENTATION', lignes: ['x'], rang: 10 },
+    { cle: 'technologies', titre: 'TECHNOLOGIES', lignes: ['y'], rang: 30 },
+  ];
+
+  it('retire celles dont la cle est masquee', () => {
+    expect(sansMasquees(avecCles, ['technologies']).map((s) => s.titre)).toEqual(['PRESENTATION']);
+  });
+
+  it('sans masque, garde tout', () => {
+    expect(sansMasquees(avecCles, [])).toHaveLength(2);
+  });
+
+  it('ignore une cle inconnue', () => {
+    expect(sansMasquees(avecCles, ['inconnue'])).toHaveLength(2);
   });
 });

@@ -58,7 +58,7 @@ export default function TechnologiesPage() {
                 )}
               </td>
               <td className="py-3 px-2">{item.label}</td>
-              <td className="py-3 px-2 text-muted-foreground">{item.family ?? "Aucune"}</td>
+              <td className="py-3 px-2 text-muted-foreground">{item.family?.name ?? "Aucune"}</td>
               <td className="py-3 px-2">{item.sortOrder}</td>
               <td className="py-3 px-2 text-muted-foreground">{item.showInCv ? "Oui" : "Non"}</td>
               <td className="py-3 px-2 text-right space-x-2">

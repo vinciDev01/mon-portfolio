@@ -95,3 +95,14 @@ describe('cvJobTitle', () => {
     expect(await erreursSur('cvJobTitle', 'x'.repeat(121))).toContain('cvJobTitle');
   });
 });
+
+describe('cvBaseMasquees', () => {
+  it('accepte les cles des sections de la base, et la liste vide', async () => {
+    expect(await erreursSur('cvBaseMasquees', ['technologies', 'projets'])).toEqual([]);
+    expect(await erreursSur('cvBaseMasquees', [])).toEqual([]);
+  });
+
+  it('refuse une cle inconnue', async () => {
+    expect(await erreursSur('cvBaseMasquees', ['loisirs'])).toContain('cvBaseMasquees');
+  });
+});

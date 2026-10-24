@@ -23,20 +23,24 @@ describe('les technologies du CV', () => {
     expect(prisma.technology.findMany).toHaveBeenCalledWith({
       where: { showInCv: true },
       orderBy: { sortOrder: 'asc' },
+      include: { family: true },
     });
   });
 });
 
 describe('les technologies par famille', () => {
-  const t = (label: string, family: string | null) => ({ label, family });
+  const fam = (name: string, sortOrder = 0) => ({ name, sortOrder });
+  const langages = fam('Langages', 0);
+  const frameworks = fam('Frameworks', 1);
+  const t = (label: string, family: { name: string; sortOrder: number } | null) => ({ label, family });
 
-  it('une ligne par famille, dans l ordre de la premiere technologie de chacune', () => {
+  it('une ligne par famille, dans l ordre des familles', () => {
     expect(
       grouperTechnologies([
-        t('Java', 'Langages'),
-        t('Spring Boot', 'Frameworks'),
-        t('Python', 'Langages'),
-        t('Angular', 'Frameworks'),
+        t('Spring Boot', frameworks),
+        t('Java', langages),
+        t('Angular', frameworks),
+        t('Python', langages),
       ]),
     ).toEqual([
       { etiquette: 'Langages', valeur: 'Java, Python' },
@@ -44,16 +48,14 @@ describe('les technologies par famille', () => {
     ]);
   });
 
-  it('confond les familles a la casse et aux blancs pres, et garde la premiere graphie', () => {
+  it('a ordre egal, departage par la premiere technologie de chaque famille', () => {
     expect(
-      grouperTechnologies([t('Git', 'Outils'), t('Docker', ' outils ')]),
-    ).toEqual([{ etiquette: 'Outils', valeur: 'Git, Docker' }]);
+      grouperTechnologies([t('Git', fam('Outils')), t('Java', fam('Langages'))]).map((p) => p.etiquette),
+    ).toEqual(['Outils', 'Langages']);
   });
 
   it('range les technologies sans famille sous « Autres », en dernier', () => {
-    expect(
-      grouperTechnologies([t('Linux', null), t('Java', 'Langages'), t('Figma', '  ')]),
-    ).toEqual([
+    expect(grouperTechnologies([t('Linux', null), t('Java', langages), t('Figma', null)])).toEqual([
       { etiquette: 'Langages', valeur: 'Java' },
       { etiquette: 'Autres', valeur: 'Linux, Figma' },
     ]);

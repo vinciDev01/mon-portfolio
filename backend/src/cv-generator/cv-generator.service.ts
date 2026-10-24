@@ -16,6 +16,8 @@ import {
 import {
   avecBrouillon,
   ordonnerSections,
+  sansMasquees,
+  type CleSectionBase,
   type SectionBase,
   type SectionBrouillon,
 } from './ordre-sections';
@@ -120,6 +122,7 @@ export class CvGeneratorService {
       this.prisma.technology.findMany({
         where: { showInCv: true },
         orderBy: { sortOrder: 'asc' },
+        include: { family: true },
       }),
       this.prisma.certification.findMany({
         include: { organization: true },
@@ -133,8 +136,9 @@ export class CvGeneratorService {
     const polices = choisirPolices(reglages?.cvFontFamily);
 
     // Sections alimentees par la base
-    const base: SectionBase[] = [
+    const base: (SectionBase & { cle: CleSectionBase })[] = [
       {
+        cle: 'presentation' as const,
         titre: 'PRÉSENTATION',
         rang: RANG.presentation,
         lignes: presentations
@@ -146,6 +150,7 @@ export class CvGeneratorService {
         // seul servent au filtre des sections vides et de repli.
         const paires = grouperTechnologies(technologies);
         return {
+          cle: 'technologies' as const,
           titre: 'TECHNOLOGIES',
           rang: RANG.technologies,
           lignes: paires.map((p) => (p.etiquette ? `${p.etiquette} : ${p.valeur}` : p.valeur)),
@@ -153,6 +158,7 @@ export class CvGeneratorService {
         };
       })(),
       {
+        cle: 'certifications' as const,
         titre: 'CERTIFICATIONS',
         rang: RANG.certifications,
         lignes: certifications.map((c) => {
@@ -163,6 +169,7 @@ export class CvGeneratorService {
         }),
       },
       {
+        cle: 'experiences' as const,
         titre: 'EXPÉRIENCES PROFESSIONNELLES',
         rang: RANG.experiences,
         lignes: experiences.map((e) => {
@@ -173,6 +180,7 @@ export class CvGeneratorService {
         }),
       },
       {
+        cle: 'projets' as const,
         titre: 'PROJETS RÉALISÉS',
         rang: RANG.projets,
         lignes: projets.map((p, i) => {
@@ -185,7 +193,11 @@ export class CvGeneratorService {
     return {
       personalInfo,
       reglages,
-      sections: ordonnerSections(base, avecBrouillon(sectionsLibres, brouillon)),
+      // Les sections de la base retirees du CV depuis le backoffice.
+      sections: ordonnerSections(
+        sansMasquees(base, reglages?.cvBaseMasquees ?? []),
+        avecBrouillon(sectionsLibres, brouillon),
+      ),
       contact: lignesContact(
         personalInfo
           ? {

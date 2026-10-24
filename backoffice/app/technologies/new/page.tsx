@@ -14,14 +14,14 @@ export default function NewTechnologyPage() {
   const [sortOrder, setSortOrder] = useState(0);
   // Cochee par defaut : une technologie nouvelle sort dans le CV.
   const [showInCv, setShowInCv] = useState(true);
-  const [family, setFamily] = useState("");
+  const [familyId, setFamilyId] = useState("");
   const [saving, setSaving] = useState(false);
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
     setSaving(true);
     try {
-      await createEntity("technologies", { label, logoPath, sortOrder, showInCv, family: family.trim() || null });
+      await createEntity("technologies", { label, logoPath, sortOrder, showInCv, familyId: familyId || null });
       toast.success("Technologie créée");
       router.push("/technologies");
     } catch {
@@ -46,7 +46,7 @@ export default function NewTechnologyPage() {
           />
         </div>
         <ImageUpload currentPath={logoPath} category="technologies" onUpload={setLogoPath} label="Logo" />
-        <ChampFamille valeur={family} surChangement={setFamily} />
+        <ChampFamille valeur={familyId} surChangement={setFamilyId} />
         <div>
           <label className="block text-sm font-medium mb-1">Ordre d&apos;affichage</label>
           <input

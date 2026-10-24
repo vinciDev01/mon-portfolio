@@ -1,3 +1,5 @@
+import type { TechnologyFamilyDto } from "./technology-family";
+
 export interface TechnologyDto {
   id: string;
   label: string;
@@ -5,7 +7,8 @@ export interface TechnologyDto {
   sortOrder: number;
   /** Faux : la technologie reste au portfolio mais ne sort pas dans le CV. */
   showInCv: boolean;
-  /** Famille (Langages, Frameworks, Outils...) : le CV range par famille.
+  /** Famille, choisie dans la liste geree : le CV range par famille.
    *  `null` : « Autres ». */
-  family: string | null;
+  familyId: string | null;
+  family: TechnologyFamilyDto | null;
 }

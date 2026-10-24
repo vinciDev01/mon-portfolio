@@ -1,6 +1,6 @@
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
 import { Type } from 'class-transformer';
-import { IsBoolean, IsInt, IsOptional, IsString, MaxLength, Min } from 'class-validator';
+import { IsBoolean, IsInt, IsOptional, IsString, Min } from 'class-validator';
 
 export class CreateTechnologyDto {
   @ApiProperty()
@@ -21,14 +21,12 @@ export class CreateTechnologyDto {
   showInCv?: boolean;
 
   @ApiPropertyOptional({
-    example: 'Langages',
-    description: 'Famille de la technologie ; le CV les range par famille',
+    description: 'Famille de la technologie (liste geree) ; null : « Autres »',
     nullable: true,
   })
   @IsOptional()
   @IsString()
-  @MaxLength(40)
-  family?: string | null;
+  familyId?: string | null;
 
   @ApiPropertyOptional({ default: 0 })
   @IsOptional()

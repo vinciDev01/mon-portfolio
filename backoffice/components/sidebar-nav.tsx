@@ -29,6 +29,7 @@ const sections: Item[] = [
 
 const apresSections: Item[] = [
   { href: "/technologies", label: "Technologies" },
+  { href: "/technology-families", label: "Familles de technologies" },
   { href: "/organizations", label: "Organisations" },
   { href: "/contact-messages", label: "Messages de contact" },
   { href: "/cv-sections", label: "Sections du CV" },

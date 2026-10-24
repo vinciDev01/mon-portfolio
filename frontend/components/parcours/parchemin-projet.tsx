@@ -297,7 +297,7 @@ function Dossier({
             switch (bloc) {
               case "photos":
                 return (
-                  <div key={bloc} className="mt-4 grid gap-3">
+                  <div key={bloc} className="mt-4 parchemin-photos">
                     {photos.map((src) => (
                       // `alt` vide : le nom du projet est lu juste a cote, une
                       // description redirait la meme chose.
@@ -307,7 +307,6 @@ function Dossier({
                         alt=""
                         width={640}
                         height={360}
-                        className="h-auto w-full"
                       />
                     ))}
                   </div>

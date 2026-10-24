@@ -693,3 +693,16 @@ describe("le parchemin est centre dans la fenetre", () => {
     expect(valeur(bloc(/^\s*\.parchemin\s*\{/m), "margin")).toBe("auto");
   });
 });
+
+describe("les photos du parchemin laissent voir le reste de la feuille", () => {
+  it("plafonnent leur hauteur et gardent leurs proportions", () => {
+    const img = bloc(/\.parchemin-photos img\s*\{/);
+    expect(valeur(img, "max-height")).toMatch(/dvh|px/);
+    expect(valeur(img, "object-fit")).toBe("contain");
+    expect(valeur(img, "width")).toBe("auto");
+  });
+
+  it("se placent cote a cote quand la largeur le permet", () => {
+    expect(valeur(bloc(/\.parchemin-photos\s*\{/), "grid-template-columns")).toMatch(/auto-fit/);
+  });
+});

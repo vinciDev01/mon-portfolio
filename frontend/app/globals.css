@@ -1606,6 +1606,26 @@ html {
     padding: var(--espace-3);
   }
 
+  /* Les photos, cote a cote des que la largeur le permet. Plafonnees en
+     hauteur : une capture d'ecran pleine largeur remplissait la feuille, et
+     le visiteur ne voyait plus ni la description ni les liens. */
+  .parchemin-photos {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(min(240px, 100%), 1fr));
+    gap: var(--espace-2);
+    align-items: start;
+  }
+
+  /* Proportions gardees, rien de rogne : `contain`, pas `cover`, une capture
+     d'ecran coupee perdrait ce qu'elle montre. */
+  .parchemin-photos img {
+    width: auto;
+    max-width: 100%;
+    height: auto;
+    max-height: 40dvh;
+    object-fit: contain;
+  }
+
   /* Les blocs de detail prennent TOUTE la largeur du corps : la feuille est
      un panneau, pas une colonne de texte, et elle porte des photos, des
      technologies, des collaborateurs et des liens qui profitent de la place.

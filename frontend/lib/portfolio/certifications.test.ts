@@ -102,6 +102,13 @@ describe("la section des certifications", () => {
     expect(bouton).toMatch(/<img[^>]*alt="Image de la certification Certif a"/);
   });
 
+  it("la fenetre est grande quelle que soit l image : une largeur fixe, bornee par l ecran", () => {
+    const img = bloc(/\.visionneuse-image\s*\{/);
+    expect(valeur(img, "width")).toBe("min(880px, calc(100vw - 2 * var(--espace-3) - 2 * var(--espace-2)))");
+    expect(valeur(img, "height")).toBe("auto");
+    expect(valeur(img, "max-height")).toMatch(/100dvh/);
+  });
+
   it("la fenetre de l image est centree, malgre le preflight", () => {
     expect(valeur(bloc(/^\s*\.visionneuse\s*\{/m), "margin")).toBe("auto");
     expect(valeur(bloc(/\.visionneuse-image\s*\{/), "object-fit")).toBe("contain");

@@ -1326,14 +1326,16 @@ html {
     font-weight: 500;
   }
 
-  /* L'image entiere, proportions gardees, dans les bornes de l'ecran ; sur
-     le fond clair d'un document imprime. */
+  /* L'image entiere, proportions gardees, sur le fond clair d'un document
+     imprime. Une largeur FIXE, et non celle de l'image : une petite image
+     donnait une petite fenetre. 880 px au plus, bornee par l'ecran ; la
+     hauteur suit les proportions, sans depasser l'ecran (l'image se reduit
+     alors, entiere, dans son cadre). */
   .visionneuse-image {
     display: block;
-    max-width: min(1100px, calc(100vw - 2 * var(--espace-3) - 2 * var(--espace-2)));
-    max-height: calc(100dvh - 2 * var(--espace-3) - 8rem);
-    width: auto;
+    width: min(880px, calc(100vw - 2 * var(--espace-3) - 2 * var(--espace-2)));
     height: auto;
+    max-height: calc(100dvh - 2 * var(--espace-3) - 8rem);
     object-fit: contain;
     background: var(--surface-clair);
   }
@@ -1559,7 +1561,7 @@ html {
     margin-inline-start: 0;
   }
 
-  /* Les sections larges : des cadres et des colonnes, pas du texte courant.
+  /* Les sections larges : des cadres et des colonnes, pas du texte courant
      Leur plafond passe a 88 caracteres (presentation, experience) ou 100
      (contact) ; la borne de l'ampoule, elle, ne change pas, et c'est souvent
      elle qui decide. Les paragraphes gardent leur `.mesure`. */

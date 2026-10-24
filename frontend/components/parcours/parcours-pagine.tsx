@@ -1,6 +1,7 @@
 "use client";
 
 import {
+  Fragment,
   createContext,
   useContext,
   useEffect,
@@ -471,8 +472,13 @@ export function ParcoursPagine({
             data-decouverte={vues.has(i) ? "true" : undefined}
             tabIndex={-1}
           >
-            {enfants[s.id]}
-            {i === derniere && pied}
+            {/* Le contenu et le pied viennent du composant serveur `Page`.
+                Cote a cote, ils forment une liste de deux enfants, que React
+                valide a la reconciliation : sans cle, il avertit (« Each
+                child in a list should have a unique key »). Chacun a donc la
+                sienne. */}
+            <Fragment key="contenu">{enfants[s.id]}</Fragment>
+            {i === derniere && <Fragment key="pied">{pied}</Fragment>}
           </div>
         ))}
         {sections.length === 0 && pied}

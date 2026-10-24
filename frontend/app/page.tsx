@@ -45,11 +45,17 @@ export default async function Page() {
     // sur celle de la fenetre.
     ouverture: (
       <SectionShell cleTitre="nav.presentation" index={rang("ouverture")}>
-        <Medaillon infos={data.personalInfo} />
-        <LigneDisponibilite etat={s.availabilityStatus} libelle={s.availabilityLabel} />
-        {s.showPresentations && (
-          <PresentationSection presentations={data.presentations} />
-        )}
+        {/* Le portrait a cote du texte et non au-dessus : la section tient
+            ainsi sur un ecran. */}
+        <div className="ouverture-corps">
+          <Medaillon infos={data.personalInfo} />
+          <div className="ouverture-texte">
+            <LigneDisponibilite etat={s.availabilityStatus} libelle={s.availabilityLabel} />
+            {s.showPresentations && (
+              <PresentationSection presentations={data.presentations} />
+            )}
+          </div>
+        </div>
       </SectionShell>
     ),
     stats: (
@@ -63,7 +69,7 @@ export default async function Page() {
       </SectionShell>
     ),
     experience: (
-      <SectionShell cleTitre="nav.experience" index={rang("experience")}>
+      <SectionShell cleTitre="nav.experience" index={rang("experience")} large>
         <ExperienceSection experiences={data.experiences} projets={data.projects} />
       </SectionShell>
     ),
@@ -83,7 +89,7 @@ export default async function Page() {
       </SectionShell>
     ),
     contact: (
-      <SectionShell cleTitre="nav.contact" index={rang("contact")}>
+      <SectionShell cleTitre="nav.contact" index={rang("contact")} large>
         <ContactSection personalInfo={data.personalInfo} />
       </SectionShell>
     ),

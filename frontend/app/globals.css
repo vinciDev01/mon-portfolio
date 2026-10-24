@@ -468,6 +468,23 @@ html {
   }
 }
 
+/* Ecran bas (portable de 768 a 860 px de haut) : les marges des sections se
+   resserrent, pour que chaque section tienne sur un ecran. `min` respecte le
+   reglage du backoffice : la marge ne grandit jamais. */
+@media (max-height: 860px) {
+  :root {
+    --espace-section: min(var(--portfolio-section-spacing, 120px), 64px);
+    --section-bas: var(--espace-3);
+  }
+}
+
+/* Telephone : la marge haute tombe a 40 px, quelle que soit la hauteur. */
+@media (max-width: 599px) {
+  :root {
+    --espace-section: min(var(--portfolio-section-spacing, 120px), 40px);
+  }
+}
+
 /* Correction ronde 1 : les selecteurs de balises rejoignent la couche
    `base` de Tailwind, sinon ils l'emportent sans condition sur les
    utilitaires (non-layered bat toujours layered, quelle que soit la
@@ -616,11 +633,111 @@ html {
     font-size: 3rem;
   }
 
+  /* L'ouverture en deux colonnes : le portrait a sa largeur, le texte le
+     reste. Empile, le portrait prenait 220 px de hauteur au-dessus du texte,
+     et la section debordait de l'ecran. */
+  .ouverture-corps {
+    display: grid;
+    grid-template-columns: auto minmax(0, 1fr);
+    column-gap: var(--espace-4);
+    align-items: start;
+  }
+
+  /* Dans la grille, la niche ne garde que la place de son echo, decale vers
+     le bas : la marge qui la separait du texte, dessous, n'a plus lieu. */
+  .ouverture-corps .medaillon-niche {
+    margin-block-end: var(--medaillon-echo);
+    /* A sa taille, calee a gauche : etiree a la largeur de la colonne, au
+       palier etroit, la niche etirait aussi son echo d'accent. */
+    justify-self: start;
+  }
+
+  /* Les cartes de presentation. Leurs tailles vivent ici et non dans des
+     utilitaires : elles suivent aussi la HAUTEUR de l'ecran, pour que
+     l'ouverture tienne sur une page. */
+  .presentation-titre {
+    margin-block-end: var(--espace-1);
+    font-size: 1.25rem;
+    font-weight: 700;
+    line-height: 1.25;
+    letter-spacing: -0.025em;
+  }
+
+  .presentation-sous-titre {
+    margin-block-end: 12px;
+    color: var(--texte-secondaire);
+    font-size: 1rem;
+    font-weight: 500;
+  }
+
+  .presentation-texte {
+    color: var(--texte-secondaire);
+    font-size: 0.875rem;
+    line-height: 1.625;
+  }
+
+  @media (min-width: 768px) {
+    .presentation-titre {
+      font-size: 1.875rem;
+    }
+
+    .presentation-sous-titre {
+      font-size: 1.25rem;
+    }
+
+    .presentation-texte {
+      font-size: 1.125rem;
+    }
+  }
+
+  /* Ecran bas : un cran plus compact, la section reste sur une page. */
+  @media (max-height: 780px) {
+    .presentation-titre {
+      font-size: 1.5rem;
+    }
+
+    .presentation-sous-titre,
+    .presentation-texte {
+      font-size: 1rem;
+    }
+  }
+
+  /* Telephone : le seuil monte a 820 px, la largeur faisant deja passer le
+     texte sur plus de lignes. */
+  @media (max-height: 820px) and (max-width: 599px) {
+    .presentation-titre {
+      font-size: 1.125rem;
+    }
+
+    .presentation-sous-titre {
+      font-size: 0.9375rem;
+    }
+
+    .presentation-texte {
+      font-size: 0.8125rem;
+      line-height: 1.55;
+    }
+  }
+
   @media (max-width: 599px) {
     .medaillon-niche {
       --medaillon-l: 128px;
       --medaillon-h: 160px;
       --medaillon-echo: 8px;
+    }
+
+    /* Telephone : a cote du texte, le portrait le reduisait a 214 px de
+       large et le faisait passer sur deux fois plus de lignes. Il repasse
+       au-dessus, petit, et le texte reprend toute la largeur. */
+    .ouverture-corps {
+      grid-template-columns: minmax(0, 1fr);
+      row-gap: var(--espace-1);
+    }
+
+    .ouverture-corps .medaillon-niche {
+      --medaillon-l: 88px;
+      --medaillon-h: 110px;
+      --medaillon-echo: 6px;
     }
   }
 
@@ -1440,6 +1557,13 @@ html {
     --mesure-courante: min(100%, max(41ch, min(66ch, var(--degagement))));
     max-width: var(--mesure-courante);
     margin-inline-start: 0;
+  }
+
+  /* Une section large (experience, contact) : des cadres et des colonnes, pas
+     du texte courant. Son plafond passe a 88 caracteres ; la borne de
+     l'ampoule, elle, ne change pas. Les paragraphes gardent leur `.mesure`. */
+  .bloc-parcours[data-large="true"] {
+    --mesure-courante: min(100%, max(41ch, min(88ch, var(--degagement))));
   }
 
   @media (min-width: 900px) {

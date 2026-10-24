@@ -105,7 +105,9 @@ describe("mitigations de performance (annexe §8.1)", () => {
     // Le `:root` est nomme dans l'en-tete : la colonne de passage pose elle
     // aussi un palier a 599 px, et viser le premier `@media` seul tombait sur
     // le sien.
-    const palier = bloc(/@media \(max-width: 599px\)\s*\{\s*:root\s*\{/);
+    // Qualifie par sa premiere declaration : la feuille pose un second
+    // `:root` a 599 px, celui des marges de section, hors couche.
+    const palier = bloc(/@media \(max-width: 599px\)\s*\{\s*:root\s*\{(?=\s*--ampoule-echelle)/);
     expect(palier).toMatch(/--faisceau-flou:\s*14px;/);
     expect(lire("components/ampoule/couches-lumiere.tsx")).not.toContain("stdDeviation={26}");
   });

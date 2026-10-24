@@ -22,6 +22,7 @@ describe("la marge de chaque section", () => {
     );
     const style = /<section[^>]*style="([^"]*)"/.exec(html)?.[1] ?? "";
     expect(style).toMatch(/padding-top:\s*var\(--espace-section\)/);
-    expect(style).toMatch(/padding-bottom:\s*var\(--espace-5\)/);
+    // 64 px par defaut ; un ecran bas la reduit par `--section-bas`.
+    expect(style).toMatch(/padding-bottom:\s*var\(--section-bas,\s*var\(--espace-5\)\)/);
   });
 });

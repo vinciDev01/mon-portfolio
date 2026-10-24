@@ -21,10 +21,14 @@ import { useTranslation } from "@/lib/i18n/i18n-context";
 export function SectionShell({
   cleTitre,
   index,
+  large = false,
   children,
 }: {
   cleTitre: string;
   index: number;
+  /** Plafond de largeur plus genereux, pour une section faite de cadres ou de
+   *  colonnes plutot que de texte courant : 88 caracteres au lieu de 66. */
+  large?: boolean;
   children: React.ReactNode;
 }) {
   const { t } = useTranslation();
@@ -39,7 +43,7 @@ export function SectionShell({
         paddingTop: "var(--espace-section)",
         // La fin du contenu ne colle pas au bord de l ecran, la ou le visiteur
         // arrive en butee pour passer a la section suivante.
-        paddingBottom: "var(--espace-5)",
+        paddingBottom: "var(--section-bas, var(--espace-5))",
       }}
     >
       <div
@@ -47,6 +51,7 @@ export function SectionShell({
         // L'amplitude vient du reglage `zigzagAmplitude`, normalise entre 0 et 1
         // par app/layout.tsx. A 0 les deux cotes se confondent : colonne unique.
         data-cote={aGauche ? "gauche" : "droite"}
+        data-large={large ? "true" : undefined}
       >
         <p className="meta" style={{ marginBottom: "var(--espace-1)" }} aria-hidden="true">
           {String(index).padStart(2, "0")}

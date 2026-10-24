@@ -8,17 +8,20 @@ interface PresentationSectionProps {
 
 function PresentationCard({ item, index }: { item: PresentationDto; index: number }) {
   return (
-    <div className="mesure" style={index > 0 ? { marginTop: "var(--espace-5)" } : undefined}>
-      <h3 className="text-2xl md:text-3xl font-bold tracking-tight leading-tight mb-4">
+    // Resserrees pour que l'ouverture tienne sur un ecran : 40 px entre deux
+    // cartes. Les tailles vivent dans la feuille, qui les adapte a la largeur
+    // et a la hauteur de l'ecran.
+    <div className="mesure" style={index > 0 ? { marginTop: "var(--espace-4)" } : undefined}>
+      <h3 className="presentation-titre">
         {item.title}
       </h3>
       {item.subtitle && (
-        <p className="mesure text-lg md:text-xl text-muted-foreground font-medium mb-6">
+        <p className="mesure presentation-sous-titre">
           {item.subtitle}
         </p>
       )}
       {item.description && (
-        <p className="mesure text-base md:text-lg text-muted-foreground leading-relaxed">
+        <p className="mesure presentation-texte">
           {item.description}
         </p>
       )}

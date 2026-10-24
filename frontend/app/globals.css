@@ -954,6 +954,87 @@ html {
     border-inline-start: 1px solid var(--bordure);
   }
 
+  /* Une certification avec image : la vignette a gauche, le texte a droite. */
+  .registre-entree.avec-image {
+    display: grid;
+    grid-template-columns: 112px minmax(0, 1fr);
+    column-gap: var(--espace-2);
+    align-items: start;
+  }
+
+  /* La vignette, sur fond clair dans les deux themes : un certificat est
+     imprime sur du blanc. Contenue entiere, jamais rognee : un certificat
+     coupe perdrait son nom ou sa date. */
+  .registre-image {
+    display: block;
+    width: 100%;
+    padding: 0;
+    cursor: zoom-in;
+    border: 1px solid var(--bordure);
+    border-radius: 4px;
+    background: var(--surface-clair);
+    overflow: hidden;
+  }
+
+  .registre-image img {
+    display: block;
+    width: 100%;
+    height: 79px;
+    object-fit: contain;
+  }
+
+  .registre-image:focus-visible {
+    outline: 2px solid var(--accent);
+    outline-offset: 2px;
+  }
+
+  /* La fenetre de l'image entiere. Le preflight de Tailwind pose `margin: 0`
+     sur tout element : sans `margin: auto`, un dialog modal se colle en haut
+     a gauche au lieu d'etre centre. */
+  .visionneuse {
+    margin: auto;
+    border: 0;
+    padding: 0;
+    background: transparent;
+    color: var(--texte);
+    max-width: calc(100vw - 2 * var(--espace-3));
+    max-height: calc(100dvh - 2 * var(--espace-3));
+  }
+
+  .visionneuse::backdrop {
+    background: rgb(0 0 0 / 0.7);
+  }
+
+  .visionneuse-feuille {
+    display: flex;
+    flex-direction: column;
+    gap: var(--espace-2);
+    margin: 0;
+    padding: var(--espace-2);
+    background: var(--surface);
+    border: 1px solid var(--bordure-signifiante);
+  }
+
+  .visionneuse-entete {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: var(--espace-2);
+    font-weight: 500;
+  }
+
+  /* L'image entiere, proportions gardees, dans les bornes de l'ecran ; sur
+     le fond clair d'un document imprime. */
+  .visionneuse-image {
+    display: block;
+    max-width: min(1100px, calc(100vw - 2 * var(--espace-3) - 2 * var(--espace-2)));
+    max-height: calc(100dvh - 2 * var(--espace-3) - 8rem);
+    width: auto;
+    height: auto;
+    object-fit: contain;
+    background: var(--surface-clair);
+  }
+
   .registre-nom {
     display: flex;
     flex-wrap: wrap;
@@ -999,6 +1080,14 @@ html {
     .registre-certifs h3 {
       align-self: center;
       margin-block: 0;
+    }
+
+    .registre-entree.avec-image {
+      grid-template-columns: 80px minmax(0, 1fr);
+    }
+
+    .registre-image img {
+      height: 57px;
     }
 
     /* La liste passe sous le sceau et reprend toute la largeur. */

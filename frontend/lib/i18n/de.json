@@ -57,6 +57,8 @@
   "experience.projects": "Umgesetzte Projekte",
 
   "certifications.viewCert": "Zertifikat ansehen",
+  "certifications.image": "Bild des Zertifikats {nom}",
+  "certifications.fermerImage": "Bild schließen",
 
   "seeMore.viewAll": "Alle anzeigen",
   "seeMore.reduce": "Weniger anzeigen",

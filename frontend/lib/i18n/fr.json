@@ -57,6 +57,8 @@
   "experience.projects": "Projets réalisés",
 
   "certifications.viewCert": "Voir la certification",
+  "certifications.image": "Image de la certification {nom}",
+  "certifications.fermerImage": "Fermer l'image",
 
   "seeMore.viewAll": "Voir tout",
   "seeMore.reduce": "Réduire",

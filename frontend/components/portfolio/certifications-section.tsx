@@ -1,10 +1,12 @@
 "use client";
 
+import { useState } from "react";
 import Image from "next/image";
 import type { CertificationDto, OrganizationDto } from "@portfolio/shared-types";
 import { getFileUrl } from "@/lib/api";
 import { useTranslation } from "@/lib/i18n/i18n-context";
 import { cheminSceau, initialesOrganisme, regrouperParOrganisme } from "@/lib/portfolio/certifications";
+import { VisionneuseImage } from "@/components/portfolio/visionneuse-image";
 
 const BORD_SCEAU = cheminSceau();
 
@@ -47,7 +49,10 @@ function Sceau({ organisme }: { organisme: OrganizationDto }) {
  */
 export function CertificationsSection({ certifications }: { certifications: CertificationDto[] }) {
   const { t } = useTranslation();
+  // La certification dont l'image est ouverte en grand, ou aucune.
+  const [ouverte, setOuverte] = useState<CertificationDto | null>(null);
   if (!certifications.length) return null;
+  const imageOuverte = ouverte ? getFileUrl(ouverte.imagePath) : null;
 
   return (
     <div className="registres-certifs mesure">
@@ -58,8 +63,29 @@ export function CertificationsSection({ certifications }: { certifications: Cert
           <Sceau organisme={organisme} />
           <h3 id={`organisme-${organisme.id}`}>{organisme.label}</h3>
           <ul className="registre-liste">
-            {liste.map((c) => (
-              <li key={c.id}>
+            {liste.map((c) => {
+              const image = getFileUrl(c.imagePath);
+              return (
+              <li key={c.id} className={image ? "registre-entree avec-image" : "registre-entree"}>
+                {/* La vignette ouvre l'image entiere dans une fenetre, sans
+                    quitter la page : un certificat se lit en grand. Son nom
+                    accessible vient de l'alternative de l'image. */}
+                {image && (
+                  <button
+                    type="button"
+                    aria-haspopup="dialog"
+                    onClick={() => setOuverte(c)}
+                    className="registre-image"
+                  >
+                    <Image
+                      src={image}
+                      alt={t("certifications.image", { nom: c.name })}
+                      width={224}
+                      height={158}
+                    />
+                  </button>
+                )}
+                <div>
                 <p className="registre-nom">
                   {c.name}
                   {c.issueDate && (
@@ -80,11 +106,21 @@ export function CertificationsSection({ certifications }: { certifications: Cert
                     {t("certifications.viewCert")}
                   </a>
                 )}
+                </div>
               </li>
-            ))}
+              );
+            })}
           </ul>
         </section>
       ))}
+      {ouverte && imageOuverte && (
+        <VisionneuseImage
+          src={imageOuverte}
+          alt={t("certifications.image", { nom: ouverte.name })}
+          legende={ouverte.name}
+          surFermeture={() => setOuverte(null)}
+        />
+      )}
     </div>
   );
 }

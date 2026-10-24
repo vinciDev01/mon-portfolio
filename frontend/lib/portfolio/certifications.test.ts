@@ -94,6 +94,31 @@ describe("la section des certifications", () => {
     expect(avec).toContain('href="https://exemple.org/c"');
   });
 
+  it("montre la vignette d une certification, nommee par son image", () => {
+    const html = rendre([certif("a", "Oracle", { imagePath: "certifications/c.webp" })]);
+    const bouton = /<button[^>]*class="registre-image"[^>]*>[\s\S]*?<\/button>/.exec(html)?.[0];
+    expect(bouton, "aucune vignette rendue").toBeDefined();
+    // Le nom accessible du bouton vient de l'alternative de l'image.
+    expect(bouton).toMatch(/<img[^>]*alt="Image de la certification Certif a"/);
+  });
+
+  it("la fenetre de l image est centree, malgre le preflight", () => {
+    expect(valeur(bloc(/^\s*\.visionneuse\s*\{/m), "margin")).toBe("auto");
+    expect(valeur(bloc(/\.visionneuse-image\s*\{/), "object-fit")).toBe("contain");
+  });
+
+  it("sans image, aucune vignette ni colonne reservee", () => {
+    const html = rendre([certif("a", "Oracle")]);
+    expect(html).not.toContain("registre-image");
+    expect(html).not.toContain("avec-image");
+  });
+
+  it("la vignette est contenue entiere, jamais rognee", () => {
+    const img = bloc(/\.registre-image img\s*\{/);
+    expect(valeur(img, "object-fit")).toBe("contain");
+    expect(valeur(bloc(/\.registre-entree\.avec-image\s*\{/), "grid-template-columns")).toMatch(/px/);
+  });
+
   it("ne rend rien sans certification", () => {
     expect(rendre([])).toBe("");
   });

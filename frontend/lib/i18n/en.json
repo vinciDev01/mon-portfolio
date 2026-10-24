@@ -57,6 +57,8 @@
   "experience.projects": "Projects delivered",
 
   "certifications.viewCert": "View certification",
+  "certifications.image": "Certificate image: {nom}",
+  "certifications.fermerImage": "Close the image",
 
   "seeMore.viewAll": "View all",
   "seeMore.reduce": "Show less",

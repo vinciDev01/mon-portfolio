@@ -206,6 +206,47 @@ describe("en butee, la molette et le balayage signalent sans changer de section"
   });
 });
 
+describe("la decouverte : une section s anime a sa premiere arrivee seulement", () => {
+  const decouvertes = () =>
+    [...document.querySelectorAll('.parcours-pagine > [data-decouverte="true"]')].map((e) => e.id);
+
+  it("la section d arrivee est decouverte des le chargement, pas les autres", () => {
+    monter();
+    expect(decouvertes()).toEqual(["ouverture"]);
+  });
+
+  it("une section l est a sa premiere activation, et le reste", () => {
+    monter();
+    pageSuivante();
+    avancer(SORTIE_MS + VERROU_APRES_MS);
+    expect(actives()).toEqual(["projets"]);
+    expect(decouvertes()).toEqual(["ouverture", "projets"]);
+  });
+
+  it("revenir sur une section deja vue ne la redecouvre pas", () => {
+    monter();
+    const ouverture = document.getElementById("ouverture")!;
+    pageSuivante();
+    avancer(SORTIE_MS + VERROU_APRES_MS);
+    // L'attribut pose a la premiere arrivee n'est ni retire ni repose : sans
+    // changement d'attribut, l'animation CSS ne rejoue pas.
+    const avant = ouverture.getAttribute("data-decouverte");
+    act(() => {
+      window.dispatchEvent(new KeyboardEvent("keydown", { key: "PageUp", bubbles: true, cancelable: true }));
+    });
+    avancer(SORTIE_MS + VERROU_APRES_MS);
+    expect(actives()).toEqual(["ouverture"]);
+    expect(ouverture.getAttribute("data-decouverte")).toBe(avant);
+  });
+
+  it("une arrivee par fragment decouvre la section visee", () => {
+    window.history.replaceState(null, "", "#contact");
+    monter();
+    avancer(50);
+    expect(decouvertes()).toContain("contact");
+  });
+});
+
 describe("le conteneur ne fait jamais de fondu croise (spec section 2)", () => {
   /** Releve l'ensemble des sections actives a chaque pas de 10 ms. */
   function enregistrer(duree: number) {

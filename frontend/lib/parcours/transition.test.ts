@@ -278,3 +278,40 @@ describe("les retraits (spec section 3.1)", () => {
     expect(css).not.toMatch(/content-visibility:\s*auto/);
   });
 });
+
+describe("la decouverte d une section, a sa premiere arrivee", () => {
+  const regle = () => {
+    // Hors de `[data-pagination]` a dessein : la section d'arrivee porte
+    // l'attribut des le rendu serveur, et son animation doit partir au premier
+    // affichage, pas a l'hydratation (le contenu deja peint clignoterait).
+    const m = /(?:^|\n)\s*\[data-decouverte="true"\] \.bloc-parcours > \*\s*\{([^}]*)\}/.exec(css);
+    expect(m, "regle de decouverte introuvable").not.toBeNull();
+    expect(css).not.toMatch(/\[data-pagination="active"\][^{]*\[data-decouverte/);
+    return m![1]!;
+  };
+
+  it("anime les blocs de la section, brievement", () => {
+    const m = /decouverte-bloc\s+(\d+)ms/.exec(regle());
+    expect(m, "animation decouverte-bloc introuvable").not.toBeNull();
+    expect(Number(m![1])).toBeLessThanOrEqual(600);
+  });
+
+  it("reste legere : opacite et un petit deplacement, rien d autre", () => {
+    const corps = blocs(/@keyframes decouverte-bloc\s*\{/, css);
+    expect(corps).toHaveLength(1);
+    expect(corps[0]).toMatch(/opacity:\s*0/);
+    const pas = /translate:\s*0\s+(\d+)px/.exec(corps[0]!);
+    expect(pas, "deplacement introuvable").not.toBeNull();
+    expect(Number(pas![1])).toBeLessThanOrEqual(12);
+    expect(corps[0]).not.toMatch(/scale|rotate|blur|filter/);
+  });
+
+  it("s eteint en mouvement reduit, sauf mouvement force", () => {
+    const reduit = blocs(/@media \(prefers-reduced-motion: reduce\)\s*\{/, css).find((b) =>
+      b.includes("data-decouverte"),
+    );
+    expect(reduit, "aucun repli en mouvement reduit").toBeDefined();
+    expect(reduit!).toMatch(/\[data-mouvement="force"\]/);
+    expect(reduit!).toMatch(/animation:\s*none/);
+  });
+});

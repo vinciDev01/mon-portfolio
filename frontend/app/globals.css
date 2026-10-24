@@ -1079,6 +1079,47 @@ html {
     }
   }
 
+  /* La decouverte : a la PREMIERE arrivee sur une section (le conteneur pose
+     `data-decouverte` a sa premiere activation et ne le retire plus), ses
+     blocs montent de quelques pixels en paraissant, l'un apres l'autre. Une
+     section deja vue ne rejoue rien : l'attribut ne change plus. Leger a
+     dessein : opacite et 8 px, rien d'autre.
+     Ces regles visent l'attribut seul, sans la classe `.section-paginee` : le
+     contrat ci-dessus regit la mise en page de la pagination, pas cette
+     animation, qui ne doit PAS dependre de `[data-pagination="active"]`. La
+     section d'arrivee porte l'attribut des le rendu serveur ; sous l'attribut
+     pose par le JavaScript, son animation ne partirait qu'a l'hydratation, et
+     le contenu deja peint s'effacerait pour reparaitre. Sans JavaScript, seule
+     la section d'arrivee s'anime, une fois. */
+  [data-decouverte="true"] .bloc-parcours > * {
+    animation: decouverte-bloc 520ms var(--courbe) both;
+  }
+
+  [data-decouverte="true"] .bloc-parcours > :nth-child(2) {
+    animation-delay: 60ms;
+  }
+
+  [data-decouverte="true"] .bloc-parcours > :nth-child(3) {
+    animation-delay: 120ms;
+  }
+
+  [data-decouverte="true"] .bloc-parcours > :nth-child(n + 4) {
+    animation-delay: 180ms;
+  }
+
+  @keyframes decouverte-bloc {
+    from {
+      opacity: 0;
+      translate: 0 8px;
+    }
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    :root:not([data-mouvement="force"]) [data-decouverte="true"] .bloc-parcours > * {
+      animation: none;
+    }
+  }
+
   /* Impression : une seule section serait imprimee, les autres etant
      `visibility: hidden`. On neutralise la pagination comme le fait le repli
      sans JavaScript : toute la page s'imprime. */

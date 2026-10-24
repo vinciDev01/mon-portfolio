@@ -164,6 +164,13 @@ export function ParcoursPagine({
   const surcoucheRef = useRef(surcoucheOuverte);
   // `null` pendant le passage par le fond : aucune section n'est active.
   const [actif, setActif] = useState<number | null>(0);
+  // Les sections deja vues pendant la visite. Une section y entre a sa
+  // premiere activation et n'en sort plus : son attribut `data-decouverte`
+  // pose une seule fois, l'animation d'arrivee ne joue qu'une fois. La
+  // section 0 est la section d'arrivee du rendu serveur.
+  const [vues, setVues] = useState<ReadonlySet<number>>(() => new Set([0]));
+  const decouvrir = (i: number) =>
+    setVues((prev) => (prev.has(i) ? prev : new Set(prev).add(i)));
   const [annonce, setAnnonce] = useState("");
 
   const conteneur = useRef<HTMLDivElement>(null);
@@ -227,6 +234,7 @@ export function ParcoursPagine({
         elements.current[cible]?.scrollTo({ top: 0 });
         focusApres.current = cible;
         setActif(cible);
+        decouvrir(cible);
         const s = sectionsRef.current[cible];
         changerSectionRef.current(s?.id ?? null);
         if (!s) return;
@@ -407,6 +415,7 @@ export function ParcoursPagine({
       // Directement sur le DOM : la suspension ne concerne que ce basculement.
       suspendreTransitions(els, true);
       setActif(cibleInitiale);
+      decouvrir(cibleInitiale);
       changerSectionRef.current(sectionsRef.current[cibleInitiale]?.id ?? null);
       // La suspension dure jusqu'au commit qui active la cible, pas un delai
       // devine : React commit apres ce passage, le premier rafraichissement
@@ -459,6 +468,7 @@ export function ParcoursPagine({
             }}
             className="section-paginee"
             data-active={actif === i ? "true" : undefined}
+            data-decouverte={vues.has(i) ? "true" : undefined}
             tabIndex={-1}
           >
             {enfants[s.id]}

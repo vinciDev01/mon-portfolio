@@ -239,7 +239,7 @@ describe("lien de demonstration (rendu)", () => {
       ],
       demoUrl: "https://exemple.test/demo",
       description: "DESCRIPTION",
-      technologies: [{ id: "1", label: "React", logoPath: null, sortOrder: 0, showInCv: true, family: null }],
+      technologies: [{ id: "1", label: "React", logoPath: null, sortOrder: 0, showInCv: true, familyId: null, family: null }],
     });
     const sequence = [
       html.indexOf("TITRE"),

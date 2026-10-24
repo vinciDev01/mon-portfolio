@@ -643,6 +643,52 @@ html {
     align-items: start;
   }
 
+  /* La colonne du portrait : la niche, puis les reseaux dessous. */
+  .ouverture-identite {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    gap: var(--espace-2);
+  }
+
+  /* Les reseaux renseignes au backoffice : des icones sur `currentColor`,
+     en encre secondaire, chacune dans une cible de 32 px. */
+  .liens-reseaux {
+    display: flex;
+    align-items: center;
+    gap: var(--espace-1);
+  }
+
+  .lien-reseau {
+    display: inline-grid;
+    place-items: center;
+    min-inline-size: 32px;
+    min-block-size: 32px;
+    color: var(--texte-secondaire);
+    border-radius: 4px;
+  }
+
+  .lien-reseau:hover {
+    color: var(--texte);
+  }
+
+  .lien-reseau:focus-visible {
+    outline: 2px solid var(--accent);
+    outline-offset: 2px;
+  }
+
+  .lien-reseau svg {
+    width: 20px;
+    height: 20px;
+  }
+
+  /* Au pied de page : la cible minimale de 24 px, pour que le pied tienne
+     avec Contact sur un ecran. */
+  .liens-reseaux-compacts .lien-reseau {
+    min-inline-size: 24px;
+    min-block-size: 24px;
+  }
+
   /* Dans la grille, la niche ne garde que la place de son echo, decale vers
      le bas : la marge qui la separait du texte, dessous, n'a plus lieu. */
   .ouverture-corps .medaillon-niche {
@@ -738,6 +784,14 @@ html {
       --medaillon-l: 88px;
       --medaillon-h: 110px;
       --medaillon-echo: 6px;
+    }
+
+    /* Telephone : les reseaux a cote du petit portrait, en bas, plutot que
+       dessous : la section garde sa hauteur et tient sur l'ecran. */
+    .ouverture-identite {
+      flex-direction: row;
+      align-items: flex-end;
+      gap: var(--espace-3);
     }
   }
 
@@ -2295,17 +2349,22 @@ html {
     color: var(--texte-secondaire);
   }
 
+  /* L'ecart entre les champs passe par une variable : un ecran bas le
+     resserre (voir la section contact), sans seconde regle pour le
+     formulaire. */
   .formulaire-contact {
     display: grid;
-    gap: var(--espace-2);
+    gap: var(--formulaire-ecart, var(--espace-2));
   }
 
-  /* Prenom et nom cote a cote des que la place le permet, empiles sinon :
-     aucune requete de media, la rangee se replie d'elle-meme. */
+  /* Deux champs cote a cote (prenom et nom, courriel et sujet) des que la
+     place le permet, empiles sinon : aucune requete de media, la rangee se
+     replie d'elle-meme. 8 rem par champ au moins : a 1024 px, ou la colonne
+     du formulaire n'a que 285 px, les deux tiennent encore. */
   .formulaire-rangee {
     display: grid;
     gap: var(--espace-2);
-    grid-template-columns: repeat(auto-fit, minmax(10rem, 1fr));
+    grid-template-columns: repeat(auto-fit, minmax(8rem, 1fr));
   }
 
   .formulaire-champ {
@@ -2415,7 +2474,7 @@ html {
      couleur d'alerte : la palette du site porte tout.
      ----------------------------------------------------------- */
   .contact-accroche {
-    margin-block-end: var(--espace-4);
+    margin-block-end: var(--espace-3);
   }
 
   .contact-accroche-titre {
@@ -2428,6 +2487,20 @@ html {
     margin-block-start: var(--espace-1);
     margin-block-end: 0;
     color: var(--texte-secondaire);
+  }
+
+  /* Ecran bas : l'accroche se rapproche du formulaire et les champs entre
+     eux, pour que Contact
+     tienne sur l'ecran avec son pied de page. La zone de message, elle,
+     garde ses trois lignes de depart, que la spec nomme. */
+  @media (max-height: 800px) {
+    .contact-accroche {
+      margin-block-end: var(--espace-1);
+    }
+
+    .contact-volets {
+      --formulaire-ecart: 12px;
+    }
   }
 
   /* Le `display: grid` et les deux paliers de colonnes viennent des classes

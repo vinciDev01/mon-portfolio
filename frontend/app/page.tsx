@@ -5,6 +5,7 @@ import { ColonnePassage } from "@/components/parcours/colonne-passage";
 import { FournisseurSectionActive, ParcoursPagine } from "@/components/parcours/parcours-pagine";
 import { Medaillon } from "@/components/parcours/medaillon";
 import { Footer } from "@/components/portfolio/footer";
+import { LiensReseaux } from "@/components/portfolio/liens-reseaux";
 import { SectionShell } from "@/components/portfolio/section-shell";
 import { PresentationSection } from "@/components/portfolio/presentation-section";
 import { SkillsSection } from "@/components/portfolio/skills-section";
@@ -48,7 +49,12 @@ export default async function Page() {
         {/* Le portrait a cote du texte et non au-dessus : la section tient
             ainsi sur un ecran. */}
         <div className="ouverture-corps">
-          <Medaillon infos={data.personalInfo} />
+          {/* Le portrait et, dessous, les reseaux renseignes au backoffice :
+              dans la colonne du portrait, ils n'ajoutent aucune hauteur. */}
+          <div className="ouverture-identite">
+            <Medaillon infos={data.personalInfo} />
+            <LiensReseaux infos={data.personalInfo} />
+          </div>
           <div className="ouverture-texte">
             <LigneDisponibilite etat={s.availabilityStatus} libelle={s.availabilityLabel} />
             {s.showPresentations && (

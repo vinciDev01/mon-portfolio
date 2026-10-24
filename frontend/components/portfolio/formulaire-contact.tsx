@@ -205,6 +205,9 @@ export function FormulaireContact() {
           </Champ>
         </div>
 
+        {/* Courriel et sujet cote a cote, comme prenom et nom : une rangee
+            de moins, et la section tient sur un ecran avec son pied. */}
+        <div className="formulaire-rangee">
         <Champ nom="email" cleLibelle="contact.email">
           {(id) => (
             <input
@@ -233,6 +236,7 @@ export function FormulaireContact() {
             />
           )}
         </Champ>
+        </div>
 
         <Champ nom="message" cleLibelle="contact.message">
           {(id) => (

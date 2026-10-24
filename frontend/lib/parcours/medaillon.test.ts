@@ -31,40 +31,53 @@ const rendre = (p: Partial<PersonalInfoDto>) =>
   );
 
 describe("medaillon (spec section 8)", () => {
-  it("declare sa boite : 88 px, bordure signifiante, rayon 4", () => {
+  it("est une arche sans cadre : haute, arrondie en haut, sans bordure", () => {
     const m = /\.medaillon\s*\{([^}]*)\}/.exec(css);
     expect(m, "regle .medaillon introuvable").not.toBeNull();
-    expect(m![1]).toMatch(/width:\s*88px/);
-    expect(m![1]).toMatch(/height:\s*88px/);
-    expect(m![1]).toContain("var(--bordure-signifiante)");
-    expect(m![1]).toMatch(/border-radius:\s*4px/);
+    // Plus grand que l'ancien carre de 88 px, et plus haut que large : les
+    // dimensions vivent sur la niche, que le palier etroit reduit.
+    expect(m![1]).toMatch(/width:\s*var\(--medaillon-l\)/);
+    expect(m![1]).toMatch(/height:\s*var\(--medaillon-h\)/);
+    const niche = /\.medaillon-niche\s*\{([^}]*)\}/.exec(css)![1];
+    expect(niche).toMatch(/--medaillon-l:\s*176px/);
+    expect(niche).toMatch(/--medaillon-h:\s*220px/);
+    expect(m![1]).not.toMatch(/(?:^|[;\s])border:/);
+    // Arrondi en haut seulement : une arche, pas un cercle d'avatar.
+    expect(m![1]).toMatch(/border-radius:\s*999px 999px 6px 6px/);
+    expect(m![1]).toMatch(/object-fit:\s*cover/);
     // Spec section 9, point 4 : width, height ET overflow, lus dans la feuille.
     expect(m![1]).toMatch(/overflow:\s*hidden/);
   });
 
-  it("n a ni ombre, ni degrade, ni filtre", () => {
+  it("n a ni ombre, ni degrade, ni filtre : l echo est un aplat", () => {
     const m = /\.medaillon\s*\{([^}]*)\}/.exec(css);
     expect(m![1]).not.toMatch(/box-shadow|gradient|filter/);
+    const echo = /\.medaillon-niche::before\s*\{([^}]*)\}/.exec(css);
+    expect(echo, "l echo de l arche est introuvable").not.toBeNull();
+    expect(echo![1]).toMatch(/background:\s*var\(--accent\)/);
+    expect(echo![1]).not.toMatch(/box-shadow|gradient|filter|blur/);
   });
 
-  it("n est pas un cercle", () => {
-    const m = /\.medaillon\s*\{([^}]*)\}/.exec(css);
-    expect(m![1]).not.toMatch(/border-radius:\s*(50%|9999px)/);
+  it("se reduit au palier etroit", () => {
+    const etroit = /@media \(max-width:\s*599px\)\s*\{\s*\.medaillon-niche\s*\{([^}]*)\}/.exec(css);
+    expect(etroit, "palier etroit du medaillon introuvable").not.toBeNull();
+    expect(etroit![1]).toMatch(/--medaillon-l:\s*128px/);
   });
 
-  it("declare les trois densites dans le rendu", () => {
+  it("charge assez de pixels pour sa taille", () => {
     const html = rendre({ avatarPath: "http://hote.test/uploads/personal/u.webp" });
     const balise = /<img\s[^>]*>/.exec(html)?.[0];
     expect(balise, "aucune balise img").toBeDefined();
-    const v = (t: number) => nomVariante("http://hote.test/uploads/personal/u.webp", t);
-    expect(balise).toContain(`src="${v(88)}"`);
+    const base = "http://hote.test/uploads/personal/u.webp";
+    // 220 px de haut a recouvrir : la variante de 264 en simple densite,
+    // l'original au-dela.
+    expect(balise).toContain(`src="${nomVariante(base, 264)}"`);
     const srcSet = /srcSet="([^"]*)"/.exec(balise!)?.[1];
-    expect(srcSet).toBeDefined();
-    expect(srcSet).toContain(`${v(176)} 2x`);
-    expect(srcSet).toContain(`${v(264)} 3x`);
-    expect(balise).toContain('width="88"');
-    expect(balise).toContain('height="88"');
+    expect(srcSet).toBe(`${nomVariante(base, 264)} 1x, ${base} 2x`);
+    expect(balise).toContain('width="176"');
+    expect(balise).toContain('height="220"');
     expect(balise).toContain('class="medaillon"');
+    expect(html).toMatch(/<span class="medaillon-niche">\s*<img/);
   });
 
   it("se replie sur les initiales quand avatarPath est nul", () => {

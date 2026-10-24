@@ -574,16 +574,38 @@ html {
 /* Correction ronde 1 : classes du projet dans `components`, meme
    raison que ci-dessus. */
 @layer components {
+  /* Le portrait est une arche : arrondi en haut, presque droit en bas, comme
+     une niche. Ni cadre ni ombre : son relief est un ECHO, la meme arche en
+     aplat d'accent, decalee derriere lui, comme si la lampe la projetait sur
+     le mur. Un cercle aurait renvoye a l'avatar de reseau social. */
+  .medaillon-niche {
+    --medaillon-l: 176px;
+    --medaillon-h: 220px;
+    --medaillon-echo: 10px;
+    position: relative;
+    display: inline-block;
+    isolation: isolate;
+    margin-block-end: calc(var(--espace-3) + var(--medaillon-echo));
+  }
+
+  .medaillon-niche::before {
+    content: "";
+    position: absolute;
+    inset: 0;
+    translate: var(--medaillon-echo) var(--medaillon-echo);
+    border-radius: 999px 999px 6px 6px;
+    background: var(--accent);
+    z-index: -1;
+  }
+
   .medaillon {
     display: block;
-    width: 88px;
-    height: 88px;
-    border: 1px solid var(--bordure-signifiante);
-    border-radius: 4px;
+    width: var(--medaillon-l);
+    height: var(--medaillon-h);
+    border-radius: 999px 999px 6px 6px;
     background: var(--surface);
     overflow: hidden;
     object-fit: cover;
-    margin-block-end: var(--espace-2);
   }
 
   .medaillon-repli {
@@ -591,7 +613,15 @@ html {
     place-items: center;
     color: var(--texte-secondaire);
     font-variation-settings: "opsz" 48;
-    font-size: 1.75rem;
+    font-size: 3rem;
+  }
+
+  @media (max-width: 599px) {
+    .medaillon-niche {
+      --medaillon-l: 128px;
+      --medaillon-h: 160px;
+      --medaillon-echo: 8px;
+    }
   }
 
   .colonne-passage {

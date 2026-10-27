@@ -18,6 +18,12 @@ export async function getSiteSettings(): Promise<SiteSettingsDto> {
   return res.json() as Promise<SiteSettingsDto>;
 }
 
+/** L'adresse de telechargement d'un cours : la route publique, qui verifie
+ *  que le cours est public et compte le telechargement. Jamais `/uploads`. */
+export function getCoursUrl(id: string): string {
+  return `${API_URL}/api/cours/${encodeURIComponent(id)}/telecharger`;
+}
+
 export function getFileUrl(path: string | null | undefined): string | null {
   if (!path) return null;
   if (path.startsWith("http://") || path.startsWith("https://")) return path;

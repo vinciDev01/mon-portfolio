@@ -15,11 +15,15 @@ function reglages(actifs: string[]): SiteSettingsDto {
 }
 
 describe("la liste des sections (spec section 2.2)", () => {
-  it("porte les dix sections dans l ordre du parcours", () => {
+  it("porte les onze sections dans l ordre du parcours, les cours apres les certifications", () => {
     expect(SECTIONS.map((s) => s.id)).toEqual([
-      "ouverture", "stats", "competences", "experience", "certifications",
+      "ouverture", "stats", "competences", "experience", "certifications", "cours",
       "projets", "a-propos", "contact", "services", "temoignages",
     ]);
+  });
+
+  it("les cours ont leur entree, sous leur propre reglage", () => {
+    expect(SECTIONS.find((s) => s.id === "cours")?.reglage).toBe("showCours");
   });
 
   it("les certifications ont leur entree, sous leur propre reglage", () => {
@@ -152,7 +156,7 @@ describe("source unique : aucune autre declaration (spec section 7.1)", () => {
 
 describe("les cles de titre existent dans les trois langues", () => {
   for (const langue of ["fr", "en", "de"]) {
-    it(`${langue}.json porte les dix cles`, () => {
+    it(`${langue}.json porte les onze cles`, () => {
       const dict = JSON.parse(lire(`lib/i18n/${langue}.json`));
       for (const s of SECTIONS) expect(dict[s.cleTitre], s.cleTitre).toBeTruthy();
     });

@@ -8,7 +8,7 @@ import { bloc, corpsDepuis, css, cssNu, lire, PALIERS, px, racine, tableDesConte
 function tousActifs(): SiteSettingsDto {
   return {
     showPresentations: true, showStats: true, showSkills: true,
-    showExperiences: true, showCertifications: true, showProjects: true, showServices: true,
+    showExperiences: true, showCertifications: true, showCours: true, showProjects: true, showServices: true,
     showAbout: true, showTestimonials: true, showContact: true,
   } as unknown as SiteSettingsDto;
 }
@@ -17,7 +17,7 @@ describe("entrees de la colonne", () => {
   it("rend une entree par section activee, dans l'ordre du parcours", () => {
     const e = sectionsActives(tousActifs());
     expect(e.map((x) => x.id)).toEqual([
-      "ouverture", "stats", "competences", "experience", "certifications",
+      "ouverture", "stats", "competences", "experience", "certifications", "cours",
       "projets", "a-propos", "contact", "services", "temoignages",
     ]);
   });

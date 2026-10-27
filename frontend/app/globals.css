@@ -1026,6 +1026,250 @@ html {
   }
 
   /* -----------------------------------------------------------
+     Les cours : une etagere de bois. Une planche par famille, surmontee
+     d'une plaquette gravee ; des livres debout, relies du cuir de leur
+     technologie (`--cuir`, `--dorure`, poses par le composant). Bois et cuir
+     en aplats, sans degrade ; aucun mouvement propre.
+     ----------------------------------------------------------- */
+  .etagere {
+    --bois: #5a3e2b;
+    --bois-arete: #7a5a3f;
+    --bois-ombre: #3b2819;
+    display: flex;
+    flex-direction: column;
+    gap: var(--espace-3);
+  }
+
+  .plaquette {
+    display: inline-block;
+    margin: 0 0 var(--espace-1) 6px;
+    padding: 3px 12px;
+    font-size: var(--meta);
+    font-weight: 600;
+    letter-spacing: 0.08em;
+    color: #e8dcc4;
+    background: var(--bois-ombre);
+    border: 1px solid var(--bois-arete);
+    border-radius: 2px;
+  }
+
+  /* Une rangee pleine passe a la ligne. Chaque livre porte son morceau de
+     planche (`::after`) : les morceaux se touchent, et la rangee suivante
+     repose elle aussi sur du bois. */
+  .rangee-livres {
+    position: relative;
+    display: flex;
+    flex-wrap: wrap;
+    align-items: flex-end;
+    row-gap: var(--espace-3);
+    padding-inline: 10px;
+  }
+
+  /* La planche de la derniere rangee, sur toute la largeur : avec deux
+     livres, les seuls morceaux de planche feraient des socles et non une
+     etagere. Elle passe au meme niveau que les morceaux des livres. */
+  .rangee-livres::after {
+    content: "";
+    position: absolute;
+    inset-inline: 0;
+    inset-block-end: 0;
+    block-size: 10px;
+    background: var(--bois);
+    border-block-start: 2px solid var(--bois-arete);
+    border-block-end: 3px solid var(--bois-ombre);
+  }
+
+  .livre-cours {
+    position: relative;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    min-inline-size: 24px;
+    inline-size: var(--epaisseur, 36px);
+    block-size: var(--hauteur, 140px);
+    margin: 0 3px 15px;
+    padding: 8px 0;
+    color: var(--dorure, #f3ead7);
+    background: var(--cuir, #5a3a2a);
+    border: 0;
+    border-block-start: 3px solid rgb(243 234 215 / 0.35);
+    border-radius: 3px 3px 0 0;
+    cursor: pointer;
+  }
+
+  .livre-cours::after {
+    content: "";
+    position: absolute;
+    inset-inline: -3px;
+    inset-block-end: -15px;
+    block-size: 10px;
+    background: var(--bois);
+    border-block-start: 2px solid var(--bois-arete);
+    border-block-end: 3px solid var(--bois-ombre);
+  }
+
+  .livre-cours:focus-visible {
+    outline: 2px solid var(--accent);
+    outline-offset: 3px;
+  }
+
+  /* La tranche se lit de bas en haut, comme sur une vraie etagere. Un titre
+     trop long pour la hauteur du livre est coupe ; le nom accessible du
+     bouton, lui, garde le titre complet. En ecriture verticale l'axe EN
+     LIGNE est vertical : c'est `max-inline-size` qui borne la hauteur. */
+  .livre-tranche {
+    writing-mode: vertical-rl;
+    rotate: 180deg;
+    max-inline-size: calc(var(--hauteur, 140px) - 16px);
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    font-size: 11px;
+    font-weight: 600;
+    letter-spacing: 0.03em;
+  }
+
+  /* Le livre ouvert. Le preflight de Tailwind pose `margin: 0` : sans
+     `margin: auto`, le dialog modal se collerait en haut a gauche. */
+  .livre-ouvert {
+    margin: auto;
+    border: 0;
+    padding: 0;
+    background: transparent;
+    max-width: calc(100vw - 2 * var(--espace-3));
+    max-height: calc(100dvh - 2 * var(--espace-3));
+    overflow: auto;
+  }
+
+  .livre-ouvert::backdrop {
+    background: rgb(0 0 0 / 0.7);
+  }
+
+  /* Deux pages et la reliure entre elles : l'ecart de la grille laisse voir
+     le fond, couleur de reliure ; le cadre interieur est la couverture. */
+  .livre-reliure-ouverte {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+    column-gap: 14px;
+    inline-size: min(720px, calc(100vw - 2 * var(--espace-3)));
+    padding: 10px;
+    background: #3b2819;
+    box-shadow: inset 0 0 0 8px #5a3e2b;
+    border-radius: 4px;
+  }
+
+  .livre-page {
+    min-block-size: 300px;
+    padding: var(--espace-3);
+    color: #2a2220;
+    background: #efe4cc;
+    font-family: var(--font-sans);
+  }
+
+  .livre-famille {
+    margin: 0;
+    font-size: 10px;
+    letter-spacing: 0.12em;
+    color: #6b4a33;
+  }
+
+  .livre-titre {
+    margin: 6px 0;
+    font-size: 1.375rem;
+    font-weight: 700;
+    line-height: 1.2;
+  }
+
+  .livre-techno {
+    display: inline-block;
+    padding: 1px 8px;
+    font-size: 11px;
+    color: #5a3e2b;
+    border: 1px solid #7a5a3f;
+    border-radius: 2px;
+  }
+
+  .livre-description {
+    margin-block-start: var(--espace-2);
+    font-size: 0.9375rem;
+    line-height: 1.65;
+  }
+
+  .livre-lettrine {
+    float: left;
+    margin: 4px 6px 0 0;
+    font-size: 2.6em;
+    font-weight: 700;
+    line-height: 0.85;
+    color: #6b2f2a;
+  }
+
+  .livre-page-droite {
+    display: flex;
+    flex-direction: column;
+    gap: var(--espace-2);
+  }
+
+  .livre-fermer {
+    align-self: flex-end;
+    color: #2a2220;
+    border-color: #7a5a3f;
+  }
+
+  .livre-details {
+    display: grid;
+    gap: 6px;
+    margin: 0;
+    font-size: 0.8125rem;
+  }
+
+  .livre-details div {
+    display: flex;
+    gap: 8px;
+  }
+
+  .livre-details dt {
+    font-weight: 700;
+  }
+
+  .livre-details dd {
+    margin: 0;
+    color: #4a3c34;
+  }
+
+  .livre-telecharger {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    min-block-size: 44px;
+    margin-block-start: auto;
+    padding: 10px;
+    font-weight: 600;
+    text-align: center;
+    text-decoration: none;
+    color: #efe4cc;
+    background: #2f4a3a;
+    border-radius: 3px;
+  }
+
+  /* Telephone : les deux pages s'empilent. */
+  @media (max-width: 599px) {
+    .livre-reliure-ouverte {
+      grid-template-columns: minmax(0, 1fr);
+      row-gap: 10px;
+    }
+
+    .livre-page {
+      min-block-size: auto;
+    }
+  }
+
+  .livre-telecharger:focus-visible {
+    outline: 2px solid #6b2f2a;
+    outline-offset: 3px;
+  }
+
+  /* -----------------------------------------------------------
      Les chiffres : a la premiere arrivee sur la section, chaque nombre
      compte jusqu'a sa valeur et son filet se trace de gauche a droite. Meme
      declencheur que la decouverte des blocs : `data-decouverte`, pose une

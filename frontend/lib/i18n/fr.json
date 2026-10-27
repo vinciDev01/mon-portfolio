@@ -11,6 +11,18 @@
   "nav.downloadCv": "Télécharger CV",
 
   "nav.certifications": "Certifications",
+  "nav.cours": "Cours",
+  "cours.telecharger": "Télécharger le cours (PDF)",
+  "cours.niveau": "Niveau",
+  "cours.pages": "Pages",
+  "cours.fichier": "Fichier",
+  "cours.majLe": "Mis à jour",
+  "cours.autres": "Autres",
+  "cours.fermer": "Fermer le livre",
+  "cours.niveau.debutant": "Débutant",
+  "cours.niveau.intermediaire": "Intermédiaire",
+  "cours.niveau.avance": "Avancé",
+  "cours.livre": "{titre}, cours de {techno}",
 
   "projects.clickForDetails": "Cliquer pour plus de détails",
   "projects.ongoing": "En cours",

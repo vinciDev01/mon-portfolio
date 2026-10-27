@@ -11,6 +11,18 @@
   "nav.downloadCv": "Lebenslauf herunterladen",
 
   "nav.certifications": "Zertifikate",
+  "nav.cours": "Kurse",
+  "cours.telecharger": "Kurs herunterladen (PDF)",
+  "cours.niveau": "Niveau",
+  "cours.pages": "Seiten",
+  "cours.fichier": "Datei",
+  "cours.majLe": "Aktualisiert",
+  "cours.autres": "Sonstige",
+  "cours.fermer": "Buch schließen",
+  "cours.niveau.debutant": "Einsteiger",
+  "cours.niveau.intermediaire": "Fortgeschritten",
+  "cours.niveau.avance": "Experte",
+  "cours.livre": "{titre}, Kurs zu {techno}",
 
   "projects.clickForDetails": "Klicken für mehr Details",
   "projects.ongoing": "Laufend",

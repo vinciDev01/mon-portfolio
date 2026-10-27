@@ -11,6 +11,7 @@ import { PresentationSection } from "@/components/portfolio/presentation-section
 import { SkillsSection } from "@/components/portfolio/skills-section";
 import { ExperienceSection } from "@/components/portfolio/experience-section";
 import { CertificationsSection } from "@/components/portfolio/certifications-section";
+import { CoursSection } from "@/components/portfolio/cours-section";
 import { JournalProjets } from "@/components/parcours/journal-projets";
 import { AboutSection } from "@/components/portfolio/about-section";
 import { ContactSection } from "@/components/portfolio/contact-section";
@@ -82,6 +83,11 @@ export default async function Page() {
     certifications: (
       <SectionShell cleTitre="nav.certifications" index={rang("certifications")}>
         <CertificationsSection certifications={data.certifications} />
+      </SectionShell>
+    ),
+    cours: (
+      <SectionShell cleTitre="nav.cours" index={rang("cours")} largeur="large">
+        <CoursSection cours={data.cours ?? []} />
       </SectionShell>
     ),
     projets: (

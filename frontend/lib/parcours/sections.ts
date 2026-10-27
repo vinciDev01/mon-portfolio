@@ -29,6 +29,8 @@ export const PICTOS: Record<string, string> = {
     '<path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round"/>',
   contact:
     '<rect width="20" height="16" x="2" y="4" rx="2" stroke="currentColor" stroke-width="2" fill="none"/><path d="m22 7-8.97 5.7a1.94 1.94 0 0 1-2.06 0L2 7" stroke="currentColor" stroke-width="2" fill="none"/>',
+  cours:
+    '<path d="M2 5c3-1.3 6-1.3 10 1c4-2.3 7-2.3 10-1v14c-3-1.3-6-1.3-10 1c-4-2.3-7-2.3-10-1z" stroke="currentColor" stroke-width="2" fill="none" stroke-linejoin="round"/><path d="M12 6v14" stroke="currentColor" stroke-width="2" fill="none"/>',
   certifications:
     '<circle cx="12" cy="8" r="6" stroke="currentColor" stroke-width="2" fill="none"/><path d="M15.48 12.89 17 22l-5-3-5 3 1.52-9.11" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round"/>',
   stats:
@@ -58,6 +60,7 @@ export const SECTIONS: readonly Section[] = [
   { id: "competences", cleTitre: "nav.skills", reglage: "showSkills" },
   { id: "experience", cleTitre: "nav.experience", reglage: "showExperiences" },
   { id: "certifications", cleTitre: "nav.certifications", reglage: "showCertifications" },
+  { id: "cours", cleTitre: "nav.cours", reglage: "showCours" },
   { id: "projets", cleTitre: "nav.projects", reglage: "showProjects" },
   { id: "a-propos", cleTitre: "nav.about", reglage: "showAbout" },
   { id: "contact", cleTitre: "nav.contact", reglage: "showContact" },

@@ -134,5 +134,9 @@ describe("les bords uses de l etagere", () => {
     expect(aSonBord(d.querySelector(".livre-reliure-ouverte"))).not.toBeNull();
     for (const page of d.querySelectorAll(".livre-page")) expect(aSonBord(page)).not.toBeNull();
     expect(aSonBord(d.querySelector(".livre-telecharger"))).not.toBeNull();
+    // L'icone de telechargement, decorative : le texte dit l'action.
+    const icone = d.querySelector(".livre-telecharger svg.livre-telecharger-icone");
+    expect(icone).not.toBeNull();
+    expect(icone!.getAttribute("aria-hidden")).toBe("true");
   });
 });

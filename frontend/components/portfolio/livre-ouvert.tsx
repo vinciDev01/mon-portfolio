@@ -122,6 +122,12 @@ export function LivreOuvert({ cours, surFermeture }: { cours: CoursPublicDto; su
           </dl>
           <a className="livre-telecharger cadre-imparfait" href={getCoursUrl(cours.id)} download>
             <BordImparfait graine={`${cours.id}:telecharger`} amplitude={1.2} pas={30} />
+            {/* La fleche qui descend dans le bac : decorative, le texte dit
+                deja l'action. */}
+            <svg className="livre-telecharger-icone" viewBox="0 0 24 24" aria-hidden="true" focusable="false">
+              <path d="M 12 3.5 V 15 M 7 10.5 L 12 15.5 L 17 10.5" />
+              <path d="M 4 15.5 V 19 A 1.5 1.5 0 0 0 5.5 20.5 H 18.5 A 1.5 1.5 0 0 0 20 19 V 15.5" />
+            </svg>
             {t("cours.telecharger")}
           </a>
         </div>

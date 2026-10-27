@@ -5,6 +5,7 @@ import Link from "next/link";
 import Image from "next/image";
 import type { BlogPostDto } from "@portfolio/shared-types";
 import { filtrerArticles, grouperParCategorie } from "@/lib/blog/recherche";
+import { BordImparfait } from "@/components/portfolio/bord-imparfait";
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:4000";
 
@@ -70,14 +71,26 @@ export function ExplorateurBlog({ articles }: { articles: BlogPostDto[] }) {
         <label htmlFor="recherche-blog" className="block text-sm font-medium mb-2">
           Rechercher un article
         </label>
-        <input
-          id="recherche-blog"
-          type="search"
-          value={requete}
-          onChange={(e) => setRequete(e.target.value)}
-          placeholder="Titre, sujet, mot du texte"
-          className="w-full px-4 py-2.5 rounded-lg border border-border bg-background text-sm"
-        />
+        {/* Le meme champ que l'etagere des cours : une etiquette de papier au
+            bord use, la loupe a gauche. */}
+        <div className="champ-recherche cadre-imparfait" role="search">
+          <BordImparfait graine="recherche-blog" amplitude={1.2} pas={28} />
+          <svg className="champ-recherche-loupe" viewBox="0 0 24 24" aria-hidden="true" focusable="false">
+            <circle cx="11" cy="11" r="6.5" />
+            <path d="M 16 16 L 20.5 20.5" />
+          </svg>
+          <input
+            id="recherche-blog"
+            type="search"
+            value={requete}
+            onChange={(e) => setRequete(e.target.value)}
+            onKeyDown={(e) => {
+              if (e.key === "Escape") setRequete("");
+            }}
+            placeholder="Titre, sujet, mot du texte"
+            autoComplete="off"
+          />
+        </div>
         {/* Le nombre de resultats, annonce a chaque frappe aux lecteurs d'ecran
             et lisible par tous tant qu'une recherche est en cours. */}
         <p aria-live="polite" className={recherche ? "text-sm text-muted-foreground mt-2" : "sr-only"}>

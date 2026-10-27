@@ -36,9 +36,9 @@ export function CoursSection({ cours }: { cours: CoursPublicDto[] }) {
     <div className="etagere">
       {/* La recherche : une etiquette de papier au bord use. Elle filtre les
           livres sur place, le site ayant deja tous les cours publics. */}
-      <div className="recherche-cours cadre-imparfait" role="search">
+      <div className="champ-recherche cadre-imparfait" role="search">
         <BordImparfait graine="recherche-cours" amplitude={1.2} pas={28} />
-        <svg className="recherche-cours-loupe" viewBox="0 0 24 24" aria-hidden="true" focusable="false">
+        <svg className="champ-recherche-loupe" viewBox="0 0 24 24" aria-hidden="true" focusable="false">
           <circle cx="11" cy="11" r="6.5" />
           <path d="M 16 16 L 20.5 20.5" />
         </svg>

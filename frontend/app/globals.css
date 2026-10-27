@@ -1104,24 +1104,27 @@ html {
     gap: var(--espace-3);
   }
 
-  /* La recherche de l'etagere : une etiquette de papier au bord use, la
-     loupe a gauche. Le champ n'a ni fond ni bordure : le bord imparfait les
+  /* Le champ de recherche du site (etagere des cours, blog) : une etiquette
+     de papier au bord use, la loupe a gauche. Le champ n'a ni fond ni bordure : le bord imparfait les
      porte. Le focus se voit sur toute l'etiquette. */
-  .recherche-cours {
+  .champ-recherche {
     --bord-fond: var(--surface);
     display: flex;
     align-items: center;
     gap: 10px;
-    max-width: 360px;
     min-height: 44px;
     padding: 6px 14px;
   }
 
-  .recherche-cours:focus-within {
+  .etagere > .champ-recherche {
+    max-width: 360px;
+  }
+
+  .champ-recherche:focus-within {
     --bord-trait: var(--accent);
   }
 
-  .recherche-cours-loupe {
+  .champ-recherche-loupe {
     flex: none;
     width: 18px;
     height: 18px;
@@ -1131,7 +1134,7 @@ html {
     stroke-linecap: round;
   }
 
-  .recherche-cours input {
+  .champ-recherche input {
     flex: 1;
     min-width: 0;
     min-height: 32px;
@@ -1142,7 +1145,7 @@ html {
     outline: none;
   }
 
-  .recherche-cours input::placeholder {
+  .champ-recherche input::placeholder {
     color: var(--texte-secondaire);
   }
 
@@ -1402,6 +1405,18 @@ html {
     .livre-page {
       min-block-size: auto;
     }
+  }
+
+  .livre-telecharger-icone {
+    flex: none;
+    width: 20px;
+    height: 20px;
+    margin-inline-end: 10px;
+    fill: none;
+    stroke: currentColor;
+    stroke-width: 2;
+    stroke-linecap: round;
+    stroke-linejoin: round;
   }
 
   .livre-telecharger:focus-visible {

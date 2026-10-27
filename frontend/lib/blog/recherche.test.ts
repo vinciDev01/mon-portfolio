@@ -128,6 +128,13 @@ describe("la page du blog filtre en direct", () => {
     expect(hote.querySelector('[aria-live="polite"]')?.textContent).toBe("1 article");
   });
 
+  it("le champ est une etiquette au bord imparfait, comme celui des cours", () => {
+    act(() => racine.render(createElement(ExplorateurBlog, { articles })));
+    const zone = hote.querySelector('[role="search"].champ-recherche')!;
+    expect(zone.querySelector(":scope > svg.bord-imparfait")).not.toBeNull();
+    expect(zone.querySelector('input#recherche-blog[type="search"]')).not.toBeNull();
+  });
+
   it("dit quand rien ne correspond, et propose d effacer", () => {
     act(() => racine.render(createElement(ExplorateurBlog, { articles })));
     saisir("kotlin");

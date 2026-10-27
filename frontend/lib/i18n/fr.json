@@ -105,5 +105,9 @@
   "journal.collaborateurs": "avec {noms}",
   "projects.photoDe": "Photo de {nom}",
   "projects.details": "Détails",
-  "projects.sansTitre": "Projet sans titre"
+  "projects.sansTitre": "Projet sans titre",
+
+  "competences.carrousel": "Compétences, faire défiler",
+  "competences.precedent": "Compétences précédentes",
+  "competences.suivant": "Compétences suivantes"
 }

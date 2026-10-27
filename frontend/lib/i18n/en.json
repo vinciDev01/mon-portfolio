@@ -105,5 +105,9 @@
   "journal.collaborateurs": "with {noms}",
   "projects.photoDe": "Photo of {nom}",
   "projects.details": "Details",
-  "projects.sansTitre": "Untitled project"
+  "projects.sansTitre": "Untitled project",
+
+  "competences.carrousel": "Skills, scroll through",
+  "competences.precedent": "Previous skills",
+  "competences.suivant": "Next skills"
 }

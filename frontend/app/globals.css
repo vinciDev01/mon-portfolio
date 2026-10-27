@@ -1612,8 +1612,8 @@ html {
     gap: var(--espace-2);
     margin: 0;
     padding: var(--espace-2);
-    background: var(--surface);
-    border: 1px solid var(--bordure-signifiante);
+    /* Fond et bordure sont portes par le bord imparfait. */
+    --bord-fond: var(--surface);
   }
 
   .visionneuse-entete {
@@ -2166,6 +2166,105 @@ html {
     font-size: 0.8125rem;
     font-weight: 500;
     line-height: 1.3;
+  }
+
+  /* Le bord imparfait : un SVG en fond du bloc, qui porte son fond et sa
+     bordure. `isolation` garde le SVG, en z-index -1, au-dessus du fond de la
+     page et sous le contenu du bloc. */
+  .cadre-imparfait {
+    position: relative;
+    isolation: isolate;
+  }
+
+  .bord-imparfait {
+    position: absolute;
+    inset: 0;
+    z-index: -1;
+    width: 100%;
+    height: 100%;
+    overflow: visible;
+    pointer-events: none;
+  }
+
+  .bord-imparfait path {
+    fill: var(--bord-fond, none);
+    stroke: var(--bord-trait, var(--bordure-signifiante));
+    stroke-width: 1.25;
+    stroke-linejoin: round;
+    vector-effect: non-scaling-stroke;
+  }
+
+  /* Les competences en carrousel : une piste qui defile, les cartes s'y
+     aimantent. Le padding laisse au bord imparfait la place d'onduler. */
+  .carrousel-competences {
+    display: flex;
+    flex-direction: column;
+    gap: var(--espace-2);
+  }
+
+  .piste-competences {
+    display: grid;
+    grid-auto-flow: column;
+    grid-auto-columns: 148px;
+    gap: var(--espace-2);
+    margin: 0;
+    padding: 4px 4px var(--espace-1);
+    list-style: none;
+    overflow-x: auto;
+    overscroll-behavior-x: contain;
+    scroll-snap-type: x mandatory;
+    scroll-padding-inline: 4px;
+    scrollbar-width: thin;
+  }
+
+  .piste-competences > li {
+    scroll-snap-align: start;
+  }
+
+  .piste-competences:focus-visible {
+    outline: 2px solid var(--accent);
+    outline-offset: 2px;
+  }
+
+  .carte-competence {
+    --bord-fond: var(--surface);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 12px;
+    height: 100%;
+    padding: var(--espace-2);
+  }
+
+  .commandes-carrousel {
+    display: flex;
+    justify-content: flex-end;
+    gap: var(--espace-1);
+  }
+
+  .fleche-carrousel {
+    display: grid;
+    place-items: center;
+    width: 36px;
+    height: 36px;
+    color: var(--texte);
+    cursor: pointer;
+  }
+
+  .fleche-carrousel svg:not(.bord-imparfait) {
+    width: 16px;
+    height: 16px;
+  }
+
+  .fleche-carrousel:disabled {
+    color: var(--texte-secondaire);
+    cursor: default;
+    --bord-trait: var(--bordure);
+  }
+
+  .fleche-carrousel:focus-visible {
+    outline: 2px solid var(--accent);
+    outline-offset: 3px;
   }
 
   /* La tache d'encre du dernier clic dans la colonne, centree sur le point
@@ -2896,6 +2995,12 @@ html {
      le `fill` du trace ne l'est pas. On force donc le `fill` avec la paire que
      le mode honore, Highlight pour le fond et HighlightText pour le texte, au
      lieu de sortir le panneau du mode. */
+  /* Le bord imparfait : `fill` et `stroke` ne sont pas forces. */
+  .bord-imparfait path {
+    fill: Canvas;
+    stroke: CanvasText;
+  }
+
   .panneau-fond path {
     fill: Highlight;
   }

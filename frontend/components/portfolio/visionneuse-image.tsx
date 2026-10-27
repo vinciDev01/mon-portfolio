@@ -3,6 +3,7 @@
 import { useEffect, useLayoutEffect, useRef } from "react";
 import { useChangerSurcouche } from "@/components/parcours/parcours-pagine";
 import { useTranslation } from "@/lib/i18n/i18n-context";
+import { BordImparfait } from "@/components/portfolio/bord-imparfait";
 
 /**
  * L'image entiere d'une certification, dans une fenetre par-dessus la page :
@@ -75,7 +76,8 @@ export function VisionneuseImage({
         if (e.target === dialogue.current) fermer();
       }}
     >
-      <figure className="visionneuse-feuille">
+      <figure className="visionneuse-feuille cadre-imparfait">
+        <BordImparfait graine={src} amplitude={2} pas={48} />
         <div className="visionneuse-entete">
           <figcaption>{legende}</figcaption>
           <button

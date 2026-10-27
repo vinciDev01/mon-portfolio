@@ -80,6 +80,10 @@ export function CoursForm({
 }) {
   const [techs, setTechs] = useState<TechnologyDto[]>([]);
   const [envoi, setEnvoi] = useState(false);
+  // Le nom du fichier choisi, pour l'afficher ; absent en modification, ou
+  // seul le PDF deja en place est connu.
+  const [nomChoisi, setNomChoisi] = useState<string | null>(null);
+  const [survol, setSurvol] = useState(false);
 
   useEffect(() => {
     fetchEntities<TechnologyDto>("technologies")
@@ -89,6 +93,10 @@ export function CoursForm({
 
   async function choisirPdf(fichier: File | undefined) {
     if (!fichier) return;
+    if (fichier.type && fichier.type !== "application/pdf") {
+      toast.error("Seuls les fichiers PDF sont acceptés");
+      return;
+    }
     setEnvoi(true);
     try {
       const r = await uploadCoursPdf(fichier);
@@ -100,6 +108,7 @@ export function CoursForm({
         // l'ancien afficherait un faux nombre de pages sur le site.
         pages: r.pages ? String(r.pages) : "",
       });
+      setNomChoisi(fichier.name);
       toast.success(r.pages ? `PDF envoyé : ${r.pages} pages` : "PDF envoyé ; pages à saisir");
     } catch (err) {
       toast.error(err instanceof Error ? err.message : "Echec de l'envoi du PDF");
@@ -113,24 +122,72 @@ export function CoursForm({
   return (
     <>
       <div>
-        <label htmlFor="cours-pdf" className="block text-sm font-medium mb-1">
-          Fichier PDF
+        <span className="block text-sm font-medium mb-1">Fichier PDF</span>
+        {/* La zone entiere est l'etiquette du champ : un clic l'ouvre, et le
+            champ, masque a l'oeil mais pas au clavier, prend le focus avec
+            Tab ; la zone se marque alors. Un PDF peut aussi y etre glisse. */}
+        <label
+          htmlFor="cours-pdf"
+          onDragOver={(e) => {
+            e.preventDefault();
+            setSurvol(true);
+          }}
+          onDragLeave={() => setSurvol(false)}
+          onDrop={(e) => {
+            e.preventDefault();
+            setSurvol(false);
+            void choisirPdf(e.dataTransfer.files?.[0]);
+          }}
+          className={`flex items-center gap-4 rounded-lg border-2 border-dashed p-4 min-h-[96px] transition-colors focus-within:ring-2 focus-within:ring-primary focus-within:ring-offset-2 ${
+            envoi ? "cursor-progress opacity-70" : "cursor-pointer"
+          } ${survol ? "border-primary bg-primary/5" : "border-border hover:border-primary/50"}`}
+        >
+          <svg
+            viewBox="0 0 24 24"
+            aria-hidden="true"
+            className={`size-10 shrink-0 ${valeurs.fichier ? "text-primary" : "text-muted-foreground"}`}
+            fill="none"
+            stroke="currentColor"
+            strokeWidth="1.5"
+            strokeLinecap="round"
+            strokeLinejoin="round"
+          >
+            <path d="M14 3H7a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V8z" />
+            <path d="M14 3v5h5" />
+            <path d="M9 13h6M9 17h4" />
+          </svg>
+          <span className="flex flex-col gap-0.5 min-w-0">
+            {envoi ? (
+              <span className="text-sm font-medium">Envoi en cours…</span>
+            ) : valeurs.fichier ? (
+              <>
+                <span className="text-sm font-medium truncate">{nomChoisi ?? "PDF en place"}</span>
+                <span className="text-xs text-muted-foreground">
+                  {mo(valeurs.taille)}
+                  {valeurs.pages ? ` · ${valeurs.pages} pages` : ""}
+                  {" · "}cliquez ou glissez un autre PDF pour le remplacer
+                </span>
+              </>
+            ) : (
+              <>
+                <span className="text-sm font-medium">Glissez un PDF ici ou cliquez pour choisir</span>
+                <span className="text-xs text-muted-foreground">PDF uniquement, 50 Mo au plus</span>
+              </>
+            )}
+          </span>
+          <input
+            id="cours-pdf"
+            type="file"
+            accept="application/pdf"
+            disabled={envoi}
+            onChange={(e) => {
+              void choisirPdf(e.target.files?.[0]);
+              // Rechoisir le meme fichier doit relancer l'envoi.
+              e.target.value = "";
+            }}
+            className="sr-only"
+          />
         </label>
-        <input
-          id="cours-pdf"
-          type="file"
-          accept="application/pdf"
-          disabled={envoi}
-          onChange={(e) => choisirPdf(e.target.files?.[0])}
-          className="block text-sm"
-        />
-        <p className="text-xs text-muted-foreground mt-1">
-          {envoi
-            ? "Envoi en cours…"
-            : valeurs.fichier
-              ? `Fichier en place : ${mo(valeurs.taille)}. Choisir un autre PDF le remplace.`
-              : "PDF uniquement, 50 Mo au plus."}
-        </p>
       </div>
       <div>
         <label htmlFor="cours-titre" className="block text-sm font-medium mb-1">Titre</label>

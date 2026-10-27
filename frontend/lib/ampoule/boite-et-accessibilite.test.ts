@@ -78,16 +78,14 @@ describe("forced-colors: active (annexe §8.4)", () => {
     expect(trouvees.length, `aucune regle pour ${sel}`).toBeGreaterThan(0);
     return trouvees.map((m) => m[2]!).join("\n");
   };
-  it("force la propriete non forcee du drapeau : fill Highlight, texte HighlightText", () => {
+  it("force la propriete non forcee du panneau : fill Highlight, texte HighlightText", () => {
     // `color` est force, le `fill` SVG ne l'est pas. La paire Highlight /
     // HighlightText est celle que le mode garantit lisible.
-    for (const sel of [".drapeau-toile path", ".drapeau-guidon path"]) {
-      expect(regleAvec(sel), sel).toMatch(/fill:\s*Highlight\s*;/);
-    }
-    expect(regleAvec(".drapeau-texte")).toMatch(/color:\s*HighlightText\s*;/);
+    expect(regleAvec(".panneau-fond path")).toMatch(/fill:\s*Highlight\s*;/);
+    expect(regleAvec(".panneau-texte")).toMatch(/color:\s*HighlightText\s*;/);
   });
-  it("ne sort pas le drapeau du mode force : l'accent de l'auteur n'y revient pas", () => {
-    for (const sel of [".drapeau-toile path", ".drapeau-guidon path", ".drapeau-texte"]) {
+  it("ne sort pas le panneau du mode force : l'accent de l'auteur n'y revient pas", () => {
+    for (const sel of [".panneau-fond path", ".panneau-texte"]) {
       expect(regleAvec(sel), sel).not.toMatch(/forced-color-adjust/);
     }
   });

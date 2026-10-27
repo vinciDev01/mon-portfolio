@@ -2125,48 +2125,47 @@ html {
     }
   }
 
-  /* Le drapeau au mat, en tete de la colonne de passage. */
-  /* La boite est fluide : c'est le texte qui porte la hauteur, le tissu
-     s'etire derriere lui. Au palier de 160 px la colonne n'offre que 127 px
-     utiles, la largeur fixe de 200 px y etait rognee. */
-  .mat-disponibilite {
+  /* Le panneau de disponibilite, en tete de la colonne de passage. Le texte
+     porte la hauteur, le trace s'etire derriere lui : la boite est fluide,
+     la colonne n'offre que 127 px utiles a son palier de 160 px. */
+  .panneau-disponibilite {
     position: relative;
     display: block;
     max-width: 200px;
-    min-height: 40px;
+    min-height: 36px;
   }
 
-  .drapeau-disponibilite {
+  .panneau-fond {
+    position: absolute;
+    inset: 0;
     display: block;
     width: 100%;
     height: 100%;
     overflow: visible;
   }
 
-  .drapeau-toile {
-    position: absolute;
-    inset: 0;
+  .panneau-fond path {
+    fill: var(--accent);
   }
 
-  .drapeau-guidon {
+  .panneau-replie {
     display: none;
   }
 
   /* Le libelle vient du backoffice et rien n'en borne la longueur : deux
-     lignes au plus, puis troncature. Le libelle complet reste le nom
-     accessible du drapeau. Les retraits suivent l'encoche de la queue
-     d'aronde, qui entre jusqu'a 12 % du bord libre. */
-  .drapeau-texte {
+     lignes au plus, puis troncature. */
+  .panneau-texte {
     position: relative;
     display: -webkit-box;
     -webkit-box-orient: vertical;
     -webkit-line-clamp: 2;
     overflow: hidden;
     overflow-wrap: anywhere;
-    padding: 8px 14% 8px 6%;
+    padding: 9px 12px;
     color: var(--fond);
     font-size: 0.8125rem;
-    line-height: 1.2;
+    font-weight: 500;
+    line-height: 1.3;
   }
 
   /* La ligne ne porte pas `.gouttiere-parcours` : elle est dans le contenu
@@ -2176,24 +2175,32 @@ html {
     margin-block-end: var(--espace-2);
   }
 
-  /* Sous 1024 px le drapeau se replie en guidon sans texte. Le guidon a son
-     propre viewBox : sous 600 px la colonne n'offre que 31 px utiles, il
-     rapetisse donc sans deformation plutot que d'etre rogne. L'element
-     masque l'est par display: none, il quitte l'arbre d'accessibilite. */
+  /* Sous 1024 px la colonne n'offre que 31 a 60 px utiles : le panneau se
+     replie en petit carre de meme facture. Le texte est masque a l'oeil
+     seulement, il reste lu ; le message visible se reporte dans l'ouverture. */
   @media (max-width: 1023px) {
-    .drapeau-toile {
+    .panneau-disponibilite {
+      width: 24px;
+      min-height: 24px;
+      height: 24px;
+    }
+
+    .panneau-plein {
       display: none;
     }
 
-    .drapeau-guidon {
+    .panneau-replie {
       display: block;
-      width: 100%;
-      max-width: 40px;
-      height: 56px;
     }
 
-    .drapeau-texte {
-      display: none;
+    .panneau-texte {
+      position: absolute;
+      width: 1px;
+      height: 1px;
+      padding: 0;
+      overflow: hidden;
+      clip-path: inset(50%);
+      white-space: nowrap;
     }
   }
 
@@ -2868,21 +2875,15 @@ html {
 
   /* La colonne de passage suit les memes regles que l'ampoule (spec 5.5).
 
-     Le drapeau : le libelle est du `color`, force a CanvasText, alors que le
-     `fill` du <path> est un attribut de presentation SVG que le mode ne force
-     pas : le tissu garderait l'accent de l'auteur sous un texte devenu noir ou
-     blanc, a environ 1,9:1 en sombre et 2,5:1 en clair. On force donc la
-     propriete que le mode ne force pas, avec la paire que lui-meme honore,
-     Highlight pour le tissu et HighlightText pour le texte, au lieu de sortir
-     les pieces du mode (ce qui rendrait l'accent de l'auteur a qui a demande
-     au systeme de choisir). Le `fill` se pose sur le <path>, qui porte son
-     propre attribut : un `fill` sur le <svg> serait masque par lui. */
-  .drapeau-toile path,
-  .drapeau-guidon path {
+     Le panneau de disponibilite : son texte est du `color`, force, alors que
+     le `fill` du trace ne l'est pas. On force donc le `fill` avec la paire que
+     le mode honore, Highlight pour le fond et HighlightText pour le texte, au
+     lieu de sortir le panneau du mode. */
+  .panneau-fond path {
     fill: Highlight;
   }
 
-  .drapeau-texte {
+  .panneau-texte {
     color: HighlightText;
   }
 

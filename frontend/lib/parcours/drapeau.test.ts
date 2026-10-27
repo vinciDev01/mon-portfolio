@@ -2,7 +2,7 @@ import { readFileSync } from "node:fs";
 import path from "node:path";
 import { describe, it, expect } from "vitest";
 import { PALETTE_CLAIRE, PALETTE_SOMBRE } from "@/lib/design/tokens";
-import { tableDesContenus } from "./feuille-test";
+import { bloc, tableDesContenus } from "./feuille-test";
 
 const RACINE = path.resolve(import.meta.dirname, "../..");
 const lire = (rel: string) => readFileSync(path.join(RACINE, rel), "utf8");
@@ -42,91 +42,64 @@ const sansCommentaires = src
   .replace(/\/\*[\s\S]*?\*\//g, "")
   .replace(/\/\/.*$/gm, "");
 
-describe("drapeau au mat (spec section 7)", () => {
-  it("declare sa boite, width height et overflow", () => {
-    const m = /\.drapeau-disponibilite\s*\{([^}]*)\}/.exec(css);
-    expect(m, "regle .drapeau-disponibilite introuvable").not.toBeNull();
-    expect(m![1]).toMatch(/width:/);
-    expect(m![1]).toMatch(/height:/);
-    expect(m![1]).toMatch(/overflow:\s*visible/);
+describe("panneau de disponibilite", () => {
+  it("est un rectangle aux bords irreguliers : aucun bord droit d un coin a l autre", () => {
+    const chemin = /const CHEMIN_PANNEAU =([\s\S]*?);/.exec(src);
+    expect(chemin, "CHEMIN_PANNEAU introuvable").not.toBeNull();
+    const points = [...chemin![1]!.matchAll(/[ML] ([\d.]+) ([\d.]+)/g)].map((m) => [Number(m[1]), Number(m[2])]);
+    // Des points intermediaires sur chaque bord : il ondule.
+    expect(points.length).toBeGreaterThanOrEqual(10);
+    // Mais a peine : aucun point ne s'ecarte de plus de 3 unites de la boite 200 x 48.
+    for (const [x, y] of points) {
+      const ecart = Math.min(Math.abs(x!), Math.abs(200 - x!), Math.abs(y!), Math.abs(48 - y!));
+      expect(ecart, `point ${x} ${y}`).toBeLessThanOrEqual(3);
+    }
+    expect(src).toContain('preserveAspectRatio="none"');
   });
 
-  it("porte une queue d aronde et un galbe, pas un rectangle", () => {
-    // Deux pointes au bord libre, et des courbes sur les bords haut et bas.
-    expect(src).toContain("CHEMIN_DRAPEAU");
-    const chemin = /const CHEMIN_DRAPEAU =([\s\S]*?);/.exec(src);
-    expect(chemin, "CHEMIN_DRAPEAU introuvable").not.toBeNull();
-    expect(chemin![1]).toMatch(/\bC\s/); // galbe des bords haut et bas
-    expect(chemin![1]).toContain("L 200 14"); // premiere pointe
-    expect(chemin![1]).toContain("L 200 42"); // seconde pointe
-    expect(chemin![1]).toContain("L 176 28"); // encoche entre les pointes
-  });
-
-  it("ne porte aucune animation : le vent est dans le trace", () => {
-    expect(sansCommentaires).not.toMatch(/transition|animate-|animation|@keyframes/);
+  it("a pour fond l accent et pour texte la couleur du fond de page", () => {
+    expect(bloc(/\.panneau-fond path\s*\{/)).toMatch(/fill:\s*var\(--accent\)/);
+    expect(bloc(/\.panneau-texte\s*\{/)).toMatch(/color:\s*var\(--fond\)/);
   });
 
   it("tient 4,5:1 pour son texte dans les deux palettes", () => {
     expect(ratio(PALETTE_CLAIRE.accent, PALETTE_CLAIRE.fond)).toBeGreaterThanOrEqual(4.5);
     expect(ratio(PALETTE_SOMBRE.accent, PALETTE_SOMBRE.fond)).toBeGreaterThanOrEqual(4.5);
-    expect(ratio(PALETTE_CLAIRE.texteSecondaire, PALETTE_CLAIRE.fond)).toBeGreaterThanOrEqual(4.5);
-    expect(ratio(PALETTE_SOMBRE.texteSecondaire, PALETTE_SOMBRE.fond)).toBeGreaterThanOrEqual(4.5);
   });
 
-  it("n emploie aucune couleur d alerte", () => {
-    // Contextes de couleur uniquement : « centered » ou « colored » ne comptent pas.
-    const couleurs = [
-      ...sansCommentaires.matchAll(/(?:fill|stroke|color|background)[=:]\s*[{"']*([^;}\n]*)/gi),
-    ].map((m) => m[1]).join(" ");
-    expect(couleurs).not.toMatch(/\b(red|orange|crimson|tomato)\b|#f0|#e4001|destructive/i);
-    expect(css.match(/\.drapeau-[a-z]+\s*\{[^}]*\}/g)?.join(" ") ?? "")
-      .not.toMatch(/\b(red|orange|crimson|tomato)\b|destructive/i);
+  it("ne porte aucune animation ni couleur d alerte", () => {
+    expect(sansCommentaires).not.toMatch(/transition|animate-|animation|@keyframes/);
+    const regles = css.match(/\.panneau-[a-z]+[^{]*\{[^}]*\}/g)?.join(" ") ?? "";
+    expect(regles).not.toMatch(/transition|animation|gradient/);
+    expect(regles).not.toMatch(/\b(red|orange|crimson|tomato)\b|destructive/i);
   });
 
-  // Review Focus 2 : un libelle de disponibilite tres long.
-  it("borne le texte a deux lignes et garde le libelle complet accessible", () => {
-    const m = /\.drapeau-texte\s*\{([^}]*)\}/.exec(css);
-    expect(m, "regle .drapeau-texte introuvable").not.toBeNull();
-    expect(m![1]).toMatch(/-webkit-line-clamp:\s*2/);
-    expect(src).toMatch(/aria-label=\{libelleComplet\}/);
+  // Un libelle de disponibilite tres long.
+  it("borne le libelle a deux lignes", () => {
+    const b = bloc(/\.panneau-texte\s*\{/);
+    expect(b).toMatch(/-webkit-line-clamp:\s*2/);
+    expect(b).toMatch(/overflow-wrap:\s*anywhere/);
+    expect(b).toMatch(/position:\s*relative/);
   });
 
-  it("n expose qu un seul nom accessible : le guidon est masque de base", () => {
-    const m = /\.drapeau-guidon\s*\{([^}]*)\}/.exec(css);
-    expect(m, "regle de base .drapeau-guidon introuvable").not.toBeNull();
-    expect(m![1]).toMatch(/display:\s*none/);
+  it("a une boite fluide : un max-width, aucune largeur fixe", () => {
+    const b = bloc(/\.panneau-disponibilite\s*\{/);
+    expect(b).toMatch(/max-width:\s*\d+px/);
+    expect(b).not.toMatch(/(?<!max-)width:\s*\d+px/);
   });
 
-  it("a une boite fluide : aucune largeur fixe en pixels, un max-width", () => {
-    const toile = /\.drapeau-disponibilite\s*\{([^}]*)\}/.exec(css)![1];
-    expect(toile).not.toMatch(/width:\s*\d+px/);
-    const mat = /\.mat-disponibilite\s*\{([^}]*)\}/.exec(css)![1];
-    const max = /max-width:\s*(\d+)px/.exec(mat);
-    expect(max, "max-width absent de .mat-disponibilite").not.toBeNull();
-    // Largeur utile au premier palier ou le drapeau s'affiche (1024 px) :
-    // colonne lue dans la feuille, moins 2 x 16 de padding et 1 de bordure.
-    // Si elle est inferieure a la boite, la largeur ne peut pas etre fixe.
-    const palier = blocs(/@media \(min-width: 1024px\)\s*\{/, css)
-      .map((b) => /--colonne:\s*(\d+)px/.exec(b)).find(Boolean);
-    expect(palier, "palier de 1024 px introuvable").toBeTruthy();
-    const utile = Number(palier![1]) - 2 * 16 - 1;
-    if (utile < Number(max![1])) {
-      expect(toile).not.toMatch(/(?<!max-)width:\s*\d+px/);
-    }
-    expect(src).toContain('preserveAspectRatio="none"');
-    const texte = /\.drapeau-texte\s*\{([^}]*)\}/.exec(css)![1];
-    expect(texte).toMatch(/position:\s*relative/);
-    expect(texte).toMatch(/overflow-wrap:\s*anywhere/);
+  it("n expose le panneau replie que sous 1024 px", () => {
+    expect(bloc(/\.panneau-replie\s*\{/)).toMatch(/display:\s*none/);
   });
 
-  it("se replie en guidon sans texte sous 1024 px", () => {
-    expect(src).toContain("guidon");
+  it("sous 1024 px se replie en carre, le texte reste lu", () => {
     const repli = blocs(/@media \(max-width: 1023px\)\s*\{/, css)
-      .find((b) => b.includes(".drapeau-toile"));
-    expect(repli, "aucun bloc 1023 px ne replie le drapeau").toBeDefined();
-    expect(repli!).toMatch(/\.drapeau-toile\s*\{[^}]*display:\s*none/);
-    expect(repli!).toMatch(/\.drapeau-guidon\s*\{[^}]*display:\s*block/);
-    expect(repli!).toMatch(/\.drapeau-texte\s*\{[^}]*display:\s*none/);
+      .find((b) => b.includes(".panneau-disponibilite"));
+    expect(repli, "aucun bloc 1023 px ne replie le panneau").toBeDefined();
+    expect(repli!).toMatch(/\.panneau-plein\s*\{[^}]*display:\s*none/);
+    expect(repli!).toMatch(/\.panneau-replie\s*\{[^}]*display:\s*block/);
+    // Masque a l'oeil, pas par display: none qui l'oterait des lecteurs d'ecran.
+    expect(repli!).toMatch(/\.panneau-texte\s*\{[^}]*clip-path:\s*inset\(50%\)/);
   });
 
   it("reporte le message dans le contenu de l ouverture, qui est inconditionnelle", () => {

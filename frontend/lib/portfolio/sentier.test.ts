@@ -41,10 +41,11 @@ describe("sentier des experiences", () => {
     for (const r of rayons) expect(r).toBeLessThanOrEqual(6);
   });
 
-  it("le chemin est en pointilles, sans animation, et l etape est une longueur", () => {
+  it("le chemin est en pointilles, immobile, et l etape est une longueur", () => {
     expect(bloc(/\.sentier-chemin\s*\{/)).toMatch(/stroke-dasharray/);
     expect(cssNu).toMatch(/@property --sentier-etape\s*\{[^}]*syntax:\s*"<length>"/);
-    expect(cssNu).not.toMatch(/\.sentier[^{]*\{[^}]*(transition|animation)/);
+    // Le chemin ne bouge pas : seule la pierre de l'experience en cours s'anime.
+    expect(bloc(/\.sentier-chemin\s*\{/)).not.toMatch(/transition|animation/);
   });
 
   it("laisse un espace sous chaque experience sauf la derniere, malgre l enveloppe de la liste", () => {
@@ -65,5 +66,13 @@ describe("sentier des experiences", () => {
     expect(bloc(/@keyframes tracer-bord\s*\{/)).toMatch(/stroke-dashoffset:\s*-100/);
     expect(bloc(/\.cadre-imparfait:hover \.bord-trace\s*\{/)).toMatch(/animation-play-state:\s*paused/);
     expect(bloc(/@media \(prefers-reduced-motion: reduce\)\s*\{(?=\s*\.bord-imparfait path\.bord-trace)/)).toMatch(/animation:\s*none/);
+  });
+
+  it("la pierre de l experience en cours eclate comme un feu d avion, sous trois eclats par seconde", () => {
+    expect(bloc(/\.sentier-balise\s*\{/)).toMatch(/animation:\s*feu-balise 1\.8s[^;]*infinite/);
+    const feu = bloc(/@keyframes feu-balise\s*\{/);
+    // Deux eclats par cycle de 1,8 s.
+    expect(feu.match(/opacity:\s*0\.55/g)).toHaveLength(2);
+    expect(bloc(/@media \(prefers-reduced-motion: reduce\)\s*\{(?=\s*\.sentier-pierre)/)).toMatch(/animation:\s*none/);
   });
 });

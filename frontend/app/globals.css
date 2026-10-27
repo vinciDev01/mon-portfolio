@@ -1494,6 +1494,39 @@ html {
     fill: var(--fond);
     stroke: var(--texte);
     stroke-width: 1.5;
+    animation: feu-pierre 1.8s linear infinite;
+  }
+
+  /* Le feu de l'experience en cours, au rythme d'un feu anticollision :
+     deux eclats brefs, puis un long silence. Deux eclats en 0,3 s, rien
+     ensuite : loin des trois eclats par seconde (WCAG 2.3.1), et sur une
+     surface minuscule. */
+  .sentier-balise {
+    fill: var(--accent);
+    opacity: 0;
+    animation: feu-balise 1.8s linear infinite;
+  }
+
+  @keyframes feu-balise {
+    0%, 100% { opacity: 0; }
+    3% { opacity: 0.55; }
+    7% { opacity: 0; }
+    12% { opacity: 0.55; }
+    16% { opacity: 0; }
+  }
+
+  @keyframes feu-pierre {
+    0%, 2%, 7%, 11%, 16%, 100% { fill: var(--fond); }
+    3%, 6% { fill: var(--accent); }
+    12%, 15% { fill: var(--accent); }
+  }
+
+  /* Moins de mouvement : pas de feu, la pierre creuse suffit. */
+  @media (prefers-reduced-motion: reduce) {
+    .sentier-pierre[data-en-cours="true"],
+    .sentier-balise {
+      animation: none;
+    }
   }
 
   /* Palier etroit : la date passe au-dessus du cadre, sur une ligne ; la

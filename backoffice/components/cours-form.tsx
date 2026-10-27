@@ -96,7 +96,9 @@ export function CoursForm({
         ...valeurs,
         fichier: r.fichier,
         taille: r.taille,
-        pages: r.pages ? String(r.pages) : valeurs.pages,
+        // Pages lues dans le NOUVEAU PDF, ou rien a saisir : garder celles de
+        // l'ancien afficherait un faux nombre de pages sur le site.
+        pages: r.pages ? String(r.pages) : "",
       });
       toast.success(r.pages ? `PDF envoyé : ${r.pages} pages` : "PDF envoyé ; pages à saisir");
     } catch (err) {

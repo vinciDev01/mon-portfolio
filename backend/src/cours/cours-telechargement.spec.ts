@@ -17,6 +17,7 @@ function service(cours: object | null) {
       findUnique: jest.fn().mockResolvedValue(cours),
       update: jest.fn().mockResolvedValue(cours),
     },
+    $executeRaw: jest.fn().mockResolvedValue(1),
   };
   return { s: new CoursService(prisma as never), prisma };
 }
@@ -46,10 +47,20 @@ describe('le telechargement d un cours', () => {
     const { s, prisma } = service(coursPublic);
     const res = reponse();
     await s.telecharger('c1', res as never);
-    expect(prisma.cours.update).toHaveBeenCalledWith({
-      where: { id: 'c1' },
-      data: { telechargements: { increment: 1 } },
-    });
+    // Le compteur avance en SQL brut : un `update` de Prisma toucherait
+    // `updatedAt`, et la date « Mis a jour » du livre deviendrait celle du
+    // dernier telechargement.
+    expect(prisma.cours.update).not.toHaveBeenCalled();
+    expect(prisma.$executeRaw).toHaveBeenCalledTimes(1);
+    const [requete, ...valeurs] = prisma.$executeRaw.mock.calls[0] as [
+      TemplateStringsArray,
+      ...unknown[],
+    ];
+    expect(requete.join('?')).toMatch(
+      /UPDATE\s+"?cours"?\s+SET\s+"?telechargements"?\s*=\s*"?telechargements"?\s*\+\s*1/i,
+    );
+    expect(requete.join('?')).not.toMatch(/updated_at/);
+    expect(valeurs).toEqual(['c1']);
     expect(res.set).toHaveBeenCalledWith({
       'Content-Type': 'application/pdf',
       'Content-Disposition':

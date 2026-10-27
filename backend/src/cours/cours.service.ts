@@ -83,10 +83,11 @@ export class CoursService {
     const cours = await this.prisma.cours.findUnique({ where: { id } });
     if (!cours || !cours.publique)
       throw new NotFoundException('Cours introuvable');
-    await this.prisma.cours.update({
-      where: { id },
-      data: { telechargements: { increment: 1 } },
-    });
+    // En SQL brut, et non par `prisma.cours.update` : `updatedAt` est un
+    // champ `@updatedAt`, que tout `update` remet a l'heure. Chaque
+    // telechargement changerait alors la date « Mis a jour » du livre.
+    await this.prisma
+      .$executeRaw`UPDATE "cours" SET "telechargements" = "telechargements" + 1 WHERE "id" = ${id}`;
     res.set({
       'Content-Type': 'application/pdf',
       'Content-Disposition': `attachment; filename="${nomDeTelechargement(cours.titre)}"`,

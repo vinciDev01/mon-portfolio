@@ -53,7 +53,8 @@
   "testimonials.cancel": "Cancel",
 
   "experience.ongoing": "Ongoing",
-  "experience.today": "Today",
+  "experience.today": "today",
+  "experience.until": "to",
   "experience.projects": "Projects delivered",
 
   "certifications.viewCert": "View certification",

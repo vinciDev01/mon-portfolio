@@ -5,6 +5,7 @@ import type { ExperienceDto, ProjectDto } from "@portfolio/shared-types";
 import { I18nProvider } from "../i18n/i18n-context";
 import { ExperienceSection } from "@/components/portfolio/experience-section";
 import { projetsParExperience } from "./experience-projets";
+import { bloc, valeur } from "../parcours/feuille-test";
 
 const Fournisseur = I18nProvider as ComponentType<{ defaultLocale: string }>;
 
@@ -70,5 +71,68 @@ describe("la section des experiences liste les projets de chacune", () => {
     const html = rendre([projet("a", null)]);
     expect(html).not.toContain("Projet a");
     expect(html).not.toContain("Projets réalisés");
+  });
+});
+
+describe("la date d une experience, a gauche de son cadre", () => {
+  const rendreUne = (e: Partial<ExperienceDto>) =>
+    renderToStaticMarkup(
+      createElement(
+        Fournisseur,
+        { defaultLocale: "fr" },
+        createElement(ExperienceSection, { experiences: [{ ...experience("x"), ...e }], projets: [] }),
+      ),
+    );
+
+  it("sort la date du cadre et la place avant lui", () => {
+    const html = rendreUne({ startDate: "2025-07-01T00:00:00.000Z", endDate: "2026-02-01T00:00:00.000Z", isCurrent: false });
+    const dates = html.indexOf('class="experience-dates"');
+    const cadre = html.indexOf("animated-card");
+    expect(dates, "colonne des dates introuvable").toBeGreaterThan(-1);
+    expect(dates).toBeLessThan(cadre);
+    // Aucune date dans le cadre lui-meme.
+    const dansLeCadre = html.slice(cadre);
+    expect(dansLeCadre).not.toMatch(/<time/);
+  });
+
+  it("donne debut et fin en dates lisibles par les machines", () => {
+    const html = rendreUne({ startDate: "2025-07-01T00:00:00.000Z", endDate: "2026-02-01T00:00:00.000Z", isCurrent: false });
+    expect(html).toMatch(/<time[^>]*dateTime="2025-07"/);
+    expect(html).toMatch(/<time[^>]*dateTime="2026-02"/);
+  });
+
+  it("en cours : la fin dit aujourd hui, et le badge suit la date", () => {
+    const html = rendreUne({ startDate: "2026-03-01T00:00:00.000Z", endDate: null, isCurrent: true });
+    const dates = html.slice(html.indexOf('class="experience-dates"'), html.indexOf("animated-card"));
+    expect(dates).toContain("aujourd");
+    expect(dates).toContain("En cours");
+  });
+
+  it("n imprime aucun tiret cadratin", () => {
+    const html = rendreUne({ startDate: "2025-07-01T00:00:00.000Z", endDate: "2026-02-01T00:00:00.000Z" });
+    expect(html).not.toContain("\u2014");
+    expect(html).not.toContain("&mdash;");
+  });
+});
+
+describe("la periode tient sur une ligne", () => {
+  it("debut, « a » et fin forment une seule periode, insecable et lue d un trait", () => {
+    const html = renderToStaticMarkup(
+      createElement(
+        Fournisseur,
+        { defaultLocale: "fr" },
+        createElement(ExperienceSection, {
+          experiences: [{ ...experience("x"), startDate: "2025-07-01T00:00:00.000Z", endDate: "2026-02-01T00:00:00.000Z", isCurrent: false }],
+          projets: [],
+        }),
+      ),
+    );
+    expect(html).toMatch(/<span class="experience-periode"><time[^>]*>juillet 2025<\/time> à <time[^>]*>février 2026<\/time><\/span>/);
+    expect(valeur(bloc(/\.experience-periode\s*\{/), "white-space")).toBe("nowrap");
+  });
+
+  it("la colonne des dates a la place de la plus longue periode", () => {
+    const largeur = /grid-template-columns:\s*([\d.]+)rem/.exec(bloc(/^\s*\.experience-ligne\s*\{/m))?.[1];
+    expect(Number(largeur)).toBeGreaterThanOrEqual(13);
   });
 });

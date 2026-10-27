@@ -22,32 +22,43 @@ function ExperienceCard({
 }) {
   const { t, locale } = useTranslation();
 
+  // En UTC, comme les autres dates du site : une date saisie au 1er juillet,
+  // enregistree a minuit UTC, ne doit pas devenir « juin » a l'ouest de
+  // Greenwich.
   function formatDate(dateStr: string): string {
-    return new Date(dateStr).toLocaleDateString(localeMap[locale] || "fr-FR", { month: "long", year: "numeric" });
+    return new Date(dateStr).toLocaleDateString(localeMap[locale] || "fr-FR", {
+      month: "long",
+      year: "numeric",
+      timeZone: "UTC",
+    });
   }
+  const mois = (dateStr: string) => dateStr.slice(0, 7);
 
   return (
-    <div className="relative pl-8 pb-10 last:pb-0">
-      <div className="absolute left-0 top-0 bottom-0 w-px bg-border" />
-      <div className="absolute left-[-4px] top-1.5 size-2 rounded-full bg-foreground border-2 border-background" />
+    // Trois colonnes : la date a gauche, hors du cadre ; la frise ; le cadre.
+    <div className="experience-ligne">
+      <div className="experience-dates">
+        {/* La periode sur une ligne, insecable : « mars 2026 a aujourd'hui ». */}
+        <span className="experience-periode">
+          <time dateTime={mois(experience.startDate)}>{formatDate(experience.startDate)}</time>
+          {` ${t("experience.until")} `}
+          {experience.endDate ? (
+            <time dateTime={mois(experience.endDate)}>{formatDate(experience.endDate)}</time>
+          ) : (
+            <span>{t("experience.today")}</span>
+          )}
+        </span>
+        {experience.isCurrent && <span className="experience-en-cours">{t("experience.ongoing")}</span>}
+      </div>
+
+      <div className="experience-frise" aria-hidden="true">
+        <span className="experience-point" />
+      </div>
 
       <div className="animated-card bg-card rounded-xl p-6 transition-colors">
-        <div className="flex flex-wrap items-start justify-between gap-2 mb-3">
-          <div>
-            <h3 className="font-semibold text-base">{experience.role}</h3>
-            <p className="text-sm text-muted-foreground font-medium mt-0.5">{experience.company}</p>
-          </div>
-          <div className="flex items-center gap-2 shrink-0">
-            {experience.isCurrent && (
-              <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-foreground text-background">
-                {t("experience.ongoing")}
-              </span>
-            )}
-            <span className="text-xs text-muted-foreground whitespace-nowrap">
-              {formatDate(experience.startDate)} &mdash;{" "}
-              {experience.endDate ? formatDate(experience.endDate) : t("experience.today")}
-            </span>
-          </div>
+        <div className="mb-3">
+          <h3 className="font-semibold text-base">{experience.role}</h3>
+          <p className="text-sm text-muted-foreground font-medium mt-0.5">{experience.company}</p>
         </div>
         {experience.description && (
           <p className="mesure text-sm text-muted-foreground leading-relaxed">{experience.description}</p>

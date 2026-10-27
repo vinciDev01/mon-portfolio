@@ -31,31 +31,35 @@ const rendre = (p: Partial<PersonalInfoDto>) =>
   );
 
 describe("medaillon (spec section 8)", () => {
-  it("est une arche sans cadre : haute, arrondie en haut, sans bordure", () => {
-    const m = /\.medaillon\s*\{([^}]*)\}/.exec(css);
-    expect(m, "regle .medaillon introuvable").not.toBeNull();
-    // Plus grand que l'ancien carre de 88 px, et plus haut que large : les
-    // dimensions vivent sur la niche, que le palier etroit reduit.
-    expect(m![1]).toMatch(/width:\s*var\(--medaillon-l\)/);
-    expect(m![1]).toMatch(/height:\s*var\(--medaillon-h\)/);
+  it("est un tableau : cadre de bois, passe-partout, photo au centre, emprise inchangee", () => {
     const niche = /\.medaillon-niche\s*\{([^}]*)\}/.exec(css)![1];
     expect(niche).toMatch(/--medaillon-l:\s*176px/);
     expect(niche).toMatch(/--medaillon-h:\s*220px/);
-    expect(m![1]).not.toMatch(/(?:^|[;\s])border:/);
-    // Arrondi en haut seulement : une arche, pas un cercle d'avatar.
-    expect(m![1]).toMatch(/border-radius:\s*999px 999px 6px 6px/);
-    expect(m![1]).toMatch(/object-fit:\s*cover/);
-    // Spec section 9, point 4 : width, height ET overflow, lus dans la feuille.
-    expect(m![1]).toMatch(/overflow:\s*hidden/);
+    // Les dimensions sont celles du tableau entier : la mise en page ne bouge pas.
+    expect(niche).toMatch(/width:\s*var\(--medaillon-l\)/);
+    expect(niche).toMatch(/height:\s*var\(--medaillon-h\)/);
+    const photo = /\.medaillon\s*\{([^}]*)\}/.exec(css)![1];
+    expect(photo).toMatch(/object-fit:\s*cover/);
+    expect(photo).toMatch(/overflow:\s*hidden/);
+    const html = rendre({ avatarPath: "http://hote.test/uploads/personal/u.webp" });
+    expect(html).toMatch(/class="tableau-bois[^"]*"[\s\S]*class="tableau-passe[^"]*"[\s\S]*<img[^>]*class="medaillon"/);
   });
 
-  it("n a ni ombre, ni degrade, ni filtre : l echo est un aplat", () => {
-    const m = /\.medaillon\s*\{([^}]*)\}/.exec(css);
-    expect(m![1]).not.toMatch(/box-shadow|gradient|filter/);
-    const echo = /\.medaillon-niche::before\s*\{([^}]*)\}/.exec(css);
-    expect(echo, "l echo de l arche est introuvable").not.toBeNull();
-    expect(echo![1]).toMatch(/background:\s*var\(--accent\)/);
-    expect(echo![1]).not.toMatch(/box-shadow|gradient|filter|blur/);
+  it("pend a un clou par une ficelle, un rien de travers, sans ombre ni degrade", () => {
+    const niche = /\.medaillon-niche\s*\{([^}]*)\}/.exec(css)![1];
+    expect(niche).toMatch(/rotate:\s*-1\.5deg/);
+    const html = rendre({ avatarPath: null });
+    expect(html).toContain('class="tableau-accroche" aria-hidden="true"');
+    expect(html).toContain("tableau-clou");
+    for (const regle of css.match(/\.(medaillon|tableau)[a-z-]*[^{]*\{[^}]*\}/g) ?? []) {
+      expect(regle).not.toMatch(/box-shadow|gradient|filter|blur/);
+    }
+  });
+
+  it("cadre et passe-partout ont leur bord imparfait", () => {
+    const html = rendre({ avatarPath: null });
+    expect(html).toMatch(/class="tableau-bois cadre-imparfait"><svg[^>]*class="bord-imparfait"/);
+    expect(html).toMatch(/class="tableau-passe cadre-imparfait"><svg[^>]*class="bord-imparfait"/);
   });
 
   it("se reduit au palier etroit", () => {
@@ -77,7 +81,7 @@ describe("medaillon (spec section 8)", () => {
     expect(balise).toContain('width="176"');
     expect(balise).toContain('height="220"');
     expect(balise).toContain('class="medaillon"');
-    // L'image est dans la niche, apres les gabarits de ses arches.
+    // L'image est dans le tableau, sous son passe-partout.
     expect(html).toMatch(/<span class="medaillon-niche"[^>]*>[\s\S]*?<img[^>]*class="medaillon"/);
   });
 

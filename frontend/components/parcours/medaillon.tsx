@@ -1,43 +1,35 @@
 "use client";
 
-import { useId, type CSSProperties, type ReactNode } from "react";
+import type { ReactNode } from "react";
 import type { PersonalInfoDto } from "@portfolio/shared-types";
 import { TAILLES_MEDAILLON, nomVariante } from "@portfolio/shared-types";
 import { getFileUrl } from "@/lib/api";
 import { useTranslation } from "@/lib/i18n/i18n-context";
 import { initialesDe } from "@/lib/parcours/identite";
-import { tracerArche } from "@/lib/parcours/arche";
+import { BordImparfait } from "@/components/portfolio/bord-imparfait";
 
 /**
- * La niche aux bords uses : la photo et son echo sont decoupes chacun par
- * une arche tracee a la main (`objectBoundingBox` : le meme gabarit sert aux
- * trois tailles du medaillon), et un trait de crayon suit le bord de la
- * photo. Sans `clip-path`, l'arrondi de la feuille reste le repli.
+ * Le tableau : un cadre de bois brut aux bords uses (le bois de l'etagere
+ * des cours), un passe-partout creme, et la photo au centre. Il pend a un
+ * clou par une ficelle, un rien de travers, comme accroche a la main.
+ * Ficelle et clou sont decoratifs.
  */
-function Niche({ graine, children }: { graine: string; children: ReactNode }) {
-  // `useId` rend des deux-points, que `url(#...)` lirait mal.
-  const id = useId().replace(/[^a-zA-Z0-9_-]/g, "");
-  const photo = tracerArche(`${graine}:photo`);
-  const echo = tracerArche(`${graine}:echo`);
+function Tableau({ graine, children }: { graine: string; children: ReactNode }) {
   return (
-    <span
-      className="medaillon-niche"
-      style={{ "--arche-photo": `url(#arche-photo-${id})`, "--arche-echo": `url(#arche-echo-${id})` } as CSSProperties}
-    >
-      <svg className="medaillon-gabarits" width="0" height="0" aria-hidden="true" focusable="false">
-        <defs>
-          <clipPath id={`arche-photo-${id}`} clipPathUnits="objectBoundingBox">
-            <path d={photo} />
-          </clipPath>
-          <clipPath id={`arche-echo-${id}`} clipPathUnits="objectBoundingBox">
-            <path d={echo} />
-          </clipPath>
-        </defs>
-      </svg>
-      {children}
-      <svg className="medaillon-trait" viewBox="0 0 1 1" preserveAspectRatio="none" aria-hidden="true" focusable="false">
-        <path d={photo} />
-      </svg>
+    <span className="medaillon-niche">
+      <span className="tableau-accroche" aria-hidden="true">
+        <svg className="tableau-ficelle" viewBox="0 0 100 20" preserveAspectRatio="none" focusable="false">
+          <path d="M 22 20 L 50 1.5 L 78 20" />
+        </svg>
+        <span className="tableau-clou" />
+      </span>
+      <span className="tableau-bois cadre-imparfait">
+        <BordImparfait graine={`${graine}:bois`} amplitude={1.6} pas={26} />
+        <span className="tableau-passe cadre-imparfait">
+          <BordImparfait graine={`${graine}:passe`} amplitude={1} pas={22} />
+          {children}
+        </span>
+      </span>
     </span>
   );
 }
@@ -48,12 +40,11 @@ export function aUnPortrait(infos: PersonalInfoDto): boolean {
 }
 
 /**
- * Le medaillon d'ouverture, une arche de 176 x 220 px (128 x 160 au palier
- * etroit), a gauche dans la colonne de texte.
+ * Le portrait d'ouverture, un tableau de 176 x 220 px cadre compris (128 x
+ * 160, puis 88 x 110 aux paliers etroits), a gauche dans la colonne de texte.
  *
- * Une arche et non un cercle : un cercle rogne les epaules et renvoie au
- * registre de l'avatar de reseau social. Sans cadre : son relief est l'echo
- * de la meme arche, en aplat d'accent, decale derriere elle (voir la feuille).
+ * Un rectangle et non un cercle : un cercle rogne les epaules et renvoie au
+ * registre de l'avatar de reseau social.
  *
  * Il est a gauche, donc hors de l'ellipse du halo a tous les paliers, et les
  * couches de lumiere sont de toute facon en z-index -1, derriere le contenu :
@@ -70,11 +61,11 @@ export function Medaillon({ infos }: { infos: PersonalInfoDto }) {
 
   if (!infos.avatarPath) {
     return (
-      <Niche graine={initiales}>
+      <Tableau graine={initiales}>
         <span className="medaillon medaillon-repli" aria-hidden="true">
           {initiales}
         </span>
-      </Niche>
+      </Tableau>
     );
   }
 
@@ -88,7 +79,7 @@ export function Medaillon({ infos }: { infos: PersonalInfoDto }) {
     <>
       {/* next/image ne sait pas exprimer un srcSet de densite construit a la
           main sur des variantes generees au televersement. */}
-      <Niche graine={infos.avatarPath}>
+      <Tableau graine={infos.avatarPath}>
         {/* eslint-disable-next-line @next/next/no-img-element */}
         <img
           className="medaillon"
@@ -100,7 +91,7 @@ export function Medaillon({ infos }: { infos: PersonalInfoDto }) {
             nom: [infos.name, infos.surname].filter(Boolean).join(" "),
           })}
         />
-      </Niche>
+      </Tableau>
     </>
   );
 }

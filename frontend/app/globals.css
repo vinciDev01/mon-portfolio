@@ -591,67 +591,94 @@ html {
 /* Correction ronde 1 : classes du projet dans `components`, meme
    raison que ci-dessus. */
 @layer components {
-  /* Le portrait est une arche : arrondi en haut, presque droit en bas, comme
-     une niche. Ni cadre ni ombre : son relief est un ECHO, la meme arche en
-     aplat d'accent, decalee derriere lui, comme si la lampe la projetait sur
-     le mur. Un cercle aurait renvoye a l'avatar de reseau social. */
+  /* Le portrait est un tableau : cadre de bois brut aux bords uses (le bois
+     de l'etagere des cours), passe-partout creme, photo au centre. Il pend a
+     un clou par une ficelle, un rien de travers. Les dimensions sont celles
+     du tableau entier, cadre compris : l'emprise reste celle de l'ancien
+     portrait. `--medaillon-echo` est l'air laisse sous lui, ou mord son
+     inclinaison. */
   .medaillon-niche {
     --medaillon-l: 176px;
     --medaillon-h: 220px;
     --medaillon-echo: 10px;
+    --tableau-bois: 11px;
+    --tableau-passe: 9px;
+    --tableau-ficelle: 20px;
+    --bois: #5a3e2b;
+    --bois-arete: #7a5a3f;
+    --bois-ombre: #3b2819;
     position: relative;
     display: inline-block;
     isolation: isolate;
-    margin-block-end: calc(var(--espace-3) + var(--medaillon-echo));
+    width: var(--medaillon-l);
+    height: var(--medaillon-h);
+    margin-block: var(--tableau-ficelle) calc(var(--espace-3) + var(--medaillon-echo));
+    rotate: -1.5deg;
+    transform-origin: 50% calc(-1 * var(--tableau-ficelle));
   }
 
-  .medaillon-niche::before {
-    content: "";
+  /* La ficelle et son clou, au-dessus du cadre. */
+  .tableau-accroche {
     position: absolute;
-    inset: 0;
-    translate: var(--medaillon-echo) var(--medaillon-echo);
-    border-radius: 999px 999px 6px 6px;
-    background: var(--accent);
-    z-index: -1;
-    /* Son arche a elle, aux bords uses, differente de celle de la photo. */
-    clip-path: var(--arche-echo, none);
+    inset-inline: 0;
+    inset-block-end: 100%;
+    height: var(--tableau-ficelle);
   }
 
-  /* Les gabarits des deux arches : definis dans la page, sans place. */
-  .medaillon-gabarits {
-    position: absolute;
-    width: 0;
-    height: 0;
-  }
-
-  /* Le trait de crayon qui suit le bord de la photo, par-dessus elle. */
-  .medaillon-trait {
-    position: absolute;
-    inset: 0;
+  .tableau-ficelle {
+    display: block;
     width: 100%;
     height: 100%;
     overflow: visible;
-    pointer-events: none;
   }
 
-  .medaillon-trait path {
+  .tableau-ficelle path {
     fill: none;
-    stroke: var(--bordure-signifiante);
+    stroke: #c9b48f;
     stroke-width: 1.25;
     stroke-linejoin: round;
     vector-effect: non-scaling-stroke;
   }
 
+  .tableau-clou {
+    position: absolute;
+    inset-block-start: -3px;
+    inset-inline-start: 50%;
+    translate: -50% 0;
+    width: 7px;
+    height: 7px;
+    border-radius: 50%;
+    background: var(--bois-arete);
+    border: 1px solid var(--bois-ombre);
+  }
+
+  /* Le cadre de bois, puis le passe-partout : fond et bord par le bord
+     imparfait de chacun. */
+  .tableau-bois {
+    --bord-fond: var(--bois);
+    --bord-trait: var(--bois-ombre);
+    display: block;
+    width: 100%;
+    height: 100%;
+    padding: var(--tableau-bois);
+  }
+
+  .tableau-passe {
+    --bord-fond: #efe4cc;
+    --bord-trait: var(--bois-ombre);
+    display: block;
+    width: 100%;
+    height: 100%;
+    padding: var(--tableau-passe);
+  }
+
   .medaillon {
     display: block;
-    width: var(--medaillon-l);
-    height: var(--medaillon-h);
-    border-radius: 999px 999px 6px 6px;
+    width: 100%;
+    height: 100%;
     background: var(--surface);
     overflow: hidden;
     object-fit: cover;
-    /* L'arche tracee a la main ; l'arrondi ci-dessus reste le repli. */
-    clip-path: var(--arche-photo, none);
   }
 
   .medaillon-repli {
@@ -799,6 +826,9 @@ html {
       --medaillon-l: 128px;
       --medaillon-h: 160px;
       --medaillon-echo: 8px;
+      --tableau-bois: 8px;
+      --tableau-passe: 6px;
+      --tableau-ficelle: 16px;
     }
 
     /* Telephone : a cote du texte, le portrait le reduisait a 214 px de
@@ -813,6 +843,9 @@ html {
       --medaillon-l: 88px;
       --medaillon-h: 110px;
       --medaillon-echo: 6px;
+      --tableau-bois: 6px;
+      --tableau-passe: 4px;
+      --tableau-ficelle: 12px;
     }
 
     /* Telephone : les reseaux a cote du petit portrait, en bas, plutot que

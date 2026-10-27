@@ -2267,6 +2267,89 @@ html {
     outline-offset: 3px;
   }
 
+  /* La boite a outils, sous le carrousel : une rangee par famille, le nom
+     grave a gauche, les etiquettes a droite. */
+  .boite-outils {
+    margin-block-start: var(--espace-4);
+  }
+
+  .boite-outils-titre {
+    margin-block-end: var(--espace-2);
+    font-family: var(--font-mono);
+    font-size: var(--meta);
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: var(--texte-secondaire);
+  }
+
+  .tiroirs-outils {
+    display: flex;
+    flex-direction: column;
+    gap: var(--espace-2);
+    margin: 0;
+  }
+
+  .tiroir-outils {
+    display: grid;
+    grid-template-columns: 112px 1fr;
+    align-items: baseline;
+    gap: var(--espace-2);
+    padding-block-start: var(--espace-2);
+    border-block-start: 1px dashed var(--bordure);
+  }
+
+  .tiroir-nom {
+    font-weight: 600;
+    font-size: 0.875rem;
+  }
+
+  .tiroir-outils dd {
+    margin: 0;
+  }
+
+  .etiquettes-outils {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
+    margin: 0;
+    padding: 0;
+    list-style: none;
+  }
+
+  /* Une etiquette de papier : fond surface, bord imparfait, un rien de
+     travers une sur trois, comme posees a la main. */
+  .etiquette-outil {
+    --bord-fond: var(--surface);
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    min-height: 28px;
+    padding: 4px 10px;
+    font-size: 0.8125rem;
+    line-height: 1.2;
+  }
+
+  .etiquette-outil:nth-child(3n + 2) {
+    rotate: -1deg;
+  }
+
+  .etiquette-outil:nth-child(5n + 4) {
+    rotate: 0.8deg;
+  }
+
+  .etiquette-logo {
+    width: 16px;
+    height: 16px;
+    object-fit: contain;
+  }
+
+  @media (max-width: 639px) {
+    .tiroir-outils {
+      grid-template-columns: 1fr;
+      gap: var(--espace-1);
+    }
+  }
+
   /* La tache d'encre du dernier clic dans la colonne, centree sur le point
      clique. La colonne, fixe, est son bloc conteneur : la tache defile avec
      son entree. Encre du texte, a peine posee : elle se voit sans couvrir. */

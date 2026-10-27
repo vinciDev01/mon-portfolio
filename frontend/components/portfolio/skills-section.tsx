@@ -2,13 +2,15 @@
 
 import { useEffect, useRef, useState } from "react";
 import Image from "next/image";
-import type { SkillDto } from "@portfolio/shared-types";
+import type { SkillDto, TechnologyDto } from "@portfolio/shared-types";
 import { getFileUrl } from "@/lib/api";
 import { useTranslation } from "@/lib/i18n/i18n-context";
 import { BordImparfait } from "./bord-imparfait";
+import { rangerParFamille } from "@/lib/competences/outillage";
 
 interface SkillsSectionProps {
   skills: SkillDto[];
+  technologies?: TechnologyDto[];
 }
 
 function SkillCard({ skill }: { skill: SkillDto }) {
@@ -55,6 +57,43 @@ function Fleche({ sens }: { sens: "gauche" | "droite" }) {
 }
 
 /**
+ * La boite a outils, sous le carrousel : toutes les technologies, une rangee
+ * par famille, en etiquettes de papier au bord imparfait. Le nom de la
+ * famille est grave a gauche ; sous 640 px il passe au-dessus.
+ */
+function BoiteAOutils({ technologies }: { technologies: TechnologyDto[] }) {
+  const { t } = useTranslation();
+  const tiroirs = rangerParFamille(technologies);
+  if (!tiroirs.length) return null;
+  return (
+    <section className="boite-outils" aria-labelledby="boite-outils-titre">
+      <h3 id="boite-outils-titre" className="boite-outils-titre">{t("competences.outillage")}</h3>
+      <dl className="tiroirs-outils">
+        {tiroirs.map(({ famille, technologies: outils }) => (
+          <div key={famille?.id ?? "autres"} className="tiroir-outils">
+            <dt className="tiroir-nom">{famille?.name ?? t("competences.autres")}</dt>
+            <dd>
+              <ul className="etiquettes-outils">
+                {outils.map((techno) => {
+                  const logo = getFileUrl(techno.logoPath);
+                  return (
+                    <li key={techno.id} className="etiquette-outil cadre-imparfait">
+                      <BordImparfait graine={techno.id} pas={18} amplitude={1} />
+                      {logo && <Image src={logo} alt="" width={16} height={16} className="etiquette-logo" />}
+                      {techno.label}
+                    </li>
+                  );
+                })}
+              </ul>
+            </dd>
+          </div>
+        ))}
+      </dl>
+    </section>
+  );
+}
+
+/**
  * Les competences en carrousel : une piste horizontale de cartes au bord
  * imparfait, qui defile a la souris, au doigt, au clavier (la piste prend le
  * focus) ou par les deux fleches. Chaque carte s'aimante au bord de la piste.
@@ -62,7 +101,7 @@ function Fleche({ sens }: { sens: "gauche" | "droite" }) {
  * Les fleches avancent d'une piste presque entiere ; elles se desactivent aux
  * butees. Le defilement est doux, sauf pour qui demande moins de mouvement.
  */
-export function SkillsSection({ skills }: SkillsSectionProps) {
+export function SkillsSection({ skills, technologies = [] }: SkillsSectionProps) {
   const { t } = useTranslation();
   const piste = useRef<HTMLUListElement>(null);
   const [butees, setButees] = useState({ debut: true, fin: false });
@@ -84,7 +123,7 @@ export function SkillsSection({ skills }: SkillsSectionProps) {
     };
   }, [skills.length]);
 
-  if (!skills.length) return null;
+  if (!skills.length && !technologies.length) return null;
 
   const avancer = (sens: 1 | -1) => {
     const el = piste.current;
@@ -94,6 +133,8 @@ export function SkillsSection({ skills }: SkillsSectionProps) {
   };
 
   return (
+    <>
+    {skills.length > 0 && (
     <div className="carrousel-competences">
       <ul ref={piste} className="piste-competences" tabIndex={0} aria-label={t("competences.carrousel")}>
         {skills.map((skill) => (
@@ -125,5 +166,8 @@ export function SkillsSection({ skills }: SkillsSectionProps) {
         </button>
       </div>
     </div>
+    )}
+    <BoiteAOutils technologies={technologies} />
+    </>
   );
 }

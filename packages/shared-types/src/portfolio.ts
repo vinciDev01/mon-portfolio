@@ -11,6 +11,7 @@ import type { TestimonialDto } from "./testimonial";
 import type { BlogPostDto } from "./blog-post";
 import type { StatsDto } from "./stats";
 import type { CoursPublicDto } from "./cours";
+import type { TechnologyDto } from "./technology";
 
 export interface PortfolioData {
   siteSettings: SiteSettingsDto;
@@ -27,4 +28,6 @@ export interface PortfolioData {
   stats: StatsDto;
   /** Les cours publics, pour l'etagere de la section Cours. */
   cours: CoursPublicDto[];
+  /** Toutes les technologies, avec leur famille : la boite a outils. */
+  technologies: TechnologyDto[];
 }

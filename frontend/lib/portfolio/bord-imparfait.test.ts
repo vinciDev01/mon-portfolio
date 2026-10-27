@@ -2,7 +2,8 @@
 import { afterEach, beforeEach, describe, expect, it } from "vitest";
 import { act, createElement, type ComponentType } from "react";
 import { createRoot, type Root } from "react-dom/client";
-import type { SkillDto } from "@portfolio/shared-types";
+import type { SkillDto, TechnologyDto } from "@portfolio/shared-types";
+import { rangerParFamille } from "@/lib/competences/outillage";
 import { I18nProvider } from "../i18n/i18n-context";
 import { tracerBord } from "@/components/portfolio/bord-imparfait";
 import { SkillsSection } from "@/components/portfolio/skills-section";
@@ -108,5 +109,59 @@ describe("carrousel des competences", () => {
     const b = bloc(/\.piste-competences\s*\{/);
     expect(b).toMatch(/overflow-x:\s*auto/);
     expect(b).toMatch(/scroll-snap-type:\s*x mandatory/);
+  });
+});
+
+describe("boite a outils", () => {
+  let racine: Root;
+  let hote: HTMLElement;
+  beforeEach(() => {
+    hote = document.createElement("div");
+    document.body.appendChild(hote);
+    racine = createRoot(hote);
+  });
+  afterEach(() => {
+    act(() => racine.unmount());
+    hote.remove();
+  });
+
+  const fam = (id: string, sortOrder: number) => ({ id, name: id, sortOrder });
+  const techno = (id: string, famille: ReturnType<typeof fam> | null, sortOrder = 0) =>
+    ({ id, label: id, logoPath: null, sortOrder, showInCv: true, familyId: famille?.id ?? null, family: famille }) as TechnologyDto;
+
+  it("range par famille dans leur ordre, Autres en dernier, sans tiroir vide", () => {
+    const web = fam("Web", 2);
+    const lang = fam("Langages", 1);
+    const tiroirs = rangerParFamille([techno("CSS", web, 1), techno("Git", null), techno("Java", lang), techno("HTML", web, 0)]);
+    expect(tiroirs.map((t) => t.famille?.name ?? "autres")).toEqual(["Langages", "Web", "autres"]);
+    expect(tiroirs[1]!.technologies.map((t) => t.label)).toEqual(["HTML", "CSS"]);
+  });
+
+  it("s affiche sous le carrousel, une etiquette imparfaite par technologie", () => {
+    const web = fam("Web", 1);
+    act(() => {
+      racine.render(
+        createElement(
+          Fournisseur,
+          { defaultLocale: "fr" },
+          createElement(SkillsSection, { skills: [competence(1)], technologies: [techno("HTML", web), techno("Git", null)] }),
+        ),
+      );
+    });
+    const boite = hote.querySelector(".boite-outils")!;
+    expect(boite).not.toBeNull();
+    // Apres le carrousel dans le flux.
+    expect(hote.querySelector(".carrousel-competences")!.compareDocumentPosition(boite) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
+    expect([...boite.querySelectorAll("dt")].map((d) => d.textContent)).toEqual(["Web", "Autres"]);
+    const etiquettes = boite.querySelectorAll(".etiquette-outil");
+    expect(etiquettes).toHaveLength(2);
+    for (const e of etiquettes) expect(e.querySelector(":scope > svg.bord-imparfait")).not.toBeNull();
+  });
+
+  it("aucune boite sans technologie", () => {
+    act(() => {
+      racine.render(createElement(Fournisseur, { defaultLocale: "fr" }, createElement(SkillsSection, { skills: [competence(1)] })));
+    });
+    expect(hote.querySelector(".boite-outils")).toBeNull();
   });
 });

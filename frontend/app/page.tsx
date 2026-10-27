@@ -72,7 +72,7 @@ export default async function Page() {
     ),
     competences: (
       <SectionShell cleTitre="nav.skills" index={rang("competences")}>
-        <SkillsSection skills={data.skills} />
+        <SkillsSection skills={data.skills} technologies={data.technologies ?? []} />
       </SectionShell>
     ),
     experience: (

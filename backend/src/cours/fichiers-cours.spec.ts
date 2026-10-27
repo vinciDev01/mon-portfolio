@@ -1,5 +1,10 @@
 import { PDFDocument } from 'pdf-lib';
-import { compterPages, estUnPdf, nomDeTelechargement, RACINE_COURS } from './fichiers-cours';
+import {
+  compterPages,
+  estUnPdf,
+  nomDeTelechargement,
+  RACINE_COURS,
+} from './fichiers-cours';
 
 describe('les fichiers de cours', () => {
   it('reconnait un PDF a sa signature, pas a son nom', () => {
@@ -21,8 +26,12 @@ describe('les fichiers de cours', () => {
   });
 
   it('nomme le fichier telecharge d apres le titre, en ASCII', () => {
-    expect(nomDeTelechargement('Java, des bases aux objets')).toBe('Java_des_bases_aux_objets.pdf');
-    expect(nomDeTelechargement('Développement Flutter')).toBe('Developpement_Flutter.pdf');
+    expect(nomDeTelechargement('Java, des bases aux objets')).toBe(
+      'Java_des_bases_aux_objets.pdf',
+    );
+    expect(nomDeTelechargement('Développement Flutter')).toBe(
+      'Developpement_Flutter.pdf',
+    );
     expect(nomDeTelechargement('  ')).toBe('cours.pdf');
   });
 

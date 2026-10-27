@@ -4,7 +4,12 @@ import * as path from 'path';
 import { CoursService } from './cours.service';
 import { RACINE_COURS } from './fichiers-cours';
 
-const coursPublic = { id: 'c1', titre: 'Java, des bases aux objets', fichier: 'a.pdf', publique: true };
+const coursPublic = {
+  id: 'c1',
+  titre: 'Java, des bases aux objets',
+  fichier: 'a.pdf',
+  publique: true,
+};
 
 function service(cours: object | null) {
   const prisma = {
@@ -23,13 +28,17 @@ function reponse() {
 describe('le telechargement d un cours', () => {
   it('refuse un cours masque, sans compter', async () => {
     const { s, prisma } = service({ ...coursPublic, publique: false });
-    await expect(s.telecharger('c1', reponse() as never)).rejects.toThrow(NotFoundException);
+    await expect(s.telecharger('c1', reponse() as never)).rejects.toThrow(
+      NotFoundException,
+    );
     expect(prisma.cours.update).not.toHaveBeenCalled();
   });
 
   it('refuse un cours inconnu', async () => {
     const { s, prisma } = service(null);
-    await expect(s.telecharger('x', reponse() as never)).rejects.toThrow(NotFoundException);
+    await expect(s.telecharger('x', reponse() as never)).rejects.toThrow(
+      NotFoundException,
+    );
     expect(prisma.cours.update).not.toHaveBeenCalled();
   });
 
@@ -43,9 +52,10 @@ describe('le telechargement d un cours', () => {
     });
     expect(res.set).toHaveBeenCalledWith({
       'Content-Type': 'application/pdf',
-      'Content-Disposition': 'attachment; filename="Java_des_bases_aux_objets.pdf"',
+      'Content-Disposition':
+        'attachment; filename="Java_des_bases_aux_objets.pdf"',
     });
-    const chemin = res.sendFile.mock.calls[0][0] as string;
+    const chemin = (res.sendFile.mock.calls as string[][])[0][0];
     expect(chemin).toBe(path.join(RACINE_COURS, 'a.pdf'));
     expect(chemin).not.toContain('uploads');
   });
@@ -54,7 +64,9 @@ describe('le telechargement d un cours', () => {
 describe('l envoi d un fichier de cours', () => {
   it('refuse ce qui n est pas un PDF, quel que soit son nom', async () => {
     const { s } = service(null);
-    await expect(s.enregistrerFichier(Buffer.from('<html>'))).rejects.toThrow(BadRequestException);
+    await expect(s.enregistrerFichier(Buffer.from('<html>'))).rejects.toThrow(
+      BadRequestException,
+    );
   });
 
   it('range le PDF dans le dossier prive, rend nom, taille et pages, et sait l effacer', async () => {
@@ -73,6 +85,8 @@ describe('l envoi d un fichier de cours', () => {
     const { s } = service(null);
     // `path.basename` ramene tout nom dans le dossier : rien ne sort.
     expect(() => s.supprimerFichier('../package.json')).not.toThrow();
-    expect(fs.existsSync(path.resolve(process.cwd(), 'package.json'))).toBe(true);
+    expect(fs.existsSync(path.resolve(process.cwd(), 'package.json'))).toBe(
+      true,
+    );
   });
 });

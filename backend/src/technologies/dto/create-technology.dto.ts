@@ -14,7 +14,8 @@ export class CreateTechnologyDto {
 
   @ApiPropertyOptional({
     default: true,
-    description: 'Faux : la technologie reste au portfolio mais ne sort pas dans le CV',
+    description:
+      'Faux : la technologie reste au portfolio mais ne sort pas dans le CV',
   })
   @IsOptional()
   @IsBoolean()

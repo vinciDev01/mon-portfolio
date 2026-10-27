@@ -1,18 +1,78 @@
-import { BadRequestException, Injectable, NotFoundException } from '@nestjs/common';
+import {
+  BadRequestException,
+  Injectable,
+  NotFoundException,
+} from '@nestjs/common';
 import * as crypto from 'crypto';
 import * as fs from 'fs';
 import * as path from 'path';
 import type { Response } from 'express';
 import { PrismaService } from '../prisma/prisma.service';
-import { compterPages, estUnPdf, nomDeTelechargement, RACINE_COURS } from './fichiers-cours';
+import {
+  compterPages,
+  estUnPdf,
+  nomDeTelechargement,
+  RACINE_COURS,
+} from './fichiers-cours';
+import { CreateCoursDto } from './dto/create-cours.dto';
+import { UpdateCoursDto } from './dto/update-cours.dto';
+
+/** Chaque cours porte sa technologie et la famille de celle-ci, qui decide
+ *  de sa planche. */
+const avecTechnologie = { technology: { include: { family: true } } } as const;
 
 /** Ce que rend l'envoi d'un PDF : son nom dans le dossier prive, sa taille
  *  et ses pages, que le formulaire du cours reprend. */
-export type FichierCours = { fichier: string; taille: number; pages: number | null };
+export type FichierCours = {
+  fichier: string;
+  taille: number;
+  pages: number | null;
+};
 
 @Injectable()
 export class CoursService {
   constructor(private readonly prisma: PrismaService) {}
+
+  findAll() {
+    return this.prisma.cours.findMany({
+      include: avecTechnologie,
+      orderBy: [{ sortOrder: 'asc' }, { titre: 'asc' }],
+    });
+  }
+
+  async findOne(id: string) {
+    const cours = await this.prisma.cours.findUnique({
+      where: { id },
+      include: avecTechnologie,
+    });
+    if (!cours) throw new NotFoundException(`Cours #${id} introuvable`);
+    return cours;
+  }
+
+  create(dto: CreateCoursDto) {
+    return this.prisma.cours.create({ data: dto, include: avecTechnologie });
+  }
+
+  /** Remplacer le PDF efface l'ancien du disque, une fois le nouveau
+   *  enregistre : un echec de l'enregistrement ne perd pas le fichier. */
+  async update(id: string, dto: UpdateCoursDto) {
+    const avant = await this.findOne(id);
+    const apres = await this.prisma.cours.update({
+      where: { id },
+      data: dto,
+      include: avecTechnologie,
+    });
+    if (dto.fichier && dto.fichier !== avant.fichier)
+      this.supprimerFichier(avant.fichier);
+    return apres;
+  }
+
+  async remove(id: string) {
+    const cours = await this.findOne(id);
+    await this.prisma.cours.delete({ where: { id } });
+    this.supprimerFichier(cours.fichier);
+    return cours;
+  }
 
   /**
    * Le telechargement public. Un cours masque ou inconnu repond 404, comme
@@ -21,7 +81,8 @@ export class CoursService {
    */
   async telecharger(id: string, res: Response): Promise<void> {
     const cours = await this.prisma.cours.findUnique({ where: { id } });
-    if (!cours || !cours.publique) throw new NotFoundException('Cours introuvable');
+    if (!cours || !cours.publique)
+      throw new NotFoundException('Cours introuvable');
     await this.prisma.cours.update({
       where: { id },
       data: { telechargements: { increment: 1 } },
@@ -36,11 +97,16 @@ export class CoursService {
   /** Range un PDF dans le dossier prive. Refuse ce qui n'en est pas un, a sa
    *  signature et non a son nom. */
   async enregistrerFichier(contenu: Buffer): Promise<FichierCours> {
-    if (!estUnPdf(contenu)) throw new BadRequestException('Seuls les PDF sont acceptes');
+    if (!estUnPdf(contenu))
+      throw new BadRequestException('Seuls les PDF sont acceptes');
     fs.mkdirSync(RACINE_COURS, { recursive: true });
     const fichier = `${crypto.randomUUID()}.pdf`;
     fs.writeFileSync(path.join(RACINE_COURS, fichier), contenu);
-    return { fichier, taille: contenu.length, pages: await compterPages(contenu) };
+    return {
+      fichier,
+      taille: contenu.length,
+      pages: await compterPages(contenu),
+    };
   }
 
   /** Efface un PDF du dossier prive. Un nom qui sortirait du dossier, ou un

@@ -1,4 +1,9 @@
-import { Injectable, NotFoundException } from '@nestjs/common';
+import {
+  ConflictException,
+  Injectable,
+  NotFoundException,
+} from '@nestjs/common';
+import { Prisma } from '@prisma/client';
 import { PrismaService } from '../prisma/prisma.service';
 import { CreateTechnologyDto } from './dto/create-technology.dto';
 import { UpdateTechnologyDto } from './dto/update-technology.dto';
@@ -40,8 +45,22 @@ export class TechnologiesService {
     });
   }
 
+  /** Une technologie qui a des cours ne se supprime pas (cle etrangere en
+   *  `Restrict`) : sans ce message, Prisma tomberait en 500. */
   async remove(id: string) {
     await this.findOne(id);
-    return this.prisma.technology.delete({ where: { id } });
+    return this.prisma.technology
+      .delete({ where: { id } })
+      .catch((e: unknown) => {
+        if (
+          e instanceof Prisma.PrismaClientKnownRequestError &&
+          e.code === 'P2003'
+        ) {
+          throw new ConflictException(
+            'Des cours utilisent cette technologie : deplacez-les ou supprimez-les d abord',
+          );
+        }
+        throw e;
+      });
   }
 }

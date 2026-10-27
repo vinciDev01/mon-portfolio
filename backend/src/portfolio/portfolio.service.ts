@@ -22,6 +22,7 @@ export class PortfolioService {
       certificationCount,
       technologyCount,
       experienceCount,
+      rawCours,
     ] = await Promise.all([
       this.prisma.siteSettings.findFirst(),
       this.prisma.personalInfo.findFirst(),
@@ -59,7 +60,28 @@ export class PortfolioService {
       this.prisma.certification.count(),
       this.prisma.technology.count(),
       this.prisma.experience.count(),
+      // Les seuls cours publics : un cours masque n'atteint jamais le site.
+      this.prisma.cours.findMany({
+        where: { publique: true },
+        include: { technology: { include: { family: true } } },
+        orderBy: [{ sortOrder: 'asc' }, { titre: 'asc' }],
+      }),
     ]);
+
+    // Ni le fichier, ni le compteur, ni la visibilite ne sortent : le site
+    // telecharge par la route publique, qui verifie et compte elle-meme.
+    const cours = rawCours.map((c: (typeof rawCours)[number]) => ({
+      id: c.id,
+      titre: c.titre,
+      titreCourt: c.titreCourt,
+      description: c.description,
+      niveau: c.niveau,
+      pages: c.pages,
+      taille: c.taille,
+      updatedAt: c.updatedAt,
+      sortOrder: c.sortOrder,
+      technology: c.technology,
+    }));
 
     const projects = rawProjects.map(
       (project: (typeof rawProjects)[number]) => ({
@@ -96,6 +118,7 @@ export class PortfolioService {
       testimonials,
       blogPosts,
       stats,
+      cours,
     };
   }
 }

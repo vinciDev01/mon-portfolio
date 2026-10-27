@@ -77,7 +77,9 @@ describe('themeParDefaut', () => {
   });
 
   it('refuse une strategie inconnue', async () => {
-    expect(await erreursSur('themeParDefaut', 'auto-nuit')).toContain('themeParDefaut');
+    expect(await erreursSur('themeParDefaut', 'auto-nuit')).toContain(
+      'themeParDefaut',
+    );
   });
 
   it('refuse une valeur vide', async () => {
@@ -87,23 +89,31 @@ describe('themeParDefaut', () => {
 
 describe('cvJobTitle', () => {
   it('accepte un titre, vide compris (il efface la ligne)', async () => {
-    expect(await erreursSur('cvJobTitle', 'Developpeur Java Spring Boot')).toEqual([]);
+    expect(
+      await erreursSur('cvJobTitle', 'Developpeur Java Spring Boot'),
+    ).toEqual([]);
     expect(await erreursSur('cvJobTitle', '')).toEqual([]);
   });
 
   it('refuse plus de 120 caracteres', async () => {
-    expect(await erreursSur('cvJobTitle', 'x'.repeat(121))).toContain('cvJobTitle');
+    expect(await erreursSur('cvJobTitle', 'x'.repeat(121))).toContain(
+      'cvJobTitle',
+    );
   });
 });
 
 describe('cvBaseMasquees', () => {
   it('accepte les cles des sections de la base, et la liste vide', async () => {
-    expect(await erreursSur('cvBaseMasquees', ['technologies', 'projets'])).toEqual([]);
+    expect(
+      await erreursSur('cvBaseMasquees', ['technologies', 'projets']),
+    ).toEqual([]);
     expect(await erreursSur('cvBaseMasquees', [])).toEqual([]);
   });
 
   it('refuse une cle inconnue', async () => {
-    expect(await erreursSur('cvBaseMasquees', ['loisirs'])).toContain('cvBaseMasquees');
+    expect(await erreursSur('cvBaseMasquees', ['loisirs'])).toContain(
+      'cvBaseMasquees',
+    );
   });
 });
 

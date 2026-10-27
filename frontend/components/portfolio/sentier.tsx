@@ -105,6 +105,10 @@ export function Sentier({ graine, enCours = false }: { graine: string; enCours?:
   return (
     <svg ref={svg} className="sentier" viewBox={`0 0 ${taille.l} ${taille.h}`} aria-hidden="true" focusable="false">
       <path className="sentier-chemin" d={tracerSentier(taille.l, taille.h, taille.etape, graine)} />
+      {/* L'experience en cours : un feu qui eclate deux fois puis se tait,
+          comme le feu anticollision d'un avion. Un halo autour de la pierre,
+          la pierre elle-meme s'allume en meme temps. */}
+      {enCours && <circle className="sentier-balise" cx={taille.l / 2} cy={taille.etape} r={9} />}
       <path
         className="sentier-pierre"
         data-en-cours={enCours ? "true" : undefined}

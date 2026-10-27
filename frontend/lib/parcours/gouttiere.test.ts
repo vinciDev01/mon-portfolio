@@ -91,9 +91,9 @@ describe("la gouttiere du parcours", () => {
 
 describe("les elements hors de SectionShell", () => {
   it("la page a bien des enfants directs a examiner", () => {
-    // Le conteneur et le toast configurable : sans eux la boucle suivante
-    // n'examinerait rien.
-    expect(enfants.length).toBeGreaterThanOrEqual(2);
+    // Le conteneur, au moins : sans lui la boucle suivante n'examinerait rien.
+    // (Le toast de bienvenue, second enfant, a ete depose.)
+    expect(enfants.length).toBeGreaterThanOrEqual(1);
   });
 
   it("chaque enfant direct de <main> est une SectionShell, porte la gouttiere, ou est fixe", () => {
@@ -119,14 +119,6 @@ describe("les elements hors de SectionShell", () => {
     expect(racine, "balise footer introuvable").not.toBeNull();
     expect(racine![1]).toContain(GOUTTIERE);
     expect(racine![1]).not.toMatch(/(?:^|[\s:])px-/);
-  });
-
-  it("le toast se centre dans l'espace restant, par un retrait et non par un padding", () => {
-    const toast = lire("components/portfolio/toast-notification.tsx");
-    const m = /className="(fixed [^"]*)"/.exec(toast);
-    expect(m, "conteneur fixe introuvable").not.toBeNull();
-    expect(m![1]).toContain("start-[var(--colonne)]");
-    expect(m![1]).not.toContain("inset-x-0");
   });
 
   it("la ligne de disponibilite garde sa marge, et sa gouttiere vient de la coquille", () => {

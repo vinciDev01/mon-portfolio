@@ -157,27 +157,6 @@ export default function SiteSettingsPage() {
           <p className="text-xs text-muted-foreground mt-1">Langue affichée par défaut pour les visiteurs</p>
         </div>
 
-        <div>
-          <label className="block text-sm font-medium mb-1">Message Toast</label>
-          <input
-            type="text"
-            value={data.toastMessage || ""}
-            onChange={(e) => setData({ ...data, toastMessage: e.target.value })}
-            className="w-full px-3 py-2 border border-border rounded-md text-sm"
-          />
-        </div>
-
-        <div>
-          <label className="block text-sm font-medium mb-1">Délai du toast (minutes)</label>
-          <input
-            type="number"
-            value={Math.round(data.toastDelayMs / 60000)}
-            onChange={(e) => setData({ ...data, toastDelayMs: Number(e.target.value) * 60000 })}
-            className="w-full px-3 py-2 border border-border rounded-md text-sm"
-            min={1}
-          />
-          <p className="text-xs text-muted-foreground mt-1">Minimum 1 minute</p>
-        </div>
 
         <ZoneDepot
           label="CV (PDF)"

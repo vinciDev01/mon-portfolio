@@ -15,7 +15,6 @@ import { CoursSection } from "@/components/portfolio/cours-section";
 import { JournalProjets } from "@/components/parcours/journal-projets";
 import { AboutSection } from "@/components/portfolio/about-section";
 import { ContactSection } from "@/components/portfolio/contact-section";
-import { ToastNotification } from "@/components/portfolio/toast-notification";
 import { LigneDisponibilite } from "@/components/parcours/drapeau-disponibilite";
 import { MaintenancePage } from "@/components/portfolio/maintenance-page";
 import { StatsSection } from "@/components/portfolio/stats-section";
@@ -72,7 +71,7 @@ export default async function Page() {
     ),
     competences: (
       <SectionShell cleTitre="nav.skills" index={rang("competences")}>
-        <SkillsSection skills={data.skills} technologies={data.technologies ?? []} />
+        <SkillsSection skills={data.skills} />
       </SectionShell>
     ),
     experience: (
@@ -131,7 +130,6 @@ export default async function Page() {
           enfants={enfants}
           pied={<Footer personalInfo={data.personalInfo} />}
         />
-        <ToastNotification message={s.toastMessage} delayMs={s.toastDelayMs} />
       </main>
     </FournisseurSectionActive>
   );

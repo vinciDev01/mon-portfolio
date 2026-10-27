@@ -263,9 +263,9 @@ describe("budget de mouvement (spec section 4)", () => {
     expect(corps[0]).not.toMatch(/translate|scale|transform/);
   });
 
-  it("le composant du toast configurable ne glisse plus", () => {
-    const src = lire("components/portfolio/toast-notification.tsx");
-    expect(src).not.toMatch(/slide-in|translate-/);
+  it("le toast de bienvenue a ete depose", () => {
+    expect(() => lire("components/portfolio/toast-notification.tsx")).toThrow();
+    expect(lire("app/page.tsx")).not.toContain("ToastNotification");
   });
 });
 

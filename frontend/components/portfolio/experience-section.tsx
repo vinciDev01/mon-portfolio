@@ -3,6 +3,7 @@
 import type { ExperienceDto, ProjectDto } from "@portfolio/shared-types";
 import { SeeMoreList } from "./see-more-button";
 import { Sentier } from "./sentier";
+import { BordImparfait } from "./bord-imparfait";
 import { useTranslation } from "@/lib/i18n/i18n-context";
 import { projetsParExperience } from "@/lib/portfolio/experience-projets";
 
@@ -56,7 +57,11 @@ function ExperienceCard({
         <Sentier graine={experience.id} enCours={experience.isCurrent} />
       </div>
 
-      <div className="animated-card bg-card rounded-xl p-6 transition-colors">
+      {/* Le cadre : une feuille au bord imparfait, posee sur une autre un peu
+          decalee, comme une pile de fiches. */}
+      <div className="experience-carte cadre-imparfait">
+        <BordImparfait graine={`${experience.id}:dessous`} className="feuille-dessous" />
+        <BordImparfait graine={experience.id} />
         <div className="mb-3">
           <h3 className="font-semibold text-base">{experience.role}</h3>
           <p className="text-sm text-muted-foreground font-medium mt-0.5">{experience.company}</p>

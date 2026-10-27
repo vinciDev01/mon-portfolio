@@ -71,12 +71,16 @@ export function BordImparfait({
   amplitude,
   pas,
   etire = false,
+  className,
 }: {
   graine: string;
   amplitude?: number;
   pas?: number;
   etire?: boolean;
+  /** Classe ajoutee au SVG, par exemple pour une feuille posee dessous. */
+  className?: string;
 }) {
+  const classes = className ? `bord-imparfait ${className}` : "bord-imparfait";
   const svg = useRef<SVGSVGElement>(null);
   const [taille, setTaille] = useState<{ l: number; h: number } | null>(null);
 
@@ -96,7 +100,7 @@ export function BordImparfait({
 
   if (etire) {
     return (
-      <svg className="bord-imparfait" viewBox="0 0 100 100" preserveAspectRatio="none" aria-hidden="true" focusable="false">
+      <svg className={classes} viewBox="0 0 100 100" preserveAspectRatio="none" aria-hidden="true" focusable="false">
         <path d={tracerBord(100, 100, graine, 2.5, 25)} />
       </svg>
     );
@@ -105,7 +109,7 @@ export function BordImparfait({
   return (
     <svg
       ref={svg}
-      className="bord-imparfait"
+      className={classes}
       viewBox={taille ? `0 0 ${taille.l} ${taille.h}` : "0 0 100 100"}
       preserveAspectRatio="none"
       aria-hidden="true"

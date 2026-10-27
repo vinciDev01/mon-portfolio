@@ -87,7 +87,7 @@ describe("la date d une experience, a gauche de son cadre", () => {
   it("sort la date du cadre et la place avant lui", () => {
     const html = rendreUne({ startDate: "2025-07-01T00:00:00.000Z", endDate: "2026-02-01T00:00:00.000Z", isCurrent: false });
     const dates = html.indexOf('class="experience-dates"');
-    const cadre = html.indexOf("animated-card");
+    const cadre = html.indexOf("experience-carte");
     expect(dates, "colonne des dates introuvable").toBeGreaterThan(-1);
     expect(dates).toBeLessThan(cadre);
     // Aucune date dans le cadre lui-meme.
@@ -103,7 +103,7 @@ describe("la date d une experience, a gauche de son cadre", () => {
 
   it("en cours : la fin dit aujourd hui, et le badge suit la date", () => {
     const html = rendreUne({ startDate: "2026-03-01T00:00:00.000Z", endDate: null, isCurrent: true });
-    const dates = html.slice(html.indexOf('class="experience-dates"'), html.indexOf("animated-card"));
+    const dates = html.slice(html.indexOf('class="experience-dates"'), html.indexOf("experience-carte"));
     expect(dates).toContain("aujourd");
     expect(dates).toContain("En cours");
   });

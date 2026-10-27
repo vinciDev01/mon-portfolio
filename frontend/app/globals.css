@@ -2865,6 +2865,52 @@ html {
     margin-block-end: var(--espace-1);
   }
 
+  /* La pagination de la suite : des etiquettes au bord use, centrees sous
+     les colonnes. La page courante est pleine, couleur du texte. */
+  .journal-pagination {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+    gap: 8px;
+    margin-block-start: var(--espace-4);
+  }
+
+  .journal-ancre {
+    scroll-margin-block-start: var(--espace-3);
+  }
+
+  .pagination-bouton {
+    --bord-fond: var(--surface);
+    display: grid;
+    place-items: center;
+    min-width: 40px;
+    min-height: 40px;
+    padding: 0 10px;
+    color: var(--texte);
+    font-family: var(--font-mono);
+    font-size: 0.9375rem;
+    cursor: pointer;
+  }
+
+  .pagination-bouton[aria-current="page"] {
+    --bord-fond: var(--texte);
+    --bord-trait: var(--texte);
+    color: var(--fond);
+    font-weight: 700;
+    cursor: default;
+  }
+
+  .pagination-bouton:disabled {
+    --bord-trait: var(--bordure);
+    color: var(--texte-secondaire);
+    cursor: default;
+  }
+
+  .pagination-bouton:focus-visible {
+    outline: 2px solid var(--accent);
+    outline-offset: 3px;
+  }
+
   .journal-colonnes {
     border-block-start: 1px solid var(--bordure);
     padding-block-start: var(--espace-3);

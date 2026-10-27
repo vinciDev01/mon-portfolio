@@ -78,3 +78,18 @@ export function dispositionJournal(projets: ProjectDto[]): Disposition {
   const ordonnes = [...projets].sort((a, b) => a.sortOrder - b.sortOrder);
   return { tete: ordonnes[0], suite: ordonnes.slice(1) };
 }
+
+/** Projets par page, sous le projet de tete : trois rangees de deux colonnes. */
+export const PROJETS_PAR_PAGE = 6;
+
+/** Une page de la suite : ses projets, son numero (ramene dans les bornes) et
+ *  le nombre de pages. Une suite courte tient sur une seule page. */
+export function pageDeSuite<T>(
+  suite: T[],
+  page: number,
+  parPage = PROJETS_PAR_PAGE,
+): { elements: T[]; page: number; pages: number } {
+  const pages = Math.max(1, Math.ceil(suite.length / parPage));
+  const juste = Math.min(Math.max(1, Math.floor(page) || 1), pages);
+  return { elements: suite.slice((juste - 1) * parPage, juste * parPage), page: juste, pages };
+}

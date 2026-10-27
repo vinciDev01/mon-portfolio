@@ -33,6 +33,11 @@
   "projects.technologies": "Technologies",
   "projects.collaborators": "Collaborateurs",
   "projects.collaboratorLinkedin": "Profil LinkedIn de {nom}",
+  "projects.pagination": "Pages des projets",
+  "projects.precedente": "Page précédente",
+  "projects.suivante": "Page suivante",
+  "projects.allerPage": "Page {n}",
+  "projects.page": "Page {n} sur {total}",
   "projects.viewDemo": "Voir la démo",
   "projects.viewProject": "Voir le projet en ligne",
 

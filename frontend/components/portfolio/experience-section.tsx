@@ -61,7 +61,7 @@ function ExperienceCard({
           decalee, comme une pile de fiches. */}
       <div className="experience-carte cadre-imparfait">
         <BordImparfait graine={`${experience.id}:dessous`} className="feuille-dessous" />
-        <BordImparfait graine={experience.id} />
+        <BordImparfait graine={experience.id} anime={experience.isCurrent} />
         <div className="mb-3">
           <h3 className="font-semibold text-base">{experience.role}</h3>
           <p className="text-sm text-muted-foreground font-medium mt-0.5">{experience.company}</p>

@@ -57,4 +57,13 @@ describe("sentier des experiences", () => {
     expect(cssNu).not.toMatch(/\.experience-ligne:last-child/);
     expect(cssNu).toMatch(/\.liste-experiences > :last-child > \.experience-ligne\s*\{[^}]*--ecart-experiences:\s*0px/);
   });
+
+  it("le bord de l experience en cours s anime, s arrete au survol, et reste fixe pour moins de mouvement", () => {
+    const trace = bloc(/\.bord-imparfait path\.bord-trace\s*\{/);
+    expect(trace).toMatch(/animation:\s*tracer-bord[^;]*infinite/);
+    expect(trace).toMatch(/fill:\s*none/);
+    expect(bloc(/@keyframes tracer-bord\s*\{/)).toMatch(/stroke-dashoffset:\s*-100/);
+    expect(bloc(/\.cadre-imparfait:hover \.bord-trace\s*\{/)).toMatch(/animation-play-state:\s*paused/);
+    expect(bloc(/@media \(prefers-reduced-motion: reduce\)\s*\{(?=\s*\.bord-imparfait path\.bord-trace)/)).toMatch(/animation:\s*none/);
+  });
 });

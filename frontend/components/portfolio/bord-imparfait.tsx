@@ -72,6 +72,7 @@ export function BordImparfait({
   pas,
   etire = false,
   className,
+  anime = false,
 }: {
   graine: string;
   amplitude?: number;
@@ -79,6 +80,8 @@ export function BordImparfait({
   etire?: boolean;
   /** Classe ajoutee au SVG, par exemple pour une feuille posee dessous. */
   className?: string;
+  /** Une lueur fait le tour du bord, sur le meme trace (voir `.bord-trace`). */
+  anime?: boolean;
 }) {
   const classes = className ? `bord-imparfait ${className}` : "bord-imparfait";
   const svg = useRef<SVGSVGElement>(null);
@@ -116,6 +119,15 @@ export function BordImparfait({
       focusable="false"
     >
       <path d={taille ? tracerBord(taille.l, taille.h, graine, amplitude, pas) : REPLI} />
+      {/* `pathLength` ramene le tour a 100 : la lueur et sa course se
+          reglent en pourcentage du bord, quelle que soit sa taille. */}
+      {anime && (
+        <path
+          className="bord-trace"
+          pathLength={100}
+          d={taille ? tracerBord(taille.l, taille.h, graine, amplitude, pas) : REPLI}
+        />
+      )}
     </svg>
   );
 }

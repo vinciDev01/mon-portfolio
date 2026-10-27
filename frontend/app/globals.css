@@ -1417,6 +1417,36 @@ html {
     padding: var(--espace-3);
   }
 
+  /* L'experience en cours : une lueur couleur accent fait lentement le tour
+     de son bord, sur le meme trace imparfait, comme une plume qui le
+     repasse. Elle s'arrete au survol ; pour qui demande moins de mouvement,
+     le bord est simplement accentue, fixe. */
+  .bord-imparfait path.bord-trace {
+    fill: none;
+    stroke: var(--accent);
+    stroke-width: 2;
+    stroke-linecap: round;
+    stroke-dasharray: 18 82;
+    animation: tracer-bord 14s linear infinite;
+  }
+
+  .cadre-imparfait:hover .bord-trace {
+    animation-play-state: paused;
+  }
+
+  @keyframes tracer-bord {
+    to {
+      stroke-dashoffset: -100;
+    }
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .bord-imparfait path.bord-trace {
+      animation: none;
+      stroke-dasharray: none;
+    }
+  }
+
   .bord-imparfait.feuille-dessous {
     z-index: -2;
     translate: 5px 5px;
@@ -2270,13 +2300,22 @@ html {
     font-size: 0.875rem;
   }
 
-  /* La fenetre de la bande : ce qui deborde est coupe net, sans fondu (le
-     site ne porte aucun degrade). Le padding laisse aux etiquettes de
-     travers la place de pencher. */
+  /* La fenetre de la bande, a la largeur de la section. Ses deux bouts
+     s'estompent : une etiquette parait et s'efface doucement, sans bord net
+     qui dirait ou la bande s'arrete. C'est un masque d'opacite, pas un
+     degrade de couleur : il ne simule aucun volume. */
   .defilement-outils {
     margin: 0;
     padding-block: 4px;
     overflow: hidden;
+    mask-image: linear-gradient(
+      to right,
+      transparent,
+      #000 var(--estompe),
+      #000 calc(100% - var(--estompe)),
+      transparent
+    );
+    --estompe: 72px;
   }
 
   /* Deux copies bout a bout : quand la bande a recule d'une copie, elle est
@@ -2335,9 +2374,9 @@ html {
     flex: none;
     align-items: center;
     gap: 6px;
-    min-height: 28px;
-    padding: 4px 10px;
-    font-size: 0.8125rem;
+    min-height: 32px;
+    padding: 6px 12px;
+    font-size: 0.875rem;
     line-height: 1.2;
     white-space: nowrap;
   }
@@ -2351,9 +2390,26 @@ html {
   }
 
   .etiquette-logo {
-    width: 16px;
-    height: 16px;
+    flex: none;
+    width: 18px;
+    height: 18px;
     object-fit: contain;
+  }
+
+  svg.etiquette-logo path {
+    fill: currentColor;
+  }
+
+  /* Sans logo connu : l'initiale, dans un petit carre trace a la main. */
+  .etiquette-initiale {
+    display: grid;
+    place-items: center;
+    border: 1px solid var(--texte-secondaire);
+    border-radius: 3px 5px 4px 6px;
+    font-size: 0.6875rem;
+    font-weight: 700;
+    line-height: 1;
+    color: var(--texte-secondaire);
   }
 
   /* Le niveau en trois pierres : pleines jusqu'au niveau, creuses ensuite. */
@@ -3164,6 +3220,11 @@ html {
   .etiquette-niveau[data-niveau="2"] > span:nth-child(-n + 2),
   .etiquette-niveau[data-niveau="3"] > span:nth-child(-n + 3) {
     background: CanvasText;
+  }
+
+  .bord-imparfait path.bord-trace {
+    fill: none;
+    stroke: Highlight;
   }
 
   /* Le sentier : `fill` et `stroke` ne sont pas forces non plus. */

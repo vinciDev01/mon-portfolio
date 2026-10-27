@@ -108,6 +108,13 @@ describe("la date d une experience, a gauche de son cadre", () => {
     expect(dates).toContain("En cours");
   });
 
+  it("seule l experience en cours porte la lueur qui fait le tour du bord", () => {
+    expect(rendreUne({ startDate: "2026-03-01T00:00:00.000Z", endDate: null, isCurrent: true })).toContain("bord-trace");
+    expect(
+      rendreUne({ startDate: "2025-07-01T00:00:00.000Z", endDate: "2026-02-01T00:00:00.000Z", isCurrent: false }),
+    ).not.toContain("bord-trace");
+  });
+
   it("n imprime aucun tiret cadratin", () => {
     const html = rendreUne({ startDate: "2025-07-01T00:00:00.000Z", endDate: "2026-02-01T00:00:00.000Z" });
     expect(html).not.toContain("\u2014");

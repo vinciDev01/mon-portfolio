@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
-import { AMPLITUDE_SENTIER, tracerPierre, tracerSentier } from "@/components/portfolio/sentier";
-import { bloc, cssNu } from "../parcours/feuille-test";
+import { AMPLITUDE_SENTIER, SILHOUETTE_AVION, tracerPierre, tracerSentier } from "@/components/portfolio/sentier";
+import { bloc, cssNu, valeur } from "../parcours/feuille-test";
 
 const points = (d: string) => [...d.matchAll(/(-?[\d.]+) (-?[\d.]+)/g)].map((m) => [Number(m[1]), Number(m[2])] as const);
 
@@ -68,11 +68,17 @@ describe("sentier des experiences", () => {
     expect(bloc(/@media \(prefers-reduced-motion: reduce\)\s*\{(?=\s*\.bord-imparfait path\.bord-trace)/)).toMatch(/animation:\s*none/);
   });
 
-  it("la pierre de l experience en cours eclate comme un feu d avion, sous trois eclats par seconde", () => {
-    expect(bloc(/\.sentier-balise\s*\{/)).toMatch(/animation:\s*feu-balise 1\.8s[^;]*infinite/);
-    const feu = bloc(/@keyframes feu-balise\s*\{/);
+  it("l avion de l experience en cours : feux fixes rouge et vert, eclats blancs sous trois par seconde", () => {
+    expect(valeur(bloc(/\.avion-feu-gauche\s*\{/), "fill")).toBe("#e0584b");
+    expect(valeur(bloc(/\.avion-feu-droit\s*\{/), "fill")).toBe("#5cc46a");
+    expect(bloc(/\.avion-eclat\s*\{/)).toMatch(/animation:\s*eclat-avion 1\.8s[^;]*infinite/);
     // Deux eclats par cycle de 1,8 s.
-    expect(feu.match(/opacity:\s*0\.55/g)).toHaveLength(2);
-    expect(bloc(/@media \(prefers-reduced-motion: reduce\)\s*\{(?=\s*\.sentier-pierre)/)).toMatch(/animation:\s*none/);
+    expect(bloc(/@keyframes eclat-avion\s*\{/).match(/opacity:\s*0\.95/g)).toHaveLength(2);
+    expect(bloc(/@media \(prefers-reduced-motion: reduce\)\s*\{(?=\s*\.avion-eclat)/)).toMatch(/animation:\s*none/);
+  });
+
+  it("la silhouette de l avion tient dans la colonne de 24 px", () => {
+    const xs = [...SILHOUETTE_AVION.matchAll(/(-?[\d.]+) (-?[\d.]+)/g)].map((m) => Math.abs(Number(m[1])));
+    expect(Math.max(...xs)).toBeLessThanOrEqual(11);
   });
 });

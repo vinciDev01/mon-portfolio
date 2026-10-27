@@ -70,6 +70,31 @@ export function tracerPierre(cx: number, cy: number, graine: string): string {
   return "M " + points.join(" L ") + " Z";
 }
 
+/** L'avion vu de dessus, nez vers le haut, centre sur l'origine : 20 x 21
+ *  unites, pour tenir dans la colonne de 24 px du sentier. */
+export const SILHOUETTE_AVION =
+  "M 0 -10 C 1.2 -10 1.6 -8 1.6 -6 L 1.6 -2 L 10 3 L 10 5 L 1.6 2.5 L 1.4 7 L 4 9 L 4 10.5 " +
+  "L 0 9.5 L -4 10.5 L -4 9 L -1.4 7 L -1.6 2.5 L -10 5 L -10 3 L -1.6 -2 L -1.6 -6 C -1.6 -8 -1.2 -10 0 -10 Z";
+
+/**
+ * L'experience en cours : un petit avion qui remonte le sentier vers la
+ * suite, feux allumes comme un vrai. Feux de navigation fixes, rouge a
+ * gauche et vert a droite ; eclats blancs aux bouts d'aile, deux puis un
+ * silence ; balise rouge sur le fuselage, qui clignote en decale.
+ */
+function Avion({ x, y }: { x: number; y: number }) {
+  return (
+    <g className="sentier-avion" transform={`translate(${x} ${y})`}>
+      <path className="avion-corps" d={SILHOUETTE_AVION} />
+      <circle className="avion-feu avion-feu-gauche" cx={-9.6} cy={4} r={1.3} />
+      <circle className="avion-feu avion-feu-droit" cx={9.6} cy={4} r={1.3} />
+      <circle className="avion-eclat" cx={-9.6} cy={4} r={2.6} />
+      <circle className="avion-eclat" cx={9.6} cy={4} r={2.6} />
+      <circle className="avion-balise" cx={0} cy={0.5} r={1.4} />
+    </g>
+  );
+}
+
 /**
  * La hauteur de l'etape vient de la feuille (`--sentier-etape`), qui la cale
  * sur la premiere date selon le palier : relue a chaque mesure.
@@ -105,15 +130,11 @@ export function Sentier({ graine, enCours = false }: { graine: string; enCours?:
   return (
     <svg ref={svg} className="sentier" viewBox={`0 0 ${taille.l} ${taille.h}`} aria-hidden="true" focusable="false">
       <path className="sentier-chemin" d={tracerSentier(taille.l, taille.h, taille.etape, graine)} />
-      {/* L'experience en cours : un feu qui eclate deux fois puis se tait,
-          comme le feu anticollision d'un avion. Un halo autour de la pierre,
-          la pierre elle-meme s'allume en meme temps. */}
-      {enCours && <circle className="sentier-balise" cx={taille.l / 2} cy={taille.etape} r={9} />}
-      <path
-        className="sentier-pierre"
-        data-en-cours={enCours ? "true" : undefined}
-        d={tracerPierre(taille.l / 2, taille.etape, graine)}
-      />
+      {enCours ? (
+        <Avion x={taille.l / 2} y={taille.etape} />
+      ) : (
+        <path className="sentier-pierre" d={tracerPierre(taille.l / 2, taille.etape, graine)} />
+      )}
     </svg>
   );
 }

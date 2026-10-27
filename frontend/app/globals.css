@@ -1520,42 +1520,62 @@ html {
     stroke-linejoin: round;
   }
 
-  .sentier-pierre[data-en-cours="true"] {
-    fill: var(--fond);
-    stroke: var(--texte);
-    stroke-width: 1.5;
-    animation: feu-pierre 1.8s linear infinite;
+  /* L'experience en cours : un avion qui remonte le sentier, feux allumes.
+     Corps couleur du texte, cerne du fond pour se detacher du chemin. */
+  .avion-corps {
+    fill: var(--texte);
+    stroke: var(--fond);
+    stroke-width: 1;
+    stroke-linejoin: round;
   }
 
-  /* Le feu de l'experience en cours, au rythme d'un feu anticollision :
-     deux eclats brefs, puis un long silence. Deux eclats en 0,3 s, rien
-     ensuite : loin des trois eclats par seconde (WCAG 2.3.1), et sur une
-     surface minuscule. */
-  .sentier-balise {
-    fill: var(--accent);
+  /* Feux de navigation, fixes : rouge a gauche, vert a droite. */
+  .avion-feu-gauche {
+    fill: #e0584b;
+  }
+
+  .avion-feu-droit {
+    fill: #5cc46a;
+  }
+
+  /* Eclats blancs des bouts d'aile, au rythme d'un feu anticollision :
+     deux eclats brefs puis un long silence. Deux eclats en 0,3 s, loin des
+     trois par seconde (WCAG 2.3.1), sur une surface minuscule. */
+  .avion-eclat {
+    fill: #fffdf6;
     opacity: 0;
-    animation: feu-balise 1.8s linear infinite;
+    animation: eclat-avion 1.8s linear infinite;
   }
 
-  @keyframes feu-balise {
+  /* La balise rouge du fuselage, en decale des eclats. */
+  .avion-balise {
+    fill: #e0584b;
+    opacity: 0.25;
+    animation: balise-avion 1.8s linear infinite;
+  }
+
+  @keyframes eclat-avion {
     0%, 100% { opacity: 0; }
-    3% { opacity: 0.55; }
+    3% { opacity: 0.95; }
     7% { opacity: 0; }
-    12% { opacity: 0.55; }
+    12% { opacity: 0.95; }
     16% { opacity: 0; }
   }
 
-  @keyframes feu-pierre {
-    0%, 2%, 7%, 11%, 16%, 100% { fill: var(--fond); }
-    3%, 6% { fill: var(--accent); }
-    12%, 15% { fill: var(--accent); }
+  @keyframes balise-avion {
+    0%, 45%, 62%, 100% { opacity: 0.25; }
+    50%, 57% { opacity: 1; }
   }
 
-  /* Moins de mouvement : pas de feu, la pierre creuse suffit. */
+  /* Moins de mouvement : feux fixes, sans eclats. */
   @media (prefers-reduced-motion: reduce) {
-    .sentier-pierre[data-en-cours="true"],
-    .sentier-balise {
+    .avion-eclat {
       animation: none;
+    }
+
+    .avion-balise {
+      animation: none;
+      opacity: 1;
     }
   }
 
@@ -3300,9 +3320,15 @@ html {
     stroke: Canvas;
   }
 
-  .sentier-pierre[data-en-cours="true"] {
-    fill: Canvas;
-    stroke: CanvasText;
+  .avion-corps {
+    fill: CanvasText;
+    stroke: Canvas;
+  }
+
+  .avion-feu,
+  .avion-eclat,
+  .avion-balise {
+    fill: Highlight;
   }
 
   /* Le bord imparfait : `fill` et `stroke` ne sont pas forces. */

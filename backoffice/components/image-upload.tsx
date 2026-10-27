@@ -66,7 +66,8 @@ export function ImageUpload({ currentPath, category, onUpload, label = "Image" }
   }
 
   return (
-    <div>
+    // Un seul parametre pour la recherche des pages, fichier et URL compris.
+    <div data-param="">
       <ZoneDepot
         label={label}
         accept="image/*"

@@ -1,9 +1,10 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { fetchSingleton, updateSingleton, uploadFile } from "@/lib/api";
 import { ImageUpload } from "@/components/image-upload";
 import { ZoneDepot } from "@/components/zone-depot";
+import { filtrerParametres } from "@/lib/recherche-parametres";
 import { toast } from "sonner";
 import type { SiteSettingsDto } from "@portfolio/shared-types";
 import { TelechargementCv } from "@/components/telechargement-cv";
@@ -12,6 +13,17 @@ export default function SiteSettingsPage() {
   const [data, setData] = useState<SiteSettingsDto | null>(null);
   const [loading, setLoading] = useState(true);
   const [envoiCv, setEnvoiCv] = useState(false);
+  const [requete, setRequete] = useState("");
+  const [trouves, setTrouves] = useState<number | null>(null);
+  const formulaire = useRef<HTMLFormElement>(null);
+
+  // Le filtre lit le formulaire rendu : il repasse apres chaque rendu des
+  // donnees, qui peut faire apparaitre un champ, et a chaque frappe.
+  useEffect(() => {
+    if (!formulaire.current) return;
+    const n = filtrerParametres(formulaire.current, requete);
+    setTrouves(requete.trim() ? n : null);
+  }, [requete, data, loading]);
   const [saving, setSaving] = useState(false);
 
   useEffect(() => {
@@ -54,8 +66,44 @@ export default function SiteSettingsPage() {
 
   return (
     <div className="max-w-2xl">
-      <h1 className="text-2xl font-bold mb-8">Paramètres du site</h1>
-      <form onSubmit={handleSubmit} className="space-y-6">
+      <h1 className="text-2xl font-bold mb-6">Paramètres du site</h1>
+      <div className="sticky top-0 z-10 bg-white pt-2 pb-4 mb-2">
+        <label htmlFor="recherche-parametre" className="sr-only">Rechercher un paramètre</label>
+        <div className="relative">
+          <svg
+            viewBox="0 0 24 24"
+            aria-hidden="true"
+            className="absolute left-3 top-1/2 -translate-y-1/2 size-4 text-muted-foreground"
+            fill="none"
+            stroke="currentColor"
+            strokeWidth="2"
+            strokeLinecap="round"
+          >
+            <circle cx="11" cy="11" r="7" />
+            <path d="m20 20-3.5-3.5" />
+          </svg>
+          <input
+            id="recherche-parametre"
+            type="search"
+            value={requete}
+            onChange={(e) => setRequete(e.target.value)}
+            onKeyDown={(e) => {
+              if (e.key === "Escape") setRequete("");
+            }}
+            placeholder="Rechercher un paramètre (police, CV, SEO, disponibilité…)"
+            autoComplete="off"
+            className="w-full pl-9 pr-3 py-2 border border-border rounded-md text-sm"
+          />
+        </div>
+        <p className="text-xs text-muted-foreground mt-1" role="status" aria-live="polite">
+          {trouves === null
+            ? ""
+            : trouves === 0
+              ? "Aucun paramètre ne correspond."
+              : `${trouves} paramètre${trouves > 1 ? "s" : ""} trouvé${trouves > 1 ? "s" : ""}. Échap pour tout afficher.`}
+        </p>
+      </div>
+      <form ref={formulaire} onSubmit={handleSubmit} className="space-y-6">
         <div className="grid grid-cols-2 gap-4">
           <ImageUpload
             label="Favicon"

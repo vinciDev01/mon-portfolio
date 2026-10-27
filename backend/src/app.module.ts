@@ -13,6 +13,7 @@ import { NotificationsModule } from './notifications/notifications.module';
 import { OrganizationsModule } from './organizations/organizations.module';
 import { BlogCategoriesModule } from './blog-categories/blog-categories.module';
 import { TechnologyFamiliesModule } from './technology-families/technology-families.module';
+import { CoursModule } from './cours/cours.module';
 import { PersonalInfoModule } from './personal-info/personal-info.module';
 import { PortfolioModule } from './portfolio/portfolio.module';
 import { PresentationsModule } from './presentations/presentations.module';
@@ -38,6 +39,7 @@ import { JwtAuthGuard } from './auth/auth.guard';
     OrganizationsModule,
     BlogCategoriesModule,
     TechnologyFamiliesModule,
+    CoursModule,
     PresentationsModule,
     SkillsModule,
     ExperiencesModule,

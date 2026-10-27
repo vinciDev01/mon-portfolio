@@ -41,3 +41,24 @@ describe("la feuille de l etagere", () => {
     expect(tranche).not.toMatch(/max-block-size/);
   });
 });
+
+describe("le bois brut et le livre tire", () => {
+  it("les planches ont un dessus irregulier", () => {
+    expect(bloc(/^\s*\.etagere\s*\{/m, cssNu)).toMatch(/--planche-brute:\s*polygon\(/);
+    expect(valeur(bloc(/^\s*\.rangee-livres::after\s*\{/m, cssNu), "clip-path")).toBe("var(--planche-brute)");
+    expect(valeur(bloc(/^\s*\.livre-cours::after\s*\{/m, cssNu), "clip-path")).toBe("var(--planche-brute)");
+  });
+
+  it("un livre survole sort a peine du rang, sauf pour moins de mouvement", () => {
+    expect(cssNu).toMatch(/\.livre-cours:hover > \.bord-imparfait[^{]*\{\s*translate:\s*0 -6px/);
+    expect(bloc(/@media \(prefers-reduced-motion: reduce\)\s*\{(?=\s*\.livre-cours > \.bord-imparfait)/, cssNu)).toMatch(/transition:\s*none/);
+  });
+
+  it("le livre pose sur sa planche, sans jour entre eux", () => {
+    const livre = bloc(/^\s*\.livre-cours\s*\{/m, cssNu);
+    const marge = valeur(livre, "margin").split(/\s+/)[2];
+    const piece = bloc(/^\s*\.livre-cours::after\s*\{/m, cssNu);
+    expect(valeur(piece, "inset-block-end")).toBe(`-${marge}`);
+    expect(valeur(piece, "block-size")).toBe(marge);
+  });
+});

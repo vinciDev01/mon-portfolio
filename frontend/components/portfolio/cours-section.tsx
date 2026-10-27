@@ -5,6 +5,7 @@ import type { CoursPublicDto } from "@portfolio/shared-types";
 import { useTranslation } from "@/lib/i18n/i18n-context";
 import { cuirDe, rangerEnPlanches } from "@/lib/cours/etagere";
 import { LivreOuvert } from "@/components/portfolio/livre-ouvert";
+import { BordImparfait } from "@/components/portfolio/bord-imparfait";
 
 /** La hauteur et l'epaisseur d'un livre, variees mais stables : derivees de
  *  son identifiant, elles ne changent pas d'un rendu a l'autre. */
@@ -34,7 +35,8 @@ export function CoursSection({ cours }: { cours: CoursPublicDto[] }) {
         const id = `planche-${famille?.id ?? "autres"}`;
         return (
           <section key={id} className="planche-cours" aria-labelledby={id}>
-            <h3 id={id} className="plaquette">
+            <h3 id={id} className="plaquette cadre-imparfait">
+              <BordImparfait graine={id} etire />
               {famille?.name ?? t("cours.autres")}
             </h3>
             <div className="rangee-livres">
@@ -45,7 +47,7 @@ export function CoursSection({ cours }: { cours: CoursPublicDto[] }) {
                   <button
                     key={c.id}
                     type="button"
-                    className="livre-cours"
+                    className="livre-cours cadre-imparfait"
                     aria-haspopup="dialog"
                     aria-label={t("cours.livre", { titre: c.titre, techno: c.technology.label })}
                     onClick={() => setOuvert(c)}
@@ -58,6 +60,8 @@ export function CoursSection({ cours }: { cours: CoursPublicDto[] }) {
                       } as CSSProperties
                     }
                   >
+                    {/* Le dos du livre : du cuir aux bords uses. */}
+                    <BordImparfait graine={c.id} etire />
                     <span className="livre-tranche" aria-hidden="true">
                       {c.titreCourt ?? c.titre}
                     </span>

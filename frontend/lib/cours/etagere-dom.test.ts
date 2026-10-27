@@ -117,3 +117,22 @@ describe("le livre ouvert", () => {
     expect(dialogue()).toBeNull();
   });
 });
+
+describe("les bords uses de l etagere", () => {
+  const aSonBord = (el: Element | null) => el?.querySelector(":scope > svg.bord-imparfait") ?? null;
+
+  it("plaquettes et dos des livres ont un bord imparfait", () => {
+    monter([cours("a")]);
+    expect(aSonBord(hote.querySelector(".plaquette"))).not.toBeNull();
+    expect(aSonBord(livre())).not.toBeNull();
+  });
+
+  it("la couverture, les deux pages et le bouton du livre ouvert aussi", () => {
+    monter([cours("a")]);
+    act(() => livre().click());
+    const d = dialogue()!;
+    expect(aSonBord(d.querySelector(".livre-reliure-ouverte"))).not.toBeNull();
+    for (const page of d.querySelectorAll(".livre-page")) expect(aSonBord(page)).not.toBeNull();
+    expect(aSonBord(d.querySelector(".livre-telecharger"))).not.toBeNull();
+  });
+});

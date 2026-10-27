@@ -6,6 +6,7 @@ import { useChangerSurcouche } from "@/components/parcours/parcours-pagine";
 import { useTranslation } from "@/lib/i18n/i18n-context";
 import { getCoursUrl } from "@/lib/api";
 import { tailleLisible } from "@/lib/cours/etagere";
+import { BordImparfait } from "@/components/portfolio/bord-imparfait";
 
 const LOCALES: Record<string, string> = { fr: "fr-FR", en: "en-US", de: "de-DE" };
 
@@ -69,11 +70,17 @@ export function LivreOuvert({ cours, surFermeture }: { cours: CoursPublicDto; su
         if (e.target === dialogue.current) fermer();
       }}
     >
-      <div className="livre-reliure-ouverte">
-        <div className="livre-page livre-page-gauche">
+      {/* La couverture et les pages ont des bords uses, comme un vieux livre. */}
+      <div className="livre-reliure-ouverte cadre-imparfait">
+        <BordImparfait graine={`${cours.id}:couverture`} amplitude={2} />
+        <div className="livre-page livre-page-gauche cadre-imparfait">
+          <BordImparfait graine={`${cours.id}:gauche`} />
           <p className="livre-famille">{cours.technology.family?.name ?? t("cours.autres")}</p>
           <h3 className="livre-titre">{cours.titre}</h3>
-          <span className="livre-techno">{cours.technology.label}</span>
+          <span className="livre-techno cadre-imparfait">
+            <BordImparfait graine={`${cours.id}:techno`} etire />
+            {cours.technology.label}
+          </span>
           {description && (
             <p className="livre-description">
               {/* La lettrine est la premiere lettre, en grand ; le reste suit. */}
@@ -85,7 +92,8 @@ export function LivreOuvert({ cours, surFermeture }: { cours: CoursPublicDto; su
             </p>
           )}
         </div>
-        <div className="livre-page livre-page-droite">
+        <div className="livre-page livre-page-droite cadre-imparfait">
+          <BordImparfait graine={`${cours.id}:droite`} />
           <button type="button" aria-label={t("cours.fermer")} onClick={fermer} className="parchemin-fermer livre-fermer">
             <svg viewBox="0 0 16 16" aria-hidden="true" focusable="false" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="square">
               <path d="M3 3 L13 13" />
@@ -112,7 +120,8 @@ export function LivreOuvert({ cours, surFermeture }: { cours: CoursPublicDto; su
               <dd>{majLe}</dd>
             </div>
           </dl>
-          <a className="livre-telecharger" href={getCoursUrl(cours.id)} download>
+          <a className="livre-telecharger cadre-imparfait" href={getCoursUrl(cours.id)} download>
+            <BordImparfait graine={`${cours.id}:telecharger`} amplitude={1.2} pas={30} />
             {t("cours.telecharger")}
           </a>
         </div>

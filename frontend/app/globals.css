@@ -1035,6 +1035,8 @@ html {
     --bois: #5a3e2b;
     --bois-arete: #7a5a3f;
     --bois-ombre: #3b2819;
+    /* Le dessus d'une planche brute : il ondule d'un pixel ou deux. */
+    --planche-brute: polygon(0 1px, 12% 0, 31% 2px, 48% 0.5px, 66% 2px, 83% 0, 100% 1.5px, 100% 100%, 0 100%);
     display: flex;
     flex-direction: column;
     gap: var(--espace-3);
@@ -1048,9 +1050,10 @@ html {
     font-weight: 600;
     letter-spacing: 0.08em;
     color: #e8dcc4;
-    background: var(--bois-ombre);
-    border: 1px solid var(--bois-arete);
-    border-radius: 2px;
+    /* Une plaquette de bois aux bords uses : fond et trait par le bord
+       imparfait. */
+    --bord-fond: var(--bois-ombre);
+    --bord-trait: var(--bois-arete);
   }
 
   /* Une rangee pleine passe a la ligne. Chaque livre porte son morceau de
@@ -1077,6 +1080,7 @@ html {
     background: var(--bois);
     border-block-start: 2px solid var(--bois-arete);
     border-block-end: 3px solid var(--bois-ombre);
+    clip-path: var(--planche-brute);
   }
 
   .livre-cours {
@@ -1087,25 +1091,50 @@ html {
     min-inline-size: 24px;
     inline-size: var(--epaisseur, 36px);
     block-size: var(--hauteur, 140px);
-    margin: 0 3px 15px;
+    /* La marge du bas egale l'epaisseur de la planche : le livre pose
+       dessus, sans jour entre eux. */
+    margin: 0 3px 10px;
     padding: 8px 0;
     color: var(--dorure, #f3ead7);
-    background: var(--cuir, #5a3a2a);
+    /* Le cuir et son bord use : portes par le bord imparfait. */
+    background: none;
     border: 0;
-    border-block-start: 3px solid rgb(243 234 215 / 0.35);
-    border-radius: 3px 3px 0 0;
+    --bord-fond: var(--cuir, #5a3a2a);
+    --bord-trait: rgb(243 234 215 / 0.35);
     cursor: pointer;
+  }
+
+  /* Au survol ou au focus, le livre sort a peine du rang, comme tire du
+     doigt. Le dos et le titre montent ; son morceau de planche reste. */
+  .livre-cours > .bord-imparfait,
+  .livre-cours > .livre-tranche {
+    transition: translate 0.25s ease;
+  }
+
+  .livre-cours:hover > .bord-imparfait,
+  .livre-cours:hover > .livre-tranche,
+  .livre-cours:focus-visible > .bord-imparfait,
+  .livre-cours:focus-visible > .livre-tranche {
+    translate: 0 -6px;
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .livre-cours > .bord-imparfait,
+    .livre-cours > .livre-tranche {
+      transition: none;
+    }
   }
 
   .livre-cours::after {
     content: "";
     position: absolute;
     inset-inline: -3px;
-    inset-block-end: -15px;
+    inset-block-end: -10px;
     block-size: 10px;
     background: var(--bois);
     border-block-start: 2px solid var(--bois-arete);
     border-block-end: 3px solid var(--bois-ombre);
+    clip-path: var(--planche-brute);
   }
 
   .livre-cours:focus-visible {
@@ -1152,17 +1181,18 @@ html {
     grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
     column-gap: 14px;
     inline-size: min(720px, calc(100vw - 2 * var(--espace-3)));
-    padding: 10px;
-    background: #3b2819;
-    box-shadow: inset 0 0 0 8px #5a3e2b;
-    border-radius: 4px;
+    padding: 12px;
+    /* La couverture : fond et bord par le bord imparfait. */
+    --bord-fond: #3b2819;
+    --bord-trait: #7a5a3f;
   }
 
   .livre-page {
     min-block-size: 300px;
     padding: var(--espace-3);
     color: #2a2220;
-    background: #efe4cc;
+    --bord-fond: #efe4cc;
+    --bord-trait: #c9b48f;
     font-family: var(--font-sans);
   }
 
@@ -1185,8 +1215,8 @@ html {
     padding: 1px 8px;
     font-size: 11px;
     color: #5a3e2b;
-    border: 1px solid #7a5a3f;
-    border-radius: 2px;
+    --bord-fond: transparent;
+    --bord-trait: #7a5a3f;
   }
 
   .livre-description {
@@ -1248,8 +1278,8 @@ html {
     text-align: center;
     text-decoration: none;
     color: #efe4cc;
-    background: #2f4a3a;
-    border-radius: 3px;
+    --bord-fond: #2f4a3a;
+    --bord-trait: #2f4a3a;
   }
 
   /* Telephone : les deux pages s'empilent. */

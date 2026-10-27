@@ -106,3 +106,13 @@ describe('cvBaseMasquees', () => {
     expect(await erreursSur('cvBaseMasquees', ['loisirs'])).toContain('cvBaseMasquees');
   });
 });
+
+describe('showCours', () => {
+  it('accepte un booleen', async () => {
+    expect(await erreursSur('showCours', true)).toEqual([]);
+  });
+
+  it('refuse autre chose', async () => {
+    expect(await erreursSur('showCours', 'oui')).toContain('showCours');
+  });
+});

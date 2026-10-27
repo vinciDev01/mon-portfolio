@@ -15,6 +15,7 @@ export type { TestimonialDto } from "./testimonial";
 export type { BlogPostDto } from "./blog-post";
 export type { BlogCategoryDto } from "./blog-category";
 export type { TechnologyFamilyDto } from "./technology-family";
+export type { CoursDto, CoursPublicDto, NiveauCours } from "./cours";
 export type { StatsDto } from "./stats";
 export type { PortfolioData } from "./portfolio";
 export * from "./variantes";

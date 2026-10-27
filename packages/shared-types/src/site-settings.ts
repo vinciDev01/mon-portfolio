@@ -43,6 +43,8 @@ export interface SiteSettingsDto {
   /** Les sections de la base retirees du CV (presentation, technologies,
    *  certifications, experiences, projets). Vide : toutes incluses. */
   cvBaseMasquees: string[];
+  /** Affiche la section Cours. */
+  showCours: boolean;
   accentHue: number;
   accentSaturation: number;
 }

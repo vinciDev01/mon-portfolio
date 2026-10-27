@@ -28,6 +28,9 @@ model SiteSettings {
   showAbout          Boolean @default(true) @map("show_about")
   showContact        Boolean @default(true) @map("show_contact")
   showTestimonials   Boolean @default(false) @map("show_testimonials")
+  /// La section Cours. Fausse par defaut : le site ne change pas tant que le
+  /// proprietaire ne l'a pas activee.
+  showCours          Boolean @default(false) @map("show_cours")
 
   allowTestimonialSubmission Boolean @default(true) @map("allow_testimonial_submission")
   defaultLanguage            String  @default("fr") @map("default_language")
@@ -168,6 +171,7 @@ model Technology {
 
   skills              Skill[]
   projectTechnologies ProjectTechnology[]
+  cours               Cours[]
 
   @@map("technologies")
 }
@@ -382,4 +386,34 @@ model CvSection {
   updatedAt DateTime @updatedAt @map("updated_at")
 
   @@map("cv_sections")
+}
+
+/// Un cours en PDF, range sur l'etagere de la section Cours. Le fichier vit
+/// hors de `uploads/` (servi en statique) : seule la route de telechargement
+/// le lit, apres avoir verifie que le cours est public.
+model Cours {
+  id              String     @id @default(uuid())
+  titre           String
+  /// Affiche sur la tranche quand le titre est trop long pour elle.
+  titreCourt      String?    @map("titre_court")
+  description     String?    @db.Text
+  /// debutant, intermediaire ou avance.
+  niveau          String     @default("debutant")
+  pages           Int?
+  /// Nom du PDF dans le dossier prive des cours : `<uuid>.pdf`.
+  fichier         String
+  /// Taille du PDF, en octets.
+  taille          Int
+  /// Supprimer une technologie qui a des cours est refuse : une cascade
+  /// effacerait des fichiers sans prevenir.
+  technologyId    String     @map("technology_id")
+  technology      Technology @relation(fields: [technologyId], references: [id], onDelete: Restrict)
+  /// Masque par defaut : un cours a moitie decrit n'apparait pas sur le site.
+  publique        Boolean    @default(false)
+  telechargements Int        @default(0)
+  sortOrder       Int        @default(0) @map("sort_order")
+  createdAt       DateTime   @default(now()) @map("created_at")
+  updatedAt       DateTime   @updatedAt @map("updated_at")
+
+  @@map("cours")
 }

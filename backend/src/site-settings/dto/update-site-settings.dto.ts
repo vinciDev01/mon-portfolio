@@ -234,6 +234,11 @@ export class UpdateSiteSettingsDto {
   @IsBoolean()
   showCvDownload?: boolean;
 
+  @ApiPropertyOptional({ default: false, description: 'Affiche la section Cours' })
+  @IsOptional()
+  @IsBoolean()
+  showCours?: boolean;
+
   @ApiPropertyOptional({
     example: 'Developpeur Java Spring Boot',
     description: 'Poste vise, imprime sous le nom en tete du CV ; vide, pas de ligne',

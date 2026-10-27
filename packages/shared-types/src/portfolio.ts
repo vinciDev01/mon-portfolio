@@ -10,6 +10,7 @@ import type { AboutDto } from "./about";
 import type { TestimonialDto } from "./testimonial";
 import type { BlogPostDto } from "./blog-post";
 import type { StatsDto } from "./stats";
+import type { CoursPublicDto } from "./cours";
 
 export interface PortfolioData {
   siteSettings: SiteSettingsDto;
@@ -24,4 +25,6 @@ export interface PortfolioData {
   testimonials: TestimonialDto[];
   blogPosts: BlogPostDto[];
   stats: StatsDto;
+  /** Les cours publics, pour l'etagere de la section Cours. */
+  cours: CoursPublicDto[];
 }

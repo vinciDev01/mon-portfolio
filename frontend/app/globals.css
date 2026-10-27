@@ -2168,6 +2168,23 @@ html {
     line-height: 1.3;
   }
 
+  /* La tache d'encre du dernier clic dans la colonne, centree sur le point
+     clique. La colonne, fixe, est son bloc conteneur : la tache defile avec
+     son entree. Encre du texte, a peine posee : elle se voit sans couvrir. */
+  .tache-encre {
+    position: absolute;
+    width: 10px;
+    height: 10px;
+    margin: -5px 0 0 -5px;
+    pointer-events: none;
+    color: var(--texte);
+    opacity: 0.32;
+  }
+
+  .tache-encre path {
+    fill: currentColor;
+  }
+
   /* La ligne ne porte pas `.gouttiere-parcours` : elle est dans le contenu
      de l'ouverture, donc dans une `SectionShell` qui la porte deja. La porter
      aussi doublerait le retrait. */

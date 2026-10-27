@@ -6,12 +6,12 @@ import { readFileSync } from "node:fs";
 import path from "node:path";
 import { I18nProvider } from "../i18n/i18n-context";
 import { ColonnePassage } from "@/components/parcours/colonne-passage";
-import { FORMES_TACHE, tacheDuClic } from "@/components/parcours/tache-encre";
+import { empreinteDuClic, tracerEmpreinte } from "@/components/parcours/empreinte";
 import type { PersonalInfoDto, SiteSettingsDto } from "@portfolio/shared-types";
 import { bloc } from "./feuille-test";
 
-/* La tache d'encre : un clic de pointeur sur une entree de la colonne laisse
-   une tache au point clique, jusqu'au clic suivant. */
+/* L'empreinte : un clic de pointeur sur une entree de la colonne laisse la
+   trace d'un doigt au point clique, jusqu'au clic suivant. */
 
 (globalThis as { IS_REACT_ACT_ENVIRONMENT?: boolean }).IS_REACT_ACT_ENVIRONMENT = true;
 
@@ -46,14 +46,14 @@ afterEach(() => {
 });
 
 const colonne = () => hote.querySelector<HTMLElement>(".colonne-passage")!;
-const taches = () => [...hote.querySelectorAll<SVGElement>(".tache-encre")];
+const taches = () => [...hote.querySelectorAll<SVGElement>(".empreinte")];
 const cliquer = (cible: Element, x: number, y: number, detail = 1) =>
   act(() => {
     cible.dispatchEvent(new MouseEvent("click", { bubbles: true, cancelable: true, clientX: x, clientY: y, detail }));
   });
 const entree = (href: string) => hote.querySelector(`a.entree-parcours[href="${href}"]`)!;
 
-describe("tache d encre de la colonne", () => {
+describe("empreinte de la colonne", () => {
   it("aucune tache avant le premier clic", () => {
     expect(taches()).toHaveLength(0);
   });
@@ -90,8 +90,8 @@ describe("tache d encre de la colonne", () => {
     c.appendChild(a);
     Object.defineProperty(c, "scrollTop", { value: 80 });
     c.getBoundingClientRect = () => ({ left: 10, top: 20 }) as DOMRect;
-    const t = tacheDuClic({ clientX: 50, clientY: 60, detail: 1, target: a }, c, () => 0.5);
-    expect(t).toMatchObject({ x: 40, y: 120, forme: Math.floor(0.5 * FORMES_TACHE.length), angle: 180 });
+    const t = empreinteDuClic({ clientX: 50, clientY: 60, detail: 1, target: a }, c, () => 0.5);
+    expect(t).toMatchObject({ x: 40, y: 120, graine: 500000, angle: 0 });
   });
 
   it("disparait au changement de taille de la fenetre", () => {
@@ -102,12 +102,38 @@ describe("tache d encre de la colonne", () => {
 
   it("est statique, transparente aux clics et centree sur le point", () => {
     const css = readFileSync(path.resolve(import.meta.dirname, "../../app/globals.css"), "utf8");
-    const b = bloc(/\.tache-encre\s*\{/, css);
+    const b = bloc(/\.empreinte\s*\{/, css);
     expect(b).toMatch(/position:\s*absolute/);
     expect(b).toMatch(/pointer-events:\s*none/);
-    expect(b).toMatch(/margin:\s*-5px 0 0 -5px/);
+    expect(b).toMatch(/margin:\s*-10px 0 0 -8px/);
     expect(b).not.toMatch(/transition|animation/);
-    const src = readFileSync(path.resolve(import.meta.dirname, "../../components/parcours/tache-encre.tsx"), "utf8");
+    const src = readFileSync(path.resolve(import.meta.dirname, "../../components/parcours/empreinte.tsx"), "utf8");
     expect(src).not.toMatch(/transition|animation|@keyframes/);
+  });
+
+  it("une empreinte : six sillons ouverts, dans sa boite, jamais deux pareilles", () => {
+    const d = tracerEmpreinte(42);
+    expect(d.match(/M /g)).toHaveLength(6);
+    for (const m of d.matchAll(/(-?[\d.]+) (-?[\d.]+)(?= |$)/g)) {
+      const [x, y] = [Number(m[1]), Number(m[2])];
+      expect(x).toBeGreaterThanOrEqual(0);
+      expect(x).toBeLessThanOrEqual(20);
+      expect(y).toBeGreaterThanOrEqual(0);
+      expect(y).toBeLessThanOrEqual(24);
+    }
+    expect(tracerEmpreinte(42)).toBe(d);
+    expect(tracerEmpreinte(43)).not.toBe(d);
+  });
+
+  it("un doigt pose de biais, jamais a l envers", () => {
+    const c = document.createElement("nav");
+    const a = document.createElement("a");
+    a.className = "entree-parcours";
+    c.appendChild(a);
+    c.getBoundingClientRect = () => ({ left: 0, top: 0 }) as DOMRect;
+    for (const h of [0, 0.999]) {
+      const t = empreinteDuClic({ clientX: 1, clientY: 1, detail: 1, target: a }, c, () => h)!;
+      expect(Math.abs(t.angle)).toBeLessThanOrEqual(35);
+    }
   });
 });

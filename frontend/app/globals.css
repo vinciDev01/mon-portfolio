@@ -2689,21 +2689,26 @@ html {
     }
   }
 
-  /* La tache d'encre du dernier clic dans la colonne, centree sur le point
-     clique. La colonne, fixe, est son bloc conteneur : la tache defile avec
-     son entree. Encre du texte, a peine posee : elle se voit sans couvrir. */
-  .tache-encre {
+  /* L'empreinte du dernier clic dans la colonne, centree sur le point
+     clique. La colonne, fixe, est son bloc conteneur : l'empreinte defile
+     avec son entree. Couleur du texte, a peine posee : elle se voit sans
+     couvrir. */
+  .empreinte {
     position: absolute;
-    width: 10px;
-    height: 10px;
-    margin: -5px 0 0 -5px;
+    width: 16px;
+    height: 20px;
+    margin: -10px 0 0 -8px;
     pointer-events: none;
     color: var(--texte);
-    opacity: 0.32;
+    opacity: 0.38;
   }
 
-  .tache-encre path {
-    fill: currentColor;
+  /* Des sillons fins, a peine marques, comme un doigt sur du papier. */
+  .empreinte path {
+    fill: none;
+    stroke: currentColor;
+    stroke-width: 0.7;
+    stroke-linecap: round;
   }
 
   /* La ligne ne porte pas `.gouttiere-parcours` : elle est dans le contenu

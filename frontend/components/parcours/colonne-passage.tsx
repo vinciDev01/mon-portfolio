@@ -9,7 +9,7 @@ import { PICTOS, sectionsActives } from "@/lib/parcours/sections";
 import { initialesDe } from "@/lib/parcours/identite";
 import { useSectionActive, useSectionSignalee } from "@/components/parcours/parcours-pagine";
 import { DrapeauDisponibilite } from "@/components/parcours/drapeau-disponibilite";
-import { TacheEncre, useTacheEncre } from "@/components/parcours/tache-encre";
+import { MarqueEmpreinte, useEmpreinte } from "@/components/parcours/empreinte";
 import { LanguageSwitcher } from "@/components/portfolio/language-switcher";
 
 /** Pictogrammes des commandes du pied. Traits seuls, sur `currentColor`, pour
@@ -73,7 +73,7 @@ export function ColonnePassage({
   const logo = getFileUrl(reglages.logoPath);
   const nomComplet = `${infos.name} ${infos.surname}`.trim();
   const initiales = initialesDe(infos);
-  const { tache, surClic } = useTacheEncre();
+  const { empreinte, surClic } = useEmpreinte();
 
   return (
     // `data-defilement-propre` : convention lue par le conteneur de pagination,
@@ -136,7 +136,7 @@ export function ColonnePassage({
           <span className="entree-nom">{t("nav.blog")}</span>
         </Link>
       </div>
-      <TacheEncre tache={tache} />
+      <MarqueEmpreinte empreinte={empreinte} />
     </nav>
   );
 }

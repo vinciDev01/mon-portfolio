@@ -22,6 +22,9 @@
   "cours.niveau.debutant": "Einsteiger",
   "cours.niveau.intermediaire": "Fortgeschritten",
   "cours.niveau.avance": "Experte",
+  "cours.rechercher": "Kurs suchen",
+  "cours.resultats": "Gefundene Kurse: {n}",
+  "cours.aucun": "Kein Kurs entspricht der Suche.",
   "cours.livre": "{titre}, Kurs zu {techno}",
 
   "projects.clickForDetails": "Klicken für mehr Details",

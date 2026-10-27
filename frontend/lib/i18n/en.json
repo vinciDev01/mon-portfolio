@@ -22,6 +22,9 @@
   "cours.niveau.debutant": "Beginner",
   "cours.niveau.intermediaire": "Intermediate",
   "cours.niveau.avance": "Advanced",
+  "cours.rechercher": "Search a course",
+  "cours.resultats": "Courses found: {n}",
+  "cours.aucun": "No course matches the search.",
   "cours.livre": "{titre}, a {techno} course",
 
   "projects.clickForDetails": "Click for more details",

@@ -7,12 +7,13 @@ import {
   Param,
   Patch,
   Post,
+  Query,
   Res,
   UploadedFile,
   UseInterceptors,
 } from '@nestjs/common';
 import { FileInterceptor } from '@nestjs/platform-express';
-import { ApiConsumes, ApiOperation, ApiTags } from '@nestjs/swagger';
+import { ApiConsumes, ApiOperation, ApiQuery, ApiTags } from '@nestjs/swagger';
 import type { Response } from 'express';
 import { memoryStorage } from 'multer';
 import { Public } from '../auth/auth.guard';
@@ -30,8 +31,13 @@ export class CoursController {
   @ApiOperation({
     summary: 'Tous les cours, publics et masques (administrateur)',
   })
-  findAll() {
-    return this.coursService.findAll();
+  @ApiQuery({
+    name: 'q',
+    required: false,
+    description: 'Recherche : chaque mot dans le titre, la description, la technologie ou la famille',
+  })
+  findAll(@Query('q') q?: string) {
+    return this.coursService.findAll(q);
   }
 
   @Get(':id')

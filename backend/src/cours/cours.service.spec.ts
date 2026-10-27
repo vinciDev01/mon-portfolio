@@ -1,6 +1,6 @@
 import { plainToInstance } from 'class-transformer';
 import { validate } from 'class-validator';
-import { CoursService } from './cours.service';
+import { CoursService, filtreRecherche } from './cours.service';
 import { CreateCoursDto } from './dto/create-cours.dto';
 
 const existant = {
@@ -68,5 +68,29 @@ describe('le DTO d un cours', () => {
 
   it('refuse un niveau inconnu', async () => {
     expect(await erreurs({ ...valide, niveau: 'expert' })).toContain('niveau');
+  });
+});
+
+describe('recherche des cours', () => {
+  it('sans mot, aucun filtre', () => {
+    expect(filtreRecherche(undefined)).toEqual({});
+    expect(filtreRecherche('   ')).toEqual({});
+  });
+
+  it('chaque mot doit se trouver quelque part, sans egard a la casse', () => {
+    const f = filtreRecherche(' java  objets ');
+    expect(f.AND).toHaveLength(2);
+    const premier = (f.AND as { OR: unknown[] }[])[0];
+    expect(premier.OR).toEqual(
+      expect.arrayContaining([
+        { titre: { contains: 'java', mode: 'insensitive' } },
+        { technology: { label: { contains: 'java', mode: 'insensitive' } } },
+        { technology: { family: { name: { contains: 'java', mode: 'insensitive' } } } },
+      ]),
+    );
+  });
+
+  it('borne le nombre de mots', () => {
+    expect((filtreRecherche('a b c d e f g h i j').AND as unknown[]).length).toBe(8);
   });
 });

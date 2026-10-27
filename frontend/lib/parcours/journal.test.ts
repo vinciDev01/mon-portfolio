@@ -491,7 +491,7 @@ describe("le declencheur du parchemin (spec section 3)", () => {
     const cles = dicts.map((x) => Object.keys(x).sort());
     expect(cles[1]).toEqual(cles[0]);
     expect(cles[2]).toEqual(cles[0]);
-    expect(cles[0]).toHaveLength(96);
+    expect(cles[0]).toHaveLength(99);
   });
 });
 

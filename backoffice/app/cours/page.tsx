@@ -17,13 +17,20 @@ export default function CoursPage() {
   const [items, setItems] = useState<CoursDto[]>([]);
   const [loading, setLoading] = useState(true);
   const [deleteId, setDeleteId] = useState<string | null>(null);
+  const [requete, setRequete] = useState("");
 
+  // La recherche passe par l'API (titre, description, technologie, famille),
+  // 250 ms apres la derniere frappe : pas une requete par touche.
   useEffect(() => {
-    fetchEntities<CoursDto>("cours")
-      .then(setItems)
-      .catch(() => toast.error("Erreur de chargement"))
-      .finally(() => setLoading(false));
-  }, []);
+    const q = requete.trim();
+    const minuterie = setTimeout(() => {
+      fetchEntities<CoursDto>(q ? `cours?q=${encodeURIComponent(q)}` : "cours")
+        .then(setItems)
+        .catch(() => toast.error("Erreur de chargement"))
+        .finally(() => setLoading(false));
+    }, q ? 250 : 0);
+    return () => clearTimeout(minuterie);
+  }, [requete]);
 
   async function handleDelete() {
     if (!deleteId) return;
@@ -37,11 +44,26 @@ export default function CoursPage() {
     setDeleteId(null);
   }
 
-  if (loading) return <p>Chargement...</p>;
+  if (loading && !items.length && !requete) return <p>Chargement...</p>;
 
   return (
     <div>
       <PageHeader title="Cours" addHref="/cours/new" addLabel="Nouveau cours" />
+      <div className="mb-4 max-w-md">
+        <label htmlFor="recherche-cours" className="sr-only">Rechercher un cours</label>
+        <input
+          id="recherche-cours"
+          type="search"
+          value={requete}
+          onChange={(e) => setRequete(e.target.value)}
+          onKeyDown={(e) => {
+            if (e.key === "Escape") setRequete("");
+          }}
+          placeholder="Rechercher un cours (titre, technologie, famille…)"
+          autoComplete="off"
+          className="w-full px-3 py-2 border border-border rounded-md text-sm"
+        />
+      </div>
       <table className="w-full text-sm [&_th]:pr-4 [&_td]:pr-4">
         <thead>
           <tr className="border-b border-border text-left">
@@ -71,7 +93,11 @@ export default function CoursPage() {
           ))}
         </tbody>
       </table>
-      {items.length === 0 && <p className="text-center text-muted-foreground py-8">Aucun cours</p>}
+      {items.length === 0 && (
+        <p className="text-center text-muted-foreground py-8">
+          {requete.trim() ? "Aucun cours ne correspond à la recherche" : "Aucun cours"}
+        </p>
+      )}
       <ConfirmDialog
         open={!!deleteId}
         title="Supprimer"

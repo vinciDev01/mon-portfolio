@@ -7,6 +7,7 @@ import * as crypto from 'crypto';
 import * as fs from 'fs';
 import * as path from 'path';
 import type { Response } from 'express';
+import { Prisma } from '@prisma/client';
 import { PrismaService } from '../prisma/prisma.service';
 import {
   compterPages,
@@ -23,6 +24,28 @@ const avecTechnologie = { technology: { include: { family: true } } } as const;
 
 /** Ce que rend l'envoi d'un PDF : son nom dans le dossier prive, sa taille
  *  et ses pages, que le formulaire du cours reprend. */
+/**
+ * Le filtre d'une recherche : chaque mot doit se trouver, sans egard a la
+ * casse, dans le titre, le titre court, la description, la technologie ou
+ * sa famille. Sans mot, aucun filtre. Exporte pour etre teste seul.
+ */
+export function filtreRecherche(requete: string | undefined): Prisma.CoursWhereInput {
+  const mots = (requete ?? '').trim().split(/\s+/).filter(Boolean).slice(0, 8);
+  if (!mots.length) return {};
+  const contient = (mot: string) => ({ contains: mot, mode: 'insensitive' as const });
+  return {
+    AND: mots.map((mot) => ({
+      OR: [
+        { titre: contient(mot) },
+        { titreCourt: contient(mot) },
+        { description: contient(mot) },
+        { technology: { label: contient(mot) } },
+        { technology: { family: { name: contient(mot) } } },
+      ],
+    })),
+  };
+}
+
 export type FichierCours = {
   fichier: string;
   taille: number;
@@ -33,8 +56,10 @@ export type FichierCours = {
 export class CoursService {
   constructor(private readonly prisma: PrismaService) {}
 
-  findAll() {
+  /** `q` : la recherche, mot a mot ; vide, tous les cours. */
+  findAll(q?: string) {
     return this.prisma.cours.findMany({
+      where: filtreRecherche(q),
       include: avecTechnologie,
       orderBy: [{ sortOrder: 'asc' }, { titre: 'asc' }],
     });

@@ -33,8 +33,8 @@ const rendre = (p: Partial<PersonalInfoDto>) =>
 describe("medaillon (spec section 8)", () => {
   it("est un tableau : cadre de bois, passe-partout, photo au centre, emprise inchangee", () => {
     const niche = /\.medaillon-niche\s*\{([^}]*)\}/.exec(css)![1];
-    expect(niche).toMatch(/--medaillon-l:\s*176px/);
-    expect(niche).toMatch(/--medaillon-h:\s*220px/);
+    expect(niche).toMatch(/--medaillon-l:\s*216px/);
+    expect(niche).toMatch(/--medaillon-h:\s*270px/);
     // Les dimensions sont celles du tableau entier : la mise en page ne bouge pas.
     expect(niche).toMatch(/width:\s*var\(--medaillon-l\)/);
     expect(niche).toMatch(/height:\s*var\(--medaillon-h\)/);
@@ -65,7 +65,7 @@ describe("medaillon (spec section 8)", () => {
   it("se reduit au palier etroit", () => {
     const etroit = /@media \(max-width:\s*599px\)\s*\{\s*\.medaillon-niche\s*\{([^}]*)\}/.exec(css);
     expect(etroit, "palier etroit du medaillon introuvable").not.toBeNull();
-    expect(etroit![1]).toMatch(/--medaillon-l:\s*128px/);
+    expect(etroit![1]).toMatch(/--medaillon-l:\s*152px/);
   });
 
   it("charge assez de pixels pour sa taille", () => {
@@ -73,13 +73,13 @@ describe("medaillon (spec section 8)", () => {
     const balise = /<img\s[^>]*>/.exec(html)?.[0];
     expect(balise, "aucune balise img").toBeDefined();
     const base = "http://hote.test/uploads/personal/u.webp";
-    // 220 px de haut a recouvrir : la variante de 264 en simple densite,
+    // 226 px de photo a recouvrir : la variante de 264 en simple densite,
     // l'original au-dela.
     expect(balise).toContain(`src="${nomVariante(base, 264)}"`);
     const srcSet = /srcSet="([^"]*)"/.exec(balise!)?.[1];
     expect(srcSet).toBe(`${nomVariante(base, 264)} 1x, ${base} 2x`);
-    expect(balise).toContain('width="176"');
-    expect(balise).toContain('height="220"');
+    expect(balise).toContain('width="216"');
+    expect(balise).toContain('height="270"');
     expect(balise).toContain('class="medaillon"');
     // L'image est dans le tableau, sous son passe-partout.
     expect(html).toMatch(/<span class="medaillon-niche"[^>]*>[\s\S]*?<img[^>]*class="medaillon"/);

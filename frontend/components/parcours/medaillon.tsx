@@ -40,8 +40,8 @@ export function aUnPortrait(infos: PersonalInfoDto): boolean {
 }
 
 /**
- * Le portrait d'ouverture, un tableau de 176 x 220 px cadre compris (128 x
- * 160, puis 88 x 110 aux paliers etroits), a gauche dans la colonne de texte.
+ * Le portrait d'ouverture, un tableau de 216 x 270 px cadre compris (152 x
+ * 190, puis 104 x 130 aux paliers etroits), a gauche dans la colonne de texte.
  *
  * Un rectangle et non un cercle : un cercle rogne les epaules et renvoie au
  * registre de l'avatar de reseau social.
@@ -70,7 +70,7 @@ export function Medaillon({ infos }: { infos: PersonalInfoDto }) {
   }
 
   const base = getFileUrl(infos.avatarPath)!;
-  // L'arche fait 176 x 220 : la plus grande variante carree (264) couvre sa
+  // Le tableau fait 216 x 270, la photo un peu moins : la variante de 264 couvre sa
   // hauteur en simple densite, l'original non retaille sert au-dela.
   const variante = nomVariante(base, TAILLES_MEDAILLON[TAILLES_MEDAILLON.length - 1]);
   return (
@@ -85,8 +85,8 @@ export function Medaillon({ infos }: { infos: PersonalInfoDto }) {
           className="medaillon"
           src={variante}
           srcSet={`${variante} 1x, ${base} 2x`}
-          width={176}
-          height={220}
+          width={216}
+          height={270}
           alt={t("parcours.portrait", {
             nom: [infos.name, infos.surname].filter(Boolean).join(" "),
           })}

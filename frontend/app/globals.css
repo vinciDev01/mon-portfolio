@@ -598,11 +598,11 @@ html {
      portrait. `--medaillon-echo` est l'air laisse sous lui, ou mord son
      inclinaison. */
   .medaillon-niche {
-    --medaillon-l: 176px;
-    --medaillon-h: 220px;
+    --medaillon-l: 216px;
+    --medaillon-h: 270px;
     --medaillon-echo: 10px;
-    --tableau-bois: 11px;
-    --tableau-passe: 9px;
+    --tableau-bois: 12px;
+    --tableau-passe: 10px;
     --tableau-ficelle: 20px;
     --bois: #5a3e2b;
     --bois-arete: #7a5a3f;
@@ -823,8 +823,8 @@ html {
 
   @media (max-width: 599px) {
     .medaillon-niche {
-      --medaillon-l: 128px;
-      --medaillon-h: 160px;
+      --medaillon-l: 152px;
+      --medaillon-h: 190px;
       --medaillon-echo: 8px;
       --tableau-bois: 8px;
       --tableau-passe: 6px;
@@ -840,8 +840,8 @@ html {
     }
 
     .ouverture-corps .medaillon-niche {
-      --medaillon-l: 88px;
-      --medaillon-h: 110px;
+      --medaillon-l: 104px;
+      --medaillon-h: 130px;
       --medaillon-echo: 6px;
       --tableau-bois: 6px;
       --tableau-passe: 4px;
@@ -1102,6 +1102,54 @@ html {
     display: flex;
     flex-direction: column;
     gap: var(--espace-3);
+  }
+
+  /* La recherche de l'etagere : une etiquette de papier au bord use, la
+     loupe a gauche. Le champ n'a ni fond ni bordure : le bord imparfait les
+     porte. Le focus se voit sur toute l'etiquette. */
+  .recherche-cours {
+    --bord-fond: var(--surface);
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    max-width: 360px;
+    min-height: 44px;
+    padding: 6px 14px;
+  }
+
+  .recherche-cours:focus-within {
+    --bord-trait: var(--accent);
+  }
+
+  .recherche-cours-loupe {
+    flex: none;
+    width: 18px;
+    height: 18px;
+    fill: none;
+    stroke: var(--texte-secondaire);
+    stroke-width: 1.75;
+    stroke-linecap: round;
+  }
+
+  .recherche-cours input {
+    flex: 1;
+    min-width: 0;
+    min-height: 32px;
+    border: 0;
+    background: transparent;
+    color: var(--texte);
+    font-size: 0.9375rem;
+    outline: none;
+  }
+
+  .recherche-cours input::placeholder {
+    color: var(--texte-secondaire);
+  }
+
+  .recherche-cours-vide {
+    margin: 0;
+    color: var(--texte-secondaire);
+    font-size: 0.9375rem;
   }
 
   .plaquette {

@@ -8,16 +8,16 @@ datasource db {
 }
 
 model SiteSettings {
-  id          String   @id @default(uuid())
-  faviconPath String?  @map("favicon_path")
-  logoPath    String?  @map("logo_path")
-  bgColor     String   @default("#131518") @map("bg_color")
-  textColor   String   @default("#E4E5E3") @map("text_color")
-  fontSize    Int      @default(17) @map("font_size")
-  fontFamily  String   @default("Literata") @map("font_family")
+  id           String  @id @default(uuid())
+  faviconPath  String? @map("favicon_path")
+  logoPath     String? @map("logo_path")
+  bgColor      String  @default("#131518") @map("bg_color")
+  textColor    String  @default("#E4E5E3") @map("text_color")
+  fontSize     Int     @default(17) @map("font_size")
+  fontFamily   String  @default("Literata") @map("font_family")
   toastMessage String? @map("toast_message")
   toastDelayMs Int     @default(180000) @map("toast_delay_ms")
-  cvFilePath  String?  @map("cv_file_path")
+  cvFilePath   String? @map("cv_file_path")
 
   showPresentations  Boolean @default(true) @map("show_presentations")
   showSkills         Boolean @default(true) @map("show_skills")
@@ -35,13 +35,13 @@ model SiteSettings {
   allowTestimonialSubmission Boolean @default(true) @map("allow_testimonial_submission")
   defaultLanguage            String  @default("fr") @map("default_language")
 
-  availabilityStatus  String  @default("available") @map("availability_status")
-  availabilityLabel   String? @map("availability_label")
-  maintenanceMode     Boolean @default(false) @map("maintenance_mode")
-  seoTitle            String? @map("seo_title")
-  seoDescription      String? @map("seo_description")
-  seoImagePath        String? @map("seo_image_path")
-  notificationEmail   String? @map("notification_email")
+  availabilityStatus String  @default("available") @map("availability_status")
+  availabilityLabel  String? @map("availability_label")
+  maintenanceMode    Boolean @default(false) @map("maintenance_mode")
+  seoTitle           String? @map("seo_title")
+  seoDescription     String? @map("seo_description")
+  seoImagePath       String? @map("seo_image_path")
+  notificationEmail  String? @map("notification_email")
 
   /**
    * Theme applique a un visiteur sans preference enregistree.
@@ -50,42 +50,42 @@ model SiteSettings {
    * convention courante : elle suit la logique de l'objet, on allume
    * une lampe le soir.
    */
-  themeParDefaut    String  @default("auto") @map("theme_par_defaut")
+  themeParDefaut String @default("auto") @map("theme_par_defaut")
 
   // Visibilité manquante : StatsSection était rendue sans condition
-  showStats         Boolean @default(true)  @map("show_stats")
+  showStats Boolean @default(true) @map("show_stats")
 
   // Rythme typographique
-  typeScale         String  @default("normal") @map("type_scale")
-  lineHeight        Float   @default(1.6)      @map("line_height")
-  zigzagAmplitude   Int     @default(50)       @map("zigzag_amplitude")
-  sectionSpacing    Int     @default(120)      @map("section_spacing")
+  typeScale       String @default("normal") @map("type_scale")
+  lineHeight      Float  @default(1.6) @map("line_height")
+  zigzagAmplitude Int    @default(50) @map("zigzag_amplitude")
+  sectionSpacing  Int    @default(120) @map("section_spacing")
 
   // Mouvement
   animationsEnabled    Boolean @default(true) @map("animations_enabled")
-  animationSpeed       Float   @default(1.0)  @map("animation_speed")
+  animationSpeed       Float   @default(1.0) @map("animation_speed")
   respectReducedMotion Boolean @default(true) @map("respect_reduced_motion")
 
   // CV genere
-  cvFontFamily      String  @default("serif") @map("cv_font_family")
+  cvFontFamily   String   @default("serif") @map("cv_font_family")
   /**
    * Le CV n'est telechargeable depuis le site que si cette case est cochee.
    * Le format Word est le seul propose publiquement ; le PDF reste reserve a
    * l'administrateur. Faux par defaut : la publication est une decision.
    */
-  showCvDownload    Boolean @default(false) @map("show_cv_download")
+  showCvDownload Boolean  @default(false) @map("show_cv_download")
   /// Le poste vise, imprime sous le nom en tete du CV. Nul : pas de ligne.
-  cvJobTitle        String? @map("cv_job_title")
+  cvJobTitle     String?  @map("cv_job_title")
   /// Les sections de la base retirees du CV (presentation, technologies,
   /// certifications, experiences, projets). Vide : toutes sont incluses.
-  cvBaseMasquees    String[] @default([]) @map("cv_base_masquees")
+  cvBaseMasquees String[] @default([]) @map("cv_base_masquees")
 
   // Accent
-  accentHue         Int     @default(107) @map("accent_hue")
-  accentSaturation  Int     @default(16)  @map("accent_saturation")
+  accentHue        Int @default(107) @map("accent_hue")
+  accentSaturation Int @default(16) @map("accent_saturation")
 
-  createdAt   DateTime @default(now()) @map("created_at")
-  updatedAt   DateTime @updatedAt @map("updated_at")
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
 
   @@map("site_settings")
 }
@@ -135,39 +135,41 @@ model BlogCategory {
 }
 
 model PersonalInfo {
-  id          String   @id @default(uuid())
-  name        String   @default("")
-  surname     String   @default("")
-  email       String   @default("")
-  phone       String?
-  githubUrl   String?  @map("github_url")
-  linkedinUrl String?  @map("linkedin_url")
-  avatarPath  String?  @map("avatar_path")
-  bio         String?
-  nationalite String?
-  adresse     String?
-  /** L'adresse postale ne part dans le CV public que sur decision explicite. */
-  adressePublique Boolean @default(false) @map("adresse_publique")
-  createdAt   DateTime @default(now()) @map("created_at")
-  updatedAt   DateTime @updatedAt @map("updated_at")
+  id              String   @id @default(uuid())
+  name            String   @default("")
+  surname         String   @default("")
+  email           String   @default("")
+  phone           String?
+  githubUrl       String?  @map("github_url")
+  linkedinUrl     String?  @map("linkedin_url")
+  avatarPath      String?  @map("avatar_path")
+  bio             String?
+  nationalite     String?
+  adresse         String?
+  /**
+   * L'adresse postale ne part dans le CV public que sur decision explicite.
+   */
+  adressePublique Boolean  @default(false) @map("adresse_publique")
+  createdAt       DateTime @default(now()) @map("created_at")
+  updatedAt       DateTime @updatedAt @map("updated_at")
 
   @@map("personal_info")
 }
 
 model Technology {
-  id        String   @id @default(uuid())
+  id        String            @id @default(uuid())
   label     String
-  logoPath  String?  @map("logo_path")
-  sortOrder Int      @default(0) @map("sort_order")
+  logoPath  String?           @map("logo_path")
+  sortOrder Int               @default(0) @map("sort_order")
   /// Faux : la technologie reste au portfolio mais ne sort pas dans le CV.
-  showInCv  Boolean  @default(true) @map("show_in_cv")
+  showInCv  Boolean           @default(true) @map("show_in_cv")
   /// Famille de la technologie, choisie dans une liste geree : le CV range
   /// les technologies par famille. Nulle : « Autres ». Supprimer la famille
   /// detache ses technologies sans les supprimer.
   familyId  String?           @map("family_id")
   family    TechnologyFamily? @relation(fields: [familyId], references: [id], onDelete: SetNull)
-  createdAt DateTime @default(now()) @map("created_at")
-  updatedAt DateTime @updatedAt @map("updated_at")
+  createdAt DateTime          @default(now()) @map("created_at")
+  updatedAt DateTime          @updatedAt @map("updated_at")
 
   skills              Skill[]
   projectTechnologies ProjectTechnology[]
@@ -185,6 +187,7 @@ model TechnologyFamily {
   updatedAt DateTime @updatedAt @map("updated_at")
 
   technologies Technology[]
+  skills       Skill[]
 
   @@map("technology_families")
 }
@@ -216,14 +219,21 @@ model Presentation {
   @@map("presentations")
 }
 
+/// Une competence : liee a une technologie (Java), dont elle prend le nom,
+/// le logo et la famille ; ou libre (Management), avec son nom et sa famille.
 model Skill {
-  id           String     @id @default(uuid())
-  technologyId String     @map("technology_id")
-  technology   Technology @relation(fields: [technologyId], references: [id], onDelete: Cascade)
+  id           String            @id @default(uuid())
+  technologyId String?           @map("technology_id")
+  technology   Technology?       @relation(fields: [technologyId], references: [id], onDelete: Cascade)
+  /// Nom d'une competence libre ; vide quand une technologie est liee.
+  label        String?
+  /// Famille d'une competence libre ; celle de la technologie sinon.
+  familyId     String?           @map("family_id")
+  family       TechnologyFamily? @relation(fields: [familyId], references: [id], onDelete: SetNull)
   proficiency  Int?
-  sortOrder    Int        @default(0) @map("sort_order")
-  createdAt    DateTime   @default(now()) @map("created_at")
-  updatedAt    DateTime   @updatedAt @map("updated_at")
+  sortOrder    Int               @default(0) @map("sort_order")
+  createdAt    DateTime          @default(now()) @map("created_at")
+  updatedAt    DateTime          @updatedAt @map("updated_at")
 
   @@map("skills")
 }
@@ -368,7 +378,6 @@ model Testimonial {
 
 /**
  * Section libre du CV genere.
- *
  * Les sections issues de la base (presentation, technologies, certifications,
  * experiences, projets) portent un rang implicite de 10 a 60 ; celles-ci
  * s'intercalent par leur `sortOrder`. Une section a 20 tombe donc entre la
@@ -377,9 +386,13 @@ model Testimonial {
 model CvSection {
   id        String   @id @default(uuid())
   titre     String
-  /** Une entree par ligne. */
+  /**
+   * Une entree par ligne.
+   */
   lignes    String
-  /** Fausse pour tout ce qui ne doit pas partir dans le CV telechargeable. */
+  /**
+   * Fausse pour tout ce qui ne doit pas partir dans le CV telechargeable.
+   */
   publique  Boolean  @default(true)
   sortOrder Int      @default(0) @map("sort_order")
   createdAt DateTime @default(now()) @map("created_at")

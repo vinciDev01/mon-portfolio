@@ -13,7 +13,7 @@ const sections = [
   { href: "/technologies", label: "Technologies", desc: "HTML, CSS, Go, Java, etc." },
   { href: "/organizations", label: "Organisations", desc: "Oracle, Azure, etc." },
   { href: "/presentations", label: "Présentations", desc: "Section héro du portfolio" },
-  { href: "/skills", label: "Compétences", desc: "Technologies maîtrisées" },
+  { href: "/skills", label: "Compétences", desc: "Technologies et savoir-faire maîtrisés" },
   { href: "/experiences", label: "Expériences", desc: "Parcours professionnel" },
   { href: "/certifications", label: "Certifications", desc: "Diplômes et certifications" },
   { href: "/projects", label: "Projets", desc: "Projets réalisés" },

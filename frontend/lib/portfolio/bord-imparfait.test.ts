@@ -3,11 +3,12 @@ import { afterEach, beforeEach, describe, expect, it } from "vitest";
 import { act, createElement, type ComponentType } from "react";
 import { createRoot, type Root } from "react-dom/client";
 import type { SkillDto, TechnologyDto } from "@portfolio/shared-types";
-import { niveauDe, rangerParFamille, remplirBande } from "@/lib/competences/outillage";
+import { competenceDe, niveauDe, rangerParFamille, remplirBande } from "@/lib/competences/outillage";
+import { traceDeLogo } from "@/lib/competences/logos";
 import { I18nProvider } from "../i18n/i18n-context";
 import { tracerBord } from "@/components/portfolio/bord-imparfait";
-import { SkillsSection } from "@/components/portfolio/skills-section";
-import { bloc } from "../parcours/feuille-test";
+import { SECONDES_PAR_ETIQUETTE, SkillsSection } from "@/components/portfolio/skills-section";
+import { bloc, cssNu } from "../parcours/feuille-test";
 
 (globalThis as { IS_REACT_ACT_ENVIRONMENT?: boolean }).IS_REACT_ACT_ENVIRONMENT = true;
 
@@ -55,16 +56,44 @@ const Fournisseur = I18nProvider as ComponentType<{ defaultLocale: string }>;
 const fam = (id: string, sortOrder: number) => ({ id, name: id, sortOrder });
 const techno = (id: string, famille: ReturnType<typeof fam> | null, sortOrder = 0) =>
   ({ id, label: id, logoPath: null, sortOrder, showInCv: true, familyId: famille?.id ?? null, family: famille }) as TechnologyDto;
-const competence = (t: TechnologyDto, proficiency: number | null) =>
-  ({ id: `s-${t.id}`, technologyId: t.id, proficiency, sortOrder: 0, technology: t }) as SkillDto;
+/** Une competence liee a une technologie. */
+const competence = (t: TechnologyDto, proficiency: number | null, sortOrder = 0) =>
+  ({ id: `s-${t.id}`, technologyId: t.id, technology: t, label: null, familyId: null, family: null, proficiency, sortOrder }) as SkillDto;
+/** Une competence libre, sans technologie. */
+const libre = (label: string, famille: ReturnType<typeof fam> | null, proficiency: number | null = null) =>
+  ({ id: `l-${label}`, technologyId: null, technology: null, label, familyId: famille?.id ?? null, family: famille, proficiency, sortOrder: 0 }) as SkillDto;
+
+describe("logos des technologies", () => {
+  it("retrouve un logo quelle que soit l ecriture du nom", () => {
+    for (const nom of ["Next.js", "next js", "NextJS", "React", "Tailwind CSS", "PostgreSQL", "Java", "HTML", "Spring Boot", "Node.js"]) {
+      expect(traceDeLogo(nom), nom).toMatch(/^[Mm]/);
+    }
+    expect(traceDeLogo("Next.js")).toBe(traceDeLogo("nextjs"));
+  });
+
+  it("rend null pour une technologie inconnue", () => {
+    expect(traceDeLogo("Power BI")).toBeNull();
+    expect(traceDeLogo("Inconnue")).toBeNull();
+  });
+});
 
 describe("rangement et bande", () => {
-  it("range par famille dans leur ordre, Autres en dernier, sans tiroir vide", () => {
+  it("une competence liee prend nom, famille et logo de sa technologie ; une libre garde les siens", () => {
+    const web = fam("Web", 1);
+    const gestion = fam("Gestion", 5);
+    const html = { ...techno("HTML", web), logoPath: "technologies/html.webp" };
+    expect(competenceDe(competence(html, 90))).toMatchObject({ nom: "HTML", famille: web, logoPath: "technologies/html.webp", niveau: 3 });
+    expect(competenceDe(libre("Management", gestion, 70))).toMatchObject({ nom: "Management", famille: gestion, logoPath: null, niveau: 2 });
+  });
+
+  it("range par famille dans leur ordre, Autres en dernier ; dans un tiroir, l ordre saisi", () => {
     const web = fam("Web", 2);
-    const lang = fam("Langages", 1);
-    const tiroirs = rangerParFamille([techno("CSS", web, 1), techno("Git", null), techno("Java", lang), techno("HTML", web, 0)]);
-    expect(tiroirs.map((t) => t.famille?.name ?? "autres")).toEqual(["Langages", "Web", "autres"]);
-    expect(tiroirs[1]!.technologies.map((t) => t.label)).toEqual(["HTML", "CSS"]);
+    const gestion = fam("Gestion", 1);
+    const tiroirs = rangerParFamille(
+      [competence(techno("CSS", web), 50, 2), libre("Veille", null), libre("Management", gestion), competence(techno("HTML", web), 50, 1)].map(competenceDe),
+    );
+    expect(tiroirs.map((t) => t.famille?.name ?? "autres")).toEqual(["Gestion", "Web", "autres"]);
+    expect(tiroirs[1]!.competences.map((c) => c.nom)).toEqual(["HTML", "CSS"]);
   });
 
   it("remplit une bande courte par repetition, sans toucher une longue", () => {
@@ -96,52 +125,67 @@ describe("competences en rangees qui defilent", () => {
   const html = techno("HTML", web);
   const css = techno("CSS", web, 1);
   const git = techno("Git", null);
-  const monter = (props: { skills: SkillDto[]; technologies?: TechnologyDto[] }) =>
+  const monter = (skills: SkillDto[]) =>
     act(() => {
-      racine.render(createElement(Fournisseur, { defaultLocale: "fr" }, createElement(SkillsSection, props)));
+      racine.render(createElement(Fournisseur, { defaultLocale: "fr" }, createElement(SkillsSection, { skills })));
     });
 
-  it("une seule vue : ni carrousel, ni seconde liste", () => {
-    monter({ skills: [competence(html, 90)], technologies: [html, css, git] });
-    expect(hote.querySelector(".carrousel-competences, .carte-competence")).toBeNull();
-    expect(hote.querySelectorAll(".boite-outils")).toHaveLength(1);
+  it("n affiche que les competences, techniques ou non", () => {
+    monter([competence(html, 90), libre("Management", fam("Gestion", 2), 80)]);
+    const lues = [...hote.querySelectorAll(".liste-outils-fixe .etiquette-nom")].map((n) => n.textContent);
+    expect(lues).toEqual(["HTML", "Management"]);
+    expect([...hote.querySelectorAll("dt")].map((d) => d.textContent)).toEqual(["Web", "Gestion"]);
   });
 
-  it("une rangee par famille, et chaque technologie lue une seule fois", () => {
-    monter({ skills: [], technologies: [html, css, git] });
+  it("une rangee par famille, chaque competence lue une seule fois, la bande muette", () => {
+    monter([competence(html, null, 0), competence(css, null, 1), competence(git, null)]);
     expect([...hote.querySelectorAll("dt")].map((d) => d.textContent)).toEqual(["Web", "Autres"]);
-    // Les listes lues : chaque technologie une fois.
-    const lues = [...hote.querySelectorAll(".liste-outils-fixe > li")].map((li) => li.textContent);
+    const lues = [...hote.querySelectorAll(".liste-outils-fixe .etiquette-nom")].map((n) => n.textContent);
     expect(lues).toEqual(["HTML", "CSS", "Git"]);
-    // La bande defilante n'est pas lue.
     for (const b of hote.querySelectorAll(".bande-outils")) expect(b.getAttribute("aria-hidden")).toBe("true");
   });
 
   it("la bande porte deux copies identiques, assez longues pour boucler", () => {
-    monter({ skills: [], technologies: [html, css] });
+    monter([competence(html, null), competence(css, null)]);
     const pistes = [...hote.querySelectorAll(".bande-outils .piste-outils")];
     expect(pistes).toHaveLength(2);
     expect(pistes[0]!.textContent).toBe(pistes[1]!.textContent);
-    expect(pistes[0]!.querySelectorAll("li").length).toBeGreaterThanOrEqual(10);
+    expect(pistes[0]!.querySelectorAll("li").length).toBeGreaterThanOrEqual(12);
+  });
+
+  it("defile lentement : la duree suit le nombre d etiquettes", () => {
+    expect(SECONDES_PAR_ETIQUETTE).toBeGreaterThanOrEqual(7);
+    monter([competence(html, null), competence(css, null)]);
+    const duree = parseFloat((hote.querySelector(".rangee-outils") as HTMLElement).style.getPropertyValue("--duree"));
+    const etiquettes = hote.querySelectorAll(".bande-outils .piste-outils")[0]!.querySelectorAll("li").length;
+    expect(duree).toBe(etiquettes * SECONDES_PAR_ETIQUETTE);
   });
 
   it("une rangee sur deux defile dans l autre sens", () => {
-    monter({ skills: [], technologies: [html, git] });
+    monter([competence(html, null), competence(git, null)]);
     const rangees = [...hote.querySelectorAll(".rangee-outils")];
     expect(rangees[0]!.getAttribute("data-sens")).toBeNull();
     expect(rangees[1]!.getAttribute("data-sens")).toBe("inverse");
   });
 
-  it("chaque etiquette a son bord imparfait, et une competence ses pierres", () => {
-    monter({ skills: [competence(html, 90)], technologies: [html, css] });
+  it("chaque etiquette a son bord imparfait, et ses pierres si un niveau est saisi", () => {
+    monter([competence(html, 90, 0), competence(css, null, 1)]);
     const fixes = [...hote.querySelectorAll(".liste-outils-fixe > li")];
     for (const e of fixes) expect(e.querySelector(":scope > svg.bord-imparfait")).not.toBeNull();
     expect(fixes[0]!.querySelector(".etiquette-niveau")?.getAttribute("data-niveau")).toBe("3");
     expect(fixes[1]!.querySelector(".etiquette-niveau")).toBeNull();
   });
 
+  it("chaque etiquette porte un logo : connu en trace, sinon l initiale", () => {
+    monter([competence(html, null), libre("Management", null)]);
+    const fixes = [...hote.querySelectorAll(".liste-outils-fixe > li")];
+    expect(fixes[0]!.querySelector("svg.etiquette-logo path")).not.toBeNull();
+    expect(fixes[1]!.querySelector(".etiquette-initiale")?.textContent).toBe("M");
+    for (const l of hote.querySelectorAll(".etiquette-logo")) expect(l.getAttribute("aria-hidden")).toBe("true");
+  });
+
   it("le bouton met en pause et reprend", () => {
-    monter({ skills: [], technologies: [html] });
+    monter([competence(html, null)]);
     const bouton = hote.querySelector<HTMLButtonElement>(".pause-outils")!;
     const avant = bouton.textContent;
     act(() => bouton.click());
@@ -151,10 +195,8 @@ describe("competences en rangees qui defilent", () => {
     expect(hote.querySelector(".boite-outils")!.getAttribute("data-pause")).toBeNull();
   });
 
-  it("sans liste de technologies, celles des competences suffisent ; rien sans aucune", () => {
-    monter({ skills: [competence(git, 50)] });
-    expect(hote.querySelectorAll(".liste-outils-fixe > li")).toHaveLength(1);
-    monter({ skills: [] });
+  it("rien sans competence", () => {
+    monter([]);
     expect(hote.innerHTML).toBe("");
   });
 
@@ -165,6 +207,9 @@ describe("competences en rangees qui defilent", () => {
     const reduit = bloc(/@media \(prefers-reduced-motion: reduce\)\s*\{(?=\s*\.bande-outils)/);
     expect(reduit).toMatch(/display:\s*none/);
     expect(reduit).toMatch(/\.liste-outils-fixe\s*\{[^}]*position:\s*static/);
-    expect(bloc(/\.defilement-outils\s*\{/)).toMatch(/overflow:\s*hidden/);
+    const fenetre = bloc(/\.defilement-outils\s*\{/);
+    expect(fenetre).toMatch(/overflow:\s*hidden/);
+    expect(fenetre).toMatch(/mask-image:\s*linear-gradient\(\s*to right,\s*transparent/);
+    expect(cssNu).not.toMatch(/margin-inline-end:\s*-100vw/);
   });
 });

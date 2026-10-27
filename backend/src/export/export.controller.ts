@@ -32,7 +32,7 @@ export class ExportController {
       this.prisma.organization.findMany({ orderBy: { sortOrder: 'asc' } }),
       this.prisma.presentation.findMany({ orderBy: { sortOrder: 'asc' } }),
       this.prisma.skill.findMany({
-        include: { technology: true },
+        include: { technology: true, family: true },
         orderBy: { sortOrder: 'asc' },
       }),
       this.prisma.experience.findMany({ orderBy: { sortOrder: 'asc' } }),

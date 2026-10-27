@@ -23,13 +23,12 @@ export class PortfolioService {
       technologyCount,
       experienceCount,
       rawCours,
-      technologies,
     ] = await Promise.all([
       this.prisma.siteSettings.findFirst(),
       this.prisma.personalInfo.findFirst(),
       this.prisma.presentation.findMany({ orderBy: { sortOrder: 'asc' } }),
       this.prisma.skill.findMany({
-        include: { technology: { include: { family: true } } },
+        include: { technology: { include: { family: true } }, family: true },
         orderBy: { sortOrder: 'asc' },
       }),
       this.prisma.experience.findMany({ orderBy: { sortOrder: 'asc' } }),
@@ -66,12 +65,6 @@ export class PortfolioService {
         where: { publique: true },
         include: { technology: { include: { family: true } } },
         orderBy: [{ sortOrder: 'asc' }, { titre: 'asc' }],
-      }),
-      // La boite a outils de la section Competences : toutes les
-      // technologies, rangees par famille sur le site.
-      this.prisma.technology.findMany({
-        include: { family: true },
-        orderBy: [{ sortOrder: 'asc' }, { label: 'asc' }],
       }),
     ]);
 
@@ -126,7 +119,6 @@ export class PortfolioService {
       blogPosts,
       stats,
       cours,
-      technologies,
     };
   }
 }

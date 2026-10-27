@@ -27,10 +27,12 @@ export default function SkillsPage() {
   return (
     <div>
       <PageHeader title="Compétences" addHref="/skills/new" />
-      <table className="w-full text-sm"><thead><tr className="border-b border-border text-left"><th className="py-3 px-2">Technologie</th><th className="py-3 px-2">Niveau</th><th className="py-3 px-2 text-right">Actions</th></tr></thead>
+      <table className="w-full text-sm"><thead><tr className="border-b border-border text-left"><th className="py-3 px-2">Compétence</th><th className="py-3 px-2">Type</th><th className="py-3 px-2">Famille</th><th className="py-3 px-2">Niveau</th><th className="py-3 px-2 text-right">Actions</th></tr></thead>
         <tbody>{items.map((item) => (
           <tr key={item.id} className="border-b border-border">
-            <td className="py-3 px-2">{item.technology?.label || item.technologyId}</td>
+            <td className="py-3 px-2">{item.technology?.label ?? item.label}</td>
+            <td className="py-3 px-2 text-muted-foreground">{item.technology ? "Technologie" : "Libre"}</td>
+            <td className="py-3 px-2 text-muted-foreground">{(item.technology?.family ?? item.family)?.name ?? "Autres"}</td>
             <td className="py-3 px-2">{item.proficiency !== null ? `${item.proficiency}%` : "-"}</td>
             <td className="py-3 px-2 text-right space-x-2">
               <button onClick={() => router.push(`/skills/${item.id}/edit`)} className="text-xs px-3 py-1 rounded border border-border hover:bg-accent">Modifier</button>

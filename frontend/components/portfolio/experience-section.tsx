@@ -2,6 +2,7 @@
 
 import type { ExperienceDto, ProjectDto } from "@portfolio/shared-types";
 import { SeeMoreList } from "./see-more-button";
+import { Sentier } from "./sentier";
 import { useTranslation } from "@/lib/i18n/i18n-context";
 import { projetsParExperience } from "@/lib/portfolio/experience-projets";
 
@@ -35,7 +36,7 @@ function ExperienceCard({
   const mois = (dateStr: string) => dateStr.slice(0, 7);
 
   return (
-    // Trois colonnes : la date a gauche, hors du cadre ; la frise ; le cadre.
+    // Trois colonnes : la date a gauche, hors du cadre ; le sentier ; le cadre.
     <div className="experience-ligne">
       <div className="experience-dates">
         {/* La periode sur une ligne, insecable : « mars 2026 a aujourd'hui ». */}
@@ -52,7 +53,7 @@ function ExperienceCard({
       </div>
 
       <div className="experience-frise" aria-hidden="true">
-        <span className="experience-point" />
+        <Sentier graine={experience.id} enCours={experience.isCurrent} />
       </div>
 
       <div className="animated-card bg-card rounded-xl p-6 transition-colors">

@@ -1,8 +1,9 @@
 "use client";
 
-import { useState, useRef } from "react";
+import { useState } from "react";
 import { uploadFile, getFileUrl } from "@/lib/api";
 import { toast } from "sonner";
+import { ZoneDepot } from "@/components/zone-depot";
 
 interface ImageUploadProps {
   currentPath: string | null;
@@ -21,14 +22,11 @@ export function ImageUpload({ currentPath, category, onUpload, label = "Image" }
   const [uploading, setUploading] = useState(false);
   const [urlValue, setUrlValue] = useState(isExternalUrl(currentPath) ? currentPath ?? "" : "");
   const [urlError, setUrlError] = useState(false);
-  const inputRef = useRef<HTMLInputElement>(null);
 
   const displayUrl = preview || getFileUrl(currentPath);
 
-  async function handleFileChange(e: React.ChangeEvent<HTMLInputElement>) {
-    const file = e.target.files?.[0];
-    if (!file) return;
-
+  async function handleFile(file: File) {
+    setUrlError(false);
     setPreview(URL.createObjectURL(file));
     setUploading(true);
 
@@ -69,32 +67,31 @@ export function ImageUpload({ currentPath, category, onUpload, label = "Image" }
 
   return (
     <div>
-      <label className="block text-sm font-medium mb-1">{label}</label>
-
-      {/* Preview zone */}
-      <div
-        onClick={() => inputRef.current?.click()}
-        className="border-2 border-dashed border-border rounded-lg p-4 cursor-pointer hover:border-primary/50 transition-colors flex items-center justify-center min-h-[120px] relative"
-      >
-        {displayUrl && !urlError ? (
-          <img
-            src={displayUrl}
-            alt={label}
-            className="max-h-32 object-contain"
-            onError={handleImageError}
-          />
-        ) : (
-          <span className="text-muted-foreground text-sm">
-            {uploading ? "Upload en cours..." : urlError ? "Image introuvable" : "Cliquez pour uploader"}
-          </span>
-        )}
-      </div>
-      <input
-        ref={inputRef}
-        type="file"
+      <ZoneDepot
+        label={label}
         accept="image/*"
-        onChange={handleFileChange}
-        className="hidden"
+        envoi={uploading}
+        onFichier={(f) => void handleFile(f)}
+        refus="Seules les images sont acceptées"
+        rempli={Boolean(displayUrl && !urlError)}
+        apercu={
+          displayUrl && !urlError ? (
+            <img
+              src={displayUrl}
+              alt=""
+              className="h-20 w-20 shrink-0 rounded-md border border-border object-contain bg-muted/40"
+              onError={handleImageError}
+            />
+          ) : undefined
+        }
+        titre={
+          urlError
+            ? "Image introuvable"
+            : displayUrl
+              ? "Image en place"
+              : "Glissez une image ici ou cliquez pour choisir"
+        }
+        detail={displayUrl && !urlError ? "Cliquez ou glissez une autre image pour la remplacer" : "Elle sera convertie en WebP"}
       />
 
       {/* URL input - always visible */}

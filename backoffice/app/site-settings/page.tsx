@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 import { fetchSingleton, updateSingleton, uploadFile } from "@/lib/api";
 import { ImageUpload } from "@/components/image-upload";
+import { ZoneDepot } from "@/components/zone-depot";
 import { toast } from "sonner";
 import type { SiteSettingsDto } from "@portfolio/shared-types";
 import { TelechargementCv } from "@/components/telechargement-cv";
@@ -10,6 +11,7 @@ import { TelechargementCv } from "@/components/telechargement-cv";
 export default function SiteSettingsPage() {
   const [data, setData] = useState<SiteSettingsDto | null>(null);
   const [loading, setLoading] = useState(true);
+  const [envoiCv, setEnvoiCv] = useState(false);
   const [saving, setSaving] = useState(false);
 
   useEffect(() => {
@@ -34,15 +36,16 @@ export default function SiteSettingsPage() {
     }
   }
 
-  async function handleCvUpload(e: React.ChangeEvent<HTMLInputElement>) {
-    const file = e.target.files?.[0];
-    if (!file) return;
+  async function handleCvUpload(file: File) {
+    setEnvoiCv(true);
     try {
       const path = await uploadFile(file, "cv");
       setData((d) => d ? { ...d, cvFilePath: path } : d);
       toast.success("CV uploadé");
     } catch {
       toast.error("Erreur upload CV");
+    } finally {
+      setEnvoiCv(false);
     }
   }
 
@@ -128,18 +131,20 @@ export default function SiteSettingsPage() {
           <p className="text-xs text-muted-foreground mt-1">Minimum 1 minute</p>
         </div>
 
-        <div>
-          <label className="block text-sm font-medium mb-1">CV (PDF)</label>
-          <input
-            type="file"
-            accept=".pdf"
-            onChange={handleCvUpload}
-            className="w-full text-sm"
-          />
-          {data.cvFilePath && (
-            <p className="text-xs text-muted-foreground mt-1">Fichier actuel : {data.cvFilePath}</p>
-          )}
-        </div>
+        <ZoneDepot
+          label="CV (PDF)"
+          accept=".pdf,application/pdf"
+          envoi={envoiCv}
+          onFichier={(f) => void handleCvUpload(f)}
+          refus="Seuls les fichiers PDF sont acceptés"
+          rempli={Boolean(data.cvFilePath)}
+          titre={data.cvFilePath ? "CV en place" : "Glissez le CV ici ou cliquez pour choisir"}
+          detail={
+            data.cvFilePath
+              ? `${data.cvFilePath} · cliquez ou glissez un autre PDF pour le remplacer`
+              : "PDF uniquement"
+          }
+        />
 
         {/* Section visibility toggles */}
         <div>

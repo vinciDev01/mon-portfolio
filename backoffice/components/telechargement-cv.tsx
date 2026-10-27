@@ -16,6 +16,37 @@ function nomDepuisEnTete(entete: string | null, repli: string): string {
   return m ? m[1] : repli;
 }
 
+/** Une page cornee et l'etiquette du format, dans sa couleur d'usage :
+ *  rouge pour le PDF, bleu pour Word. Decorative, le texte du bouton dit
+ *  deja le format. */
+function IconeFormat({ format }: { format: "PDF" | "DOC" }) {
+  const couleur = format === "PDF" ? "#b91c1c" : "#1d4ed8";
+  return (
+    <svg viewBox="0 0 24 24" aria-hidden="true" className="size-6 shrink-0" fill="none">
+      <path
+        d="M14 2.5H6.5a2 2 0 0 0-2 2v15a2 2 0 0 0 2 2h11a2 2 0 0 0 2-2V8z"
+        stroke="currentColor"
+        strokeWidth="1.4"
+        strokeLinejoin="round"
+        className="text-muted-foreground"
+      />
+      <path d="M14 2.5V8h5.5" stroke="currentColor" strokeWidth="1.4" strokeLinejoin="round" className="text-muted-foreground" />
+      <rect x="2" y="11.5" width="15" height="7" rx="1.2" fill={couleur} />
+      <text
+        x="9.5"
+        y="16.6"
+        textAnchor="middle"
+        fontSize="5.2"
+        fontWeight="700"
+        fontFamily="system-ui, sans-serif"
+        fill="#fff"
+      >
+        {format}
+      </text>
+    </svg>
+  );
+}
+
 export function TelechargementCv() {
   const [enCours, setEnCours] = useState<string | null>(null);
 
@@ -42,7 +73,7 @@ export function TelechargementCv() {
   }
 
   const bouton =
-    "px-4 py-2 text-sm rounded-md border border-border hover:bg-muted disabled:opacity-50";
+    "inline-flex items-center gap-2 px-4 py-2 text-sm rounded-md border border-border hover:bg-muted disabled:opacity-50";
 
   return (
     <div className="flex flex-wrap gap-3">
@@ -52,6 +83,7 @@ export function TelechargementCv() {
         disabled={enCours !== null}
         className={bouton}
       >
+        <IconeFormat format="PDF" />
         {enCours === "generate" ? "Génération…" : "Télécharger le PDF"}
       </button>
       <button
@@ -60,6 +92,7 @@ export function TelechargementCv() {
         disabled={enCours !== null}
         className={bouton}
       >
+        <IconeFormat format="DOC" />
         {enCours === "generate.docx" ? "Génération…" : "Télécharger le Word"}
       </button>
     </div>

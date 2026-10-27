@@ -61,13 +61,28 @@ export function tracerBord(
 /** Le trace de repli, avant la mesure : boite 100 x 100, etiree. */
 const REPLI = "M 0.6 0.9 L 50 0.3 L 99.4 0.8 L 99.7 50 L 99.2 99.3 L 50 99.8 L 0.4 99.1 L 0.9 50 Z";
 
-export function BordImparfait({ graine, amplitude, pas }: { graine: string; amplitude?: number; pas?: number }) {
+/**
+ * `etire` : pas de mesure, un trace 100 x 100 etire sur le bloc. Pour les
+ * petites pieces nombreuses (les etiquettes), ou l'etirement ne se voit pas
+ * et ou cent observateurs de taille ne vaudraient pas leur cout.
+ */
+export function BordImparfait({
+  graine,
+  amplitude,
+  pas,
+  etire = false,
+}: {
+  graine: string;
+  amplitude?: number;
+  pas?: number;
+  etire?: boolean;
+}) {
   const svg = useRef<SVGSVGElement>(null);
   const [taille, setTaille] = useState<{ l: number; h: number } | null>(null);
 
   useLayoutEffect(() => {
     const el = svg.current;
-    if (!el) return;
+    if (!el || etire) return;
     const mesurer = () => {
       const { width, height } = el.getBoundingClientRect();
       if (width > 0 && height > 0) setTaille({ l: Math.round(width), h: Math.round(height) });
@@ -77,7 +92,15 @@ export function BordImparfait({ graine, amplitude, pas }: { graine: string; ampl
     const obs = new ResizeObserver(mesurer);
     obs.observe(el);
     return () => obs.disconnect();
-  }, []);
+  }, [etire]);
+
+  if (etire) {
+    return (
+      <svg className="bord-imparfait" viewBox="0 0 100 100" preserveAspectRatio="none" aria-hidden="true" focusable="false">
+        <path d={tracerBord(100, 100, graine, 2.5, 25)} />
+      </svg>
+    );
+  }
 
   return (
     <svg

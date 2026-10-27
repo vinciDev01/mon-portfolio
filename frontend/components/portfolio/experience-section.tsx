@@ -101,7 +101,7 @@ export function ExperienceSection({
           projets={parExperience.get(experience.id) ?? []}
         />
       )}
-      className="flex flex-col"
+      className="liste-experiences flex flex-col"
     />
   );
 }

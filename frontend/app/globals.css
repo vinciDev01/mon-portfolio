@@ -1366,11 +1366,14 @@ html {
        2026 », et son equivalent allemand. */
     grid-template-columns: 13.5rem 24px minmax(0, 1fr);
     column-gap: var(--espace-2);
-    padding-block-end: var(--espace-4);
+    --ecart-experiences: var(--espace-4);
+    padding-block-end: var(--ecart-experiences);
   }
 
-  .experience-ligne:last-child {
-    padding-block-end: 0;
+  /* Chaque experience est enveloppee par la liste « voir plus » : c'est
+     l'enveloppe qui est derniere, pas la ligne. */
+  .liste-experiences > :last-child > .experience-ligne {
+    --ecart-experiences: 0px;
   }
 
   /* Alignee a droite, contre la frise, et a hauteur du titre du cadre. */
@@ -1407,8 +1410,11 @@ html {
   /* Le sentier du parcours : un chemin en pointilles qui serpente d'une
      experience a l'autre, une pierre a chaque etape. Les troncons se
      raccordent : chacun part et revient au milieu de la colonne. */
+  /* Le sentier traverse l'ecart entre deux experiences : sa cellule
+     s'etire dans le padding de la ligne, sinon le chemin serait coupe. */
   .experience-frise {
     position: relative;
+    margin-block-end: calc(-1 * var(--ecart-experiences));
   }
 
   .sentier {
@@ -2219,107 +2225,30 @@ html {
     vector-effect: non-scaling-stroke;
   }
 
-  /* Les competences en carrousel : une piste qui defile, les cartes s'y
-     aimantent. Le padding laisse au bord imparfait la place d'onduler. */
-  .carrousel-competences {
-    display: flex;
-    flex-direction: column;
-    gap: var(--espace-2);
-  }
-
-  .piste-competences {
-    display: grid;
-    grid-auto-flow: column;
-    grid-auto-columns: 148px;
-    gap: var(--espace-2);
-    margin: 0;
-    padding: 4px 4px var(--espace-1);
-    list-style: none;
-    overflow-x: auto;
-    overscroll-behavior-x: contain;
-    scroll-snap-type: x mandatory;
-    scroll-padding-inline: 4px;
-    scrollbar-width: thin;
-  }
-
-  .piste-competences > li {
-    scroll-snap-align: start;
-  }
-
-  .piste-competences:focus-visible {
-    outline: 2px solid var(--accent);
-    outline-offset: 2px;
-  }
-
-  .carte-competence {
-    --bord-fond: var(--surface);
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    gap: 12px;
-    height: 100%;
-    padding: var(--espace-2);
-  }
-
-  .commandes-carrousel {
-    display: flex;
-    justify-content: flex-end;
-    gap: var(--espace-1);
-  }
-
-  .fleche-carrousel {
-    display: grid;
-    place-items: center;
-    width: 36px;
-    height: 36px;
-    color: var(--texte);
-    cursor: pointer;
-  }
-
-  .fleche-carrousel svg:not(.bord-imparfait) {
-    width: 16px;
-    height: 16px;
-  }
-
-  .fleche-carrousel:disabled {
-    color: var(--texte-secondaire);
-    cursor: default;
-    --bord-trait: var(--bordure);
-  }
-
-  .fleche-carrousel:focus-visible {
-    outline: 2px solid var(--accent);
-    outline-offset: 3px;
-  }
-
-  /* La boite a outils, sous le carrousel : une rangee par famille, le nom
-     grave a gauche, les etiquettes a droite. */
+  /* Les competences : une rangee par famille, le nom grave a gauche, une
+     bande d'etiquettes qui defile sans fin a droite. */
   .boite-outils {
-    margin-block-start: var(--espace-4);
-  }
-
-  .boite-outils-titre {
-    margin-block-end: var(--espace-2);
-    font-family: var(--font-mono);
-    font-size: var(--meta);
-    letter-spacing: 0.08em;
-    text-transform: uppercase;
-    color: var(--texte-secondaire);
+    display: flex;
+    flex-direction: column;
+    gap: var(--espace-2);
   }
 
   .tiroirs-outils {
     display: flex;
     flex-direction: column;
-    gap: var(--espace-2);
     margin: 0;
   }
 
-  .tiroir-outils {
+  .rangee-outils {
     display: grid;
-    grid-template-columns: 112px 1fr;
-    align-items: baseline;
+    grid-template-columns: 112px minmax(0, 1fr);
+    align-items: center;
     gap: var(--espace-2);
-    padding-block-start: var(--espace-2);
+    padding-block: 10px;
+    border-block-end: 1px dashed var(--bordure);
+  }
+
+  .rangee-outils:first-child {
     border-block-start: 1px dashed var(--bordure);
   }
 
@@ -2328,17 +2257,61 @@ html {
     font-size: 0.875rem;
   }
 
-  .tiroir-outils dd {
+  /* La fenetre de la bande : ce qui deborde est coupe net, sans fondu (le
+     site ne porte aucun degrade). Le padding laisse aux etiquettes de
+     travers la place de pencher. */
+  .defilement-outils {
     margin: 0;
+    padding-block: 4px;
+    overflow: hidden;
   }
 
-  .etiquettes-outils {
+  /* Deux copies bout a bout : quand la bande a recule d'une copie, elle est
+     revenue a son point de depart, et la boucle ne se voit pas. */
+  .bande-outils {
     display: flex;
-    flex-wrap: wrap;
+    width: max-content;
+    animation: defiler-outils var(--duree, 40s) linear infinite;
+  }
+
+  .rangee-outils[data-sens="inverse"] .bande-outils {
+    animation-direction: reverse;
+  }
+
+  .rangee-outils:hover .bande-outils,
+  .boite-outils[data-pause="true"] .bande-outils {
+    animation-play-state: paused;
+  }
+
+  @keyframes defiler-outils {
+    to {
+      translate: -50% 0;
+    }
+  }
+
+  .piste-outils,
+  .liste-outils-fixe {
+    display: flex;
     gap: 10px;
     margin: 0;
     padding: 0;
     list-style: none;
+  }
+
+  /* L'ecart apres la derniere etiquette egale celui entre deux : le raccord
+     des copies tombe juste. */
+  .piste-outils {
+    padding-inline-end: 10px;
+  }
+
+  /* La liste lue : hors de la vue tant que la bande defile. */
+  .liste-outils-fixe {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    overflow: hidden;
+    clip-path: inset(50%);
+    white-space: nowrap;
   }
 
   /* Une etiquette de papier : fond surface, bord imparfait, un rien de
@@ -2346,12 +2319,14 @@ html {
   .etiquette-outil {
     --bord-fond: var(--surface);
     display: inline-flex;
+    flex: none;
     align-items: center;
     gap: 6px;
     min-height: 28px;
     padding: 4px 10px;
     font-size: 0.8125rem;
     line-height: 1.2;
+    white-space: nowrap;
   }
 
   .etiquette-outil:nth-child(3n + 2) {
@@ -2368,9 +2343,71 @@ html {
     object-fit: contain;
   }
 
+  /* Le niveau en trois pierres : pleines jusqu'au niveau, creuses ensuite. */
+  .etiquette-niveau {
+    display: inline-flex;
+    gap: 2px;
+    margin-inline-start: 2px;
+  }
+
+  .etiquette-niveau > span {
+    width: 5px;
+    height: 5px;
+    border-radius: 45% 55% 50% 50%;
+    border: 1px solid var(--texte-secondaire);
+  }
+
+  .etiquette-niveau[data-niveau="1"] > span:nth-child(-n + 1),
+  .etiquette-niveau[data-niveau="2"] > span:nth-child(-n + 2),
+  .etiquette-niveau[data-niveau="3"] > span:nth-child(-n + 3) {
+    background: var(--texte-secondaire);
+  }
+
+  .pause-outils {
+    align-self: flex-end;
+    min-height: 24px;
+    padding: 2px 4px;
+    font-family: var(--font-mono);
+    font-size: var(--meta);
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    color: var(--texte-secondaire);
+    text-decoration: underline dashed;
+    text-underline-offset: 4px;
+    cursor: pointer;
+  }
+
+  .pause-outils:hover {
+    color: var(--texte);
+  }
+
+  .pause-outils:focus-visible {
+    outline: 2px solid var(--accent);
+    outline-offset: 2px;
+  }
+
+  /* Moins de mouvement : aucune bande, les etiquettes posees et fixes, sur
+     plusieurs lignes ; le bouton pause n'a plus d'objet. */
+  @media (prefers-reduced-motion: reduce) {
+    .bande-outils,
+    .pause-outils {
+      display: none;
+    }
+
+    .liste-outils-fixe {
+      position: static;
+      width: auto;
+      height: auto;
+      overflow: visible;
+      clip-path: none;
+      white-space: normal;
+      flex-wrap: wrap;
+    }
+  }
+
   @media (max-width: 639px) {
-    .tiroir-outils {
-      grid-template-columns: 1fr;
+    .rangee-outils {
+      grid-template-columns: minmax(0, 1fr);
       gap: var(--espace-1);
     }
   }
@@ -3103,6 +3140,19 @@ html {
      le `fill` du trace ne l'est pas. On force donc le `fill` avec la paire que
      le mode honore, Highlight pour le fond et HighlightText pour le texte, au
      lieu de sortir le panneau du mode. */
+  /* Les pierres de niveau : le mode forcerait leur fond a Canvas, et une
+     pierre pleine ne se distinguerait plus d'une creuse. */
+  .etiquette-niveau > span {
+    forced-color-adjust: none;
+    border-color: CanvasText;
+  }
+
+  .etiquette-niveau[data-niveau="1"] > span:nth-child(-n + 1),
+  .etiquette-niveau[data-niveau="2"] > span:nth-child(-n + 2),
+  .etiquette-niveau[data-niveau="3"] > span:nth-child(-n + 3) {
+    background: CanvasText;
+  }
+
   /* Le sentier : `fill` et `stroke` ne sont pas forces non plus. */
   .sentier-chemin {
     stroke: CanvasText;

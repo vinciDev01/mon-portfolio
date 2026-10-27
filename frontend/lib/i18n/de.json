@@ -107,9 +107,7 @@
   "projects.details": "Details",
   "projects.sansTitre": "Projekt ohne Titel",
 
-  "competences.carrousel": "Kompetenzen, durchblättern",
-  "competences.precedent": "Vorherige Kompetenzen",
-  "competences.outillage": "Werkzeugkasten",
-  "competences.autres": "Weitere",
-  "competences.suivant": "Nächste Kompetenzen"
+  "competences.pause": "Laufband anhalten",
+  "competences.reprendre": "Laufband fortsetzen",
+  "competences.autres": "Weitere"
 }

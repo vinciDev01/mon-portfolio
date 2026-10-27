@@ -3,7 +3,7 @@ import { afterEach, beforeEach, describe, expect, it } from "vitest";
 import { act, createElement, type ComponentType } from "react";
 import { createRoot, type Root } from "react-dom/client";
 import type { SkillDto, TechnologyDto } from "@portfolio/shared-types";
-import { rangerParFamille } from "@/lib/competences/outillage";
+import { niveauDe, rangerParFamille, remplirBande } from "@/lib/competences/outillage";
 import { I18nProvider } from "../i18n/i18n-context";
 import { tracerBord } from "@/components/portfolio/bord-imparfait";
 import { SkillsSection } from "@/components/portfolio/skills-section";
@@ -52,83 +52,13 @@ describe("trace du bord imparfait", () => {
 });
 
 const Fournisseur = I18nProvider as ComponentType<{ defaultLocale: string }>;
-const competence = (i: number) =>
-  ({ id: `s${i}`, proficiency: 50, technology: { id: `t${i}`, label: `Techno ${i}`, logoPath: null } }) as unknown as SkillDto;
+const fam = (id: string, sortOrder: number) => ({ id, name: id, sortOrder });
+const techno = (id: string, famille: ReturnType<typeof fam> | null, sortOrder = 0) =>
+  ({ id, label: id, logoPath: null, sortOrder, showInCv: true, familyId: famille?.id ?? null, family: famille }) as TechnologyDto;
+const competence = (t: TechnologyDto, proficiency: number | null) =>
+  ({ id: `s-${t.id}`, technologyId: t.id, proficiency, sortOrder: 0, technology: t }) as SkillDto;
 
-describe("carrousel des competences", () => {
-  let racine: Root;
-  let hote: HTMLElement;
-  beforeEach(() => {
-    hote = document.createElement("div");
-    document.body.appendChild(hote);
-    racine = createRoot(hote);
-  });
-  afterEach(() => {
-    act(() => racine.unmount());
-    hote.remove();
-  });
-
-  const monter = (n: number) =>
-    act(() => {
-      racine.render(
-        createElement(Fournisseur, { defaultLocale: "fr" }, createElement(SkillsSection, { skills: Array.from({ length: n }, (_, i) => competence(i)) })),
-      );
-    });
-
-  it("montre TOUTES les competences, sans bouton Voir plus", () => {
-    monter(14);
-    expect(hote.querySelectorAll(".piste-competences > li")).toHaveLength(14);
-    expect(hote.textContent).not.toMatch(/voir plus/i);
-  });
-
-  it("chaque carte porte son bord imparfait", () => {
-    monter(3);
-    for (const carte of hote.querySelectorAll(".carte-competence")) {
-      expect(carte.querySelector(":scope > svg.bord-imparfait")).not.toBeNull();
-    }
-  });
-
-  it("la piste prend le focus et porte un nom ; les fleches ont le leur", () => {
-    monter(3);
-    const piste = hote.querySelector(".piste-competences")!;
-    expect(piste.getAttribute("tabindex")).toBe("0");
-    expect(piste.getAttribute("aria-label")).toBeTruthy();
-    const fleches = [...hote.querySelectorAll<HTMLButtonElement>(".fleche-carrousel")];
-    expect(fleches).toHaveLength(2);
-    for (const f of fleches) expect(f.getAttribute("aria-label")).toBeTruthy();
-    // Au depart, on est a la butee gauche.
-    expect(fleches[0]!.disabled).toBe(true);
-  });
-
-  it("rien sans competence", () => {
-    monter(0);
-    expect(hote.innerHTML).toBe("");
-  });
-
-  it("la piste s aimante et defile a l horizontale", () => {
-    const b = bloc(/\.piste-competences\s*\{/);
-    expect(b).toMatch(/overflow-x:\s*auto/);
-    expect(b).toMatch(/scroll-snap-type:\s*x mandatory/);
-  });
-});
-
-describe("boite a outils", () => {
-  let racine: Root;
-  let hote: HTMLElement;
-  beforeEach(() => {
-    hote = document.createElement("div");
-    document.body.appendChild(hote);
-    racine = createRoot(hote);
-  });
-  afterEach(() => {
-    act(() => racine.unmount());
-    hote.remove();
-  });
-
-  const fam = (id: string, sortOrder: number) => ({ id, name: id, sortOrder });
-  const techno = (id: string, famille: ReturnType<typeof fam> | null, sortOrder = 0) =>
-    ({ id, label: id, logoPath: null, sortOrder, showInCv: true, familyId: famille?.id ?? null, family: famille }) as TechnologyDto;
-
+describe("rangement et bande", () => {
   it("range par famille dans leur ordre, Autres en dernier, sans tiroir vide", () => {
     const web = fam("Web", 2);
     const lang = fam("Langages", 1);
@@ -137,31 +67,104 @@ describe("boite a outils", () => {
     expect(tiroirs[1]!.technologies.map((t) => t.label)).toEqual(["HTML", "CSS"]);
   });
 
-  it("s affiche sous le carrousel, une etiquette imparfaite par technologie", () => {
-    const web = fam("Web", 1);
-    act(() => {
-      racine.render(
-        createElement(
-          Fournisseur,
-          { defaultLocale: "fr" },
-          createElement(SkillsSection, { skills: [competence(1)], technologies: [techno("HTML", web), techno("Git", null)] }),
-        ),
-      );
-    });
-    const boite = hote.querySelector(".boite-outils")!;
-    expect(boite).not.toBeNull();
-    // Apres le carrousel dans le flux.
-    expect(hote.querySelector(".carrousel-competences")!.compareDocumentPosition(boite) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
-    expect([...boite.querySelectorAll("dt")].map((d) => d.textContent)).toEqual(["Web", "Autres"]);
-    const etiquettes = boite.querySelectorAll(".etiquette-outil");
-    expect(etiquettes).toHaveLength(2);
-    for (const e of etiquettes) expect(e.querySelector(":scope > svg.bord-imparfait")).not.toBeNull();
+  it("remplit une bande courte par repetition, sans toucher une longue", () => {
+    expect(remplirBande(["a", "b", "c"], 10)).toHaveLength(12);
+    expect(remplirBande(["a", "b", "c"], 10).slice(3, 6)).toEqual(["a", "b", "c"]);
+    expect(remplirBande(Array.from({ length: 12 }, (_, i) => i), 10)).toHaveLength(12);
+    expect(remplirBande([], 10)).toEqual([]);
   });
 
-  it("aucune boite sans technologie", () => {
+  it("traduit la maitrise en une a trois pierres", () => {
+    expect([null, 40, 60, 79, 80, 100].map(niveauDe)).toEqual([0, 1, 2, 2, 3, 3]);
+  });
+});
+
+describe("competences en rangees qui defilent", () => {
+  let racine: Root;
+  let hote: HTMLElement;
+  beforeEach(() => {
+    hote = document.createElement("div");
+    document.body.appendChild(hote);
+    racine = createRoot(hote);
+  });
+  afterEach(() => {
+    act(() => racine.unmount());
+    hote.remove();
+  });
+
+  const web = fam("Web", 1);
+  const html = techno("HTML", web);
+  const css = techno("CSS", web, 1);
+  const git = techno("Git", null);
+  const monter = (props: { skills: SkillDto[]; technologies?: TechnologyDto[] }) =>
     act(() => {
-      racine.render(createElement(Fournisseur, { defaultLocale: "fr" }, createElement(SkillsSection, { skills: [competence(1)] })));
+      racine.render(createElement(Fournisseur, { defaultLocale: "fr" }, createElement(SkillsSection, props)));
     });
-    expect(hote.querySelector(".boite-outils")).toBeNull();
+
+  it("une seule vue : ni carrousel, ni seconde liste", () => {
+    monter({ skills: [competence(html, 90)], technologies: [html, css, git] });
+    expect(hote.querySelector(".carrousel-competences, .carte-competence")).toBeNull();
+    expect(hote.querySelectorAll(".boite-outils")).toHaveLength(1);
+  });
+
+  it("une rangee par famille, et chaque technologie lue une seule fois", () => {
+    monter({ skills: [], technologies: [html, css, git] });
+    expect([...hote.querySelectorAll("dt")].map((d) => d.textContent)).toEqual(["Web", "Autres"]);
+    // Les listes lues : chaque technologie une fois.
+    const lues = [...hote.querySelectorAll(".liste-outils-fixe > li")].map((li) => li.textContent);
+    expect(lues).toEqual(["HTML", "CSS", "Git"]);
+    // La bande defilante n'est pas lue.
+    for (const b of hote.querySelectorAll(".bande-outils")) expect(b.getAttribute("aria-hidden")).toBe("true");
+  });
+
+  it("la bande porte deux copies identiques, assez longues pour boucler", () => {
+    monter({ skills: [], technologies: [html, css] });
+    const pistes = [...hote.querySelectorAll(".bande-outils .piste-outils")];
+    expect(pistes).toHaveLength(2);
+    expect(pistes[0]!.textContent).toBe(pistes[1]!.textContent);
+    expect(pistes[0]!.querySelectorAll("li").length).toBeGreaterThanOrEqual(10);
+  });
+
+  it("une rangee sur deux defile dans l autre sens", () => {
+    monter({ skills: [], technologies: [html, git] });
+    const rangees = [...hote.querySelectorAll(".rangee-outils")];
+    expect(rangees[0]!.getAttribute("data-sens")).toBeNull();
+    expect(rangees[1]!.getAttribute("data-sens")).toBe("inverse");
+  });
+
+  it("chaque etiquette a son bord imparfait, et une competence ses pierres", () => {
+    monter({ skills: [competence(html, 90)], technologies: [html, css] });
+    const fixes = [...hote.querySelectorAll(".liste-outils-fixe > li")];
+    for (const e of fixes) expect(e.querySelector(":scope > svg.bord-imparfait")).not.toBeNull();
+    expect(fixes[0]!.querySelector(".etiquette-niveau")?.getAttribute("data-niveau")).toBe("3");
+    expect(fixes[1]!.querySelector(".etiquette-niveau")).toBeNull();
+  });
+
+  it("le bouton met en pause et reprend", () => {
+    monter({ skills: [], technologies: [html] });
+    const bouton = hote.querySelector<HTMLButtonElement>(".pause-outils")!;
+    const avant = bouton.textContent;
+    act(() => bouton.click());
+    expect(hote.querySelector(".boite-outils")!.getAttribute("data-pause")).toBe("true");
+    expect(bouton.textContent).not.toBe(avant);
+    act(() => bouton.click());
+    expect(hote.querySelector(".boite-outils")!.getAttribute("data-pause")).toBeNull();
+  });
+
+  it("sans liste de technologies, celles des competences suffisent ; rien sans aucune", () => {
+    monter({ skills: [competence(git, 50)] });
+    expect(hote.querySelectorAll(".liste-outils-fixe > li")).toHaveLength(1);
+    monter({ skills: [] });
+    expect(hote.innerHTML).toBe("");
+  });
+
+  it("defile en boucle, s arrete au survol, en pause, et pour moins de mouvement", () => {
+    expect(bloc(/\.bande-outils\s*\{/)).toMatch(/animation:\s*defiler-outils[^;]*infinite/);
+    expect(bloc(/@keyframes defiler-outils\s*\{/)).toMatch(/translate:\s*-50% 0/);
+    expect(bloc(/\.boite-outils\[data-pause="true"\] \.bande-outils\s*\{/)).toMatch(/animation-play-state:\s*paused/);
+    const reduit = bloc(/@media \(prefers-reduced-motion: reduce\)\s*\{(?=\s*\.bande-outils)/);
+    expect(reduit).toMatch(/display:\s*none/);
+    expect(reduit).toMatch(/\.liste-outils-fixe\s*\{[^}]*position:\s*static/);
+    expect(bloc(/\.defilement-outils\s*\{/)).toMatch(/overflow:\s*hidden/);
   });
 });

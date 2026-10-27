@@ -107,9 +107,7 @@
   "projects.details": "Détails",
   "projects.sansTitre": "Projet sans titre",
 
-  "competences.carrousel": "Compétences, faire défiler",
-  "competences.precedent": "Compétences précédentes",
-  "competences.outillage": "Boîte à outils",
-  "competences.autres": "Autres",
-  "competences.suivant": "Compétences suivantes"
+  "competences.pause": "Mettre en pause le défilement",
+  "competences.reprendre": "Reprendre le défilement",
+  "competences.autres": "Autres"
 }

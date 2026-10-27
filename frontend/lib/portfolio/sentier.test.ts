@@ -46,4 +46,15 @@ describe("sentier des experiences", () => {
     expect(cssNu).toMatch(/@property --sentier-etape\s*\{[^}]*syntax:\s*"<length>"/);
     expect(cssNu).not.toMatch(/\.sentier[^{]*\{[^}]*(transition|animation)/);
   });
+
+  it("laisse un espace sous chaque experience sauf la derniere, malgre l enveloppe de la liste", () => {
+    const ligne = bloc(/^\s*\.experience-ligne\s*\{/m);
+    expect(ligne).toMatch(/--ecart-experiences:\s*var\(--espace-4\)/);
+    expect(ligne).toMatch(/padding-block-end:\s*var\(--ecart-experiences\)/);
+    // Le sentier traverse l'ecart : sa cellule s'etire dedans.
+    expect(bloc(/^\s*\.experience-frise\s*\{/m)).toMatch(/margin-block-end:\s*calc\(-1 \* var\(--ecart-experiences\)\)/);
+    // `:last-child` sur la ligne elle-meme viserait chaque ligne, seule dans son enveloppe.
+    expect(cssNu).not.toMatch(/\.experience-ligne:last-child/);
+    expect(cssNu).toMatch(/\.liste-experiences > :last-child > \.experience-ligne\s*\{[^}]*--ecart-experiences:\s*0px/);
+  });
 });

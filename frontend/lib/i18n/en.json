@@ -107,9 +107,7 @@
   "projects.details": "Details",
   "projects.sansTitre": "Untitled project",
 
-  "competences.carrousel": "Skills, scroll through",
-  "competences.precedent": "Previous skills",
-  "competences.outillage": "Toolbox",
-  "competences.autres": "Other",
-  "competences.suivant": "Next skills"
+  "competences.pause": "Pause scrolling",
+  "competences.reprendre": "Resume scrolling",
+  "competences.autres": "Other"
 }

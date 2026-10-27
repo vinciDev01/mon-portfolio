@@ -22,6 +22,7 @@ import {
   type SectionBrouillon,
 } from './ordre-sections';
 import { grouperTechnologies } from './technologies-cv';
+import { ligneCours, ligneExperience } from './contenu-cv';
 import {
   hrefDeLien,
   lignesContact,
@@ -30,13 +31,20 @@ import {
   type LigneContact,
 } from './en-tete';
 
-/** Rangs implicites des sections alimentees par la base. */
+/**
+ * Rangs implicites des sections alimentees par la base, dans l'ordre ou un
+ * recruteur lit un CV : qui (presentation), ce qu'il a fait (experiences),
+ * ce qu'il sait faire (competences, technologies), ce qu'il a construit
+ * (projets), puis ce qui le confirme (certifications, cours rediges).
+ */
 const RANG = {
   presentation: 10,
+  experiences: 20,
+  competences: 25,
   technologies: 30,
-  certifications: 40,
-  experiences: 50,
-  projets: 60,
+  projets: 40,
+  certifications: 50,
+  cours: 55,
 } as const;
 
 /** Mise en page, en points PostScript. 56 pt valent environ 2 cm. */
@@ -84,16 +92,6 @@ function policeWord(reglage: string | undefined): string {
 /** Document produit : le contenu et le nom sous lequel il se telecharge. */
 export type DocumentCv = { contenu: Buffer; nom: string };
 
-/** « Juillet 2025 ». */
-function moisAnnee(date: Date | null | undefined): string {
-  if (!date) return '';
-  const s = new Intl.DateTimeFormat('fr-FR', {
-    month: 'long',
-    year: 'numeric',
-  }).format(new Date(date));
-  return s.charAt(0).toUpperCase() + s.slice(1);
-}
-
 @Injectable()
 export class CvGeneratorService {
   constructor(private readonly prisma: PrismaService) { }
@@ -114,6 +112,8 @@ export class CvGeneratorService {
       experiences,
       projets,
       sectionsLibres,
+      competencesLibres,
+      cours,
     ] = await Promise.all([
       this.prisma.personalInfo.findFirst(),
       this.prisma.siteSettings.findFirst(),
@@ -128,9 +128,24 @@ export class CvGeneratorService {
         include: { organization: true },
         orderBy: { sortOrder: 'asc' },
       }),
-      this.prisma.experience.findMany({ orderBy: { startDate: 'desc' } }),
+      this.prisma.experience.findMany({
+        orderBy: { startDate: 'desc' },
+        include: { projects: { orderBy: { sortOrder: 'asc' }, select: { name: true } } },
+      }),
       this.prisma.project.findMany({ orderBy: { sortOrder: 'asc' } }),
       this.prisma.cvSection.findMany({ orderBy: { sortOrder: 'asc' } }),
+      // Les competences sans technologie (management...) : les techniques
+      // sont deja dans TECHNOLOGIES.
+      this.prisma.skill.findMany({
+        where: { technologyId: null },
+        orderBy: { sortOrder: 'asc' },
+        include: { family: true },
+      }),
+      this.prisma.cours.findMany({
+        where: { publique: true },
+        orderBy: [{ sortOrder: 'asc' }, { titre: 'asc' }],
+        include: { technology: true },
+      }),
     ]);
 
     const polices = choisirPolices(reglages?.cvFontFamily);
@@ -172,21 +187,44 @@ export class CvGeneratorService {
         cle: 'experiences' as const,
         titre: 'EXPÉRIENCES PROFESSIONNELLES',
         rang: RANG.experiences,
-        lignes: experiences.map((e) => {
-          const debut = moisAnnee(e.startDate);
-          const fin = e.isCurrent ? "aujourd'hui" : moisAnnee(e.endDate);
-          const periode = [debut, fin].filter(Boolean).join(' à ');
-          return `${periode ? `${periode} : ` : ''}${e.role} à ${e.company}`;
-        }),
+        // Ce qui y a ete fait et les projets menes, dans l'entree meme.
+        lignes: experiences.map((e) =>
+          ligneExperience(
+            e,
+            e.projects.map((p) => p.name),
+          ),
+        ),
       },
+      (() => {
+        const paires = grouperTechnologies(
+          competencesLibres.map((s) => ({ label: s.label ?? '', family: s.family })).filter((s) => s.label),
+        );
+        return {
+          cle: 'competences' as const,
+          titre: 'COMPÉTENCES',
+          rang: RANG.competences,
+          lignes: paires.map((p) => (p.etiquette ? `${p.etiquette} : ${p.valeur}` : p.valeur)),
+          paires,
+        };
+      })(),
       {
         cle: 'projets' as const,
         titre: 'PROJETS RÉALISÉS',
         rang: RANG.projets,
-        lignes: projets.map((p, i) => {
-          const detail = p.description ? ` : ${p.description}` : '';
-          return `${i + 1}. ${p.name}${detail}`;
-        }),
+        // Les projets d'une experience sont cites sous elle : ici, les autres
+        // (personnels, independants), sans doublon.
+        lignes: projets
+          .filter((p) => !p.experienceId)
+          .map((p, i) => {
+            const detail = p.description ? ` : ${p.description}` : '';
+            return `${i + 1}. ${p.name}${detail}`;
+          }),
+      },
+      {
+        cle: 'cours' as const,
+        titre: 'COURS RÉDIGÉS',
+        rang: RANG.cours,
+        lignes: cours.map(ligneCours),
       },
     ];
 

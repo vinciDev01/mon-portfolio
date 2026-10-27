@@ -12,10 +12,12 @@
  *  edite leurs donnees : c'est la qu'on les modifie, pas ici. */
 export const RANGS_DE_LA_BASE = [
   { cle: "presentation", rang: 10, titre: "PRÉSENTATION", page: "/presentations" },
+  { cle: "experiences", rang: 20, titre: "EXPÉRIENCES PROFESSIONNELLES", page: "/experiences" },
+  { cle: "competences", rang: 25, titre: "COMPÉTENCES", page: "/skills" },
   { cle: "technologies", rang: 30, titre: "TECHNOLOGIES", page: "/technologies" },
-  { cle: "certifications", rang: 40, titre: "CERTIFICATIONS", page: "/certifications" },
-  { cle: "experiences", rang: 50, titre: "EXPÉRIENCES PROFESSIONNELLES", page: "/experiences" },
-  { cle: "projets", rang: 60, titre: "PROJETS RÉALISÉS", page: "/projects" },
+  { cle: "projets", rang: 40, titre: "PROJETS RÉALISÉS", page: "/projects" },
+  { cle: "certifications", rang: 50, titre: "CERTIFICATIONS", page: "/certifications" },
+  { cle: "cours", rang: 55, titre: "COURS RÉDIGÉS", page: "/cours" },
 ] as const;
 
 export type ValeursSection = {

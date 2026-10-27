@@ -42,7 +42,8 @@ function decouper(lignes: string): string[] {
  * ordonne.
  *
  * Les sections de la base portent un rang implicite (presentation 10,
- * technologies 30, certifications 40, experiences 50, projets 60) ; les
+ * experiences 20, competences 25, technologies 30, projets 40,
+ * certifications 50, cours 55) ; les
  * sections libres s'intercalent par leur `sortOrder`. A rang egal, la base
  * passe en premier : c'est le tri stable de `Array.prototype.sort`, garanti
  * par la specification depuis ES2019.
@@ -102,10 +103,12 @@ export function avecBrouillon<T extends SectionBrouillon>(
  *  retirer du CV une a une. */
 export const CLES_SECTIONS_BASE = [
   'presentation',
-  'technologies',
-  'certifications',
   'experiences',
+  'competences',
+  'technologies',
   'projets',
+  'certifications',
+  'cours',
 ] as const;
 export type CleSectionBase = (typeof CLES_SECTIONS_BASE)[number];
 

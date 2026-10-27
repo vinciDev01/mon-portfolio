@@ -13,6 +13,8 @@ function baseVide() {
     experience: vide(),
     project: vide(),
     cvSection: vide(),
+    skill: vide(),
+    cours: vide(),
   };
 }
 
@@ -25,6 +27,13 @@ describe('les technologies du CV', () => {
       orderBy: { sortOrder: 'asc' },
       include: { family: true },
     });
+  });
+
+  it('ne reprend que les competences libres : les techniques sont deja dans TECHNOLOGIES', async () => {
+    const prisma = baseVide();
+    await new CvGeneratorService(prisma as never).generatePdf();
+    expect(prisma.skill.findMany).toHaveBeenCalledWith(expect.objectContaining({ where: { technologyId: null } }));
+    expect(prisma.cours.findMany).toHaveBeenCalledWith(expect.objectContaining({ where: { publique: true } }));
   });
 });
 

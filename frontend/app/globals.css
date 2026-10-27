@@ -613,6 +613,33 @@ html {
     border-radius: 999px 999px 6px 6px;
     background: var(--accent);
     z-index: -1;
+    /* Son arche a elle, aux bords uses, differente de celle de la photo. */
+    clip-path: var(--arche-echo, none);
+  }
+
+  /* Les gabarits des deux arches : definis dans la page, sans place. */
+  .medaillon-gabarits {
+    position: absolute;
+    width: 0;
+    height: 0;
+  }
+
+  /* Le trait de crayon qui suit le bord de la photo, par-dessus elle. */
+  .medaillon-trait {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    overflow: visible;
+    pointer-events: none;
+  }
+
+  .medaillon-trait path {
+    fill: none;
+    stroke: var(--bordure-signifiante);
+    stroke-width: 1.25;
+    stroke-linejoin: round;
+    vector-effect: non-scaling-stroke;
   }
 
   .medaillon {
@@ -623,6 +650,8 @@ html {
     background: var(--surface);
     overflow: hidden;
     object-fit: cover;
+    /* L'arche tracee a la main ; l'arrondi ci-dessus reste le repli. */
+    clip-path: var(--arche-photo, none);
   }
 
   .medaillon-repli {

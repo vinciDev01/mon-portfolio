@@ -77,7 +77,8 @@ describe("medaillon (spec section 8)", () => {
     expect(balise).toContain('width="176"');
     expect(balise).toContain('height="220"');
     expect(balise).toContain('class="medaillon"');
-    expect(html).toMatch(/<span class="medaillon-niche">\s*<img/);
+    // L'image est dans la niche, apres les gabarits de ses arches.
+    expect(html).toMatch(/<span class="medaillon-niche"[^>]*>[\s\S]*?<img[^>]*class="medaillon"/);
   });
 
   it("se replie sur les initiales quand avatarPath est nul", () => {

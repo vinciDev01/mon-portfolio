@@ -1,10 +1,46 @@
 "use client";
 
+import { useId, type CSSProperties, type ReactNode } from "react";
 import type { PersonalInfoDto } from "@portfolio/shared-types";
 import { TAILLES_MEDAILLON, nomVariante } from "@portfolio/shared-types";
 import { getFileUrl } from "@/lib/api";
 import { useTranslation } from "@/lib/i18n/i18n-context";
 import { initialesDe } from "@/lib/parcours/identite";
+import { tracerArche } from "@/lib/parcours/arche";
+
+/**
+ * La niche aux bords uses : la photo et son echo sont decoupes chacun par
+ * une arche tracee a la main (`objectBoundingBox` : le meme gabarit sert aux
+ * trois tailles du medaillon), et un trait de crayon suit le bord de la
+ * photo. Sans `clip-path`, l'arrondi de la feuille reste le repli.
+ */
+function Niche({ graine, children }: { graine: string; children: ReactNode }) {
+  // `useId` rend des deux-points, que `url(#...)` lirait mal.
+  const id = useId().replace(/[^a-zA-Z0-9_-]/g, "");
+  const photo = tracerArche(`${graine}:photo`);
+  const echo = tracerArche(`${graine}:echo`);
+  return (
+    <span
+      className="medaillon-niche"
+      style={{ "--arche-photo": `url(#arche-photo-${id})`, "--arche-echo": `url(#arche-echo-${id})` } as CSSProperties}
+    >
+      <svg className="medaillon-gabarits" width="0" height="0" aria-hidden="true" focusable="false">
+        <defs>
+          <clipPath id={`arche-photo-${id}`} clipPathUnits="objectBoundingBox">
+            <path d={photo} />
+          </clipPath>
+          <clipPath id={`arche-echo-${id}`} clipPathUnits="objectBoundingBox">
+            <path d={echo} />
+          </clipPath>
+        </defs>
+      </svg>
+      {children}
+      <svg className="medaillon-trait" viewBox="0 0 1 1" preserveAspectRatio="none" aria-hidden="true" focusable="false">
+        <path d={photo} />
+      </svg>
+    </span>
+  );
+}
 
 /** Vrai quand le medaillon a quelque chose a montrer : photo ou initiales. */
 export function aUnPortrait(infos: PersonalInfoDto): boolean {
@@ -34,11 +70,11 @@ export function Medaillon({ infos }: { infos: PersonalInfoDto }) {
 
   if (!infos.avatarPath) {
     return (
-      <span className="medaillon-niche">
+      <Niche graine={initiales}>
         <span className="medaillon medaillon-repli" aria-hidden="true">
           {initiales}
         </span>
-      </span>
+      </Niche>
     );
   }
 
@@ -52,7 +88,7 @@ export function Medaillon({ infos }: { infos: PersonalInfoDto }) {
     <>
       {/* next/image ne sait pas exprimer un srcSet de densite construit a la
           main sur des variantes generees au televersement. */}
-      <span className="medaillon-niche">
+      <Niche graine={infos.avatarPath}>
         {/* eslint-disable-next-line @next/next/no-img-element */}
         <img
           className="medaillon"
@@ -64,7 +100,7 @@ export function Medaillon({ infos }: { infos: PersonalInfoDto }) {
             nom: [infos.name, infos.surname].filter(Boolean).join(" "),
           })}
         />
-      </span>
+      </Niche>
     </>
   );
 }

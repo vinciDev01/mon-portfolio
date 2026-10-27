@@ -102,7 +102,27 @@ export async function deleteEntity(entity: string, id: string): Promise<void> {
   const res = await appelerApi(`/api/${entity}/${id}`, {
     method: "DELETE",
   });
-  if (!res.ok) throw new Error(`Failed to delete ${entity}/${id}`);
+  // Le message de l'API passe tel quel : un refus (409, une technologie qui
+  // a des cours) doit dire pourquoi.
+  if (!res.ok) {
+    const err = await res.json().catch(() => ({}));
+    throw new Error(err.message || `Failed to delete ${entity}/${id}`);
+  }
+}
+
+/** Le PDF d'un cours : envoye a part, range hors du dossier public. L'API
+ *  rend son nom, sa taille et ses pages lues ; le formulaire les reprend. */
+export async function uploadCoursPdf(
+  file: File,
+): Promise<{ fichier: string; taille: number; pages: number | null }> {
+  const formData = new FormData();
+  formData.append("file", file);
+  const res = await appelerApi(`/api/cours/fichier`, { method: "POST", body: formData });
+  if (!res.ok) {
+    const err = await res.json().catch(() => ({}));
+    throw new Error(err.message || "Echec de l'envoi du PDF");
+  }
+  return res.json();
 }
 
 export async function uploadFile(file: File, category: string): Promise<string> {

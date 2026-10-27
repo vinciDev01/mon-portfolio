@@ -27,8 +27,9 @@ export default function TechnologiesPage() {
       await deleteEntity("technologies", deleteId);
       setItems((prev) => prev.filter((i) => i.id !== deleteId));
       toast.success("Technologie supprimée");
-    } catch {
-      toast.error("Erreur de suppression");
+    } catch (err) {
+      // Une technologie qui a des cours ne se supprime pas : l'API dit pourquoi.
+      toast.error(err instanceof Error && !err.message.startsWith("Failed") ? err.message : "Erreur de suppression");
     }
     setDeleteId(null);
   }

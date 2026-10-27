@@ -150,6 +150,7 @@ export default function SiteSettingsPage() {
               { key: "showSkills", label: "Compétences" },
               { key: "showExperiences", label: "Expériences" },
               { key: "showCertifications", label: "Certifications" },
+              { key: "showCours", label: "Cours" },
               { key: "showProjects", label: "Projets" },
               { key: "showServices", label: "Services" },
               { key: "showAbout", label: "À propos" },

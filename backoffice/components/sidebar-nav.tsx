@@ -21,6 +21,7 @@ const sections: Item[] = [
   { href: "/skills", label: "Compétences" },
   { href: "/experiences", label: "Expériences" },
   { href: "/certifications", label: "Certifications" },
+  { href: "/cours", label: "Cours" },
   { href: "/projects", label: "Projets" },
   { href: "/services", label: "Services" },
   { href: "/about", label: "À propos" },

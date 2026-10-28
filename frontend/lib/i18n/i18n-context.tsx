@@ -1,6 +1,6 @@
 "use client";
 
-import { createContext, useContext, useState, useCallback, useEffect, type ReactNode } from "react";
+import { createContext, useContext, useCallback, useEffect, useSyncExternalStore, type ReactNode } from "react";
 import fr from "./fr.json";
 import en from "./en.json";
 import de from "./de.json";
@@ -17,6 +17,33 @@ interface I18nContextValue {
 
 const I18nContext = createContext<I18nContextValue | null>(null);
 
+const CLE_LANGUE = "portfolio-locale";
+/** Prevenir les abonnes de cet onglet : `storage` ne part que vers les autres. */
+const EVENEMENT_LANGUE = "portfolio-locale";
+
+/** Le dernier choix de la page, pour un navigateur qui refuse le stockage :
+ *  la langue change quand meme, sans etre retenue d'une visite a l'autre. */
+let choixEnMemoire: Locale | null = null;
+
+/** La langue choisie, lue dans le navigateur ; null si aucune n'est valide. */
+function langueEnregistree(): Locale | null {
+  try {
+    const l = localStorage.getItem(CLE_LANGUE) as Locale | null;
+    return l && dictionaries[l] ? l : null;
+  } catch {
+    return choixEnMemoire;
+  }
+}
+
+function abonnerLangue(prevenir: () => void) {
+  window.addEventListener("storage", prevenir);
+  window.addEventListener(EVENEMENT_LANGUE, prevenir);
+  return () => {
+    window.removeEventListener("storage", prevenir);
+    window.removeEventListener(EVENEMENT_LANGUE, prevenir);
+  };
+}
+
 export function I18nProvider({
   defaultLocale = "fr",
   children,
@@ -25,16 +52,11 @@ export function I18nProvider({
   children: ReactNode;
 }) {
   const safeDefault = (dictionaries[defaultLocale as Locale] ? defaultLocale : "fr") as Locale;
-  // Initialize with server-safe default to avoid hydration mismatch
-  const [locale, setLocaleState] = useState<Locale>(safeDefault);
-
-  // After hydration, read localStorage preference
-  useEffect(() => {
-    const stored = localStorage.getItem("portfolio-locale") as Locale | null;
-    if (stored && dictionaries[stored]) {
-      setLocaleState(stored);
-    }
-  }, []);
+  // La langue enregistree, lue par React dans le navigateur ; au rendu
+  // serveur, et donc a l'hydratation, la langue par defaut : aucune
+  // divergence. Un choix fait dans un autre onglet suit aussi.
+  const enregistree = useSyncExternalStore(abonnerLangue, langueEnregistree, () => null);
+  const locale = enregistree ?? safeDefault;
 
   // Garde `lang` sur `<html>` synchronise avec la locale courante (assainie,
   // jamais la valeur brute) a chaque changement, WCAG 3.1.2. S'execute apres
@@ -45,8 +67,13 @@ export function I18nProvider({
   }, [locale]);
 
   const setLocale = useCallback((newLocale: Locale) => {
-    setLocaleState(newLocale);
-    localStorage.setItem("portfolio-locale", newLocale);
+    choixEnMemoire = newLocale;
+    try {
+      localStorage.setItem(CLE_LANGUE, newLocale);
+    } catch {
+      // Stockage refuse (navigation privee stricte) : la langue ne suit pas.
+    }
+    window.dispatchEvent(new Event(EVENEMENT_LANGUE));
   }, []);
 
   const t = useCallback(

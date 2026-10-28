@@ -98,8 +98,9 @@ export function TelechargementCv() {
         const pdf = `generate${l.suffixe}`;
         const docx = `generate.docx${l.suffixe}`;
         return (
-          <div key={l.code} className="flex flex-wrap items-center gap-3">
-            <span className="w-20 text-sm text-muted-foreground">{l.libelle}</span>
+          <div key={l.code}>
+            <p className="text-xs font-medium text-muted-foreground mb-1.5">{l.libelle}</p>
+            <div className="flex flex-wrap gap-2">
             <button
               type="button"
               onClick={() => telecharger(pdf, "CV.pdf")}
@@ -118,6 +119,7 @@ export function TelechargementCv() {
               <IconeFormat format="DOC" />
               {enCours === docx ? "Génération…" : "Télécharger le Word"}
             </button>
+            </div>
           </div>
         );
       })}

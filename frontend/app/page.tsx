@@ -3,6 +3,7 @@ import { connection } from "next/server";
 import { getFileUrl, getPortfolioData } from "@/lib/api";
 import { enJsonLd, fichePersonne, ficheSite, urlDuSite } from "@/lib/seo/seo";
 import { Ampoule } from "@/components/ampoule/ampoule";
+import { Hublot } from "@/components/horizon/hublot";
 import { ColonnePassage } from "@/components/parcours/colonne-passage";
 import { FournisseurSectionActive, ParcoursPagine } from "@/components/parcours/parcours-pagine";
 import { Medaillon } from "@/components/parcours/medaillon";
@@ -141,6 +142,7 @@ export default async function Page() {
           sans montrer l'accueil le temps que React demarre. */}
       <script dangerouslySetInnerHTML={{ __html: scriptArrivee(sections.map((x) => x.id)) }} />
       <Ampoule />
+      <Hublot />
       <ColonnePassage reglages={s} infos={data.personalInfo} />
       <main className="min-h-screen">
         <ParcoursPagine

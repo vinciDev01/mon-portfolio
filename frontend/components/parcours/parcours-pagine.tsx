@@ -20,6 +20,7 @@ import {
   type Direction,
 } from "@/lib/parcours/pagination";
 import { actionClavier, directionTactile, traiterMolette } from "@/lib/parcours/gestes";
+import { leverArrivee } from "@/lib/parcours/script-arrivee";
 import {
   analyserDuree,
   creerSequenceur,
@@ -422,11 +423,17 @@ export function ParcoursPagine({
       // devine : React commit apres ce passage, le premier rafraichissement
       // peint l'etat valide, le second est certain de l'avoir vu. On ne
       // restaure qu'ensuite.
+      // Le script d'arrivee (voir `script-arrivee.ts`) tenait la section
+      // affichee depuis l'analyse du HTML : il se retire une fois la cible
+      // activee pour de bon, au meme moment que la suspension.
       trame = requestAnimationFrame(() => {
         trame = requestAnimationFrame(() => {
           suspendreTransitions(els, false);
+          leverArrivee();
         });
       });
+    } else {
+      leverArrivee();
     }
 
     // Sur `window` et non sur le conteneur : la colonne et l'interrupteur de
@@ -443,6 +450,7 @@ export function ParcoursPagine({
     return () => {
       sequenceur.annuler();
       cancelAnimationFrame(trame);
+      leverArrivee();
       suspendreTransitions(els, false);
       window.removeEventListener("wheel", surMolette);
       window.removeEventListener("touchstart", surDebutTactile);

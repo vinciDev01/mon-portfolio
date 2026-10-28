@@ -23,6 +23,7 @@ import { StatsSection } from "@/components/portfolio/stats-section";
 import { ServicesSection } from "@/components/portfolio/services-section";
 import { TestimonialsSection } from "@/components/portfolio/testimonials-section";
 import { sectionsActives } from "@/lib/parcours/sections";
+import { scriptArrivee } from "@/lib/parcours/script-arrivee";
 
 export default async function Page() {
   // Rendue a la demande, jamais au build : l'API n'est pas joignable pendant
@@ -136,6 +137,9 @@ export default async function Page() {
         // Le contenu est echappe par `enJsonLd` : rien ne peut fermer la balise.
         <script key={i} type="application/ld+json" dangerouslySetInnerHTML={{ __html: enJsonLd(f) }} />
       ))}
+      {/* Avant le parcours : actualiser sur une section l'affiche aussitot,
+          sans montrer l'accueil le temps que React demarre. */}
+      <script dangerouslySetInnerHTML={{ __html: scriptArrivee(sections.map((x) => x.id)) }} />
       <Ampoule />
       <ColonnePassage reglages={s} infos={data.personalInfo} />
       <main className="min-h-screen">

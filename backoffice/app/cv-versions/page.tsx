@@ -1,11 +1,12 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { fetchEntities, deleteEntity } from "@/lib/api";
 import { PageHeader } from "@/components/page-header";
 import { ConfirmDialog } from "@/components/confirm-dialog";
 import { IconeFormat, telechargerCv } from "@/components/telechargement-cv";
+import { ApercuVersionCv } from "@/components/apercu-version-cv";
 import { toast } from "sonner";
 import type { CvVersionDto } from "@portfolio/shared-types";
 
@@ -29,6 +30,8 @@ export default function CvVersionsPage() {
   const [loading, setLoading] = useState(true);
   const [deleteId, setDeleteId] = useState<string | null>(null);
   const [enCours, setEnCours] = useState<string | null>(null);
+  const [apercu, setApercu] = useState<CvVersionDto | null>(null);
+  const fermerApercu = useCallback(() => setApercu(null), []);
 
   useEffect(() => {
     fetchEntities<CvVersionDto>("cv-versions")
@@ -90,6 +93,9 @@ export default function CvVersionsPage() {
               <td className="py-3 px-2 text-muted-foreground">{resume(v)}</td>
               <td className="py-3 px-2">
                 <div className="flex flex-wrap justify-end gap-2">
+                  <button type="button" onClick={() => setApercu(v)} className={bouton}>
+                    Aperçu
+                  </button>
                   <button type="button" onClick={() => telecharger(v, "pdf")} disabled={enCours !== null} className={bouton}>
                     <IconeFormat format="PDF" />
                     {enCours === `${v.id}:pdf` ? "…" : "PDF"}
@@ -111,6 +117,7 @@ export default function CvVersionsPage() {
         </tbody>
       </table>
       {items.length === 0 && <p className="text-center text-muted-foreground py-8">Aucune version pour l&apos;instant.</p>}
+      {apercu && <ApercuVersionCv version={apercu} onClose={fermerApercu} />}
       <ConfirmDialog
         open={!!deleteId}
         title="Supprimer"

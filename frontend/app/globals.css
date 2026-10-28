@@ -1484,14 +1484,112 @@ html {
     padding: var(--espace-3);
   }
 
-  /* Les services et les temoignages : la meme feuille au bord imparfait. */
-  .service-carte {
-    --bord-fond: var(--surface);
-    padding: var(--espace-3);
-  }
-
+  /* Les temoignages : la meme feuille au bord imparfait. */
   .temoignage-carte {
     --bord-fond: var(--surface);
+  }
+
+  /* La carte des prestations : une feuille unique, a la mesure d'une page de
+     livre, ou chaque service tient sur une ligne de tarif. */
+  .carte-prestations {
+    --bord-fond: var(--surface);
+    max-width: 62ch;
+    margin-inline: auto;
+    padding: var(--espace-4) var(--espace-4) var(--espace-3);
+  }
+
+  .carte-prestations-entete {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: var(--espace-2);
+    margin-block-end: var(--espace-3);
+    color: var(--texte-secondaire);
+    font-variant-caps: all-small-caps;
+    letter-spacing: 0.12em;
+  }
+
+  /* Deux filets courts encadrent l'entete. */
+  .carte-prestations-entete::before,
+  .carte-prestations-entete::after {
+    content: "";
+    width: 3rem;
+    border-block-start: 1px solid var(--bordure-signifiante);
+  }
+
+  .carte-prestations-liste {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+  }
+
+  /* Le fleuron entre deux entrees, decoratif : son texte de remplacement
+     est vide, les lecteurs d'ecran le taisent. */
+  .prestation + .prestation::before {
+    content: "~ ✦ ~" / "";
+    display: block;
+    margin-block: var(--espace-2);
+    color: var(--texte-secondaire);
+    font-size: 0.75rem;
+    letter-spacing: 0.4em;
+    text-align: center;
+  }
+
+  /* Nom, points de conduite, organisme : alignes sur la ligne de base. Les
+     points occupent tout l'espace libre. */
+  .prestation-ligne {
+    display: flex;
+    align-items: baseline;
+    gap: var(--espace-1);
+  }
+
+  .prestation-nom {
+    margin: 0;
+    font-size: 1rem;
+    font-weight: 600;
+  }
+
+  .prestation-points {
+    flex: 1;
+    min-width: 2ch;
+    border-block-end: 2px dotted var(--bordure-signifiante);
+    translate: 0 -0.3em;
+  }
+
+  .prestation-organisme {
+    flex: none;
+    color: var(--texte-secondaire);
+    font-variant-caps: all-small-caps;
+    letter-spacing: 0.06em;
+  }
+
+  .prestation-description {
+    max-width: 52ch;
+    margin: var(--espace-1) 0 0 var(--espace-2);
+    color: var(--texte-secondaire);
+    font-size: 0.9375rem;
+    line-height: 1.55;
+  }
+
+  /* Sur telephone, des points sur une ligne etroite deviennent du bruit :
+     l'organisme passe sous le nom. */
+  @media (max-width: 599px) {
+    .prestation-points {
+      display: none;
+    }
+
+    .prestation-ligne {
+      flex-direction: column;
+      gap: 2px;
+    }
+
+    .carte-prestations {
+      padding: var(--espace-3) var(--espace-2) var(--espace-2);
+    }
+
+    .prestation-description {
+      margin-inline-start: 0;
+    }
   }
 
   /* L'experience en cours : une lueur couleur accent fait lentement le tour

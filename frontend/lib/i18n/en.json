@@ -118,5 +118,6 @@
 
   "competences.pause": "Pause scrolling",
   "competences.reprendre": "Resume scrolling",
-  "competences.autres": "Other"
+  "competences.autres": "Other",
+  "services.carte": "Services"
 }

@@ -1,52 +1,43 @@
 "use client";
 
-import Image from "next/image";
 import type { ServiceDto } from "@portfolio/shared-types";
-import { getFileUrl } from "@/lib/api";
-import { SeeMoreList } from "./see-more-button";
 import { BordImparfait } from "./bord-imparfait";
+import { useTranslation } from "@/lib/i18n/i18n-context";
 
 interface ServicesSectionProps {
   services: ServiceDto[];
 }
 
-function ServiceCard({ service }: { service: ServiceDto }) {
-  const orgLogoUrl = service.organization ? getFileUrl(service.organization.logoPath) : null;
-
-  return (
-    // Une fiche au bord imparfait posee sur une autre, comme les experiences.
-    <div className="service-carte cadre-imparfait flex flex-col gap-4">
-      <BordImparfait graine={`${service.id}:dessous`} className="feuille-dessous" />
-      <BordImparfait graine={service.id} />
-      {orgLogoUrl && (
-        <div className="size-10 flex items-center justify-center">
-          <Image src={orgLogoUrl} alt={service.organization!.label} width={40} height={40} className="object-contain" />
-        </div>
-      )}
-      <div className="flex flex-col gap-2">
-        <h3 className="font-semibold text-base">{service.label}</h3>
-        {service.organization && !orgLogoUrl && (
-          <p className="text-xs text-muted-foreground font-medium">{service.organization.label}</p>
-        )}
-      </div>
-      {service.description && (
-        <p className="mesure text-sm text-muted-foreground leading-relaxed flex-1">{service.description}</p>
-      )}
-    </div>
-  );
-}
-
+/**
+ * La carte des prestations : une seule feuille, comme le tarif d'un artisan
+ * pose sur le comptoir. Une ligne par service, son nom relie a l'organisme par
+ * des points de conduite, la description dessous. Tout se lit d'un coup
+ * d'oeil : pas de « voir plus ». Le logo de l'organisme n'y figure pas, une
+ * couleur de marque casserait le registre de la feuille.
+ */
 export function ServicesSection({ services }: ServicesSectionProps) {
+  const { t } = useTranslation();
   if (!services.length) return null;
 
   return (
-    <>
-      <SeeMoreList
-        items={services}
-        initialCount={4}
-        renderItem={(service) => <ServiceCard key={service.id} service={service} />}
-        className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6"
-      />
-    </>
+    <div className="carte-prestations cadre-imparfait">
+      <BordImparfait graine="carte-prestations" amplitude={2} />
+      {/* Le titre de la section l'annonce deja : l'entete n'est que decor. */}
+      <p className="carte-prestations-entete" aria-hidden="true">{t("services.carte")}</p>
+      <ul className="carte-prestations-liste">
+        {services.map((service) => (
+          <li key={service.id} className="prestation">
+            <div className="prestation-ligne">
+              <h3 className="prestation-nom">{service.label}</h3>
+              <span className="prestation-points" aria-hidden="true" />
+              {service.organization && (
+                <span className="prestation-organisme">{service.organization.label}</span>
+              )}
+            </div>
+            {service.description && <p className="prestation-description">{service.description}</p>}
+          </li>
+        ))}
+      </ul>
+    </div>
   );
 }

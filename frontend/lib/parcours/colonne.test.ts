@@ -180,12 +180,12 @@ describe("defaut 1 : la largeur utile du palier de 40 px", () => {
 
   it("ramene l identite a ce que la colonne peut porter", () => {
     const padding = px(valeur(bloc(/\.colonne-passage\s*\{/, blocEtroit), "padding-inline"));
-    const identite = bloc(/\.identite-logo,\s*\.identite-initiales\s*\{/, blocEtroit);
+    const identite = bloc(/\.identite-logo,\s*\.identite-boussole\s*\{/, blocEtroit);
     const cote = px(valeur(identite, "width"));
     expect(cote).toBe(px(valeur(identite, "height")));
     expect(cote).toBeLessThanOrEqual(utile(padding));
     // Le cadre de 36 px du palier large ne tiendrait pas dans 31 px.
-    expect(px(valeur(bloc(/\.identite-initiales\s*\{/), "width"))).toBeGreaterThan(
+    expect(px(valeur(bloc(/\.identite-boussole\s*\{/), "width"))).toBeGreaterThan(
       utile(padding),
     );
   });

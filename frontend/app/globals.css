@@ -798,16 +798,44 @@ html {
     color: var(--texte);
   }
 
-  .identite-initiales {
-    display: grid;
-    place-items: center;
+  /* La boussole, a la place des initiales. Traits et fonds sur les jetons de
+     la palette : elle suit les deux themes. Seul le nord porte l'accent. */
+  .identite-boussole {
+    flex: 0 0 auto;
     width: 36px;
     height: 36px;
-    border: 1px solid var(--bordure-signifiante);
-    border-radius: 4px;
-    background: var(--surface);
-    color: var(--texte-secondaire);
-    font-variation-settings: "opsz" 48;
+  }
+
+  .boussole-lunette {
+    fill: var(--surface);
+    stroke: var(--bordure-signifiante);
+    stroke-width: 1;
+  }
+
+  .boussole-cadran {
+    fill: none;
+    stroke: var(--bordure);
+    stroke-width: 0.75;
+  }
+
+  .boussole-repere {
+    stroke: var(--texte-secondaire);
+    stroke-width: 1.25;
+    stroke-linecap: round;
+  }
+
+  .boussole-nord {
+    fill: var(--accent);
+  }
+
+  .boussole-sud {
+    fill: var(--texte-secondaire);
+  }
+
+  .boussole-pivot {
+    fill: var(--fond);
+    stroke: var(--texte-secondaire);
+    stroke-width: 0.75;
   }
 
   .entrees-parcours {
@@ -969,7 +997,7 @@ html {
     }
 
     .identite-logo,
-    .identite-initiales {
+    .identite-boussole {
       width: 24px;
       height: 24px;
     }
@@ -3542,6 +3570,26 @@ html {
   .bord-imparfait path {
     fill: Canvas;
     stroke: CanvasText;
+  }
+
+  /* La boussole non plus : lunette et aiguille sur les couleurs systeme. */
+  .boussole-lunette,
+  .boussole-pivot {
+    fill: Canvas;
+    stroke: CanvasText;
+  }
+
+  .boussole-cadran,
+  .boussole-repere {
+    stroke: CanvasText;
+  }
+
+  .boussole-nord {
+    fill: Highlight;
+  }
+
+  .boussole-sud {
+    fill: CanvasText;
   }
 
   .panneau-fond path {

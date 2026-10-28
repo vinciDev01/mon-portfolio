@@ -157,12 +157,14 @@ describe("initiales (regle unique)", () => {
     expect(initialesDe({ name: null, surname: "Fanuel" } as never)).toBe("F");
   });
 
-  it("est lue par la colonne et par le medaillon, sans copie locale", () => {
-    for (const f of ["components/parcours/colonne-passage.tsx", "components/parcours/medaillon.tsx"]) {
-      const t = lire(f);
-      expect(t, f).toContain('from "@/lib/parcours/identite"');
-      expect(t, f).not.toMatch(/name\?\.(trim\(\))?\[0\]/);
-    }
+  it("est lue par le medaillon, sans copie locale ; la colonne n en affiche plus", () => {
+    const medaillon = lire("components/parcours/medaillon.tsx");
+    expect(medaillon).toContain('from "@/lib/parcours/identite"');
+    expect(medaillon).not.toMatch(/name\?\.(trim\(\))?\[0\]/);
+    // La boussole a remplace les initiales au sommet de la colonne.
+    const colonne = lire("components/parcours/colonne-passage.tsx");
+    expect(colonne).not.toContain("initialesDe");
+    expect(colonne).not.toMatch(/name\?\.(trim\(\))?\[0\]/);
   });
 
   it("le texte alternatif n affiche jamais null ni undefined", () => {

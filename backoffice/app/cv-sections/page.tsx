@@ -11,7 +11,7 @@ import { ApercuCv } from "@/components/apercu-cv";
 import { TitrePosteCv } from "@/components/titre-poste-cv";
 import { ReglagesCv } from "@/components/reglages-cv";
 import { toast } from "sonner";
-import type { CvSectionDto, SiteSettingsDto } from "@portfolio/shared-types";
+import type { CvSectionDto, CvVersionDto, SiteSettingsDto } from "@portfolio/shared-types";
 
 type Ligne =
   | { genre: "base"; rang: number; titre: string; page: string; cle: string }
@@ -28,28 +28,55 @@ export default function SectionsCvPage() {
   const [masquees, setMasquees] = useState<string[]>([]);
   // La ligne dont l'inclusion est en cours d'enregistrement.
   const [bascule, setBascule] = useState<string | null>(null);
+  // Les versions du CV, et celle que la page regarde ; null : le CV general.
+  // Le choix est garde dans l'adresse (`?version=`) : il resiste au
+  // rechargement.
+  const [versions, setVersions] = useState<CvVersionDto[]>([]);
+  const [versionId, setVersionId] = useState<string | null>(null);
+  const versionCv = versions.find((v) => v.id === versionId) ?? null;
 
   useEffect(() => {
     fetchSingleton<SiteSettingsDto>("site-settings")
       .then((r) => setMasquees(r.cvBaseMasquees ?? []))
       .catch(() => toast.error("Erreur de chargement des sections incluses"));
+    fetchEntities<CvVersionDto>("cv-versions")
+      .then((liste) => {
+        setVersions(liste);
+        const demandee = new URLSearchParams(window.location.search).get("version");
+        if (demandee && liste.some((v) => v.id === demandee)) setVersionId(demandee);
+      })
+      .catch(() => toast.error("Erreur de chargement des versions du CV"));
   }, []);
 
+  function choisirVersion(id: string | null) {
+    setVersionId(id);
+    router.replace(id ? `/cv-sections?version=${encodeURIComponent(id)}` : "/cv-sections", { scroll: false });
+  }
+
+  // Les sections de la base masquees : celles de la version regardee, ou a
+  // defaut le reglage general.
+  const masqueesVues = versionCv ? versionCv.sectionsMasquees : masquees;
   const estIncluse = (l: Ligne) =>
-    l.genre === "base" ? !masquees.includes(l.cle) : l.section.publique;
+    l.genre === "base" ? !masqueesVues.includes(l.cle) : l.section.publique;
 
   /** Inclut ou retire une section du CV, enregistre aussitot, et regenere
-   *  l'apercu. Base : la liste des masquees, dans les reglages du site.
-   *  Libre : la case « publique » de la section, qui jouait deja ce role. */
+   *  l'apercu. Base : la liste des masquees, celle de la version regardee ou
+   *  a defaut celle des reglages du site. Libre : la case « publique » de la
+   *  section, commune a toutes les versions. */
   async function basculerInclusion(l: Ligne) {
     const cle = l.genre === "base" ? l.cle : l.section.id;
     const incluse = !estIncluse(l);
     setBascule(cle);
     try {
       if (l.genre === "base") {
-        const suivantes = incluse ? masquees.filter((m) => m !== l.cle) : [...masquees, l.cle];
-        await updateSingleton("site-settings", { cvBaseMasquees: suivantes });
-        setMasquees(suivantes);
+        const suivantes = incluse ? masqueesVues.filter((m) => m !== l.cle) : [...masqueesVues, l.cle];
+        if (versionCv) {
+          await updateEntity("cv-versions", versionCv.id, { sectionsMasquees: suivantes });
+          setVersions((prev) => prev.map((v) => (v.id === versionCv.id ? { ...v, sectionsMasquees: suivantes } : v)));
+        } else {
+          await updateSingleton("site-settings", { cvBaseMasquees: suivantes });
+          setMasquees(suivantes);
+        }
       } else {
         await updateEntity("cv-sections", l.section.id, { publique: incluse });
         setSections((prev) => prev.map((s) => (s.id === l.section.id ? { ...s, publique: incluse } : s)));
@@ -115,7 +142,41 @@ export default function SectionsCvPage() {
           l'ecran pendant qu'on parcourt une longue liste. */}
       <div className="grid gap-8 xl:grid-cols-[minmax(0,1fr)_minmax(420px,42%)] items-start">
       <div>
-      <TitrePosteCv surEnregistrement={() => setVersionApercu((v) => v + 1)} />
+      <div className="mb-6 rounded-md border border-border p-4">
+        <label htmlFor="version-cv" className="block text-sm font-medium mb-1">
+          Version du CV
+        </label>
+        <select
+          id="version-cv"
+          value={versionId ?? ""}
+          onChange={(e) => choisirVersion(e.target.value || null)}
+          className="w-full max-w-md px-3 py-2 border border-border rounded-md text-sm bg-background"
+        >
+          <option value="">CV général</option>
+          {versions.map((v) => (
+            <option key={v.id} value={v.id}>
+              {v.nom}
+            </option>
+          ))}
+        </select>
+        <p className="text-xs text-muted-foreground mt-2">
+          {versionCv ? (
+            <>
+              L&apos;aperçu et la colonne « Inclus » des sections de la base portent sur cette version. Les
+              sections libres sont communes à tous les CV. Titre, présentation, projets et technologies :{" "}
+              <Link href={`/cv-versions/${versionCv.id}/edit`} className="text-primary hover:underline">
+                modifier la version
+              </Link>
+              .
+            </>
+          ) : (
+            "Le CV téléchargé depuis le site. Choisissez une version pour la régler et la prévisualiser ici."
+          )}
+        </p>
+      </div>
+      {/* Le titre du poste des reglages ne vaut que pour le CV general : une
+          version a le sien, dans son formulaire. */}
+      {!versionCv && <TitrePosteCv surEnregistrement={() => setVersionApercu((v) => v + 1)} />}
       <ReglagesCv surEnregistrement={() => setVersionApercu((v) => v + 1)} />
 
       <p className="text-sm text-muted-foreground mb-6 max-w-2xl">
@@ -199,7 +260,7 @@ export default function SectionsCvPage() {
       </div>
 
       <aside className="xl:sticky xl:top-8 h-[80vh]">
-        <ApercuCv version={versionApercu} />
+        <ApercuCv version={versionApercu} versionCv={versionCv?.id} />
       </aside>
       </div>
 

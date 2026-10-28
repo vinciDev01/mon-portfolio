@@ -3,10 +3,10 @@
 Toute la pile tourne sur un seul serveur :
 
 ```
-Internet ──► Caddy (80/443, HTTPS automatique)
-              ├── exemple.dev        ──► frontend   (Next.js, 3000)
-              ├── api.exemple.dev    ──► backend    (NestJS, 4000) ──► postgres
-              └── admin.exemple.dev  ──► backoffice (Next.js, 3001)
+Internet --> Caddy (80/443, HTTPS automatique)
+              +-- exemple.dev        --> frontend   (Next.js, 3000)
+              +-- api.exemple.dev    --> backend    (NestJS, 4000) --> postgres
+              +-- admin.exemple.dev  --> backoffice (Next.js, 3001)
 ```
 
 Les fichiers à connaître :

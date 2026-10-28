@@ -9,6 +9,7 @@ import { PICTOS, sectionsActives } from "@/lib/parcours/sections";
 import { useSectionActive, useSectionSignalee } from "@/components/parcours/parcours-pagine";
 import { DrapeauDisponibilite } from "@/components/parcours/drapeau-disponibilite";
 import { MarqueEmpreinte, useEmpreinte } from "@/components/parcours/empreinte";
+import { Boussole } from "@/components/parcours/boussole";
 import { LanguageSwitcher } from "@/components/portfolio/language-switcher";
 
 /** Pictogrammes des commandes du pied. Traits seuls, sur `currentColor`, pour
@@ -27,28 +28,6 @@ function Picto({ chemin }: { chemin: string }) {
       focusable="false"
     >
       <path d={chemin} />
-    </svg>
-  );
-}
-
-/**
- * La boussole du sommet de la colonne, a la place des initiales : le site est
- * un parcours, elle l'oriente. Une lunette, quatre reperes cardinaux, une
- * aiguille dont la moitie nord porte l'accent. Immobile : le site ne compte
- * que deux mouvements, et celui-ci n'en serait pas un troisieme.
- */
-function Boussole() {
-  return (
-    <svg className="identite-boussole" viewBox="0 0 36 36" aria-hidden="true" focusable="false">
-      <circle className="boussole-lunette" cx="18" cy="18" r="16.5" />
-      <circle className="boussole-cadran" cx="18" cy="18" r="12.5" />
-      <path className="boussole-repere" d="M 18 3.5 V 6.5" />
-      <path className="boussole-repere" d="M 32.5 18 H 29.5" />
-      <path className="boussole-repere" d="M 18 32.5 V 29.5" />
-      <path className="boussole-repere" d="M 3.5 18 H 6.5" />
-      <path className="boussole-nord" d="M 18 7.5 L 21 18 L 15 18 Z" />
-      <path className="boussole-sud" d="M 18 28.5 L 21 18 L 15 18 Z" />
-      <circle className="boussole-pivot" cx="18" cy="18" r="1.6" />
     </svg>
   );
 }
@@ -108,7 +87,7 @@ export function ColonnePassage({
         {logo ? (
           <Image src={logo} alt="" width={36} height={36} className="identite-logo" />
         ) : (
-          <Boussole />
+          <Boussole index={entrees.findIndex((e) => e.id === idActif)} total={entrees.length} />
         )}
         <span className="identite-nom">{nomComplet}</span>
       </Link>

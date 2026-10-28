@@ -798,12 +798,29 @@ html {
     color: var(--texte);
   }
 
-  /* La boussole, a la place des initiales. Traits et fonds sur les jetons de
-     la palette : elle suit les deux themes. Seul le nord porte l'accent. */
+  /* La boussole a clapet, a la place des initiales. Traits et fonds sur les
+     jetons de la palette : elle suit les deux themes. Seul le nord porte
+     l'accent. Deux SVG superposes : le boitier, et le clapet articule en
+     haut, que la perspective fait basculer. */
   .identite-boussole {
+    position: relative;
     flex: 0 0 auto;
     width: 36px;
     height: 36px;
+    perspective: 120px;
+  }
+
+  .boussole-boitier,
+  .boussole-clapet {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    overflow: visible;
+  }
+
+  .boussole-charniere {
+    fill: var(--bordure-signifiante);
   }
 
   .boussole-lunette {
@@ -824,6 +841,14 @@ html {
     stroke-linecap: round;
   }
 
+  /* L'aiguille prend le cap de la section active : elle depasse un peu son
+     cap, puis s'y pose, comme une aiguille aimantee. */
+  .boussole-aiguille {
+    transform-box: view-box;
+    transform-origin: 18px 18px;
+    transition: transform 900ms cubic-bezier(0.34, 1.56, 0.64, 1);
+  }
+
   .boussole-nord {
     fill: var(--accent);
   }
@@ -836,6 +861,43 @@ html {
     fill: var(--fond);
     stroke: var(--texte-secondaire);
     stroke-width: 0.75;
+  }
+
+  /* Le clapet, ouvert : dresse au-dessus du boitier, a peine visible. Il se
+     rabat sur le cadran au survol, ou au focus clavier du lien. */
+  .boussole-clapet {
+    transform-origin: 50% 0;
+    transform: rotateX(-105deg);
+    transition: transform 450ms var(--courbe);
+  }
+
+  .identite-mat:hover .boussole-clapet,
+  .identite-mat:focus-visible .boussole-clapet {
+    transform: rotateX(0deg);
+  }
+
+  .boussole-couvercle {
+    fill: var(--surface);
+    stroke: var(--bordure-signifiante);
+    stroke-width: 1;
+  }
+
+  .boussole-gravure {
+    fill: none;
+    stroke: var(--bordure-signifiante);
+    stroke-width: 0.6;
+    stroke-dasharray: 1.2 1.6;
+  }
+
+  .boussole-rose {
+    fill: var(--texte-secondaire);
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    :root:not([data-mouvement="force"]) .boussole-aiguille,
+    :root:not([data-mouvement="force"]) .boussole-clapet {
+      transition: none;
+    }
   }
 
   .entrees-parcours {
@@ -3572,10 +3634,21 @@ html {
     stroke: CanvasText;
   }
 
-  /* La boussole non plus : lunette et aiguille sur les couleurs systeme. */
+  /* La boussole non plus : boitier, clapet et aiguille sur les couleurs
+     systeme. */
   .boussole-lunette,
-  .boussole-pivot {
+  .boussole-pivot,
+  .boussole-couvercle {
     fill: Canvas;
+    stroke: CanvasText;
+  }
+
+  .boussole-charniere,
+  .boussole-rose {
+    fill: CanvasText;
+  }
+
+  .boussole-gravure {
     stroke: CanvasText;
   }
 

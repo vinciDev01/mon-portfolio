@@ -28,6 +28,8 @@ export default function EditProjectPage() {
   const [name, setName] = useState("");
   const [description, setDescription] = useState("");
   const [cvSummary, setCvSummary] = useState("");
+  const [descriptionEn, setDescriptionEn] = useState("");
+  const [cvSummaryEn, setCvSummaryEn] = useState("");
   const [photo1Path, setPhoto1Path] = useState<string | null>(null);
   const [photo2Path, setPhoto2Path] = useState<string | null>(null);
   const [demoUrl, setDemoUrl] = useState("");
@@ -58,6 +60,8 @@ export default function EditProjectPage() {
         setName(project.name);
         setDescription(project.description || "");
         setCvSummary(project.cvSummary || "");
+        setDescriptionEn(project.descriptionEn || "");
+        setCvSummaryEn(project.cvSummaryEn || "");
         setPhoto1Path(project.photo1Path);
         setPhoto2Path(project.photo2Path);
         setDemoUrl(project.demoUrl || "");
@@ -128,6 +132,8 @@ export default function EditProjectPage() {
         name,
         description: description || null,
         cvSummary: cvSummary.trim() || null,
+        descriptionEn: descriptionEn.trim() || null,
+        cvSummaryEn: cvSummaryEn.trim() || null,
         photo1Path,
         photo2Path,
         demoUrl: demoUrl || null,
@@ -188,6 +194,32 @@ export default function EditProjectPage() {
           <p className="text-xs text-muted-foreground mt-1">
             Une phrase courte, reprise telle quelle dans le CV. Vide : le CV prend le début de la description.{" "}
             <span className="tabular-nums">{cvSummary.length}/220</span>
+          </p>
+        </div>
+        <div>
+          <label htmlFor="projet-description-en" className="block text-sm font-medium mb-1">Description (anglais)</label>
+          <textarea
+            id="projet-description-en"
+            value={descriptionEn}
+            onChange={(e) => setDescriptionEn(e.target.value)}
+            rows={3}
+            className="w-full px-3 py-2 border border-border rounded-md text-sm"
+          />
+        </div>
+        <div>
+          <label htmlFor="projet-resume-cv-en" className="block text-sm font-medium mb-1">Description pour le CV (anglais)</label>
+          <textarea
+            id="projet-resume-cv-en"
+            value={cvSummaryEn}
+            onChange={(e) => setCvSummaryEn(e.target.value)}
+            rows={2}
+            maxLength={220}
+            placeholder="Ex : Digitalisation of microfinance institutions"
+            className="w-full px-3 py-2 border border-border rounded-md text-sm"
+          />
+          <p className="text-xs text-muted-foreground mt-1">
+            Pour le CV en anglais. Vides : les textes français sont repris.{" "}
+            <span className="tabular-nums">{cvSummaryEn.length}/220</span>
           </p>
         </div>
         <div className="grid grid-cols-2 gap-4">

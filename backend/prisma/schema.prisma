@@ -76,6 +76,13 @@ model SiteSettings {
   showCvDownload Boolean  @default(false) @map("show_cv_download")
   /// Le poste vise, imprime sous le nom en tete du CV. Nul : pas de ligne.
   cvJobTitle     String?  @map("cv_job_title")
+  /// Version anglaise, pour le CV en anglais. Vide : le francais est repris.
+  cvJobTitleEn   String?  @map("cv_job_title_en")
+  /// L'adresse publique du portfolio : imprimee dans les coordonnees du CV,
+  /// et encodee dans son QR code. Nulle : ni lien ni QR code.
+  siteUrl        String?  @map("site_url")
+  /// Le QR code du portfolio en tete du CV, quand l'adresse est renseignee.
+  cvAfficherQr   Boolean  @default(true) @map("cv_afficher_qr")
   /// Les sections de la base retirees du CV (presentation, technologies,
   /// certifications, experiences, projets). Vide : toutes sont incluses.
   cvBaseMasquees String[] @default([]) @map("cv_base_masquees")
@@ -184,6 +191,8 @@ model Technology {
 model TechnologyFamily {
   id        String   @id @default(uuid())
   name      String   @unique
+  /// Version anglaise, pour le CV en anglais. Vide : le francais est repris.
+  nameEn    String?  @map("name_en")
   /// Ordre des familles dans le CV.
   sortOrder Int      @default(0) @map("sort_order")
   createdAt DateTime @default(now()) @map("created_at")
@@ -211,13 +220,15 @@ model Organization {
 }
 
 model Presentation {
-  id          String   @id @default(uuid())
-  title       String
-  subtitle    String?
-  description String?  @db.Text
-  sortOrder   Int      @default(0) @map("sort_order")
-  createdAt   DateTime @default(now()) @map("created_at")
-  updatedAt   DateTime @updatedAt @map("updated_at")
+  id            String   @id @default(uuid())
+  title         String
+  subtitle      String?
+  description   String?  @db.Text
+  /// Version anglaise, pour le CV en anglais. Vide : le francais est repris.
+  descriptionEn String?  @map("description_en") @db.Text
+  sortOrder     Int      @default(0) @map("sort_order")
+  createdAt     DateTime @default(now()) @map("created_at")
+  updatedAt     DateTime @updatedAt @map("updated_at")
 
   @@map("presentations")
 }
@@ -230,6 +241,8 @@ model Skill {
   technology   Technology?       @relation(fields: [technologyId], references: [id], onDelete: Cascade)
   /// Nom d'une competence libre ; vide quand une technologie est liee.
   label        String?
+  /// Version anglaise, pour le CV en anglais. Vide : le francais est repris.
+  labelEn      String?           @map("label_en")
   /// Famille d'une competence libre ; celle de la technologie sinon.
   familyId     String?           @map("family_id")
   family       TechnologyFamily? @relation(fields: [familyId], references: [id], onDelete: SetNull)
@@ -242,16 +255,20 @@ model Skill {
 }
 
 model Experience {
-  id          String    @id @default(uuid())
-  company     String
-  role        String
-  description String?   @db.Text
-  startDate   DateTime  @map("start_date")
-  endDate     DateTime? @map("end_date")
-  isCurrent   Boolean   @default(false) @map("is_current")
-  sortOrder   Int       @default(0) @map("sort_order")
-  createdAt   DateTime  @default(now()) @map("created_at")
-  updatedAt   DateTime  @updatedAt @map("updated_at")
+  id            String    @id @default(uuid())
+  company       String
+  role          String
+  /// Version anglaise, pour le CV en anglais. Vide : le francais est repris.
+  roleEn        String?   @map("role_en")
+  description   String?   @db.Text
+  /// Version anglaise, pour le CV en anglais. Vide : le francais est repris.
+  descriptionEn String?   @map("description_en") @db.Text
+  startDate     DateTime  @map("start_date")
+  endDate       DateTime? @map("end_date")
+  isCurrent     Boolean   @default(false) @map("is_current")
+  sortOrder     Int       @default(0) @map("sort_order")
+  createdAt     DateTime  @default(now()) @map("created_at")
+  updatedAt     DateTime  @updatedAt @map("updated_at")
 
   projects Project[]
 
@@ -278,9 +295,13 @@ model Project {
   id             String    @id @default(uuid())
   name           String
   description    String?   @db.Text
+  /// Version anglaise, pour le CV en anglais. Vide : le francais est repris.
+  descriptionEn  String?   @map("description_en") @db.Text
   /// Breve description pour le CV, ecrite pour lui. Vide : le CV prend le
   /// debut de la description.
   cvSummary      String?   @map("cv_summary")
+  /// Version anglaise, pour le CV en anglais. Vide : le francais est repris.
+  cvSummaryEn    String?   @map("cv_summary_en")
   photo1Path     String?   @map("photo1_path")
   photo2Path     String?   @map("photo2_path")
   demoUrl        String?   @map("demo_url")
@@ -392,10 +413,14 @@ model Testimonial {
 model CvSection {
   id        String   @id @default(uuid())
   titre     String
+  /// Version anglaise, pour le CV en anglais. Vide : le francais est repris.
+  titreEn   String?  @map("titre_en")
   /**
    * Une entree par ligne.
    */
   lignes    String
+  /// Version anglaise, pour le CV en anglais. Vide : le francais est repris.
+  lignesEn  String?  @map("lignes_en")
   /**
    * Fausse pour tout ce qui ne doit pas partir dans le CV telechargeable.
    */
@@ -413,6 +438,8 @@ model CvSection {
 model Cours {
   id              String     @id @default(uuid())
   titre           String
+  /// Version anglaise, pour le CV en anglais. Vide : le francais est repris.
+  titreEn         String?    @map("titre_en")
   /// Affiche sur la tranche quand le titre est trop long pour elle.
   titreCourt      String?    @map("titre_court")
   description     String?    @db.Text
@@ -435,4 +462,29 @@ model Cours {
   updatedAt       DateTime   @updatedAt @map("updated_at")
 
   @@map("cours")
+}
+
+/// Une version du CV, une par candidature : sa langue, son titre de poste,
+/// sa presentation, les sections masquees et ce qu'elle retient. Une liste
+/// vide retient tout : une version neuve donne le CV complet.
+model CvVersion {
+  id               String   @id @default(uuid())
+  nom              String
+  /// « fr » ou « en ».
+  langue           String   @default("fr")
+  /// Le poste vise ; vide : celui des reglages du CV.
+  titrePoste       String?  @map("titre_poste")
+  /// La presentation propre a la version ; vide : celle de la base.
+  presentation     String?  @db.Text
+  /// Les sections de la base retirees de cette version.
+  sectionsMasquees String[] @default([]) @map("sections_masquees")
+  projetIds        String[] @default([]) @map("projet_ids")
+  technologieIds   String[] @default([]) @map("technologie_ids")
+  /// Les competences libres retenues (management...).
+  competenceIds    String[] @default([]) @map("competence_ids")
+  sortOrder        Int      @default(0) @map("sort_order")
+  createdAt        DateTime @default(now()) @map("created_at")
+  updatedAt        DateTime @updatedAt @map("updated_at")
+
+  @@map("cv_versions")
 }

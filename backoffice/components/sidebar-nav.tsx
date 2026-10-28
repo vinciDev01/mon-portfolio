@@ -34,6 +34,7 @@ const apresSections: Item[] = [
   { href: "/organizations", label: "Organisations" },
   { href: "/contact-messages", label: "Messages de contact" },
   { href: "/cv-sections", label: "Sections du CV" },
+  { href: "/cv-versions", label: "Versions du CV" },
   { href: "/blog", label: "Blog" },
   { href: "/blog-categories", label: "Catégories du blog" },
 ];

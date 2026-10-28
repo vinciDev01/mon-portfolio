@@ -47,4 +47,16 @@ export class CreateCvSectionDto {
   @Min(0)
   @Max(999)
   sortOrder?: number;
+
+  @ApiPropertyOptional({ description: 'Version anglaise, pour le CV en anglais ; vide : le francais', nullable: true })
+  @IsOptional()
+  @IsString()
+  @MaxLength(120)
+  titreEn?: string | null;
+
+  @ApiPropertyOptional({ description: 'Version anglaise, pour le CV en anglais ; vide : le francais', nullable: true })
+  @IsOptional()
+  @IsString()
+  @MaxLength(6000)
+  lignesEn?: string | null;
 }

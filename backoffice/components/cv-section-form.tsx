@@ -22,7 +22,10 @@ export const RANGS_DE_LA_BASE = [
 
 export type ValeursSection = {
   titre: string;
+  /** Versions anglaises, pour le CV en anglais ; vides, le francais. */
+  titreEn: string;
   lignes: string;
+  lignesEn: string;
   publique: boolean;
   sortOrder: number;
 };
@@ -60,6 +63,20 @@ export function CvSectionForm({
       </div>
 
       <div>
+        <label htmlFor="section-titre-en" className="block text-sm font-medium mb-1">Titre (anglais)</label>
+        <input
+          id="section-titre-en"
+          type="text"
+          value={valeurs.titreEn}
+          onChange={(e) => maj({ titreEn: e.target.value })}
+          maxLength={80}
+          placeholder="Education"
+          className="w-full px-3 py-2 border border-border rounded-md text-sm"
+        />
+        <p className="text-xs text-muted-foreground mt-1">Pour le CV en anglais. Vide : le texte français est repris.</p>
+      </div>
+
+      <div>
         <label className="block text-sm font-medium mb-1">Contenu</label>
         <textarea
           value={valeurs.lignes}
@@ -73,6 +90,18 @@ export function CvSectionForm({
           Une entrée par ligne. Les lignes vides sont ignorées, et une section
           sans aucune entrée n&apos;apparaît pas dans le PDF.
         </p>
+      </div>
+
+      <div>
+        <label htmlFor="section-lignes-en" className="block text-sm font-medium mb-1">Contenu (anglais)</label>
+        <textarea
+          id="section-lignes-en"
+          value={valeurs.lignesEn}
+          onChange={(e) => maj({ lignesEn: e.target.value })}
+          rows={5}
+          className="w-full px-3 py-2 border border-border rounded-md text-sm font-mono"
+        />
+        <p className="text-xs text-muted-foreground mt-1">Pour le CV en anglais. Vide : le texte français est repris.</p>
       </div>
 
       <div>

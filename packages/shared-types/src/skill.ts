@@ -11,6 +11,8 @@ export interface SkillDto {
   technology: TechnologyDto | null;
   /** Nom d'une competence libre ; null quand une technologie est liee. */
   label: string | null;
+  /** Version anglaise, pour le CV en anglais ; vide : le francais. */
+  labelEn?: string | null;
   familyId: string | null;
   /** Famille d'une competence libre. */
   family: TechnologyFamilyDto | null;

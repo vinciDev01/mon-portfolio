@@ -3,6 +3,10 @@ import { ordonnerSections } from './ordre-sections';
 import { CvGeneratorService } from './cv-generator.service';
 import { CLES_SECTIONS_BASE } from './ordre-sections';
 
+/** Un vrai rendu PDF ou Word (polices, QR code) : sous la charge de toute
+ *  la suite en parallele, il peut depasser les 5 s par defaut de Jest. */
+const RENDU_MS = 20_000;
+
 const exp = {
   role: 'Développeur',
   company: 'OssanAsur',
@@ -148,7 +152,7 @@ describe('rendu des experiences', () => {
     const docx = await service.generateDocx();
     // Un .docx est une archive zip.
     expect(docx.contenu.subarray(0, 2).toString()).toBe('PK');
-  });
+  }, RENDU_MS);
 
   it('ne demande plus les technologies des projets', async () => {
     const prisma = base();
@@ -158,3 +162,32 @@ describe('rendu des experiences', () => {
     expect(appel.include.projects.select.cvSummary).toBe(true);
   });
 });
+
+describe('QR code du portfolio', () => {
+  const vide = () => ({ findMany: jest.fn().mockResolvedValue([]), findFirst: jest.fn().mockResolvedValue(null) });
+  const avecReglages = (reglages: Record<string, unknown> | null) => ({
+    personalInfo: { findFirst: jest.fn().mockResolvedValue({ name: 'BENYO', surname: 'Fanuel', adressePublique: false, email: 'a@b.c' }) },
+    siteSettings: { findFirst: jest.fn().mockResolvedValue(reglages) },
+    presentation: vide(), technology: vide(), certification: vide(), experience: vide(),
+    project: vide(), cvSection: vide(), skill: vide(), cours: vide(),
+  });
+  /** Le nombre d'images d'un PDF : chaque image est un XObject de sous-type Image. */
+  const images = (pdf: Buffer) => (pdf.toString('latin1').match(/\/Subtype\s*\/Image/g) ?? []).length;
+
+  it('imprime le QR code quand l adresse existe et que la case est cochee', async () => {
+    const service = new CvGeneratorService(avecReglages({ siteUrl: 'https://fanuel.dev', cvAfficherQr: true }) as never);
+    // PDFKit range un PNG en image et masque de transparence : au moins une.
+    expect(images((await service.generatePdf()).contenu)).toBeGreaterThan(0);
+    const docx = (await service.generateDocx()).contenu;
+    // L'image est rangee dans l'archive Word.
+    expect(docx.toString('latin1')).toMatch(/word\/media\/[^"]+\.png/);
+  }, RENDU_MS);
+
+  it('pas de QR code si la case est decochee, ni sans adresse', async () => {
+    const decoche = new CvGeneratorService(avecReglages({ siteUrl: 'https://fanuel.dev', cvAfficherQr: false }) as never);
+    expect(images((await decoche.generatePdf()).contenu)).toBe(0);
+    const sansAdresse = new CvGeneratorService(avecReglages({ siteUrl: null, cvAfficherQr: true }) as never);
+    expect(images((await sansAdresse.generatePdf()).contenu)).toBe(0);
+  }, RENDU_MS);
+});
+

@@ -7,6 +7,7 @@ import { CertificationsModule } from './certifications/certifications.module';
 import { ContactMessagesModule } from './contact-messages/contact-messages.module';
 import { CvGeneratorModule } from './cv-generator/cv-generator.module';
 import { CvSectionsModule } from './cv-sections/cv-sections.module';
+import { CvVersionsModule } from './cv-versions/cv-versions.module';
 import { ExperiencesModule } from './experiences/experiences.module';
 import { ExportModule } from './export/export.module';
 import { NotificationsModule } from './notifications/notifications.module';
@@ -56,6 +57,7 @@ import { JwtAuthGuard } from './auth/auth.guard';
     ExportModule,
     CvGeneratorModule,
     CvSectionsModule,
+    CvVersionsModule,
   ],
   providers: [
     {

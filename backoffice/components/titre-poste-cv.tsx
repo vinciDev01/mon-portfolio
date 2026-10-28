@@ -13,6 +13,9 @@ import type { SiteSettingsDto } from "@portfolio/shared-types";
 export function TitrePosteCv({ surEnregistrement }: { surEnregistrement: () => void }) {
   const [titre, setTitre] = useState("");
   const [enregistre, setEnregistre] = useState("");
+  // La version anglaise, pour le CV en anglais ; vide : le francais.
+  const [titreEn, setTitreEn] = useState("");
+  const [enregistreEn, setEnregistreEn] = useState("");
   const [saving, setSaving] = useState(false);
 
   useEffect(() => {
@@ -20,6 +23,8 @@ export function TitrePosteCv({ surEnregistrement }: { surEnregistrement: () => v
       .then((r) => {
         setTitre(r.cvJobTitle ?? "");
         setEnregistre(r.cvJobTitle ?? "");
+        setTitreEn(r.cvJobTitleEn ?? "");
+        setEnregistreEn(r.cvJobTitleEn ?? "");
       })
       .catch(() => toast.error("Erreur de chargement du titre du poste"));
   }, []);
@@ -29,9 +34,12 @@ export function TitrePosteCv({ surEnregistrement }: { surEnregistrement: () => v
     setSaving(true);
     try {
       const valeur = titre.trim();
-      await updateSingleton("site-settings", { cvJobTitle: valeur || null });
+      const valeurEn = titreEn.trim();
+      await updateSingleton("site-settings", { cvJobTitle: valeur || null, cvJobTitleEn: valeurEn || null });
       setTitre(valeur);
       setEnregistre(valeur);
+      setTitreEn(valeurEn);
+      setEnregistreEn(valeurEn);
       toast.success(valeur ? "Titre du poste enregistré" : "Titre du poste retiré du CV");
       surEnregistrement();
     } catch {
@@ -58,15 +66,27 @@ export function TitrePosteCv({ surEnregistrement }: { surEnregistrement: () => v
         />
         <button
           type="submit"
-          disabled={saving || titre.trim() === enregistre}
+          disabled={saving || (titre.trim() === enregistre && titreEn.trim() === enregistreEn)}
           className="px-4 py-2 text-sm rounded-md bg-primary text-primary-foreground hover:bg-primary/90 disabled:opacity-50"
         >
           {saving ? "Enregistrement…" : "Enregistrer"}
         </button>
       </div>
+      <label htmlFor="cv-titre-poste-en" className="block text-sm font-medium mt-3 mb-1">
+        Titre du poste (anglais)
+      </label>
+      <input
+        id="cv-titre-poste-en"
+        type="text"
+        value={titreEn}
+        onChange={(e) => setTitreEn(e.target.value)}
+        maxLength={120}
+        placeholder="Ex. : Java Spring Boot Developer"
+        className="w-full px-3 py-2 border border-border rounded-md text-sm"
+      />
       <p className="text-xs text-muted-foreground mt-1">
         Le poste auquel vous postulez, imprimé sous votre nom en tête du CV.
-        Laissé vide, le CV n&apos;a pas de ligne de titre.
+        Laissé vide, le CV n&apos;a pas de ligne de titre. Le titre anglais, s&apos;il est vide, reprend le français.
       </p>
     </form>
   );

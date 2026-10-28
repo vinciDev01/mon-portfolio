@@ -122,3 +122,14 @@ describe('le titre du poste vise', () => {
     expect(titrePoste(undefined)).toBeNull();
   });
 });
+
+describe('lien du portfolio', () => {
+  it('ajoute le portfolio aux coordonnees, en lien', () => {
+    const l = lignesContact({ adressePublique: false, portfolioUrl: ' https://fanuel.dev ' });
+    expect(l).toEqual([{ genre: 'lien', etiquette: 'Portfolio : ', url: 'https://fanuel.dev' }]);
+  });
+
+  it('rien sans adresse', () => {
+    expect(lignesContact({ adressePublique: false, portfolioUrl: '  ' })).toEqual([]);
+  });
+});

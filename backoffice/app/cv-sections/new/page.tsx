@@ -11,7 +11,9 @@ export default function NouvelleSectionCvPage() {
   const router = useRouter();
   const [valeurs, setValeurs] = useState<ValeursSection>({
     titre: "",
+    titreEn: "",
     lignes: "",
+    lignesEn: "",
     publique: true,
     sortOrder: 20,
   });

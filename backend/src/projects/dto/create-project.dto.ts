@@ -117,4 +117,16 @@ export class CreateProjectDto {
   @ValidateNested({ each: true })
   @Type(() => CreateCollaboratorDto)
   collaborators?: CreateCollaboratorDto[];
+
+  @ApiPropertyOptional({ description: 'Version anglaise, pour le CV en anglais ; vide : le francais', nullable: true })
+  @IsOptional()
+  @IsString()
+  @MaxLength(4000)
+  descriptionEn?: string | null;
+
+  @ApiPropertyOptional({ description: 'Version anglaise, pour le CV en anglais ; vide : le francais', nullable: true })
+  @IsOptional()
+  @IsString()
+  @MaxLength(220)
+  cvSummaryEn?: string | null;
 }

@@ -21,6 +21,8 @@ export interface CoursPublicDto {
 
 /** Un cours tel que le backoffice le gere. */
 export interface CoursDto extends CoursPublicDto {
+  /** Titre anglais, pour le CV en anglais ; vide : le francais. */
+  titreEn?: string | null;
   publique: boolean;
   telechargements: number;
   fichier: string;

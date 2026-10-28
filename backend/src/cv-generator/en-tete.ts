@@ -7,6 +7,8 @@
  * domicile du proprietaire du site, d'ou les tests.
  */
 
+import { TEXTES, type LangueCv } from './langue-cv';
+
 export type InfoContact = {
   nationalite?: string | null;
   adresse?: string | null;
@@ -15,6 +17,8 @@ export type InfoContact = {
   email?: string | null;
   githubUrl?: string | null;
   linkedinUrl?: string | null;
+  /** L'adresse publique du portfolio. */
+  portfolioUrl?: string | null;
 };
 
 export type LigneContact =
@@ -26,8 +30,9 @@ function renseigne(v: string | null | undefined): v is string {
   return typeof v === 'string' && v.trim().length > 0;
 }
 
-export function lignesContact(info: InfoContact | null): LigneContact[] {
+export function lignesContact(info: InfoContact | null, langue: LangueCv = 'fr'): LigneContact[] {
   if (!info) return [];
+  const { contact: c, deuxPoints: dp } = TEXTES[langue];
 
   const lignes: LigneContact[] = [];
 
@@ -37,24 +42,27 @@ export function lignesContact(info: InfoContact | null): LigneContact[] {
 
   // L'adresse exige les deux conditions : etre renseignee ET etre publique.
   if (renseigne(info.adresse) && info.adressePublique) {
-    lignes.push({ genre: 'texte', texte: `Adresse : ${info.adresse.trim()}` });
+    lignes.push({ genre: 'texte', texte: `${c.adresse}${dp}${info.adresse.trim()}` });
   }
 
   if (renseigne(info.phone)) {
-    lignes.push({ genre: 'texte', texte: `Tel : ${info.phone.trim()}` });
+    lignes.push({ genre: 'texte', texte: `${c.tel}${dp}${info.phone.trim()}` });
   }
   if (renseigne(info.email)) {
-    lignes.push({ genre: 'lien', etiquette: 'Email : ', url: info.email.trim() });
+    lignes.push({ genre: 'lien', etiquette: `${c.email}${dp}`, url: info.email.trim() });
   }
   if (renseigne(info.githubUrl)) {
-    lignes.push({ genre: 'lien', etiquette: 'Github : ', url: info.githubUrl.trim() });
+    lignes.push({ genre: 'lien', etiquette: `${c.github}${dp}`, url: info.githubUrl.trim() });
   }
   if (renseigne(info.linkedinUrl)) {
     lignes.push({
       genre: 'lien',
-      etiquette: 'LinkedIn : ',
+      etiquette: `${c.linkedin}${dp}`,
       url: info.linkedinUrl.trim(),
     });
+  }
+  if (renseigne(info.portfolioUrl)) {
+    lignes.push({ genre: 'lien', etiquette: `${c.portfolio}${dp}`, url: info.portfolioUrl.trim() });
   }
 
   return lignes;
@@ -71,6 +79,8 @@ export function nomFichier(
   nom: string,
   prenom: string,
   extension: string,
+  /** Le CV anglais porte « _EN » : les deux se distinguent dans un dossier. */
+  langue: LangueCv = 'fr',
 ): string {
   const nettoyer = (v: string) =>
     v
@@ -84,7 +94,7 @@ export function nomFichier(
     (m) => m.length > 0,
   );
 
-  return ['CV', ...morceaux].join('_') + '.' + extension;
+  return ['CV', ...morceaux, ...(langue === 'en' ? ['EN'] : [])].join('_') + '.' + extension;
 }
 
 /**

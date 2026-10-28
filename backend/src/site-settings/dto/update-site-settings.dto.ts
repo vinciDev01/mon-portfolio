@@ -9,6 +9,7 @@ import {
   IsNumber,
   IsOptional,
   IsString,
+  IsUrl,
   Max,
   MaxLength,
   Min,
@@ -249,6 +250,21 @@ export class UpdateSiteSettingsDto {
   cvJobTitle?: string | null;
 
   @ApiPropertyOptional({
+    example: 'https://fanuel-benyo.dev',
+    description: 'Adresse publique du portfolio : lien et QR code du CV ; vide, ni l un ni l autre',
+    nullable: true,
+  })
+  @IsOptional()
+  @IsUrl({ require_protocol: true, protocols: ['http', 'https'] })
+  @MaxLength(200)
+  siteUrl?: string | null;
+
+  @ApiPropertyOptional({ description: 'Affiche le QR code du portfolio en tete du CV' })
+  @IsOptional()
+  @IsBoolean()
+  cvAfficherQr?: boolean;
+
+  @ApiPropertyOptional({
     example: ['technologies'],
     description: 'Sections de la base retirees du CV ; vide : toutes incluses',
   })
@@ -274,4 +290,10 @@ export class UpdateSiteSettingsDto {
   @Min(0)
   @Max(30)
   accentSaturation?: number;
+
+  @ApiPropertyOptional({ description: 'Version anglaise, pour le CV en anglais ; vide : le francais', nullable: true })
+  @IsOptional()
+  @IsString()
+  @MaxLength(120)
+  cvJobTitleEn?: string | null;
 }

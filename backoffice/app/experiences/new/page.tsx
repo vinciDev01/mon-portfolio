@@ -10,6 +10,8 @@ export default function NewExperiencePage() {
   const [company, setCompany] = useState("");
   const [role, setRole] = useState("");
   const [description, setDescription] = useState("");
+  const [roleEn, setRoleEn] = useState("");
+  const [descriptionEn, setDescriptionEn] = useState("");
   const [startDate, setStartDate] = useState("");
   const [endDate, setEndDate] = useState("");
   const [isCurrent, setIsCurrent] = useState(false);
@@ -22,6 +24,7 @@ export default function NewExperiencePage() {
     try {
       await createEntity("experiences", {
         company, role, description: description || null,
+        roleEn: roleEn.trim() || null, descriptionEn: descriptionEn.trim() || null,
         startDate: new Date(startDate).toISOString(),
         endDate: isCurrent ? null : endDate ? new Date(endDate).toISOString() : null,
         isCurrent, sortOrder,
@@ -37,7 +40,9 @@ export default function NewExperiencePage() {
       <form onSubmit={handleSubmit} className="space-y-6">
         <div><label className="block text-sm font-medium mb-1">Entreprise</label><input type="text" value={company} onChange={(e) => setCompany(e.target.value)} required className="w-full px-3 py-2 border border-border rounded-md text-sm" /></div>
         <div><label className="block text-sm font-medium mb-1">Poste</label><input type="text" value={role} onChange={(e) => setRole(e.target.value)} required className="w-full px-3 py-2 border border-border rounded-md text-sm" /></div>
+        <div><label className="block text-sm font-medium mb-1">Poste (anglais)</label><input type="text" value={roleEn} onChange={(e) => setRoleEn(e.target.value)} className="w-full px-3 py-2 border border-border rounded-md text-sm" /><p className="text-xs text-muted-foreground mt-1">Pour le CV en anglais. Vide : le texte français est repris.</p></div>
         <div><label className="block text-sm font-medium mb-1">Description</label><textarea value={description} onChange={(e) => setDescription(e.target.value)} rows={4} className="w-full px-3 py-2 border border-border rounded-md text-sm" /></div>
+        <div><label className="block text-sm font-medium mb-1">Description (anglais)</label><textarea value={descriptionEn} onChange={(e) => setDescriptionEn(e.target.value)} rows={4} className="w-full px-3 py-2 border border-border rounded-md text-sm" /><p className="text-xs text-muted-foreground mt-1">Pour le CV en anglais. Vide : le texte français est repris.</p></div>
         <div className="grid grid-cols-2 gap-4">
           <div><label className="block text-sm font-medium mb-1">Date de début</label><input type="date" value={startDate} onChange={(e) => setStartDate(e.target.value)} required className="w-full px-3 py-2 border border-border rounded-md text-sm" /></div>
           <div><label className="block text-sm font-medium mb-1">Date de fin</label><input type="date" value={endDate} onChange={(e) => setEndDate(e.target.value)} disabled={isCurrent} className="w-full px-3 py-2 border border-border rounded-md text-sm disabled:opacity-50" /></div>

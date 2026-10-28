@@ -1,14 +1,16 @@
 /**
  * Les lignes du CV qui racontent : une experience avec ce qu'on y a fait et
  * les projets qu'on y a menes, un cours avec sa technologie et son niveau.
- * Pures, pour etre testees sans base ni rendu.
+ * Pures, pour etre testees sans base ni rendu. Chacune prend la langue du
+ * CV : les champs anglais saisis au backoffice, a defaut le francais.
  */
+import { choisir, TEXTES, type LangueCv } from './langue-cv';
 
 /** « Juillet 2025 », en UTC comme le reste du site : une date saisie au
  *  1er juillet, enregistree a minuit UTC, ne recule pas en juin. */
-export function moisAnnee(date: Date | null | undefined): string {
+export function moisAnnee(date: Date | null | undefined, langue: LangueCv = 'fr'): string {
   if (!date) return '';
-  const s = new Intl.DateTimeFormat('fr-FR', {
+  const s = new Intl.DateTimeFormat(TEXTES[langue].locale, {
     month: 'long',
     year: 'numeric',
     timeZone: 'UTC',
@@ -40,29 +42,44 @@ export function resumeProjet(description: string | null | undefined): string | n
   return coupe.charAt(0).toLowerCase() + coupe.slice(1);
 }
 
+/** Une experience telle qu'elle vient de la base, versions anglaises comprises. */
+type ExperienceBrute = {
+  role: string;
+  roleEn?: string | null;
+  company: string;
+  description: string | null;
+  descriptionEn?: string | null;
+  startDate: Date;
+  endDate: Date | null;
+  isCurrent: boolean;
+};
+
+/** « Juillet 2025 à aujourd'hui », « July 2025 to present ». */
+function periodeDe(e: ExperienceBrute, langue: LangueCv): string {
+  const t = TEXTES[langue];
+  const debut = moisAnnee(e.startDate, langue);
+  const fin = e.isCurrent ? t.aujourdhui : moisAnnee(e.endDate, langue);
+  return [debut, fin].filter(Boolean).join(` ${t.jusqua} `);
+}
+
 export function ligneExperience(
-  e: {
-    role: string;
-    company: string;
-    description: string | null;
-    startDate: Date;
-    endDate: Date | null;
-    isCurrent: boolean;
-  },
-  projets: readonly (string | { name: string; description: string | null })[] = [],
+  e: ExperienceBrute,
+  projets: readonly (string | ProjetBrut)[] = [],
+  langue: LangueCv = 'fr',
 ): string {
-  const debut = moisAnnee(e.startDate);
-  const fin = e.isCurrent ? "aujourd'hui" : moisAnnee(e.endDate);
-  const periode = [debut, fin].filter(Boolean).join(' à ');
-  const morceaux = [`${periode ? `${periode} : ` : ''}${e.role} à ${e.company}.`];
-  if (e.description?.trim()) morceaux.push(phrase(e.description));
+  const t = TEXTES[langue];
+  const periode = periodeDe(e, langue);
+  const role = choisir(e.role, e.roleEn, langue);
+  const description = choisir(e.description, e.descriptionEn, langue);
+  const morceaux = [`${periode ? `${periode}${t.deuxPoints}` : ''}${role} ${t.chez} ${e.company}.`];
+  if (description?.trim()) morceaux.push(phrase(description));
   if (projets.length) {
     const noms = projets.map((p) => {
       if (typeof p === 'string') return p;
-      const resume = resumeProjet(p.description);
+      const resume = projetCv(p, false, langue).resume;
       return resume ? `${p.name} (${resume})` : p.name;
     });
-    morceaux.push(`Projets : ${noms.join(', ')}.`);
+    morceaux.push(`${t.projets}${t.deuxPoints}${noms.join(', ')}.`);
   }
   return morceaux.join(' ');
 }
@@ -74,8 +91,10 @@ export type ProjetCv = { nom: string; resume: string | null };
 type ProjetBrut = {
   name: string;
   description: string | null;
+  descriptionEn?: string | null;
   /** La breve description ecrite pour le CV : quand elle existe, elle prime. */
   cvSummary?: string | null;
+  cvSummaryEn?: string | null;
 };
 
 /**
@@ -84,8 +103,9 @@ type ProjetBrut = {
  * dans « Projets realises », seul endroit ou il est decrit, la description
  * entiere.
  */
-export function projetCv(p: ProjetBrut, complet = false): ProjetCv {
-  const ecrite = p.cvSummary?.trim().replace(/\s+/g, ' ');
+export function projetCv(p: ProjetBrut, complet = false, langue: LangueCv = 'fr'): ProjetCv {
+  const ecrite = choisir(p.cvSummary, p.cvSummaryEn, langue)?.trim().replace(/\s+/g, ' ');
+  const description = choisir(p.description, p.descriptionEn, langue);
   // Sous un poste, la phrase suit « Nom : » : minuscule initiale, comme les
   // resumes tires de la description. Un sigle (« GED », « API ») est garde.
   const apresDeuxPoints = (t: string) => (complet || /^\p{Lu}{2}/u.test(t) ? t : t.charAt(0).toLowerCase() + t.slice(1));
@@ -94,17 +114,20 @@ export function projetCv(p: ProjetBrut, complet = false): ProjetCv {
     resume: ecrite
       ? apresDeuxPoints(ecrite)
       : complet
-        ? p.description?.trim()
-          ? phrase(p.description)
+        ? description?.trim()
+          ? phrase(description)
           : null
-        : resumeProjet(p.description),
+        : resumeProjet(description),
   };
 }
 
-/** Le texte d'un projet apres son nom : « : ce qu'il est. », ponctue une fois. */
-export function suiteProjet(resume: string | null): string {
+/** Le texte d'un projet apres son nom : « : ce qu'il est. », ponctue une
+ *  fois, avec la typographie de la langue (« : » en francais, « : » colle en
+ *  anglais). */
+export function suiteProjet(resume: string | null, langue: LangueCv = 'fr'): string {
   if (!resume) return '';
-  return /[.!?…]$/.test(resume) ? ` : ${resume}` : ` : ${resume}.`;
+  const deuxPoints = TEXTES[langue].deuxPoints;
+  return /[.!?…]$/.test(resume) ? `${deuxPoints}${resume}` : `${deuxPoints}${resume}.`;
 }
 
 /**
@@ -121,44 +144,37 @@ export type PosteCv = {
 };
 
 export function posteDe(
-  e: {
-    role: string;
-    company: string;
-    description: string | null;
-    startDate: Date;
-    endDate: Date | null;
-    isCurrent: boolean;
-  },
+  e: ExperienceBrute,
   projets: readonly ProjetBrut[] = [],
+  langue: LangueCv = 'fr',
 ): PosteCv {
-  const debut = moisAnnee(e.startDate);
-  const fin = e.isCurrent ? "aujourd'hui" : moisAnnee(e.endDate);
+  const description = choisir(e.description, e.descriptionEn, langue);
   return {
-    intitule: e.role.trim(),
+    intitule: choisir(e.role, e.roleEn, langue).trim(),
     employeur: e.company.trim(),
-    periode: [debut, fin].filter(Boolean).join(' à '),
-    description: e.description?.trim() ? phrase(e.description) : null,
-    projets: projets.map((p) => projetCv(p)),
+    periode: periodeDe(e, langue),
+    description: description?.trim() ? phrase(description) : null,
+    projets: projets.map((p) => projetCv(p, false, langue)),
   };
 }
 
-const NIVEAUX: Record<string, string> = {
-  debutant: 'débutant',
-  intermediaire: 'intermédiaire',
-  avance: 'avancé',
-};
-
 /** « Java, de zéro aux objets (Java, niveau débutant, 120 pages) ». */
-export function ligneCours(c: {
-  titre: string;
-  niveau: string;
-  pages: number | null;
-  technology: { label: string } | null;
-}): string {
+export function ligneCours(
+  c: {
+    titre: string;
+    titreEn?: string | null;
+    niveau: string;
+    pages: number | null;
+    technology: { label: string } | null;
+  },
+  langue: LangueCv = 'fr',
+): string {
+  const t = TEXTES[langue];
+  const titre = choisir(c.titre, c.titreEn, langue);
   const details = [
     c.technology?.label,
-    NIVEAUX[c.niveau] ? `niveau ${NIVEAUX[c.niveau]}` : null,
-    c.pages ? `${c.pages} pages` : null,
+    t.niveaux[c.niveau] ? `${t.niveau} ${t.niveaux[c.niveau]}` : null,
+    c.pages ? `${c.pages} ${t.pages}` : null,
   ].filter(Boolean);
-  return details.length ? `${c.titre} (${details.join(', ')})` : c.titre;
+  return details.length ? `${titre} (${details.join(', ')})` : titre;
 }

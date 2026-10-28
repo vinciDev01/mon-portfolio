@@ -2,7 +2,6 @@
  *  `etiquette` nulle : la ligne s'imprime seule, sans colonne de gauche. */
 export type Paire = { etiquette: string | null; valeur: string };
 
-const AUTRES = 'Autres';
 
 /**
  * Les technologies rangees par famille, une ligne par famille, deja triees
@@ -14,6 +13,8 @@ const AUTRES = 'Autres';
  */
 export function grouperTechnologies(
   technologies: readonly { label: string; family: { name: string; sortOrder: number } | null }[],
+  /** Le nom de la rangee des sans famille, dans la langue du CV. */
+  autres = 'Autres',
 ): Paire[] {
   if (technologies.length === 0) return [];
   const familles = new Map<string, { sortOrder: number; arrivee: number; labels: string[] }>();
@@ -34,6 +35,6 @@ export function grouperTechnologies(
   const paires: Paire[] = [...familles.entries()]
     .sort(([, a], [, b]) => a.sortOrder - b.sortOrder || a.arrivee - b.arrivee)
     .map(([nom, g]) => ({ etiquette: nom, valeur: g.labels.join(', ') }));
-  if (sansFamille.length) paires.push({ etiquette: AUTRES, valeur: sansFamille.join(', ') });
+  if (sansFamille.length) paires.push({ etiquette: autres, valeur: sansFamille.join(', ') });
   return paires;
 }

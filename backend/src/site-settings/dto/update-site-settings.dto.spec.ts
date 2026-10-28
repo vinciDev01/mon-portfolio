@@ -126,3 +126,21 @@ describe('showCours', () => {
     expect(await erreursSur('showCours', 'oui')).toContain('showCours');
   });
 });
+
+describe('adresse du portfolio et QR code du CV', () => {
+  it('accepte une adresse http(s) complete, ou rien', async () => {
+    expect(await erreursSur('siteUrl', 'https://fanuel-benyo.dev')).toEqual([]);
+    expect(await erreursSur('siteUrl', undefined)).toEqual([]);
+  });
+
+  it('refuse une adresse sans protocole ou d un autre protocole', async () => {
+    expect(await erreursSur('siteUrl', 'fanuel-benyo.dev')).toContain('siteUrl');
+    expect(await erreursSur('siteUrl', 'javascript:alert(1)')).toContain('siteUrl');
+    expect(await erreursSur('siteUrl', 'ftp://exemple.org')).toContain('siteUrl');
+  });
+
+  it('la case du QR code est un booleen', async () => {
+    expect(await erreursSur('cvAfficherQr', false)).toEqual([]);
+    expect(await erreursSur('cvAfficherQr', 'oui')).toContain('cvAfficherQr');
+  });
+});

@@ -20,7 +20,7 @@ export default function EditPresentationPage() {
     if (!data) return;
     setSaving(true);
     try {
-      await updateEntity("presentations", id, { title: data.title, subtitle: data.subtitle, description: data.description, sortOrder: data.sortOrder });
+      await updateEntity("presentations", id, { title: data.title, subtitle: data.subtitle, description: data.description, descriptionEn: data.descriptionEn?.trim() || null, sortOrder: data.sortOrder });
       toast.success("Mis à jour");
       router.push("/presentations");
     } catch { toast.error("Erreur"); } finally { setSaving(false); }
@@ -36,6 +36,7 @@ export default function EditPresentationPage() {
         <div><label className="block text-sm font-medium mb-1">Titre</label><input type="text" value={data.title} onChange={(e) => setData({ ...data, title: e.target.value })} required className="w-full px-3 py-2 border border-border rounded-md text-sm" /></div>
         <div><label className="block text-sm font-medium mb-1">Sous-titre</label><input type="text" value={data.subtitle || ""} onChange={(e) => setData({ ...data, subtitle: e.target.value })} className="w-full px-3 py-2 border border-border rounded-md text-sm" /></div>
         <div><label className="block text-sm font-medium mb-1">Description</label><textarea value={data.description || ""} onChange={(e) => setData({ ...data, description: e.target.value })} rows={4} className="w-full px-3 py-2 border border-border rounded-md text-sm" /></div>
+        <div><label className="block text-sm font-medium mb-1">Description (anglais)</label><textarea value={data.descriptionEn || ""} onChange={(e) => setData({ ...data, descriptionEn: e.target.value })} rows={4} className="w-full px-3 py-2 border border-border rounded-md text-sm" /><p className="text-xs text-muted-foreground mt-1">Pour le CV en anglais. Vide : le texte français est repris.</p></div>
         <div>
           <label className="block text-sm font-medium mb-1">Ordre</label>
           <input type="number" value={data.sortOrder} onChange={(e) => setData({ ...data, sortOrder: Number(e.target.value) })} min={0} className="w-full px-3 py-2 border border-border rounded-md text-sm" />

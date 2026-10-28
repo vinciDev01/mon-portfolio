@@ -6,6 +6,7 @@ import {
   IsInt,
   IsOptional,
   IsString,
+  MaxLength,
   Min,
 } from 'class-validator';
 
@@ -43,4 +44,16 @@ export class CreateExperienceDto {
   @IsInt()
   @Min(0)
   sortOrder?: number;
+
+  @ApiPropertyOptional({ description: 'Version anglaise, pour le CV en anglais ; vide : le francais', nullable: true })
+  @IsOptional()
+  @IsString()
+  @MaxLength(160)
+  roleEn?: string | null;
+
+  @ApiPropertyOptional({ description: 'Version anglaise, pour le CV en anglais ; vide : le francais', nullable: true })
+  @IsOptional()
+  @IsString()
+  @MaxLength(4000)
+  descriptionEn?: string | null;
 }

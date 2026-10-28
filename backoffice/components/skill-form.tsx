@@ -9,6 +9,8 @@ export type ValeursCompetence = {
   sorte: "technologie" | "libre";
   technologyId: string;
   label: string;
+  /** Nom anglais d'une competence libre, pour le CV en anglais. */
+  labelEn: string;
   familyId: string;
   proficiency: number | "";
   sortOrder: number;
@@ -18,6 +20,7 @@ export const COMPETENCE_VIDE: ValeursCompetence = {
   sorte: "technologie",
   technologyId: "",
   label: "",
+  labelEn: "",
   familyId: "",
   proficiency: "",
   sortOrder: 0,
@@ -28,6 +31,7 @@ export function valeursDe(s: SkillDto): ValeursCompetence {
     sorte: s.technologyId ? "technologie" : "libre",
     technologyId: s.technologyId ?? "",
     label: s.label ?? "",
+    labelEn: s.labelEn ?? "",
     familyId: s.familyId ?? "",
     proficiency: s.proficiency ?? "",
     sortOrder: s.sortOrder,
@@ -38,8 +42,8 @@ export function valeursDe(s: SkillDto): ValeursCompetence {
 export function corpsCompetence(v: ValeursCompetence) {
   const commun = { proficiency: v.proficiency === "" ? null : v.proficiency, sortOrder: v.sortOrder };
   return v.sorte === "technologie"
-    ? { ...commun, technologyId: v.technologyId, label: null, familyId: null }
-    : { ...commun, technologyId: null, label: v.label.trim(), familyId: v.familyId || null };
+    ? { ...commun, technologyId: v.technologyId, label: null, labelEn: null, familyId: null }
+    : { ...commun, technologyId: null, label: v.label.trim(), labelEn: v.labelEn.trim() || null, familyId: v.familyId || null };
 }
 
 /** Le message d'erreur du formulaire, ou null s'il peut partir. */
@@ -143,6 +147,19 @@ export function SkillForm({
               placeholder="Ex : Management"
               className={champ}
             />
+          </div>
+          <div>
+            <label htmlFor="competence-nom-en" className="block text-sm font-medium mb-1">Nom (anglais)</label>
+            <input
+              id="competence-nom-en"
+              type="text"
+              maxLength={80}
+              value={valeurs.labelEn}
+              onChange={(e) => maj("labelEn", e.target.value)}
+              placeholder="Ex : Team management"
+              className={champ}
+            />
+            <p className="text-xs text-muted-foreground mt-1">Pour le CV en anglais. Vide : le nom français.</p>
           </div>
           <div>
             <label htmlFor="competence-famille" className="block text-sm font-medium mb-1">Famille</label>

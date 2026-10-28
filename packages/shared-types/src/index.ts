@@ -7,6 +7,7 @@ export type { SkillDto } from "./skill";
 export type { ExperienceDto } from "./experience";
 export type { CertificationDto } from "./certification";
 export type { CvSectionDto } from "./cv-section";
+export type { CvVersionDto } from "./cv-version";
 export type { ProjectDto, ProjectTechnologyDto, ProjectRawDto, ProjectCollaboratorDto } from "./project";
 export type { ServiceDto } from "./service";
 export type { AboutDto } from "./about";

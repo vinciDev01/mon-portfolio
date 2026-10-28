@@ -19,7 +19,7 @@ function nomDepuisEnTete(entete: string | null, repli: string): string {
 /** Une page cornee et l'etiquette du format, dans sa couleur d'usage :
  *  rouge pour le PDF, bleu pour Word. Decorative, le texte du bouton dit
  *  deja le format. */
-function IconeFormat({ format }: { format: "PDF" | "DOC" }) {
+export function IconeFormat({ format }: { format: "PDF" | "DOC" }) {
   const couleur = format === "PDF" ? "#b91c1c" : "#1d4ed8";
   return (
     <svg viewBox="0 0 24 24" aria-hidden="true" className="size-6 shrink-0" fill="none">
@@ -47,26 +47,36 @@ function IconeFormat({ format }: { format: "PDF" | "DOC" }) {
   );
 }
 
+/**
+ * Telecharge un CV genere (`chemin` : `generate`, `generate.docx?langue=en`,
+ * `generate?version=...`). Partage par les reglages et les versions du CV.
+ */
+export async function telechargerCv(chemin: string, repli: string) {
+  try {
+    const res = await appelerApi(`/api/cv-generator/${chemin}`);
+    if (!res.ok) throw new Error(String(res.status));
+
+    const blob = await res.blob();
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = nomDepuisEnTete(res.headers.get("content-disposition"), repli);
+    document.body.appendChild(a);
+    a.click();
+    a.remove();
+    URL.revokeObjectURL(url);
+  } catch {
+    toast.error("Erreur de génération du CV");
+  }
+}
+
 export function TelechargementCv() {
   const [enCours, setEnCours] = useState<string | null>(null);
 
   async function telecharger(chemin: string, repli: string) {
     setEnCours(chemin);
     try {
-      const res = await appelerApi(`/api/cv-generator/${chemin}`);
-      if (!res.ok) throw new Error(String(res.status));
-
-      const blob = await res.blob();
-      const url = URL.createObjectURL(blob);
-      const a = document.createElement("a");
-      a.href = url;
-      a.download = nomDepuisEnTete(res.headers.get("content-disposition"), repli);
-      document.body.appendChild(a);
-      a.click();
-      a.remove();
-      URL.revokeObjectURL(url);
-    } catch {
-      toast.error("Erreur de génération du CV");
+      await telechargerCv(chemin, repli);
     } finally {
       setEnCours(null);
     }
@@ -75,26 +85,42 @@ export function TelechargementCv() {
   const bouton =
     "inline-flex items-center gap-2 px-4 py-2 text-sm rounded-md border border-border hover:bg-muted disabled:opacity-50";
 
+  // Une rangee par langue : le francais, puis l'anglais (les champs anglais
+  // saisis au backoffice, a defaut le francais).
+  const langues = [
+    { code: "fr", libelle: "Français", suffixe: "" },
+    { code: "en", libelle: "Anglais", suffixe: "?langue=en" },
+  ] as const;
+
   return (
-    <div className="flex flex-wrap gap-3">
-      <button
-        type="button"
-        onClick={() => telecharger("generate", "CV.pdf")}
-        disabled={enCours !== null}
-        className={bouton}
-      >
-        <IconeFormat format="PDF" />
-        {enCours === "generate" ? "Génération…" : "Télécharger le PDF"}
-      </button>
-      <button
-        type="button"
-        onClick={() => telecharger("generate.docx", "CV.docx")}
-        disabled={enCours !== null}
-        className={bouton}
-      >
-        <IconeFormat format="DOC" />
-        {enCours === "generate.docx" ? "Génération…" : "Télécharger le Word"}
-      </button>
+    <div className="space-y-3">
+      {langues.map((l) => {
+        const pdf = `generate${l.suffixe}`;
+        const docx = `generate.docx${l.suffixe}`;
+        return (
+          <div key={l.code} className="flex flex-wrap items-center gap-3">
+            <span className="w-20 text-sm text-muted-foreground">{l.libelle}</span>
+            <button
+              type="button"
+              onClick={() => telecharger(pdf, "CV.pdf")}
+              disabled={enCours !== null}
+              className={bouton}
+            >
+              <IconeFormat format="PDF" />
+              {enCours === pdf ? "Génération…" : "Télécharger le PDF"}
+            </button>
+            <button
+              type="button"
+              onClick={() => telecharger(docx, "CV.docx")}
+              disabled={enCours !== null}
+              className={bouton}
+            >
+              <IconeFormat format="DOC" />
+              {enCours === docx ? "Génération…" : "Télécharger le Word"}
+            </button>
+          </div>
+        );
+      })}
     </div>
   );
 }

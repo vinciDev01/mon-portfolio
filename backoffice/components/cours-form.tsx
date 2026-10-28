@@ -8,6 +8,8 @@ import type { TechnologyDto } from "@portfolio/shared-types";
 
 export type ValeursCours = {
   titre: string;
+  /** Titre anglais, pour le CV en anglais ; vide : le francais. */
+  titreEn: string;
   titreCourt: string;
   description: string;
   niveau: "debutant" | "intermediaire" | "avance";
@@ -21,6 +23,7 @@ export type ValeursCours = {
 
 export const COURS_VIDE: ValeursCours = {
   titre: "",
+  titreEn: "",
   titreCourt: "",
   description: "",
   niveau: "debutant",
@@ -37,6 +40,7 @@ export const COURS_VIDE: ValeursCours = {
 export function corpsCours(v: ValeursCours) {
   return {
     titre: v.titre.trim(),
+    titreEn: v.titreEn.trim() || null,
     titreCourt: v.titreCourt.trim() || null,
     description: v.description.trim() || null,
     niveau: v.niveau,
@@ -134,6 +138,11 @@ export function CoursForm({
       <div>
         <label htmlFor="cours-titre" className="block text-sm font-medium mb-1">Titre</label>
         <input id="cours-titre" type="text" required maxLength={160} value={valeurs.titre} onChange={(e) => maj("titre", e.target.value)} className={champ} />
+      </div>
+      <div>
+        <label htmlFor="cours-titre-en" className="block text-sm font-medium mb-1">Titre (anglais)</label>
+        <input id="cours-titre-en" type="text" maxLength={160} value={valeurs.titreEn} onChange={(e) => maj("titreEn", e.target.value)} className={champ} />
+        <p className="text-xs text-muted-foreground mt-1">Pour le CV en anglais. Vide : le titre français est repris.</p>
       </div>
       <div>
         <label htmlFor="cours-titre-court" className="block text-sm font-medium mb-1">Titre court</label>

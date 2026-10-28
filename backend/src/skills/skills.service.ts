@@ -7,7 +7,7 @@ import { UpdateSkillDto } from './dto/update-skill.dto';
 /** La technologie et sa famille, et la famille propre d'une competence libre. */
 const AVEC_LIENS = { technology: { include: { family: true } }, family: true } as const;
 
-type Champs = Pick<CreateSkillDto, 'technologyId' | 'label' | 'familyId'>;
+type Champs = Pick<CreateSkillDto, 'technologyId' | 'label' | 'familyId' | 'labelEn'>;
 
 /**
  * Une competence est soit liee a une technologie, soit libre : jamais les
@@ -15,12 +15,12 @@ type Champs = Pick<CreateSkillDto, 'technologyId' | 'label' | 'familyId'>;
  * les siens) ; libre, il lui faut un nom.
  */
 function normaliser(champs: Champs): Champs {
-  if (champs.technologyId) return { technologyId: champs.technologyId, label: null, familyId: null };
+  if (champs.technologyId) return { technologyId: champs.technologyId, label: null, labelEn: null, familyId: null };
   const label = champs.label?.trim();
   if (!label) {
     throw new BadRequestException('Choisissez une technologie ou saisissez le nom de la competence');
   }
-  return { technologyId: null, label, familyId: champs.familyId || null };
+  return { technologyId: null, label, labelEn: champs.labelEn?.trim() || null, familyId: champs.familyId || null };
 }
 
 function traduire(e: unknown): never {
@@ -61,12 +61,13 @@ export class SkillsService {
     const actuelle = await this.findOne(id);
     const { proficiency, sortOrder } = dto;
     // Un champ absent garde sa valeur : la regle s'applique a l'etat final.
-    const touche = 'technologyId' in dto || 'label' in dto || 'familyId' in dto;
+    const touche = 'technologyId' in dto || 'label' in dto || 'familyId' in dto || 'labelEn' in dto;
     const liens = touche
       ? normaliser({
           technologyId: 'technologyId' in dto ? dto.technologyId : actuelle.technologyId,
           label: 'label' in dto ? dto.label : actuelle.label,
           familyId: 'familyId' in dto ? dto.familyId : actuelle.familyId,
+          labelEn: 'labelEn' in dto ? dto.labelEn : actuelle.labelEn,
         })
       : {};
     return this.prisma.skill

@@ -73,4 +73,10 @@ export class CreateCoursDto {
   @IsInt()
   @Min(0)
   sortOrder?: number;
+
+  @ApiPropertyOptional({ description: 'Version anglaise, pour le CV en anglais ; vide : le francais', nullable: true })
+  @IsOptional()
+  @IsString()
+  @MaxLength(160)
+  titreEn?: string | null;
 }

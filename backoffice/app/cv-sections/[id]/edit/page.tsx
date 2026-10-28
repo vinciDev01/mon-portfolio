@@ -19,7 +19,9 @@ export default function EditerSectionCvPage() {
       .then((s) =>
         setValeurs({
           titre: s.titre,
+          titreEn: s.titreEn ?? "",
           lignes: s.lignes,
+          lignesEn: s.lignesEn ?? "",
           publique: s.publique,
           sortOrder: s.sortOrder,
         }),

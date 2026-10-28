@@ -18,6 +18,7 @@ export default function ModifierCoursPage() {
       .then((c) =>
         setValeurs({
           titre: c.titre,
+          titreEn: c.titreEn ?? "",
           titreCourt: c.titreCourt ?? "",
           description: c.description ?? "",
           niveau: c.niveau,

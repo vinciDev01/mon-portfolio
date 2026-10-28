@@ -40,6 +40,12 @@ export interface SiteSettingsDto {
   showCvDownload: boolean;
   /** Le poste vise, imprime sous le nom en tete du CV ; `null` : pas de ligne. */
   cvJobTitle: string | null;
+  /** Version anglaise, pour le CV en anglais ; vide : le francais. */
+  cvJobTitleEn?: string | null;
+  /** L'adresse publique du portfolio : lien et QR code du CV. */
+  siteUrl: string | null;
+  /** Le QR code du portfolio en tete du CV, quand l'adresse est renseignee. */
+  cvAfficherQr: boolean;
   /** Les sections de la base retirees du CV (presentation, technologies,
    *  certifications, experiences, projets). Vide : toutes incluses. */
   cvBaseMasquees: string[];

@@ -66,7 +66,7 @@ export function ColonnePassage({
   reglages: SiteSettingsDto;
   infos: PersonalInfoDto;
 }) {
-  const { t } = useTranslation();
+  const { t, locale } = useTranslation();
   const entrees = sectionsActives(reglages);
   const idActif = useSectionActive();
   const idSignale = useSectionSignalee();
@@ -120,7 +120,7 @@ export function ColonnePassage({
       <div className="pied-colonne">
         {reglages.showCvDownload && (
           <a
-            href="/api/download-cv-word"
+            href={`/api/download-cv-word?langue=${locale === "fr" ? "fr" : "en"}`}
             download
             className="entree-parcours"
             aria-label={t("nav.downloadCv")}

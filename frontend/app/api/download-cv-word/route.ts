@@ -9,9 +9,12 @@ const API_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:4000";
  * pas cochee ; on relaie alors son 404 tel quel plutot que d'inventer une
  * autre reponse.
  */
-export async function GET() {
+export async function GET(requete: Request) {
+  // La langue du visiteur : le CV anglais pour l'anglais (et l'allemand, faute
+  // de CV allemand), le francais sinon. Seules ces deux valeurs passent.
+  const langue = new URL(requete.url).searchParams.get("langue") === "en" ? "en" : "fr";
   try {
-    const res = await fetch(`${API_URL}/api/cv-generator/public.docx`, {
+    const res = await fetch(`${API_URL}/api/cv-generator/public.docx?langue=${langue}`, {
       cache: "no-store",
     });
 

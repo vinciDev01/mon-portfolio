@@ -1,5 +1,7 @@
-import { Injectable } from '@nestjs/common';
+import { Injectable, NotFoundException } from '@nestjs/common';
+import type { CvVersion } from '@prisma/client';
 import PDFDocument from 'pdfkit';
+import * as QRCode from 'qrcode';
 import { PrismaService } from '../prisma/prisma.service';
 import {
   AlignmentType,
@@ -7,11 +9,16 @@ import {
   Document,
   ExternalHyperlink,
   HeadingLevel,
+  HorizontalPositionAlign,
+  HorizontalPositionRelativeFrom,
+  ImageRun,
   Packer,
   Paragraph,
   Tab,
   TabStopType,
   TextRun,
+  VerticalPositionRelativeFrom,
+  TextWrappingType,
 } from 'docx';
 import {
   avecBrouillon,
@@ -22,6 +29,7 @@ import {
   type SectionBrouillon,
 } from './ordre-sections';
 import { grouperTechnologies } from './technologies-cv';
+import { choisir, langueCv, TEXTES, type LangueCv } from './langue-cv';
 import { ligneCours, ligneExperience, posteDe, projetCv, suiteProjet, type ProjetCv } from './contenu-cv';
 import {
   hrefDeLien,
@@ -63,6 +71,11 @@ const AVANT_SECTION = 1.1;
 const COLONNE_ETIQUETTE = 108;
 /** Retrait des projets sous leur poste, et place de leur puce. */
 const RETRAIT_PROJET = 16;
+/** Cote du QR code du portfolio, en tete a droite (environ 2,3 cm). */
+const QR = 66;
+/** Blanc entre l'en-tete et le QR code. */
+const ECART_QR = 14;
+
 /** Largeur utile d'une page Word A4 (marges de 1120 twips), pour caler la
  *  periode a droite par une tabulation. */
 const LARGEUR_WORD = 11906 - 2 * 1120;
@@ -107,7 +120,23 @@ export class CvGeneratorService {
    * C'est ce qui garantit que le PDF et le Word ne divergeront pas : ajouter
    * une rubrique ici la fait apparaitre dans les deux formats.
    */
-  private async collecter(brouillon?: SectionBrouillon) {
+  /**
+   * La version demandee, s'il y en a une : elle fixe aussi la langue. Une
+   * version inconnue est un 404, jamais le CV complet a sa place.
+   */
+  private async version(id: string | undefined): Promise<CvVersion | null> {
+    if (!id) return null;
+    const v = await this.prisma.cvVersion.findUnique({ where: { id } });
+    if (!v) throw new NotFoundException(`Version du CV #${id} introuvable`);
+    return v;
+  }
+
+  private async collecter(brouillon?: SectionBrouillon, langue: LangueCv = 'fr', version: CvVersion | null = null) {
+    const t = TEXTES[langue];
+    // Ce que la version retient ; une liste vide retient tout.
+    const retenus = (ids: string[] | undefined) => (ids?.length ? new Set(ids) : null);
+    const projetsRetenus = retenus(version?.projetIds);
+    const competencesRetenues = retenus(version?.competenceIds);
     const [
       personalInfo,
       reglages,
@@ -123,9 +152,10 @@ export class CvGeneratorService {
       this.prisma.personalInfo.findFirst(),
       this.prisma.siteSettings.findFirst(),
       this.prisma.presentation.findMany({ orderBy: { sortOrder: 'asc' } }),
-      // Une technologie decochee « dans le CV » reste au portfolio seulement.
+      // Une technologie decochee « dans le CV » reste au portfolio seulement ;
+      // une version qui choisit ses technologies les prend telles quelles.
       this.prisma.technology.findMany({
-        where: { showInCv: true },
+        where: version?.technologieIds.length ? { id: { in: version.technologieIds } } : { showInCv: true },
         orderBy: { sortOrder: 'asc' },
         include: { family: true },
       }),
@@ -139,9 +169,12 @@ export class CvGeneratorService {
           projects: {
             orderBy: { sortOrder: 'asc' },
             select: {
+              id: true,
               name: true,
               description: true,
               cvSummary: true,
+              descriptionEn: true,
+              cvSummaryEn: true,
             },
           },
         },
@@ -163,86 +196,107 @@ export class CvGeneratorService {
     ]);
 
     const polices = choisirPolices(reglages?.cvFontFamily);
+    const garderProjets = <P extends { id: string }>(liste: P[]) =>
+      projetsRetenus ? liste.filter((p) => projetsRetenus.has(p.id)) : liste;
 
     // Sections alimentees par la base
     const base: (SectionBase & { cle: CleSectionBase })[] = [
       {
         cle: 'presentation' as const,
-        titre: 'PRÉSENTATION',
+        titre: t.titres.presentation,
         rang: RANG.presentation,
         // Une breve presentation, en paragraphe : pas une liste.
         sansPuce: true,
         lignes: presentations
-          .map((p) => p.description ?? p.subtitle ?? p.title)
+          .map((p) => choisir(p.description, p.descriptionEn, langue) ?? p.subtitle ?? p.title)
+          // La presentation propre a la version remplace celle de la base.
+          .filter(() => !version?.presentation)
+          .concat(version?.presentation ? [version.presentation] : [])
           .filter((l): l is string => Boolean(l)),
       },
       (() => {
         // Une ligne par famille, en deux colonnes ; les lignes en texte
         // seul servent au filtre des sections vides et de repli.
-        const paires = grouperTechnologies(technologies);
+        const paires = grouperTechnologies(
+          technologies.map((x) => ({
+            label: x.label,
+            family: x.family ? { name: choisir(x.family.name, x.family.nameEn, langue), sortOrder: x.family.sortOrder } : null,
+          })),
+          t.autres,
+        );
         return {
           cle: 'technologies' as const,
-          titre: 'TECHNOLOGIES',
+          titre: t.titres.technologies,
           rang: RANG.technologies,
-          lignes: paires.map((p) => (p.etiquette ? `${p.etiquette} : ${p.valeur}` : p.valeur)),
+          lignes: paires.map((p) => (p.etiquette ? `${p.etiquette}${t.deuxPoints}${p.valeur}` : p.valeur)),
           paires,
         };
       })(),
       {
         cle: 'certifications' as const,
-        titre: 'CERTIFICATIONS',
+        titre: t.titres.certifications,
         rang: RANG.certifications,
         lignes: certifications.map((c) => {
           const annee = c.issueDate ? new Date(c.issueDate).getFullYear() : null;
           const organisme = c.organization?.label ?? '';
           const suffixe = organisme ? ` - ${organisme}` : '';
-          return `${annee ? `${annee} : ` : ''}${c.name}${suffixe}`;
+          return `${annee ? `${annee}${t.deuxPoints}` : ''}${c.name}${suffixe}`;
         }),
       },
       {
         cle: 'experiences' as const,
-        titre: 'EXPÉRIENCES PROFESSIONNELLES',
+        titre: t.titres.experiences,
         rang: RANG.experiences,
         // Ce qui y a ete fait et les projets menes, dans l'entree meme.
         lignes: experiences.map((e) =>
           // Chaque projet avec ce qu'il est, en quelques mots.
-          ligneExperience(e, e.projects),
+          ligneExperience(e, garderProjets(e.projects), langue),
         ),
         // La meme matiere structuree, que les deux rendus dessinent.
-        postes: experiences.map((e) => posteDe(e, e.projects)),
+        postes: experiences.map((e) => posteDe(e, garderProjets(e.projects), langue)),
       },
       (() => {
         const paires = grouperTechnologies(
-          competencesLibres.map((s) => ({ label: s.label ?? '', family: s.family })).filter((s) => s.label),
+          competencesLibres
+            .filter((s) => !competencesRetenues || competencesRetenues.has(s.id))
+            .map((s) => ({
+              label: choisir(s.label, s.labelEn, langue) ?? '',
+              family: s.family ? { name: choisir(s.family.name, s.family.nameEn, langue), sortOrder: s.family.sortOrder } : null,
+            }))
+            .filter((s) => s.label),
+          t.autres,
         );
         return {
           cle: 'competences' as const,
-          titre: 'COMPÉTENCES',
+          titre: t.titres.competences,
           rang: RANG.competences,
-          lignes: paires.map((p) => (p.etiquette ? `${p.etiquette} : ${p.valeur}` : p.valeur)),
+          lignes: paires.map((p) => (p.etiquette ? `${p.etiquette}${t.deuxPoints}${p.valeur}` : p.valeur)),
           paires,
         };
       })(),
       {
         cle: 'projets' as const,
-        titre: 'PROJETS RÉALISÉS',
+        titre: t.titres.projets,
         rang: RANG.projets,
         // Les projets d'une experience sont cites sous elle : ici, les autres
         // (personnels, independants), sans doublon.
-        lignes: projets
+        lignes: garderProjets(projets)
           .filter((p) => !p.experienceId)
           .map((p, i) => {
-            const detail = p.description ? ` : ${p.description}` : '';
+            const description = choisir(p.description, p.descriptionEn, langue);
+            const detail = description ? `${t.deuxPoints}${description}` : '';
             return `${i + 1}. ${p.name}${detail}`;
           }),
         // En puces, comme sous un poste, avec la description entiere.
-        projets: projets.filter((p) => !p.experienceId).map((p) => projetCv(p, true)),
+        projets: garderProjets(projets)
+          .filter((p) => !p.experienceId)
+          .map((p) => projetCv(p, true, langue)),
       },
       {
         cle: 'cours' as const,
-        titre: 'COURS RÉDIGÉS',
+        titre: t.titres.cours,
         rang: RANG.cours,
-        lignes: cours.map(ligneCours),
+        lignes: cours.map((c) => ligneCours(c, langue)),
       },
     ];
 
@@ -251,8 +305,17 @@ export class CvGeneratorService {
       reglages,
       // Les sections de la base retirees du CV depuis le backoffice.
       sections: ordonnerSections(
-        sansMasquees(base, reglages?.cvBaseMasquees ?? []),
-        avecBrouillon(sectionsLibres, brouillon),
+        // Les sections masquees de la version, ou a defaut le reglage general.
+        sansMasquees(base, version ? version.sectionsMasquees : (reglages?.cvBaseMasquees ?? [])),
+        avecBrouillon(
+          // Les sections libres dans la langue du CV, francais a defaut.
+          sectionsLibres.map((x) => ({
+            ...x,
+            titre: choisir(x.titre, x.titreEn, langue),
+            lignes: choisir(x.lignes, x.lignesEn, langue),
+          })),
+          brouillon,
+        ),
       ),
       contact: lignesContact(
         personalInfo
@@ -264,10 +327,25 @@ export class CvGeneratorService {
               email: personalInfo.email,
               githubUrl: personalInfo.githubUrl,
               linkedinUrl: personalInfo.linkedinUrl,
+              portfolioUrl: reglages?.siteUrl,
             }
           : null,
+        langue,
       ),
-      titre: titrePoste(reglages?.cvJobTitle),
+      // Le QR code du portfolio : seulement si l'adresse existe et que la
+      // case est cochee au backoffice. Une image PNG, noir sur blanc.
+      qr:
+        reglages?.siteUrl?.trim() && reglages.cvAfficherQr
+          ? await QRCode.toBuffer(reglages.siteUrl.trim(), {
+              type: 'png',
+              errorCorrectionLevel: 'M',
+              margin: 1,
+              width: 360,
+              color: { dark: '#000000', light: '#ffffff' },
+            })
+          : null,
+      titre: titrePoste(version?.titrePoste ?? choisir(reglages?.cvJobTitle, reglages?.cvJobTitleEn, langue)),
+      langue,
       nomComplet: personalInfo
         ? `${personalInfo.name} ${personalInfo.surname}`.trim()
         : 'Curriculum Vitae',
@@ -277,9 +355,12 @@ export class CvGeneratorService {
   }
 
   /** `brouillon` : la section du formulaire, pour l'apercu du backoffice. */
-  async generatePdf(brouillon?: SectionBrouillon): Promise<DocumentCv> {
-    const { reglages, sections, contact, titre, nomComplet, nom, prenom } =
-      await this.collecter(brouillon);
+  /** `versionId` : une version du CV, dont la langue prime sur `langue`. */
+  async generatePdf(brouillon?: SectionBrouillon, langue: LangueCv = 'fr', versionId?: string): Promise<DocumentCv> {
+    const version = await this.version(versionId);
+    if (version) langue = langueCv(version.langue);
+    const { reglages, sections, contact, titre, nomComplet, nom, prenom, qr } =
+      await this.collecter(brouillon, langue, version);
     const polices = choisirPolices(reglages?.cvFontFamily);
 
     const contenu = await new Promise<Buffer>((resolve, reject) => {
@@ -302,11 +383,21 @@ export class CvGeneratorService {
           .font(polices.gras)
           .fillColor(ENCRE)
           .text(projet.nom, x, y, { width: largeurProjet, lineGap: INTERLIGNE - 2, continued: Boolean(projet.resume) });
-        if (projet.resume) doc.font(polices.normal).text(suiteProjet(projet.resume));
+        if (projet.resume) doc.font(polices.normal).text(suiteProjet(projet.resume, langue));
       };
 
+      // Le QR code du portfolio, en haut a droite : l'en-tete s'arrete avant
+      // lui, pour ne jamais passer dessous.
+      // Le temps de l'en-tete, la marge droite s'elargit de la place du QR
+      // code : chaque texte, coordonnees comprises, s'arrete avant lui.
+      const hautEntete = doc.y;
+      if (qr) {
+        doc.image(qr, MARGE + largeur - QR, hautEntete, { width: QR, height: QR });
+        doc.page.margins.right = MARGE + QR + ECART_QR;
+      }
+
       // En-tete : le nom, le poste vise, puis les coordonnees sur une ligne.
-      doc.font(polices.gras).fontSize(NOM).fillColor(ENCRE).text(nomComplet);
+      doc.font(polices.gras).fontSize(NOM).fillColor(ENCRE).text(nomComplet, MARGE, hautEntete);
       // Le poste vise, sous le nom : c'est la premiere chose que lit un
       // recruteur apres le nom.
       if (titre) {
@@ -336,6 +427,13 @@ export class CvGeneratorService {
             }
           }
         });
+      }
+
+      // Fin de l'en-tete : la marge reprend sa place, et la suite part sous
+      // le QR code s'il descend plus bas que le texte.
+      if (qr) {
+        doc.page.margins.right = MARGE;
+        doc.y = Math.max(doc.y, hautEntete + QR);
       }
 
       // Sections
@@ -442,7 +540,7 @@ export class CvGeneratorService {
       doc.end();
     });
 
-    return { contenu, nom: nomFichier(nom, prenom, 'pdf') };
+    return { contenu, nom: nomFichier(nom, prenom, 'pdf', langue) };
   }
 
   /**
@@ -453,9 +551,11 @@ export class CvGeneratorService {
    * de restyler le CV d'un clic, fait fonctionner le volet de navigation, et
    * garde le fichier reellement modifiable.
    */
-  async generateDocx(): Promise<DocumentCv> {
-    const { reglages, sections, contact, titre, nomComplet, nom, prenom } =
-      await this.collecter();
+  async generateDocx(langue: LangueCv = 'fr', versionId?: string): Promise<DocumentCv> {
+    const version = await this.version(versionId);
+    if (version) langue = langueCv(version.langue);
+    const { reglages, sections, contact, titre, nomComplet, nom, prenom, qr } =
+      await this.collecter(undefined, langue, version);
     const police = policeWord(reglages?.cvFontFamily);
 
     // Gris du poste et des coordonnees, comme dans le PDF.
@@ -480,12 +580,37 @@ export class CvGeneratorService {
         spacing: { after: 40 },
         children: [
           new TextRun({ text: projet.nom, bold: true }),
-          ...(projet.resume ? [new TextRun({ text: suiteProjet(projet.resume) })] : []),
+          ...(projet.resume ? [new TextRun({ text: suiteProjet(projet.resume, langue) })] : []),
         ],
       });
 
     const corps: Paragraph[] = [
-      new Paragraph({ text: nomComplet, heading: HeadingLevel.TITLE }),
+      new Paragraph({
+        heading: HeadingLevel.TITLE,
+        children: [
+          // Le QR code du portfolio, flottant en haut a droite : le nom, le
+          // poste et les coordonnees le contournent. Word compte en pixels
+          // (96 par pouce), le PDF en points (72) : meme taille imprimee.
+          ...(qr
+            ? [
+                new ImageRun({
+                  type: 'png',
+                  data: qr,
+                  transformation: { width: Math.round((QR * 96) / 72), height: Math.round((QR * 96) / 72) },
+                  floating: {
+                    horizontalPosition: {
+                      relative: HorizontalPositionRelativeFrom.MARGIN,
+                      align: HorizontalPositionAlign.RIGHT,
+                    },
+                    verticalPosition: { relative: VerticalPositionRelativeFrom.PARAGRAPH, offset: 0 },
+                    wrap: { type: TextWrappingType.SQUARE },
+                  },
+                }),
+              ]
+            : []),
+          new TextRun(nomComplet),
+        ],
+      }),
       ...(titre
         ? [
             new Paragraph({
@@ -603,6 +728,6 @@ export class CvGeneratorService {
     });
 
     const contenu = await Packer.toBuffer(doc);
-    return { contenu: Buffer.from(contenu), nom: nomFichier(nom, prenom, 'docx') };
+    return { contenu: Buffer.from(contenu), nom: nomFichier(nom, prenom, 'docx', langue) };
   }
 }

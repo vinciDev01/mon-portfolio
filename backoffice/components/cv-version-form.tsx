@@ -4,7 +4,7 @@ import { useEffect, useState } from "react";
 import { toast } from "sonner";
 import { fetchEntities } from "@/lib/api";
 import { RANGS_DE_LA_BASE } from "@/components/cv-section-form";
-import type { CvVersionDto, ProjectDto, SkillDto, TechnologyDto } from "@portfolio/shared-types";
+import type { CvVersionDto, PresentationDto, ProjectDto, SkillDto, TechnologyDto } from "@portfolio/shared-types";
 
 export type ValeursVersion = {
   nom: string;
@@ -119,6 +119,18 @@ function Choix({
 }
 
 /**
+ * La presentation que le CV prend quand la version n'a pas la sienne : la
+ * regle du generateur, chaque presentation dans la langue du CV (le francais
+ * a defaut), sinon son sous-titre, sinon son titre.
+ */
+function presentationDuSite(presentations: PresentationDto[], langue: ValeursVersion["langue"]): string {
+  return presentations
+    .map((p) => (langue === "en" ? p.descriptionEn || p.description : p.description) || p.subtitle || p.title)
+    .filter(Boolean)
+    .join(" ");
+}
+
+/**
  * Le formulaire d'une version du CV, partage par la creation et la
  * modification : son nom, sa langue, son titre et sa presentation, les
  * sections incluses, et ce qu'elle retient des projets, technologies et
@@ -134,14 +146,17 @@ export function CvVersionForm({
   const [projets, setProjets] = useState<ProjectDto[]>([]);
   const [technologies, setTechnologies] = useState<TechnologyDto[]>([]);
   const [competences, setCompetences] = useState<SkillDto[]>([]);
+  const [presentations, setPresentations] = useState<PresentationDto[]>([]);
 
   useEffect(() => {
     Promise.all([
       fetchEntities<ProjectDto>("projects"),
       fetchEntities<TechnologyDto>("technologies"),
       fetchEntities<SkillDto>("skills"),
+      fetchEntities<PresentationDto>("presentations"),
     ])
-      .then(([p, t, s]) => {
+      .then(([p, t, s, pr]) => {
+        setPresentations(pr);
         setProjets(p);
         setTechnologies(t);
         // Les competences techniques passent par leurs technologies.
@@ -151,6 +166,7 @@ export function CvVersionForm({
   }, []);
 
   const maj = <K extends keyof ValeursVersion>(cle: K, v: ValeursVersion[K]) => onChange({ ...valeurs, [cle]: v });
+  const duSite = presentationDuSite(presentations, valeurs.langue);
 
   return (
     <>
@@ -197,16 +213,32 @@ export function CvVersionForm({
       </div>
 
       <div>
-        <label htmlFor="version-presentation" className="block text-sm font-medium mb-1">Présentation</label>
+        <div className="flex items-end justify-between gap-3 mb-1">
+          <label htmlFor="version-presentation" className="block text-sm font-medium">Présentation</label>
+          {/* Retoucher le texte du site plutot que repartir de zero. */}
+          {duSite && valeurs.presentation.trim() !== duSite && (
+            <button
+              type="button"
+              onClick={() => maj("presentation", duSite)}
+              className="text-xs px-2 py-1 rounded border border-border hover:bg-muted"
+            >
+              Partir du texte du site
+            </button>
+          )}
+        </div>
         <textarea
           id="version-presentation"
-          rows={3}
+          rows={5}
           maxLength={2000}
           value={valeurs.presentation}
           onChange={(e) => maj("presentation", e.target.value)}
-          placeholder="Vide : la présentation du site"
+          placeholder={duSite ? `Vide, le CV reprend le texte du site : ${duSite}` : "Vide : la présentation du site"}
+          aria-describedby="version-presentation-aide"
           className={champ}
         />
+        <p id="version-presentation-aide" className="text-xs text-muted-foreground mt-1">
+          Propre à cette version, dans sa langue. Vide, le CV reprend la présentation du site.
+        </p>
       </div>
 
       <fieldset>

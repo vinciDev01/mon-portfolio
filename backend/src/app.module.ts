@@ -23,6 +23,7 @@ import { ServicesModule } from './services/services.module';
 import { SiteSettingsModule } from './site-settings/site-settings.module';
 import { SkillsModule } from './skills/skills.module';
 import { TechnologiesModule } from './technologies/technologies.module';
+import { LogosModule } from './logos/logos.module';
 import { TestimonialsModule } from './testimonials/testimonials.module';
 import { UploadModule } from './upload/upload.module';
 import { JwtAuthGuard } from './auth/auth.guard';
@@ -36,6 +37,7 @@ import { JwtAuthGuard } from './auth/auth.guard';
     SiteSettingsModule,
     PersonalInfoModule,
     TechnologiesModule,
+    LogosModule,
     OrganizationsModule,
     BlogCategoriesModule,
     TechnologyFamiliesModule,

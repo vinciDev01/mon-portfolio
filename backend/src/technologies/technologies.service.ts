@@ -1,4 +1,5 @@
 import {
+  BadRequestException,
   ConflictException,
   Injectable,
   NotFoundException,
@@ -7,20 +8,28 @@ import { Prisma } from '@prisma/client';
 import { PrismaService } from '../prisma/prisma.service';
 import { CreateTechnologyDto } from './dto/create-technology.dto';
 import { UpdateTechnologyDto } from './dto/update-technology.dto';
+import { avecTrace, logoDe } from '../logos/catalogue-logos';
 
 /** Chaque technologie porte sa famille : le backoffice l'affiche, le CV
  *  range par elle. */
 const avecFamille = { family: true } as const;
 
+/** Un identifiant de logo doit exister dans le catalogue : sinon le site
+ *  n'aurait rien a dessiner, sans que personne le voie. */
+function verifierLogo(slug: string | null | undefined) {
+  if (slug && !logoDe(slug)) throw new BadRequestException(`Logo « ${slug} » introuvable dans le catalogue`);
+}
+
 @Injectable()
 export class TechnologiesService {
   constructor(private readonly prisma: PrismaService) {}
 
-  findAll() {
-    return this.prisma.technology.findMany({
+  async findAll() {
+    const liste = await this.prisma.technology.findMany({
       orderBy: { sortOrder: 'asc' },
       include: avecFamille,
     });
+    return liste.map(avecTrace);
   }
 
   async findOne(id: string) {
@@ -29,20 +38,24 @@ export class TechnologiesService {
       include: avecFamille,
     });
     if (!record) throw new NotFoundException(`Technology #${id} not found`);
-    return record;
+    return avecTrace(record);
   }
 
-  create(dto: CreateTechnologyDto) {
-    return this.prisma.technology.create({ data: dto, include: avecFamille });
+  async create(dto: CreateTechnologyDto) {
+    verifierLogo(dto.logoSlug);
+    return avecTrace(await this.prisma.technology.create({ data: dto, include: avecFamille }));
   }
 
   async update(id: string, dto: UpdateTechnologyDto) {
     await this.findOne(id);
-    return this.prisma.technology.update({
-      where: { id },
-      data: dto,
-      include: avecFamille,
-    });
+    verifierLogo(dto.logoSlug);
+    return avecTrace(
+      await this.prisma.technology.update({
+        where: { id },
+        data: dto,
+        include: avecFamille,
+      }),
+    );
   }
 
   /** Une technologie qui a des cours ne se supprime pas (cle etrangere en

@@ -13,6 +13,14 @@ export class CreateTechnologyDto {
   logoPath?: string;
 
   @ApiPropertyOptional({
+    description: 'Identifiant du logo dans le catalogue (« openjdk ») ; null : aucun',
+    nullable: true,
+  })
+  @IsOptional()
+  @IsString()
+  logoSlug?: string | null;
+
+  @ApiPropertyOptional({
     default: true,
     description:
       'Faux : la technologie reste au portfolio mais ne sort pas dans le CV',

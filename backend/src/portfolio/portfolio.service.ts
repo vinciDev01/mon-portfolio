@@ -1,5 +1,6 @@
 import { Injectable } from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service';
+import { avecTrace } from '../logos/catalogue-logos';
 
 @Injectable()
 export class PortfolioService {
@@ -109,7 +110,8 @@ export class PortfolioService {
       siteSettings,
       personalInfo,
       presentations,
-      skills,
+      // Le logo de chaque technologie, dessine depuis le catalogue.
+      skills: skills.map((s) => ({ ...s, technology: s.technology ? avecTrace(s.technology) : null })),
       experiences,
       certifications,
       projects,

@@ -6,6 +6,7 @@ import { I18nProvider } from "../i18n/i18n-context";
 import { FournisseurSectionActive, ParcoursPagine } from "@/components/parcours/parcours-pagine";
 import { SECTIONS } from "./sections";
 import { leverArrivee, scriptArrivee } from "./script-arrivee";
+import { bloc, valeur } from "./feuille-test";
 
 /* Actualiser la page sur une section ne doit pas montrer l'accueil.
 
@@ -101,6 +102,33 @@ describe("le script d arrivee", () => {
     expect(racineHtml.hasAttribute("data-arrivee")).toBe(false);
     expect(document.getElementById("style-arrivee")).toBeNull();
     expect(visible("ouverture")).toBe("visible");
+  });
+});
+
+describe("la colonne, avant React, designe deja la section du fragment", () => {
+  it("le script reprend les valeurs de l entree active de la feuille, et neutralise les autres", () => {
+    const script = scriptArrivee(IDS);
+    const actif = (sel: RegExp, prop: string) => valeur(bloc(sel), prop);
+    // L'entree visee : exactement le style de `[aria-current="true"]`.
+    for (const [sel, prop] of [
+      [/\.entree-parcours\[aria-current="true"\]\s*\{/, "color"],
+      [/\.entree-parcours\[aria-current="true"\] \.picto-section > \*\s*\{/, "stroke-width"],
+      [/\.entree-parcours\[aria-current="true"\] \.entree-nom\s*\{/, "font-weight"],
+      [/\.entree-parcours\[aria-current="true"\] \.entree-nom\s*\{/, "text-decoration"],
+    ] as const) {
+      expect(script, `${prop} de l entree active`).toContain(`${prop}:${actif(sel, prop)}`);
+    }
+    // L'entree que le serveur a marquee : rendue a son style de repos.
+    expect(script).toContain(`color:${valeur(bloc(/^\s*\.entree-parcours\s*\{/m), "color")}`);
+    expect(script).toContain(`stroke-width:${valeur(bloc(/^\s*\.picto-section > \*\s*\{/m), "stroke-width")}`);
+  });
+
+  it("vise l entree de la section du fragment par son ancre", () => {
+    sectionsServeur();
+    window.history.replaceState(null, "", "#contact");
+    executer(IDS);
+    const feuille = document.getElementById("style-arrivee")!.textContent!;
+    expect(feuille).toContain('.entree-parcours[href="#contact"]');
   });
 });
 

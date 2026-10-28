@@ -16,7 +16,13 @@
  * (`leverArrivee`) et la pagination ordinaire reprend.
  *
  * Seuls les identifiants de la liste fournie sont acceptes : la feuille est
- * ecrite avec l'un d'eux, jamais avec le fragment brut. Ses selecteurs
+ * ecrite avec l'un d'eux, jamais avec le fragment brut.
+ *
+ * La colonne suit : l'entree que le serveur a marquee active reprend son style
+ * de repos, celle de la section visee le style actif. Ses ATTRIBUTS ne sont pas
+ * touches, React les hydrate tels que le serveur les a rendus ; seule la
+ * feuille change, et ses valeurs recopient celles de `globals.css`, ce que
+ * verifie un test. Ses selecteurs
  * l'emportent sur ceux de la pagination (`[data-active]`) par leur
  * specificite, sans compter sur l'ordre des couches CSS.
  */
@@ -38,8 +44,16 @@ r.setAttribute("data-pagination","active");
 r.setAttribute(${JSON.stringify(ATTRIBUT_ARRIVEE)},id);
 var f=document.createElement("style");
 f.id=${JSON.stringify(ID_FEUILLE)};
+var a="html[${ATTRIBUT_ARRIVEE}] .entree-parcours";
+var v=a+'[href="#'+id+'"]';
 f.textContent="html[${ATTRIBUT_ARRIVEE}] .parcours-pagine>.section-paginee{opacity:0;visibility:hidden;transition:none}"
-+"html[${ATTRIBUT_ARRIVEE}] .parcours-pagine>#"+id+"{opacity:1;visibility:visible}";
++"html[${ATTRIBUT_ARRIVEE}] .parcours-pagine>#"+id+"{opacity:1;visibility:visible}"
++a+'[aria-current="true"]{color:var(--texte-secondaire)}'
++a+'[aria-current="true"] .picto-section>*{stroke-width:1.5}'
++a+'[aria-current="true"] .entree-nom{font-weight:inherit;text-decoration:none}'
++v+"{color:var(--texte)}"
++v+" .picto-section>*{stroke-width:2.75}"
++v+" .entree-nom{font-weight:600;text-decoration:underline dashed;text-decoration-thickness:1px;text-underline-offset:4px}";
 document.head.appendChild(f);
 }catch(_){}})()`;
 }

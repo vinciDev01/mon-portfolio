@@ -73,6 +73,9 @@ export default function CvVersionsPage() {
         Une version par candidature : sa langue, son titre de poste, sa présentation, et ce qu&apos;elle retient des
         projets, technologies et compétences. Une version neuve donne le CV complet.
       </p>
+      {/* Les actions restent sur une ligne : sur un ecran etroit, le tableau
+          defile plutot que d'empiler les boutons. */}
+      <div className="overflow-x-auto">
       <table className="w-full text-sm">
         <thead>
           <tr className="border-b border-border text-left">
@@ -91,8 +94,8 @@ export default function CvVersionsPage() {
               </td>
               <td className="py-3 px-2">{v.langue === "en" ? "Anglais" : "Français"}</td>
               <td className="py-3 px-2 text-muted-foreground">{resume(v)}</td>
-              <td className="py-3 px-2">
-                <div className="flex flex-wrap justify-end gap-2">
+              <td className="py-3 px-2 whitespace-nowrap">
+                <div className="flex justify-end gap-2">
                   <button type="button" onClick={() => setApercu(v)} className={bouton}>
                     Aperçu
                   </button>
@@ -116,6 +119,7 @@ export default function CvVersionsPage() {
           ))}
         </tbody>
       </table>
+      </div>
       {items.length === 0 && <p className="text-center text-muted-foreground py-8">Aucune version pour l&apos;instant.</p>}
       {apercu && <ApercuVersionCv version={apercu} onClose={fermerApercu} />}
       <ConfirmDialog

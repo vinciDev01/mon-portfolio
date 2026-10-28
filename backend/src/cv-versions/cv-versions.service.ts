@@ -4,12 +4,22 @@ import { CreateCvVersionDto } from './dto/create-cv-version.dto';
 import { UpdateCvVersionDto } from './dto/update-cv-version.dto';
 
 /** Les textes vides deviennent nuls : « vide » veut dire « celui de la base ». */
-function nettoyer<T extends { titrePoste?: string | null; presentation?: string | null; nom?: string }>(dto: T): T {
+function nettoyer<
+  T extends {
+    titrePoste?: string | null;
+    presentation?: string | null;
+    nom?: string;
+  },
+>(dto: T): T {
   return {
     ...dto,
     ...(dto.nom !== undefined ? { nom: dto.nom.trim() } : {}),
-    ...(dto.titrePoste !== undefined ? { titrePoste: dto.titrePoste?.trim() || null } : {}),
-    ...(dto.presentation !== undefined ? { presentation: dto.presentation?.trim() || null } : {}),
+    ...(dto.titrePoste !== undefined
+      ? { titrePoste: dto.titrePoste?.trim() || null }
+      : {}),
+    ...(dto.presentation !== undefined
+      ? { presentation: dto.presentation?.trim() || null }
+      : {}),
   };
 }
 
@@ -18,12 +28,15 @@ export class CvVersionsService {
   constructor(private readonly prisma: PrismaService) {}
 
   findAll() {
-    return this.prisma.cvVersion.findMany({ orderBy: [{ sortOrder: 'asc' }, { nom: 'asc' }] });
+    return this.prisma.cvVersion.findMany({
+      orderBy: [{ sortOrder: 'asc' }, { nom: 'asc' }],
+    });
   }
 
   async findOne(id: string) {
     const record = await this.prisma.cvVersion.findUnique({ where: { id } });
-    if (!record) throw new NotFoundException(`Version du CV #${id} introuvable`);
+    if (!record)
+      throw new NotFoundException(`Version du CV #${id} introuvable`);
     return record;
   }
 

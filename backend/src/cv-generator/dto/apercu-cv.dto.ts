@@ -1,6 +1,14 @@
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
 import { Type } from 'class-transformer';
-import { IsBoolean, IsInt, IsOptional, IsString, Max, MaxLength, Min } from 'class-validator';
+import {
+  IsBoolean,
+  IsInt,
+  IsOptional,
+  IsString,
+  Max,
+  MaxLength,
+  Min,
+} from 'class-validator';
 
 /**
  * La section en cours de saisie, pour l'apercu. Memes bornes que
@@ -8,7 +16,9 @@ import { IsBoolean, IsInt, IsOptional, IsString, Max, MaxLength, Min } from 'cla
  * frappe, et un titre pas encore saisi ne doit pas faire echouer le rendu.
  */
 export class ApercuCvDto {
-  @ApiPropertyOptional({ description: 'Id de la section modifiee ; absent pour une nouvelle' })
+  @ApiPropertyOptional({
+    description: 'Id de la section modifiee ; absent pour une nouvelle',
+  })
   @IsOptional()
   @IsString()
   id?: string;

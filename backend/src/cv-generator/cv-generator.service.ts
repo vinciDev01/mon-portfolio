@@ -29,11 +29,21 @@ import {
   type SectionBrouillon,
 } from './ordre-sections';
 import { grouperTechnologies } from './technologies-cv';
+import { iconeContact } from './icones-contact';
 import { choisir, langueCv, TEXTES, type LangueCv } from './langue-cv';
-import { ligneCours, ligneExperience, posteDe, projetCv, suiteProjet, type ProjetCv } from './contenu-cv';
+import {
+  ligneCours,
+  ligneExperience,
+  posteDe,
+  projetCv,
+  suiteProjet,
+  type ProjetCv,
+} from './contenu-cv';
 import {
   hrefDeLien,
   lignesContact,
+  rangerEnLignes,
+  urlAffichee,
   nomFichier,
   titrePoste,
   type LigneContact,
@@ -74,13 +84,17 @@ const RETRAIT_PROJET = 16;
 /** Cote du QR code du portfolio, en tete a droite (environ 2,3 cm). */
 const QR = 66;
 /** Blanc entre l'en-tete et le QR code. */
-const ECART_QR = 14;
+const ECART_QR = 18;
+/** Entre l'icone d'une coordonnee et sa valeur, et entre deux coordonnees. */
+const ECART_ICONE = 3.5;
+const ECART_CONTACT = 14;
+/** La legende sous le QR code, un cran sous les coordonnees. */
+const LEGENDE_QR = 7.5;
 
 /** Largeur utile d'une page Word A4 (marges de 1120 twips), pour caler la
  *  periode a droite par une tabulation. */
 const LARGEUR_WORD = 11906 - 2 * 1120;
 
-const LIEN = '#1A0DAB';
 const ENCRE = '#000000';
 /** Gris du poste, des coordonnees et du filet : lisible, en retrait du nom. */
 const GRIS = '#4A4A4A';
@@ -112,7 +126,7 @@ export type DocumentCv = { contenu: Buffer; nom: string };
 
 @Injectable()
 export class CvGeneratorService {
-  constructor(private readonly prisma: PrismaService) { }
+  constructor(private readonly prisma: PrismaService) {}
 
   /**
    * Collecte unique, partagee par les deux rendus.
@@ -131,10 +145,15 @@ export class CvGeneratorService {
     return v;
   }
 
-  private async collecter(brouillon?: SectionBrouillon, langue: LangueCv = 'fr', version: CvVersion | null = null) {
+  private async collecter(
+    brouillon?: SectionBrouillon,
+    langue: LangueCv = 'fr',
+    version: CvVersion | null = null,
+  ) {
     const t = TEXTES[langue];
     // Ce que la version retient ; une liste vide retient tout.
-    const retenus = (ids: string[] | undefined) => (ids?.length ? new Set(ids) : null);
+    const retenus = (ids: string[] | undefined) =>
+      ids?.length ? new Set(ids) : null;
     const projetsRetenus = retenus(version?.projetIds);
     const competencesRetenues = retenus(version?.competenceIds);
     const [
@@ -155,7 +174,9 @@ export class CvGeneratorService {
       // Une technologie decochee « dans le CV » reste au portfolio seulement ;
       // une version qui choisit ses technologies les prend telles quelles.
       this.prisma.technology.findMany({
-        where: version?.technologieIds.length ? { id: { in: version.technologieIds } } : { showInCv: true },
+        where: version?.technologieIds.length
+          ? { id: { in: version.technologieIds } }
+          : { showInCv: true },
         orderBy: { sortOrder: 'asc' },
         include: { family: true },
       }),
@@ -195,7 +216,6 @@ export class CvGeneratorService {
       }),
     ]);
 
-    const polices = choisirPolices(reglages?.cvFontFamily);
     const garderProjets = <P extends { id: string }>(liste: P[]) =>
       projetsRetenus ? liste.filter((p) => projetsRetenus.has(p.id)) : liste;
 
@@ -208,7 +228,12 @@ export class CvGeneratorService {
         // Une breve presentation, en paragraphe : pas une liste.
         sansPuce: true,
         lignes: presentations
-          .map((p) => choisir(p.description, p.descriptionEn, langue) ?? p.subtitle ?? p.title)
+          .map(
+            (p) =>
+              choisir(p.description, p.descriptionEn, langue) ??
+              p.subtitle ??
+              p.title,
+          )
           // La presentation propre a la version remplace celle de la base.
           .filter(() => !version?.presentation)
           .concat(version?.presentation ? [version.presentation] : [])
@@ -220,7 +245,12 @@ export class CvGeneratorService {
         const paires = grouperTechnologies(
           technologies.map((x) => ({
             label: x.label,
-            family: x.family ? { name: choisir(x.family.name, x.family.nameEn, langue), sortOrder: x.family.sortOrder } : null,
+            family: x.family
+              ? {
+                  name: choisir(x.family.name, x.family.nameEn, langue),
+                  sortOrder: x.family.sortOrder,
+                }
+              : null,
           })),
           t.autres,
         );
@@ -228,7 +258,9 @@ export class CvGeneratorService {
           cle: 'technologies' as const,
           titre: t.titres.technologies,
           rang: RANG.technologies,
-          lignes: paires.map((p) => (p.etiquette ? `${p.etiquette}${t.deuxPoints}${p.valeur}` : p.valeur)),
+          lignes: paires.map((p) =>
+            p.etiquette ? `${p.etiquette}${t.deuxPoints}${p.valeur}` : p.valeur,
+          ),
           paires,
         };
       })(),
@@ -237,7 +269,9 @@ export class CvGeneratorService {
         titre: t.titres.certifications,
         rang: RANG.certifications,
         lignes: certifications.map((c) => {
-          const annee = c.issueDate ? new Date(c.issueDate).getFullYear() : null;
+          const annee = c.issueDate
+            ? new Date(c.issueDate).getFullYear()
+            : null;
           const organisme = c.organization?.label ?? '';
           const suffixe = organisme ? ` - ${organisme}` : '';
           return `${annee ? `${annee}${t.deuxPoints}` : ''}${c.name}${suffixe}`;
@@ -253,15 +287,24 @@ export class CvGeneratorService {
           ligneExperience(e, garderProjets(e.projects), langue),
         ),
         // La meme matiere structuree, que les deux rendus dessinent.
-        postes: experiences.map((e) => posteDe(e, garderProjets(e.projects), langue)),
+        postes: experiences.map((e) =>
+          posteDe(e, garderProjets(e.projects), langue),
+        ),
       },
       (() => {
         const paires = grouperTechnologies(
           competencesLibres
-            .filter((s) => !competencesRetenues || competencesRetenues.has(s.id))
+            .filter(
+              (s) => !competencesRetenues || competencesRetenues.has(s.id),
+            )
             .map((s) => ({
               label: choisir(s.label, s.labelEn, langue) ?? '',
-              family: s.family ? { name: choisir(s.family.name, s.family.nameEn, langue), sortOrder: s.family.sortOrder } : null,
+              family: s.family
+                ? {
+                    name: choisir(s.family.name, s.family.nameEn, langue),
+                    sortOrder: s.family.sortOrder,
+                  }
+                : null,
             }))
             .filter((s) => s.label),
           t.autres,
@@ -270,7 +313,9 @@ export class CvGeneratorService {
           cle: 'competences' as const,
           titre: t.titres.competences,
           rang: RANG.competences,
-          lignes: paires.map((p) => (p.etiquette ? `${p.etiquette}${t.deuxPoints}${p.valeur}` : p.valeur)),
+          lignes: paires.map((p) =>
+            p.etiquette ? `${p.etiquette}${t.deuxPoints}${p.valeur}` : p.valeur,
+          ),
           paires,
         };
       })(),
@@ -306,7 +351,10 @@ export class CvGeneratorService {
       // Les sections de la base retirees du CV depuis le backoffice.
       sections: ordonnerSections(
         // Les sections masquees de la version, ou a defaut le reglage general.
-        sansMasquees(base, version ? version.sectionsMasquees : (reglages?.cvBaseMasquees ?? [])),
+        sansMasquees(
+          base,
+          version ? version.sectionsMasquees : (reglages?.cvBaseMasquees ?? []),
+        ),
         avecBrouillon(
           // Les sections libres dans la langue du CV, francais a defaut.
           sectionsLibres.map((x) => ({
@@ -344,7 +392,10 @@ export class CvGeneratorService {
               color: { dark: '#000000', light: '#ffffff' },
             })
           : null,
-      titre: titrePoste(version?.titrePoste ?? choisir(reglages?.cvJobTitle, reglages?.cvJobTitleEn, langue)),
+      titre: titrePoste(
+        version?.titrePoste ??
+          choisir(reglages?.cvJobTitle, reglages?.cvJobTitleEn, langue),
+      ),
       langue,
       nomComplet: personalInfo
         ? `${personalInfo.name} ${personalInfo.surname}`.trim()
@@ -356,7 +407,11 @@ export class CvGeneratorService {
 
   /** `brouillon` : la section du formulaire, pour l'apercu du backoffice. */
   /** `versionId` : une version du CV, dont la langue prime sur `langue`. */
-  async generatePdf(brouillon?: SectionBrouillon, langue: LangueCv = 'fr', versionId?: string): Promise<DocumentCv> {
+  async generatePdf(
+    brouillon?: SectionBrouillon,
+    langue: LangueCv = 'fr',
+    versionId?: string,
+  ): Promise<DocumentCv> {
     const version = await this.version(versionId);
     if (version) langue = langueCv(version.langue);
     const { reglages, sections, contact, titre, nomComplet, nom, prenom, qr } =
@@ -378,63 +433,126 @@ export class CvGeneratorService {
         const y = doc.y;
         const x = MARGE + RETRAIT_PROJET;
         const largeurProjet = largeur - RETRAIT_PROJET;
-        doc.font(polices.normal).fontSize(CORPS).fillColor(ENCRE).text('•', MARGE + 4, y);
+        doc
+          .font(polices.normal)
+          .fontSize(CORPS)
+          .fillColor(ENCRE)
+          .text('•', MARGE + 4, y);
         doc
           .font(polices.gras)
           .fillColor(ENCRE)
-          .text(projet.nom, x, y, { width: largeurProjet, lineGap: INTERLIGNE - 2, continued: Boolean(projet.resume) });
-        if (projet.resume) doc.font(polices.normal).text(suiteProjet(projet.resume, langue));
+          .text(projet.nom, x, y, {
+            width: largeurProjet,
+            lineGap: INTERLIGNE - 2,
+            continued: Boolean(projet.resume),
+          });
+        if (projet.resume)
+          doc.font(polices.normal).text(suiteProjet(projet.resume, langue));
       };
 
-      // Le QR code du portfolio, en haut a droite : l'en-tete s'arrete avant
-      // lui, pour ne jamais passer dessous.
-      // Le temps de l'en-tete, la marge droite s'elargit de la place du QR
-      // code : chaque texte, coordonnees comprises, s'arrete avant lui.
+      // L'en-tete : a gauche le nom, le poste et les coordonnees ; a droite
+      // le QR code du portfolio et sa legende. Le temps de l'en-tete, la
+      // marge droite s'elargit de la place du QR code : aucun texte ne passe
+      // dessous.
       const hautEntete = doc.y;
+      const largeurEntete = qr ? largeur - QR - ECART_QR : largeur;
+      let basQr = hautEntete;
       if (qr) {
-        doc.image(qr, MARGE + largeur - QR, hautEntete, { width: QR, height: QR });
+        const xQr = MARGE + largeur - QR;
+        doc.image(qr, xQr, hautEntete, { width: QR, height: QR });
+        doc
+          .font(polices.normal)
+          .fontSize(LEGENDE_QR)
+          .fillColor(GRIS)
+          .text(TEXTES[langue].legendeQr, xQr - 12, hautEntete + QR + 2, {
+            width: QR + 24,
+            align: 'center',
+          });
+        basQr = doc.y;
         doc.page.margins.right = MARGE + QR + ECART_QR;
       }
 
-      // En-tete : le nom, le poste vise, puis les coordonnees sur une ligne.
-      doc.font(polices.gras).fontSize(NOM).fillColor(ENCRE).text(nomComplet, MARGE, hautEntete);
+      doc
+        .font(polices.gras)
+        .fontSize(NOM)
+        .fillColor(ENCRE)
+        .text(nomComplet, MARGE, hautEntete, { width: largeurEntete });
       // Le poste vise, sous le nom : c'est la premiere chose que lit un
       // recruteur apres le nom.
       if (titre) {
         doc.moveDown(0.1);
-        doc.font(polices.normal).fontSize(POSTE).fillColor(GRIS).text(titre);
+        doc
+          .font(polices.normal)
+          .fontSize(POSTE)
+          .fillColor(GRIS)
+          .text(titre, MARGE, doc.y, { width: largeurEntete });
       }
 
       if (contact.length) {
-        doc.moveDown(0.35);
-        doc.font(polices.normal).fontSize(CONTACT).fillColor(GRIS);
-        // Une seule ligne, coupee la ou il faut : chaque morceau est un
-        // `text` continu, les liens gardent leur adresse.
-        contact.forEach((l, i) => {
-          const dernier = i === contact.length - 1;
-          const suite = { continued: !dernier };
-          if (l.genre === 'texte') {
-            doc.fillColor(GRIS).text(l.texte + (dernier ? '' : SEPARATEUR), suite);
-          } else {
-            doc.fillColor(GRIS).text(l.etiquette, { continued: true });
-            // Dernier morceau : le lien clot la ligne lui-meme. Un `text('')`
-            // final serait ignore par PDFKit et laisserait la ligne ouverte,
-            // collant le titre de section suivant aux coordonnees.
-            doc.fillColor(LIEN).text(l.url, { link: hrefDeLien(l.url), underline: true, ...suite });
-            // Le separateur, hors du lien : sinon le soulignement le suit.
-            if (!dernier) {
-              doc.fillColor(GRIS).text(SEPARATEUR, { link: null, underline: false, continued: true });
+        doc.moveDown(0.45);
+        doc.font(polices.normal).fontSize(CONTACT);
+        // Chaque coordonnee : une petite icone grise, puis sa seule valeur
+        // (« +228 ... », « github.com/... »), sans libelle. Les elements sont
+        // ranges en lignes completes, jamais coupes, espaces par un blanc
+        // plutot qu'une barre. Un lien reste cliquable sur toute sa valeur,
+        // sans souligne : le CV s'imprime sobre.
+        const taille = CONTACT * 1.05;
+        const morceaux = contact.map((l) => ({
+          icone: iconeContact(l.cle),
+          texte: l.genre === 'texte' ? l.valeur : urlAffichee(l.url),
+          lien: l.genre === 'lien' ? l.url : null,
+        }));
+        const largeurDe = (m: (typeof morceaux)[number]) =>
+          (m.icone ? taille + ECART_ICONE : 0) + doc.widthOfString(m.texte);
+        const lignes = rangerEnLignes(
+          morceaux,
+          largeurDe,
+          ECART_CONTACT,
+          largeurEntete,
+        );
+        const hauteurLigne = doc.currentLineHeight() + 3;
+        for (const ligne of lignes) {
+          const y = doc.y;
+          let x = MARGE;
+          for (const m of ligne) {
+            if (m.icone) {
+              // L'icone, ramenee de 24 a la taille du texte, centree sur sa
+              // hauteur de ligne.
+              const echelle = taille / 24;
+              doc.save();
+              doc
+                .translate(x, y + (doc.currentLineHeight() - taille) / 2 - 0.5)
+                .scale(echelle);
+              if (m.icone.mode === 'plein') doc.path(m.icone.trace).fill(GRIS);
+              else
+                doc
+                  .path(m.icone.trace)
+                  .lineWidth(2)
+                  .lineCap('round')
+                  .lineJoin('round')
+                  .stroke(GRIS);
+              doc.restore();
+              x += taille + ECART_ICONE;
             }
+            const largeurTexte = doc.widthOfString(m.texte);
+            doc.fillColor(m.lien ? ENCRE : GRIS).text(m.texte, x, y, {
+              lineBreak: false,
+              width: largeurTexte + 1,
+              ...(m.lien ? { link: hrefDeLien(m.lien) } : {}),
+            });
+            x += largeurTexte + ECART_CONTACT;
           }
-        });
+          doc.y = y + hauteurLigne;
+        }
+        doc.x = MARGE;
       }
 
-      // Fin de l'en-tete : la marge reprend sa place, et la suite part sous
-      // le QR code s'il descend plus bas que le texte.
-      if (qr) {
-        doc.page.margins.right = MARGE;
-        doc.y = Math.max(doc.y, hautEntete + QR);
-      }
+      // Fin de l'en-tete : la marge reprend sa place, la suite part sous le
+      // plus bas du texte et du QR code, avec un blanc avant la premiere
+      // section.
+      doc.page.margins.right = MARGE;
+      doc.x = MARGE;
+      doc.y = Math.max(doc.y, basQr) + (qr ? 4 : 0);
 
       // Sections
       for (const section of sections) {
@@ -466,21 +584,31 @@ export class CvGeneratorService {
             const y = doc.y;
             doc.font(polices.normal).fontSize(CORPS);
             const largeurPeriode = doc.widthOfString(poste.periode);
-            doc.fillColor(GRIS).text(poste.periode, MARGE, y, { width: largeur, align: 'right' });
+            doc.fillColor(GRIS).text(poste.periode, MARGE, y, {
+              width: largeur,
+              align: 'right',
+            });
             const basPeriode = doc.y;
             doc
               .font(polices.gras)
               .fillColor(ENCRE)
-              .text(poste.intitule, MARGE, y, { width: largeur - largeurPeriode - 12, continued: true })
+              .text(poste.intitule, MARGE, y, {
+                width: largeur - largeurPeriode - 12,
+                continued: true,
+              })
               .font(polices.normal)
               .text(`, ${poste.employeur}`);
             doc.y = Math.max(doc.y, basPeriode);
             if (poste.description) {
               doc.moveDown(0.15);
-              doc.font(polices.normal).fontSize(CORPS).fillColor(ENCRE).text(poste.description, MARGE, doc.y, {
-                width: largeur,
-                lineGap: INTERLIGNE - 2,
-              });
+              doc
+                .font(polices.normal)
+                .fontSize(CORPS)
+                .fillColor(ENCRE)
+                .text(poste.description, MARGE, doc.y, {
+                  width: largeur,
+                  lineGap: INTERLIGNE - 2,
+                });
             }
             for (const projet of poste.projets) dessinerProjet(projet);
           });
@@ -503,17 +631,27 @@ export class CvGeneratorService {
           for (const p of section.paires) {
             const y = doc.y;
             if (p.etiquette === null) {
-              doc.font(polices.normal).fontSize(CORPS).fillColor(ENCRE).text(p.valeur, MARGE, y, { width: largeur });
+              doc
+                .font(polices.normal)
+                .fontSize(CORPS)
+                .fillColor(ENCRE)
+                .text(p.valeur, MARGE, y, { width: largeur });
               continue;
             }
-            doc.font(polices.gras).fontSize(CORPS).fillColor(ENCRE).text(p.etiquette, MARGE, y, {
-              width: COLONNE_ETIQUETTE - 8,
-            });
+            doc
+              .font(polices.gras)
+              .fontSize(CORPS)
+              .fillColor(ENCRE)
+              .text(p.etiquette, MARGE, y, {
+                width: COLONNE_ETIQUETTE - 8,
+              });
             const basEtiquette = doc.y;
-            doc.font(polices.normal).text(p.valeur, MARGE + COLONNE_ETIQUETTE, y, {
-              width: largeur - COLONNE_ETIQUETTE,
-              lineGap: INTERLIGNE - 2,
-            });
+            doc
+              .font(polices.normal)
+              .text(p.valeur, MARGE + COLONNE_ETIQUETTE, y, {
+                width: largeur - COLONNE_ETIQUETTE,
+                lineGap: INTERLIGNE - 2,
+              });
             doc.y = Math.max(doc.y, basEtiquette) + 2;
           }
           doc.x = MARGE;
@@ -530,10 +668,15 @@ export class CvGeneratorService {
             .font(polices.normal)
             .fontSize(CORPS)
             .fillColor(ENCRE)
-            .text(numerotee || section.sansPuce ? entree : `• ${entree}`, MARGE, doc.y, {
-              width: largeur,
-              lineGap: INTERLIGNE - 2,
-            });
+            .text(
+              numerotee || section.sansPuce ? entree : `• ${entree}`,
+              MARGE,
+              doc.y,
+              {
+                width: largeur,
+                lineGap: INTERLIGNE - 2,
+              },
+            );
         }
       }
 
@@ -551,7 +694,10 @@ export class CvGeneratorService {
    * de restyler le CV d'un clic, fait fonctionner le volet de navigation, et
    * garde le fichier reellement modifiable.
    */
-  async generateDocx(langue: LangueCv = 'fr', versionId?: string): Promise<DocumentCv> {
+  async generateDocx(
+    langue: LangueCv = 'fr',
+    versionId?: string,
+  ): Promise<DocumentCv> {
     const version = await this.version(versionId);
     if (version) langue = langueCv(version.langue);
     const { reglages, sections, contact, titre, nomComplet, nom, prenom, qr } =
@@ -567,10 +713,18 @@ export class CvGeneratorService {
             new TextRun({ text: l.etiquette, color: gris, size: 19 }),
             new ExternalHyperlink({
               link: hrefDeLien(l.url),
-              children: [new TextRun({ text: l.url, style: 'Hyperlink', size: 19 })],
+              children: [
+                new TextRun({
+                  text: urlAffichee(l.url),
+                  style: 'Hyperlink',
+                  size: 19,
+                }),
+              ],
             }),
           ]),
-      ...(dernier ? [] : [new TextRun({ text: SEPARATEUR, color: gris, size: 19 })]),
+      ...(dernier
+        ? []
+        : [new TextRun({ text: SEPARATEUR, color: gris, size: 19 })]),
     ];
 
     // Un projet en puce Word : le nom en gras, puis ce qu'il est.
@@ -580,7 +734,9 @@ export class CvGeneratorService {
         spacing: { after: 40 },
         children: [
           new TextRun({ text: projet.nom, bold: true }),
-          ...(projet.resume ? [new TextRun({ text: suiteProjet(projet.resume, langue) })] : []),
+          ...(projet.resume
+            ? [new TextRun({ text: suiteProjet(projet.resume, langue) })]
+            : []),
         ],
       });
 
@@ -596,13 +752,19 @@ export class CvGeneratorService {
                 new ImageRun({
                   type: 'png',
                   data: qr,
-                  transformation: { width: Math.round((QR * 96) / 72), height: Math.round((QR * 96) / 72) },
+                  transformation: {
+                    width: Math.round((QR * 96) / 72),
+                    height: Math.round((QR * 96) / 72),
+                  },
                   floating: {
                     horizontalPosition: {
                       relative: HorizontalPositionRelativeFrom.MARGIN,
                       align: HorizontalPositionAlign.RIGHT,
                     },
-                    verticalPosition: { relative: VerticalPositionRelativeFrom.PARAGRAPH, offset: 0 },
+                    verticalPosition: {
+                      relative: VerticalPositionRelativeFrom.PARAGRAPH,
+                      offset: 0,
+                    },
                     wrap: { type: TextWrappingType.SQUARE },
                   },
                 }),
@@ -624,7 +786,9 @@ export class CvGeneratorService {
         ? [
             new Paragraph({
               spacing: { after: 0 },
-              children: contact.flatMap((l, i) => morceauxDeContact(l, i === contact.length - 1)),
+              children: contact.flatMap((l, i) =>
+                morceauxDeContact(l, i === contact.length - 1),
+              ),
             }),
           ]
         : []),
@@ -649,19 +813,29 @@ export class CvGeneratorService {
               children: [
                 new TextRun({ text: poste.intitule, bold: true }),
                 new TextRun({ text: `, ${poste.employeur}` }),
-                new TextRun({ children: [new Tab(), poste.periode], color: gris }),
+                new TextRun({
+                  children: [new Tab(), poste.periode],
+                  color: gris,
+                }),
               ],
             }),
           );
           if (poste.description) {
-            corps.push(new Paragraph({ text: poste.description, spacing: { after: 40 } }));
+            corps.push(
+              new Paragraph({
+                text: poste.description,
+                spacing: { after: 40 },
+              }),
+            );
           }
-          for (const projet of poste.projets) corps.push(paragrapheProjet(projet));
+          for (const projet of poste.projets)
+            corps.push(paragrapheProjet(projet));
         }
         continue;
       }
       if (section.projets?.length) {
-        for (const projet of section.projets) corps.push(paragrapheProjet(projet));
+        for (const projet of section.projets)
+          corps.push(paragrapheProjet(projet));
         continue;
       }
       if (section.paires?.length) {
@@ -672,9 +846,14 @@ export class CvGeneratorService {
           corps.push(
             new Paragraph({
               spacing: { after: 20 },
-              tabStops: [{ type: TabStopType.LEFT, position: COLONNE_ETIQUETTE * 20 }],
+              tabStops: [
+                { type: TabStopType.LEFT, position: COLONNE_ETIQUETTE * 20 },
+              ],
               children: p.etiquette
-                ? [new TextRun({ text: p.etiquette, bold: true }), new TextRun({ children: [new Tab(), p.valeur] })]
+                ? [
+                    new TextRun({ text: p.etiquette, bold: true }),
+                    new TextRun({ children: [new Tab(), p.valeur] }),
+                  ]
                 : [new TextRun(p.valeur)],
             }),
           );
@@ -704,15 +883,31 @@ export class CvGeneratorService {
           },
           title: {
             run: { font: police, size: NOM * 2, bold: true, color: '000000' },
-            paragraph: { spacing: { after: 40 }, alignment: AlignmentType.LEFT },
+            paragraph: {
+              spacing: { after: 40 },
+              alignment: AlignmentType.LEFT,
+            },
           },
           // Le titre de section porte son filet, comme dans le PDF : une
           // bordure de paragraphe, que le destinataire peut restyler.
           heading1: {
-            run: { font: police, size: 22, bold: true, color: '000000', characterSpacing: 12 },
+            run: {
+              font: police,
+              size: 22,
+              bold: true,
+              color: '000000',
+              characterSpacing: 12,
+            },
             paragraph: {
               spacing: { before: 280, after: 100 },
-              border: { bottom: { style: BorderStyle.SINGLE, size: 4, color: FILET.slice(1), space: 2 } },
+              border: {
+                bottom: {
+                  style: BorderStyle.SINGLE,
+                  size: 4,
+                  color: FILET.slice(1),
+                  space: 2,
+                },
+              },
             },
           },
         },
@@ -720,7 +915,9 @@ export class CvGeneratorService {
       sections: [
         {
           properties: {
-            page: { margin: { top: 1120, bottom: 1120, left: 1120, right: 1120 } },
+            page: {
+              margin: { top: 1120, bottom: 1120, left: 1120, right: 1120 },
+            },
           },
           children: corps,
         },
@@ -728,6 +925,9 @@ export class CvGeneratorService {
     });
 
     const contenu = await Packer.toBuffer(doc);
-    return { contenu: Buffer.from(contenu), nom: nomFichier(nom, prenom, 'docx', langue) };
+    return {
+      contenu: Buffer.from(contenu),
+      nom: nomFichier(nom, prenom, 'docx', langue),
+    };
   }
 }

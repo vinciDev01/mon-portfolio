@@ -11,7 +11,9 @@ import { correspondance } from '../src/logos/catalogue-logos';
 async function main() {
   const prisma = new PrismaClient();
   try {
-    const technos = await prisma.technology.findMany({ where: { logoSlug: null, logoPath: null } });
+    const technos = await prisma.technology.findMany({
+      where: { logoSlug: null, logoPath: null },
+    });
     const sansLogo: string[] = [];
     for (const t of technos) {
       const slug = correspondance(t.label);
@@ -19,10 +21,14 @@ async function main() {
         sansLogo.push(t.label);
         continue;
       }
-      await prisma.technology.update({ where: { id: t.id }, data: { logoSlug: slug } });
+      await prisma.technology.update({
+        where: { id: t.id },
+        data: { logoSlug: slug },
+      });
       console.log(`${t.label} -> ${slug}`);
     }
-    if (sansLogo.length) console.log(`Sans correspondance : ${sansLogo.join(', ')}`);
+    if (sansLogo.length)
+      console.log(`Sans correspondance : ${sansLogo.join(', ')}`);
   } finally {
     await prisma.$disconnect();
   }

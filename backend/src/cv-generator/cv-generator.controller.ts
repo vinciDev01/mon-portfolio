@@ -1,4 +1,12 @@
-import { Body, Controller, Get, NotFoundException, Post, Query, Res } from '@nestjs/common';
+import {
+  Body,
+  Controller,
+  Get,
+  NotFoundException,
+  Post,
+  Query,
+  Res,
+} from '@nestjs/common';
 import { ApiOperation, ApiQuery, ApiTags } from '@nestjs/swagger';
 import type { Response } from 'express';
 import { PrismaService } from '../prisma/prisma.service';
@@ -9,9 +17,17 @@ import { ApercuCvDto } from './dto/apercu-cv.dto';
 import { langueCv } from './langue-cv';
 
 /** La langue du CV, en parametre de requete : `fr` par defaut, ou `en`. */
-const QUERY_LANGUE = { name: 'langue', required: false, enum: ['fr', 'en'] } as const;
+const QUERY_LANGUE = {
+  name: 'langue',
+  required: false,
+  enum: ['fr', 'en'],
+} as const;
 /** Une version du CV ; sa langue prime alors sur `langue`. */
-const QUERY_VERSION = { name: 'version', required: false, description: 'Identifiant d une version du CV' } as const;
+const QUERY_VERSION = {
+  name: 'version',
+  required: false,
+  description: 'Identifiant d une version du CV',
+} as const;
 
 const TYPE_DOCX =
   'application/vnd.openxmlformats-officedocument.wordprocessingml.document';
@@ -42,7 +58,11 @@ export class CvGeneratorController {
   ) {
     this.envoyer(
       res,
-      await this.cvGeneratorService.generatePdf(undefined, langueCv(langue), version || undefined),
+      await this.cvGeneratorService.generatePdf(
+        undefined,
+        langueCv(langue),
+        version || undefined,
+      ),
       'application/pdf',
     );
   }
@@ -52,7 +72,9 @@ export class CvGeneratorController {
    * rien enregistrer. POST parce que la section voyage dans le corps.
    */
   @Post('apercu')
-  @ApiOperation({ summary: 'Apercu du CV PDF avec une section brouillon (administrateur)' })
+  @ApiOperation({
+    summary: 'Apercu du CV PDF avec une section brouillon (administrateur)',
+  })
   async apercu(@Body() dto: ApercuCvDto, @Res() res: Response) {
     this.envoyer(
       res,
@@ -69,7 +91,9 @@ export class CvGeneratorController {
 
   /** Word, pour relecture depuis le backoffice avant publication. */
   @Get('generate.docx')
-  @ApiOperation({ summary: 'Telecharger le CV au format Word (administrateur)' })
+  @ApiOperation({
+    summary: 'Telecharger le CV au format Word (administrateur)',
+  })
   @ApiQuery(QUERY_LANGUE)
   @ApiQuery(QUERY_VERSION)
   async generateDocx(
@@ -77,7 +101,14 @@ export class CvGeneratorController {
     @Query('version') version: string | undefined,
     @Res() res: Response,
   ) {
-    this.envoyer(res, await this.cvGeneratorService.generateDocx(langueCv(langue), version || undefined), TYPE_DOCX);
+    this.envoyer(
+      res,
+      await this.cvGeneratorService.generateDocx(
+        langueCv(langue),
+        version || undefined,
+      ),
+      TYPE_DOCX,
+    );
   }
 
   /**
@@ -92,14 +123,21 @@ export class CvGeneratorController {
   @Get('public.docx')
   @ApiOperation({ summary: 'Telecharger le CV au format Word (site public)' })
   @ApiQuery(QUERY_LANGUE)
-  async publicDocx(@Query('langue') langue: string | undefined, @Res() res: Response) {
+  async publicDocx(
+    @Query('langue') langue: string | undefined,
+    @Res() res: Response,
+  ) {
     const reglages = await this.prisma.siteSettings.findFirst({
       select: { showCvDownload: true },
     });
     if (!reglages?.showCvDownload) {
       throw new NotFoundException('CV indisponible');
     }
-    this.envoyer(res, await this.cvGeneratorService.generateDocx(langueCv(langue)), TYPE_DOCX);
+    this.envoyer(
+      res,
+      await this.cvGeneratorService.generateDocx(langueCv(langue)),
+      TYPE_DOCX,
+    );
   }
 
   private envoyer(res: Response, document: DocumentCv, type: string) {

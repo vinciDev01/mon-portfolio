@@ -106,7 +106,9 @@ export function avecBrouillon<T extends SectionBrouillon>(
   brouillon: SectionBrouillon | undefined,
 ): SectionBrouillon[] {
   if (!brouillon) return [...enregistrees];
-  const remplacee = brouillon.id !== undefined && enregistrees.some((s) => s.id === brouillon.id);
+  const remplacee =
+    brouillon.id !== undefined &&
+    enregistrees.some((s) => s.id === brouillon.id);
   return remplacee
     ? enregistrees.map((s) => (s.id === brouillon.id ? brouillon : s))
     : [...enregistrees, brouillon];

@@ -78,7 +78,11 @@ export function avecTrace<T extends { logoSlug: string | null }>(
   t: T,
 ): T & { logoTrace: string | null; logoHex: string | null } {
   const trace = traceDe(t.logoSlug);
-  return { ...t, logoTrace: trace, logoHex: trace && t.logoSlug ? (logoDe(t.logoSlug)?.hex ?? null) : null };
+  return {
+    ...t,
+    logoTrace: trace,
+    logoHex: trace && t.logoSlug ? (logoDe(t.logoSlug)?.hex ?? null) : null,
+  };
 }
 
 /** Le logo d'un identifiant, s'il existe. */
@@ -94,7 +98,10 @@ export function traceDe(slug: string | null | undefined): string | null {
   charger();
   let trace: string | null = null;
   try {
-    const svg = fs.readFileSync(path.join(dossierIcones, `${slug}.svg`), 'utf8');
+    const svg = fs.readFileSync(
+      path.join(dossierIcones, `${slug}.svg`),
+      'utf8',
+    );
     trace = /<path d="([^"]+)"/.exec(svg)?.[1] ?? null;
   } catch {
     trace = null;
@@ -137,9 +144,20 @@ export function rechercherLogos(saisie: string, limite = 12): LogoAvecTrace[] {
       return { e, note };
     })
     .filter((x) => x.note > 0)
-    .sort((a, b) => b.note - a.note || a.e.title.length - b.e.title.length || a.e.title.localeCompare(b.e.title));
+    .sort(
+      (a, b) =>
+        b.note - a.note ||
+        a.e.title.length - b.e.title.length ||
+        a.e.title.localeCompare(b.e.title),
+    );
   return notes
     .slice(0, limite)
-    .map(({ e }) => ({ slug: e.slug, title: e.title, hex: e.hex, trace: traceDe(e.slug) ?? '', exact: e.slug === exact }))
+    .map(({ e }) => ({
+      slug: e.slug,
+      title: e.title,
+      hex: e.hex,
+      trace: traceDe(e.slug) ?? '',
+      exact: e.slug === exact,
+    }))
     .filter((l) => l.trace);
 }

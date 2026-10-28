@@ -1,6 +1,15 @@
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
 import { Type } from 'class-transformer';
-import { ArrayMaxSize, IsArray, IsIn, IsInt, IsOptional, IsString, MaxLength, Min } from 'class-validator';
+import {
+  ArrayMaxSize,
+  IsArray,
+  IsIn,
+  IsInt,
+  IsOptional,
+  IsString,
+  MaxLength,
+  Min,
+} from 'class-validator';
 import { CLES_SECTIONS_BASE } from '../../cv-generator/ordre-sections';
 import { LANGUES_CV } from '../../cv-generator/langue-cv';
 
@@ -19,19 +28,28 @@ export class CreateCvVersionDto {
   @IsIn(LANGUES_CV)
   langue?: string;
 
-  @ApiPropertyOptional({ description: 'Poste vise ; vide : celui des reglages du CV', nullable: true })
+  @ApiPropertyOptional({
+    description: 'Poste vise ; vide : celui des reglages du CV',
+    nullable: true,
+  })
   @IsOptional()
   @IsString()
   @MaxLength(120)
   titrePoste?: string | null;
 
-  @ApiPropertyOptional({ description: 'Presentation propre a la version ; vide : celle de la base', nullable: true })
+  @ApiPropertyOptional({
+    description: 'Presentation propre a la version ; vide : celle de la base',
+    nullable: true,
+  })
   @IsOptional()
   @IsString()
   @MaxLength(2000)
   presentation?: string | null;
 
-  @ApiPropertyOptional({ description: 'Sections de la base retirees de cette version', example: ['cours'] })
+  @ApiPropertyOptional({
+    description: 'Sections de la base retirees de cette version',
+    example: ['cours'],
+  })
   @IsOptional()
   @IsArray()
   @IsIn(CLES_SECTIONS_BASE, { each: true })
@@ -44,14 +62,18 @@ export class CreateCvVersionDto {
   @IsString({ each: true })
   projetIds?: string[];
 
-  @ApiPropertyOptional({ description: 'Technologies retenues ; vide : celles cochees « dans le CV »' })
+  @ApiPropertyOptional({
+    description: 'Technologies retenues ; vide : celles cochees « dans le CV »',
+  })
   @IsOptional()
   @IsArray()
   @ArrayMaxSize(300)
   @IsString({ each: true })
   technologieIds?: string[];
 
-  @ApiPropertyOptional({ description: 'Competences libres retenues ; vide : toutes' })
+  @ApiPropertyOptional({
+    description: 'Competences libres retenues ; vide : toutes',
+  })
   @IsOptional()
   @IsArray()
   @ArrayMaxSize(200)

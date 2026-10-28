@@ -1,4 +1,11 @@
-import { hrefDeLien, lignesContact, nomFichier, titrePoste } from './en-tete';
+import {
+  hrefDeLien,
+  lignesContact,
+  nomFichier,
+  titrePoste,
+  rangerEnLignes,
+  urlAffichee,
+} from './en-tete';
 
 const complet = {
   nationalite: 'Togolais',
@@ -17,25 +24,39 @@ describe('lignesContact', () => {
 
   it('omet l adresse tant qu elle n est pas declaree publique', () => {
     const lignes = lignesContact(complet);
-    expect(lignes.some((l) => l.genre === 'texte' && l.texte.includes('Agbalepedo'))).toBe(false);
+    expect(
+      lignes.some((l) => l.genre === 'texte' && l.texte.includes('Agbalepedo')),
+    ).toBe(false);
   });
 
   it('rend l adresse une fois declaree publique', () => {
     const lignes = lignesContact({ ...complet, adressePublique: true });
     expect(lignes).toContainEqual({
       genre: 'texte',
+      cle: 'adresse',
       texte: 'Adresse : Agbalepedo, non loin de la station E.TRA.B',
+      valeur: 'Agbalepedo, non loin de la station E.TRA.B',
     });
   });
 
   it('n invente pas d adresse publique quand le champ est vide', () => {
-    const lignes = lignesContact({ ...complet, adresse: null, adressePublique: true });
-    expect(lignes.some((l) => l.genre === 'texte' && l.texte.startsWith('Adresse'))).toBe(false);
+    const lignes = lignesContact({
+      ...complet,
+      adresse: null,
+      adressePublique: true,
+    });
+    expect(
+      lignes.some((l) => l.genre === 'texte' && l.texte.startsWith('Adresse')),
+    ).toBe(false);
   });
 
   it('suit l ordre du canevas', () => {
     const lignes = lignesContact({ ...complet, adressePublique: true });
-    expect(lignes.map((l) => (l.genre === 'texte' ? l.texte.split(' :')[0] : l.etiquette))).toEqual([
+    expect(
+      lignes.map((l) =>
+        l.genre === 'texte' ? l.texte.split(' :')[0] : l.etiquette,
+      ),
+    ).toEqual([
       'Togolais',
       'Adresse',
       'Tel',
@@ -72,7 +93,9 @@ describe('lignesContact', () => {
 
 describe('nomFichier', () => {
   it('compose le nom depuis l identite', () => {
-    expect(nomFichier('BENYO', 'Fanuel Kokou', 'pdf')).toBe('CV_BENYO_Fanuel_Kokou.pdf');
+    expect(nomFichier('BENYO', 'Fanuel Kokou', 'pdf')).toBe(
+      'CV_BENYO_Fanuel_Kokou.pdf',
+    );
   });
 
   it('retire les diacritiques, qu un systeme de fichiers peut mal rendre', () => {
@@ -112,7 +135,9 @@ describe('hrefDeLien', () => {
 
 describe('le titre du poste vise', () => {
   it('est imprime tel que saisi, sans ses blancs de bord', () => {
-    expect(titrePoste('  Developpeur Java Spring Boot ')).toBe('Developpeur Java Spring Boot');
+    expect(titrePoste('  Developpeur Java Spring Boot ')).toBe(
+      'Developpeur Java Spring Boot',
+    );
   });
 
   it('vide, blanc ou absent : pas de ligne du tout', () => {
@@ -125,11 +150,54 @@ describe('le titre du poste vise', () => {
 
 describe('lien du portfolio', () => {
   it('ajoute le portfolio aux coordonnees, en lien', () => {
-    const l = lignesContact({ adressePublique: false, portfolioUrl: ' https://fanuel.dev ' });
-    expect(l).toEqual([{ genre: 'lien', etiquette: 'Portfolio : ', url: 'https://fanuel.dev' }]);
+    const l = lignesContact({
+      adressePublique: false,
+      portfolioUrl: ' https://fanuel.dev ',
+    });
+    expect(l).toEqual([
+      {
+        genre: 'lien',
+        cle: 'portfolio',
+        etiquette: 'Portfolio : ',
+        url: 'https://fanuel.dev',
+      },
+    ]);
   });
 
   it('rien sans adresse', () => {
-    expect(lignesContact({ adressePublique: false, portfolioUrl: '  ' })).toEqual([]);
+    expect(
+      lignesContact({ adressePublique: false, portfolioUrl: '  ' }),
+    ).toEqual([]);
+  });
+});
+
+describe('affichage des coordonnees', () => {
+  it('affiche les adresses courtes, sans protocole, www ni barre finale', () => {
+    expect(
+      urlAffichee('https://www.linkedin.com/in/fanuel-benyo-362628257/'),
+    ).toBe('linkedin.com/in/fanuel-benyo-362628257');
+    expect(urlAffichee('https://fanu.dev')).toBe('fanu.dev');
+    expect(urlAffichee('http://github.com/vinciDev01/')).toBe(
+      'github.com/vinciDev01',
+    );
+    expect(urlAffichee(' benyofanuel@gmail.com ')).toBe(
+      'benyofanuel@gmail.com',
+    );
+  });
+
+  it('range en lignes completes, sans couper un element ni ouvrir une ligne par un separateur', () => {
+    const largeur = (s: string) => s.length;
+    expect(rangerEnLignes(['aaaa', 'bbbb', 'cccc'], largeur, 3, 11)).toEqual([
+      ['aaaa', 'bbbb'],
+      ['cccc'],
+    ]);
+    expect(rangerEnLignes(['aaaa', 'bbbb'], largeur, 3, 100)).toEqual([
+      ['aaaa', 'bbbb'],
+    ]);
+    // Trop large pour une ligne : seul sur la sienne, jamais perdu.
+    expect(
+      rangerEnLignes(['a', 'xxxxxxxxxxxxxxxx', 'b'], largeur, 1, 5),
+    ).toEqual([['a'], ['xxxxxxxxxxxxxxxx'], ['b']]);
+    expect(rangerEnLignes([], largeur, 1, 5)).toEqual([]);
   });
 });

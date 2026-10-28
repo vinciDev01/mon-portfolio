@@ -25,7 +25,16 @@ export function choisir<T extends string | null | undefined>(
 }
 
 type Textes = {
-  titres: Record<'presentation' | 'experiences' | 'competences' | 'technologies' | 'projets' | 'certifications' | 'cours', string>;
+  titres: Record<
+    | 'presentation'
+    | 'experiences'
+    | 'competences'
+    | 'technologies'
+    | 'projets'
+    | 'certifications'
+    | 'cours',
+    string
+  >;
   aujourdhui: string;
   /** Entre deux dates : « mars 2025 a juin 2026 ». */
   jusqua: string;
@@ -38,7 +47,12 @@ type Textes = {
   pages: string;
   /** Le signe qui suit une etiquette : « Tel : » en francais, « Phone: » en anglais. */
   deuxPoints: string;
-  contact: Record<'adresse' | 'tel' | 'email' | 'github' | 'linkedin' | 'portfolio', string>;
+  contact: Record<
+    'adresse' | 'tel' | 'email' | 'github' | 'linkedin' | 'portfolio',
+    string
+  >;
+  /** La legende sous le QR code du portfolio. */
+  legendeQr: string;
   locale: string;
 };
 
@@ -58,11 +72,23 @@ export const TEXTES: Record<LangueCv, Textes> = {
     chez: 'à',
     projets: 'Projets',
     autres: 'Autres',
-    niveaux: { debutant: 'débutant', intermediaire: 'intermédiaire', avance: 'avancé' },
+    niveaux: {
+      debutant: 'débutant',
+      intermediaire: 'intermédiaire',
+      avance: 'avancé',
+    },
     niveau: 'niveau',
     pages: 'pages',
     deuxPoints: ' : ',
-    contact: { adresse: 'Adresse', tel: 'Tel', email: 'Email', github: 'Github', linkedin: 'LinkedIn', portfolio: 'Portfolio' },
+    contact: {
+      adresse: 'Adresse',
+      tel: 'Tel',
+      email: 'Email',
+      github: 'Github',
+      linkedin: 'LinkedIn',
+      portfolio: 'Portfolio',
+    },
+    legendeQr: 'Mon portfolio',
     locale: 'fr-FR',
   },
   en: {
@@ -80,11 +106,23 @@ export const TEXTES: Record<LangueCv, Textes> = {
     chez: 'at',
     projets: 'Projects',
     autres: 'Other',
-    niveaux: { debutant: 'beginner', intermediaire: 'intermediate', avance: 'advanced' },
+    niveaux: {
+      debutant: 'beginner',
+      intermediaire: 'intermediate',
+      avance: 'advanced',
+    },
     niveau: 'level',
     pages: 'pages',
     deuxPoints: ': ',
-    contact: { adresse: 'Address', tel: 'Phone', email: 'Email', github: 'GitHub', linkedin: 'LinkedIn', portfolio: 'Portfolio' },
+    contact: {
+      adresse: 'Address',
+      tel: 'Phone',
+      email: 'Email',
+      github: 'GitHub',
+      linkedin: 'LinkedIn',
+      portfolio: 'Portfolio',
+    },
+    legendeQr: 'My portfolio',
     locale: 'en-GB',
   },
 };

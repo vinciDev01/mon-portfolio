@@ -8,7 +8,10 @@ import { choisir, TEXTES, type LangueCv } from './langue-cv';
 
 /** « Juillet 2025 », en UTC comme le reste du site : une date saisie au
  *  1er juillet, enregistree a minuit UTC, ne recule pas en juin. */
-export function moisAnnee(date: Date | null | undefined, langue: LangueCv = 'fr'): string {
+export function moisAnnee(
+  date: Date | null | undefined,
+  langue: LangueCv = 'fr',
+): string {
   if (!date) return '';
   const s = new Intl.DateTimeFormat(TEXTES[langue].locale, {
     month: 'long',
@@ -34,10 +37,12 @@ function phrase(texte: string): string {
  * parle son nom : le debut de sa description, jusqu'au premier « : » ou au
  * premier point, la majuscule rabattue. Rien sans description.
  */
-export function resumeProjet(description: string | null | undefined): string | null {
+export function resumeProjet(
+  description: string | null | undefined,
+): string | null {
   const t = description?.trim().replace(/\s+/g, ' ');
   if (!t) return null;
-  const coupe = t.split(/\s:\s|:\s|\.\s|\.$/)[0]!.trim();
+  const coupe = t.split(/\s:\s|:\s|\.\s|\.$/)[0].trim();
   if (!coupe || coupe.length > 90) return null;
   return coupe.charAt(0).toLowerCase() + coupe.slice(1);
 }
@@ -71,7 +76,9 @@ export function ligneExperience(
   const periode = periodeDe(e, langue);
   const role = choisir(e.role, e.roleEn, langue);
   const description = choisir(e.description, e.descriptionEn, langue);
-  const morceaux = [`${periode ? `${periode}${t.deuxPoints}` : ''}${role} ${t.chez} ${e.company}.`];
+  const morceaux = [
+    `${periode ? `${periode}${t.deuxPoints}` : ''}${role} ${t.chez} ${e.company}.`,
+  ];
   if (description?.trim()) morceaux.push(phrase(description));
   if (projets.length) {
     const noms = projets.map((p) => {
@@ -103,12 +110,21 @@ type ProjetBrut = {
  * dans « Projets realises », seul endroit ou il est decrit, la description
  * entiere.
  */
-export function projetCv(p: ProjetBrut, complet = false, langue: LangueCv = 'fr'): ProjetCv {
-  const ecrite = choisir(p.cvSummary, p.cvSummaryEn, langue)?.trim().replace(/\s+/g, ' ');
+export function projetCv(
+  p: ProjetBrut,
+  complet = false,
+  langue: LangueCv = 'fr',
+): ProjetCv {
+  const ecrite = choisir(p.cvSummary, p.cvSummaryEn, langue)
+    ?.trim()
+    .replace(/\s+/g, ' ');
   const description = choisir(p.description, p.descriptionEn, langue);
   // Sous un poste, la phrase suit « Nom : » : minuscule initiale, comme les
   // resumes tires de la description. Un sigle (« GED », « API ») est garde.
-  const apresDeuxPoints = (t: string) => (complet || /^\p{Lu}{2}/u.test(t) ? t : t.charAt(0).toLowerCase() + t.slice(1));
+  const apresDeuxPoints = (t: string) =>
+    complet || /^\p{Lu}{2}/u.test(t)
+      ? t
+      : t.charAt(0).toLowerCase() + t.slice(1);
   return {
     nom: p.name.trim(),
     resume: ecrite
@@ -124,10 +140,15 @@ export function projetCv(p: ProjetBrut, complet = false, langue: LangueCv = 'fr'
 /** Le texte d'un projet apres son nom : « : ce qu'il est. », ponctue une
  *  fois, avec la typographie de la langue (« : » en francais, « : » colle en
  *  anglais). */
-export function suiteProjet(resume: string | null, langue: LangueCv = 'fr'): string {
+export function suiteProjet(
+  resume: string | null,
+  langue: LangueCv = 'fr',
+): string {
   if (!resume) return '';
   const deuxPoints = TEXTES[langue].deuxPoints;
-  return /[.!?…]$/.test(resume) ? `${deuxPoints}${resume}` : `${deuxPoints}${resume}.`;
+  return /[.!?…]$/.test(resume)
+    ? `${deuxPoints}${resume}`
+    : `${deuxPoints}${resume}.`;
 }
 
 /**

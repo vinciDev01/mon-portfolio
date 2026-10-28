@@ -1,4 +1,11 @@
-import { avecTrace, cle, correspondance, logoDe, rechercherLogos, traceDe } from './catalogue-logos';
+import {
+  avecTrace,
+  cle,
+  correspondance,
+  logoDe,
+  rechercherLogos,
+  traceDe,
+} from './catalogue-logos';
 
 describe('catalogue des logos', () => {
   it('normalise les noms comme les identifiants du catalogue', () => {
@@ -28,7 +35,10 @@ describe('catalogue des logos', () => {
     expect(r.length).toBeGreaterThan(0);
     expect(r[0].slug).toBe('react');
     expect(r[0].trace).toMatch(/^[Mm]/);
-    expect(rechercherLogos('java')[0]).toMatchObject({ slug: 'openjdk', exact: true });
+    expect(rechercherLogos('java')[0]).toMatchObject({
+      slug: 'openjdk',
+      exact: true,
+    });
     expect(rechercherLogos('reac')[0].exact).toBe(false);
     expect(rechercherLogos('zzzzqq')).toEqual([]);
     expect(rechercherLogos('a', 5).length).toBeLessThanOrEqual(5);
@@ -46,6 +56,9 @@ describe('catalogue des logos', () => {
     const git = avecTrace({ label: 'Git', logoSlug: 'git' });
     expect(git.logoTrace).toMatch(/^[Mm]/);
     expect(git.logoHex).toMatch(/^[0-9A-F]{6}$/i);
-    expect(avecTrace({ label: 'X', logoSlug: null })).toMatchObject({ logoTrace: null, logoHex: null });
+    expect(avecTrace({ label: 'X', logoSlug: null })).toMatchObject({
+      logoTrace: null,
+      logoHex: null,
+    });
   });
 });

@@ -2,7 +2,6 @@
  *  `etiquette` nulle : la ligne s'imprime seule, sans colonne de gauche. */
 export type Paire = { etiquette: string | null; valeur: string };
 
-
 /**
  * Les technologies rangees par famille, une ligne par famille, deja triees
  * dans l'ordre d'affichage recu. Les familles suivent leur propre ordre
@@ -12,12 +11,18 @@ export type Paire = { etiquette: string | null; valeur: string };
  * seule ligne, sans etiquette.
  */
 export function grouperTechnologies(
-  technologies: readonly { label: string; family: { name: string; sortOrder: number } | null }[],
+  technologies: readonly {
+    label: string;
+    family: { name: string; sortOrder: number } | null;
+  }[],
   /** Le nom de la rangee des sans famille, dans la langue du CV. */
   autres = 'Autres',
 ): Paire[] {
   if (technologies.length === 0) return [];
-  const familles = new Map<string, { sortOrder: number; arrivee: number; labels: string[] }>();
+  const familles = new Map<
+    string,
+    { sortOrder: number; arrivee: number; labels: string[] }
+  >();
   const sansFamille: string[] = [];
 
   technologies.forEach((t, i) => {
@@ -27,14 +32,21 @@ export function grouperTechnologies(
     }
     const groupe = familles.get(t.family.name);
     if (groupe) groupe.labels.push(t.label);
-    else familles.set(t.family.name, { sortOrder: t.family.sortOrder, arrivee: i, labels: [t.label] });
+    else
+      familles.set(t.family.name, {
+        sortOrder: t.family.sortOrder,
+        arrivee: i,
+        labels: [t.label],
+      });
   });
 
-  if (familles.size === 0) return [{ etiquette: null, valeur: sansFamille.join(', ') }];
+  if (familles.size === 0)
+    return [{ etiquette: null, valeur: sansFamille.join(', ') }];
 
   const paires: Paire[] = [...familles.entries()]
     .sort(([, a], [, b]) => a.sortOrder - b.sortOrder || a.arrivee - b.arrivee)
     .map(([nom, g]) => ({ etiquette: nom, valeur: g.labels.join(', ') }));
-  if (sansFamille.length) paires.push({ etiquette: autres, valeur: sansFamille.join(', ') });
+  if (sansFamille.length)
+    paires.push({ etiquette: autres, valeur: sansFamille.join(', ') });
   return paires;
 }

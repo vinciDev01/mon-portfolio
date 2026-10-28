@@ -19,7 +19,7 @@ function cours(id: string, fam: TechnologyFamilyDto | null, extra: Partial<Cours
     technology: {
       id: `t-${id}`,
       label: `Techno ${id}`,
-      logoPath: null,
+      logoPath: null, logoSlug: null,
       sortOrder: 0,
       showInCv: true,
       familyId: fam?.id ?? null,

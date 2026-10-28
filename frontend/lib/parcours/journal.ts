@@ -33,6 +33,11 @@ export function ligneDate(
     timeZone: "UTC",
   });
   const debut = format.format(bornes[0]);
+  // Un projet commence et sans terme est en cours : la periode court jusqu'a
+  // aujourd'hui, mot fixe et non date du jour (voir plus haut).
+  if (projets.some((p) => p.startDate && !p.endDate)) {
+    return projets.length === 1 ? t("journal.depuis", { date: debut }) : t("journal.periodeEnCours", { debut });
+  }
   const fin = format.format(bornes[bornes.length - 1]);
   return debut === fin
     ? t("journal.periodeUnique", { date: debut })

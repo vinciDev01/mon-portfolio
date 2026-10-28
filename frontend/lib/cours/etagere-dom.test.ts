@@ -25,7 +25,7 @@ function cours(id: string, extra: Partial<CoursPublicDto> = {}): CoursPublicDto 
     taille: 2516582,
     updatedAt: "2026-10-01T00:00:00.000Z",
     sortOrder: 0,
-    technology: { id: "t-java", label: "Java", logoPath: null, sortOrder: 0, showInCv: true, familyId: "f1", family: langages },
+    technology: { id: "t-java", label: "Java", logoPath: null, logoSlug: null, sortOrder: 0, showInCv: true, familyId: "f1", family: langages },
     ...extra,
   };
 }

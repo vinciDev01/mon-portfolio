@@ -110,6 +110,8 @@
   "parcours.fermerParchemin": "Projektakte schliessen",
   "journal.periode": "von {debut} bis {fin}",
   "journal.periodeUnique": "im {date}",
+  "journal.depuis": "seit {date}",
+  "journal.periodeEnCours": "von {debut} bis heute",
   "journal.collaborateurs": "mit {noms}",
   "projects.photoDe": "Foto von {nom}",
   "projects.details": "Details",

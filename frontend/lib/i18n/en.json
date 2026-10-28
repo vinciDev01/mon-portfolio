@@ -110,6 +110,8 @@
   "parcours.fermerParchemin": "Close the project file",
   "journal.periode": "from {debut} to {fin}",
   "journal.periodeUnique": "in {date}",
+  "journal.depuis": "since {date}",
+  "journal.periodeEnCours": "from {debut} to today",
   "journal.collaborateurs": "with {noms}",
   "projects.photoDe": "Photo of {nom}",
   "projects.details": "Details",

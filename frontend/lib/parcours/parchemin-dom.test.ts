@@ -224,8 +224,8 @@ const projetComplet = () => fabrique({
   // DEUX technologies, et non une : avec une seule, le point median n'est
   // jamais rendu et toute assertion sur le separateur serait vide.
   technologies: [
-    { id: "t1", label: "Angular", logoPath: null, sortOrder: 0, showInCv: true, familyId: null, family: null },
-    { id: "t2", label: "NestJS", logoPath: null, sortOrder: 1, showInCv: true, familyId: null, family: null },
+    { id: "t1", label: "Angular", logoPath: null, logoSlug: null, sortOrder: 0, showInCv: true, familyId: null, family: null },
+    { id: "t2", label: "NestJS", logoPath: null, logoSlug: null, sortOrder: 1, showInCv: true, familyId: null, family: null },
   ],
   collaborators: [
     { id: "c1", firstName: "Ada", lastName: "Lovelace", email: null,
@@ -563,7 +563,7 @@ describe("le parchemin (spec sections 4, 5 et 6)", () => {
   it("la mention En cours accompagne un debut sans terme, et lui seul", () => {
     const enCours = monterParchemin(projetEnCours());
     expect(enCours.querySelector("p.meta")?.textContent)
-      .toContain("en mars 2024");
+      .toContain("depuis mars 2024");
     expect(enCours.textContent,
       "un projet sans terme n est pas annonce en cours").toContain("En cours");
     // Demonte, puis remonte : l'autre moitie de la regle.

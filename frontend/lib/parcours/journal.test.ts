@@ -1,12 +1,13 @@
 import { readFileSync } from "node:fs";
 import path from "node:path";
 import { describe, it, expect } from "vitest";
-import { dispositionJournal, ligneDate } from "./journal";
+import { dispositionJournal, ligneDate, ligneDateProjet } from "./journal";
 import { createElement, type ComponentType } from "react";
 import { renderToStaticMarkup } from "react-dom/server";
 import { Article } from "../../components/parcours/journal-projets";
 import { I18nProvider } from "../i18n/i18n-context";
 import { bloc, evaluer, proprietes, valeur, px } from "./feuille-test";
+import fr from "../i18n/fr.json";
 import type { ProjectDto } from "@portfolio/shared-types";
 
 /** `children` est requis par le type du fournisseur mais passe ici en troisieme
@@ -82,6 +83,34 @@ describe("ligne de date du journal (spec section 6.2)", () => {
 
   it("tient avec une seule borne renseignee", () => {
     expect(ligneDate([projet({ startDate: "2024-03-01" })], "fr", tFaux)).toContain("2024");
+  });
+});
+
+describe("projets en cours", () => {
+  const t = (cle: string, p?: Record<string, string>) =>
+    `${cle}:${Object.values(p ?? {}).join("|")}`;
+
+  it("un projet commence et sans terme dit « depuis », pas un mois unique", () => {
+    expect(ligneDateProjet(projet({ startDate: "2025-09-01" }), "fr", t)).toBe("journal.depuis:septembre 2025");
+  });
+
+  it("le bandeau court jusqu a aujourd hui des qu un projet est en cours", () => {
+    const l = ligneDate([
+      projet({ startDate: "2024-03-01", endDate: "2024-09-01" }),
+      projet({ startDate: "2025-09-01" }),
+    ], "fr", t);
+    expect(l).toBe("journal.periodeEnCours:mars 2024");
+  });
+
+  it("un projet termine garde sa periode", () => {
+    expect(ligneDateProjet(projet({ startDate: "2024-03-01", endDate: "2024-09-01" }), "fr", t)).toBe(
+      "journal.periode:mars 2024|septembre 2024",
+    );
+  });
+
+  it("les trois langues ont leurs mots", () => {
+    expect(fr["journal.depuis"]).toBe("depuis {date}");
+    expect(fr["journal.periodeEnCours"]).toBe("de {debut} à aujourd'hui");
   });
 });
 
@@ -239,7 +268,7 @@ describe("lien de demonstration (rendu)", () => {
       ],
       demoUrl: "https://exemple.test/demo",
       description: "DESCRIPTION",
-      technologies: [{ id: "1", label: "React", logoPath: null, sortOrder: 0, showInCv: true, familyId: null, family: null }],
+      technologies: [{ id: "1", label: "React", logoPath: null, logoSlug: null, sortOrder: 0, showInCv: true, familyId: null, family: null }],
     });
     const sequence = [
       html.indexOf("TITRE"),
@@ -491,7 +520,7 @@ describe("le declencheur du parchemin (spec section 3)", () => {
     const cles = dicts.map((x) => Object.keys(x).sort());
     expect(cles[1]).toEqual(cles[0]);
     expect(cles[2]).toEqual(cles[0]);
-    expect(cles[0]).toHaveLength(104);
+    expect(cles[0]).toHaveLength(106);
   });
 });
 

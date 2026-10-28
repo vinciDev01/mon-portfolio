@@ -63,8 +63,6 @@ const AVANT_SECTION = 1.1;
 const COLONNE_ETIQUETTE = 108;
 /** Retrait des projets sous leur poste, et place de leur puce. */
 const RETRAIT_PROJET = 16;
-/** Les technologies d'un projet, un cran sous le corps. */
-const TECHNOS = 9;
 /** Largeur utile d'une page Word A4 (marges de 1120 twips), pour caler la
  *  periode a droite par une tabulation. */
 const LARGEUR_WORD = 11906 - 2 * 1120;
@@ -143,15 +141,12 @@ export class CvGeneratorService {
             select: {
               name: true,
               description: true,
-              technologies: { select: { technology: { select: { label: true } } } },
+              cvSummary: true,
             },
           },
         },
       }),
-      this.prisma.project.findMany({
-        orderBy: { sortOrder: 'asc' },
-        include: { technologies: { select: { technology: { select: { label: true } } } } },
-      }),
+      this.prisma.project.findMany({ orderBy: { sortOrder: 'asc' } }),
       this.prisma.cvSection.findMany({ orderBy: { sortOrder: 'asc' } }),
       // Les competences sans technologie (management...) : les techniques
       // sont deja dans TECHNOLOGIES.
@@ -294,9 +289,7 @@ export class CvGeneratorService {
 
       const largeur = doc.page.width - 2 * MARGE;
 
-      // Un projet en puce : le nom en gras et ce qu'il est sur une ligne, ses
-      // technologies en gris sur la suivante, alignees sous le nom. Separees,
-      // elles ne se coupent plus au milieu de la phrase.
+      // Un projet en puce : le nom en gras, puis ce qu'il est.
       const dessinerProjet = (projet: ProjetCv) => {
         doc.moveDown(0.2);
         const y = doc.y;
@@ -308,13 +301,6 @@ export class CvGeneratorService {
           .fillColor(ENCRE)
           .text(projet.nom, x, y, { width: largeurProjet, lineGap: INTERLIGNE - 2, continued: Boolean(projet.resume) });
         if (projet.resume) doc.font(polices.normal).text(suiteProjet(projet.resume));
-        if (projet.technologies.length) {
-          doc
-            .font(polices.normal)
-            .fontSize(TECHNOS)
-            .fillColor(GRIS)
-            .text(projet.technologies.join(', '), x, doc.y + 1, { width: largeurProjet });
-        }
       };
 
       // En-tete : le nom, le poste vise, puis les coordonnees sur une ligne.
@@ -485,8 +471,7 @@ export class CvGeneratorService {
       ...(dernier ? [] : [new TextRun({ text: SEPARATEUR, color: gris, size: 19 })]),
     ];
 
-    // Un projet en puce Word : le nom en gras et ce qu'il est, puis, apres un
-    // saut de ligne dans la meme puce, ses technologies en gris.
+    // Un projet en puce Word : le nom en gras, puis ce qu'il est.
     const paragrapheProjet = (projet: ProjetCv) =>
       new Paragraph({
         bullet: { level: 0 },
@@ -494,9 +479,6 @@ export class CvGeneratorService {
         children: [
           new TextRun({ text: projet.nom, bold: true }),
           ...(projet.resume ? [new TextRun({ text: suiteProjet(projet.resume) })] : []),
-          ...(projet.technologies.length
-            ? [new TextRun({ text: projet.technologies.join(', '), color: gris, size: TECHNOS * 2, break: 1 })]
-            : []),
         ],
       });
 

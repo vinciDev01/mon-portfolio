@@ -19,6 +19,8 @@ export interface ProjectDto {
   id: string;
   name: string;
   description: string | null;
+  /** Breve description pour le CV ; vide, le CV prend le debut de la description. */
+  cvSummary?: string | null;
   photo1Path: string | null;
   photo2Path: string | null;
   /** L'adresse de la DEMONSTRATION : une video, un bac a sable, une maquette. */
@@ -41,6 +43,8 @@ export interface ProjectRawDto {
   id: string;
   name: string;
   description: string | null;
+  /** Breve description pour le CV ; vide, le CV prend le debut de la description. */
+  cvSummary?: string | null;
   photo1Path: string | null;
   photo2Path: string | null;
   /** L'adresse de la DEMONSTRATION : une video, un bac a sable, une maquette. */

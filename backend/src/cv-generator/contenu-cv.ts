@@ -67,21 +67,37 @@ export function ligneExperience(
   return morceaux.join(' ');
 }
 
-/** Un projet du CV : son nom, ce qu'il est, ses technologies. */
-export type ProjetCv = { nom: string; resume: string | null; technologies: string[] };
+/** Un projet du CV : son nom et ce qu'il est. Ses technologies n'y figurent
+ *  pas : la section Technologies les dit deja. */
+export type ProjetCv = { nom: string; resume: string | null };
 
-type ProjetBrut = { name: string; description: string | null; technologies?: { technology: { label: string } }[] };
+type ProjetBrut = {
+  name: string;
+  description: string | null;
+  /** La breve description ecrite pour le CV : quand elle existe, elle prime. */
+  cvSummary?: string | null;
+};
 
 /**
- * Un projet pret a dessiner. Sous un poste, quelques mots suffisent
- * (`resumeProjet`) ; dans « Projets realises », seul endroit ou il est
- * decrit, la description entiere.
+ * Un projet pret a dessiner. La breve description ecrite pour le CV d'abord,
+ * telle quelle. A defaut : sous un poste, quelques mots (`resumeProjet`) ;
+ * dans « Projets realises », seul endroit ou il est decrit, la description
+ * entiere.
  */
 export function projetCv(p: ProjetBrut, complet = false): ProjetCv {
+  const ecrite = p.cvSummary?.trim().replace(/\s+/g, ' ');
+  // Sous un poste, la phrase suit « Nom : » : minuscule initiale, comme les
+  // resumes tires de la description. Un sigle (« GED », « API ») est garde.
+  const apresDeuxPoints = (t: string) => (complet || /^\p{Lu}{2}/u.test(t) ? t : t.charAt(0).toLowerCase() + t.slice(1));
   return {
     nom: p.name.trim(),
-    resume: complet ? (p.description?.trim() ? phrase(p.description) : null) : resumeProjet(p.description),
-    technologies: (p.technologies ?? []).map((t) => t.technology.label),
+    resume: ecrite
+      ? apresDeuxPoints(ecrite)
+      : complet
+        ? p.description?.trim()
+          ? phrase(p.description)
+          : null
+        : resumeProjet(p.description),
   };
 }
 

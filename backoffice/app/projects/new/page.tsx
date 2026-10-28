@@ -26,6 +26,7 @@ export default function NewProjectPage() {
   const [techs, setTechs] = useState<TechnologyDto[]>([]);
   const [name, setName] = useState("");
   const [description, setDescription] = useState("");
+  const [cvSummary, setCvSummary] = useState("");
   const [photo1Path, setPhoto1Path] = useState<string | null>(null);
   const [photo2Path, setPhoto2Path] = useState<string | null>(null);
   const [demoUrl, setDemoUrl] = useState("");
@@ -88,6 +89,7 @@ export default function NewProjectPage() {
       await createEntity("projects", {
         name,
         description: description || null,
+        cvSummary: cvSummary.trim() || null,
         photo1Path,
         photo2Path,
         demoUrl: demoUrl || null,
@@ -131,6 +133,22 @@ export default function NewProjectPage() {
             rows={4}
             className="w-full px-3 py-2 border border-border rounded-md text-sm"
           />
+        </div>
+        <div>
+          <label htmlFor="projet-resume-cv" className="block text-sm font-medium mb-1">Description pour le CV</label>
+          <textarea
+            id="projet-resume-cv"
+            value={cvSummary}
+            onChange={(e) => setCvSummary(e.target.value)}
+            rows={2}
+            maxLength={220}
+            placeholder="Ex : Digitalisation des institutions de microfinance"
+            className="w-full px-3 py-2 border border-border rounded-md text-sm"
+          />
+          <p className="text-xs text-muted-foreground mt-1">
+            Une phrase courte, reprise telle quelle dans le CV. Vide : le CV prend le début de la description.{" "}
+            <span className="tabular-nums">{cvSummary.length}/220</span>
+          </p>
         </div>
         <div className="grid grid-cols-2 gap-4">
           <ImageUpload

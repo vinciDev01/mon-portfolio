@@ -7,6 +7,7 @@ import {
   IsOptional,
   IsString,
   IsUrl,
+  MaxLength,
   Min,
   ValidateNested,
 } from 'class-validator';
@@ -21,6 +22,16 @@ export class CreateProjectDto {
   @IsOptional()
   @IsString()
   description?: string;
+
+  @ApiPropertyOptional({
+    description: 'Breve description pour le CV ; vide : le debut de la description',
+    nullable: true,
+    maxLength: 220,
+  })
+  @IsOptional()
+  @IsString()
+  @MaxLength(220)
+  cvSummary?: string | null;
 
   @ApiPropertyOptional()
   @IsOptional()

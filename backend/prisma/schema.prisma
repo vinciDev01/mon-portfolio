@@ -278,6 +278,9 @@ model Project {
   id             String    @id @default(uuid())
   name           String
   description    String?   @db.Text
+  /// Breve description pour le CV, ecrite pour lui. Vide : le CV prend le
+  /// debut de la description.
+  cvSummary      String?   @map("cv_summary")
   photo1Path     String?   @map("photo1_path")
   photo2Path     String?   @map("photo2_path")
   demoUrl        String?   @map("demo_url")

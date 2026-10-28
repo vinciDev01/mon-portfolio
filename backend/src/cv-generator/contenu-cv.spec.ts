@@ -65,12 +65,11 @@ describe('lignes du CV', () => {
     );
   });
 
-  it('un poste structure : intitule, employeur, periode, description, projets et technologies', () => {
+  it('un poste structure : intitule, employeur, periode, description et projets', () => {
     const p = posteDe({ ...exp, isCurrent: true, endDate: null, description: 'Back-ends Java' }, [
       {
         name: 'OssanFina',
         description: 'Plateforme de microfinance : credits.',
-        technologies: [{ technology: { label: 'Spring Boot' } }, { technology: { label: 'React' } }],
       },
     ]);
     expect(p).toEqual({
@@ -78,7 +77,8 @@ describe('lignes du CV', () => {
       employeur: 'OssanAsur',
       periode: "Juillet 2025 à aujourd'hui",
       description: 'Back-ends Java.',
-      projets: [{ nom: 'OssanFina', resume: 'plateforme de microfinance', technologies: ['Spring Boot', 'React'] }],
+      // Ses technologies ne sont pas reprises : la section Technologies les dit.
+      projets: [{ nom: 'OssanFina', resume: 'plateforme de microfinance' }],
     });
   });
 
@@ -88,6 +88,18 @@ describe('lignes du CV', () => {
     expect(suiteProjet(p.resume)).toBe(' : Gestion agricole. Suivi des parcelles.');
     expect(suiteProjet('plateforme')).toBe(' : plateforme.');
     expect(suiteProjet(null)).toBe('');
+  });
+
+  it('la breve description ecrite pour le CV prime, sous un poste comme dans Projets realises', () => {
+    const p = { name: 'OssanFina', description: 'Plateforme de microfinance : credits.', cvSummary: '  Digitalisation   de la microfinance ' };
+    // Sous un poste, apres « Nom : », la minuscule ; dans Projets realises, telle quelle.
+    expect(projetCv(p).resume).toBe('digitalisation de la microfinance');
+    expect(projetCv(p, true).resume).toBe('Digitalisation de la microfinance');
+    expect(suiteProjet(projetCv(p).resume)).toBe(' : digitalisation de la microfinance.');
+    // Un sigle garde ses capitales.
+    expect(projetCv({ ...p, cvSummary: 'GED des procès-verbaux' }).resume).toBe('GED des procès-verbaux');
+    // Vide : le comportement d'avant.
+    expect(projetCv({ ...p, cvSummary: '  ' }).resume).toBe('plateforme de microfinance');
   });
 
   it('les postes passent jusqu au rendu', () => {
@@ -133,10 +145,11 @@ describe('rendu des experiences', () => {
     expect(docx.contenu.subarray(0, 2).toString()).toBe('PK');
   });
 
-  it('demande les technologies des projets de chaque experience', async () => {
+  it('ne demande plus les technologies des projets', async () => {
     const prisma = base();
     await new CvGeneratorService(prisma as never).generatePdf();
     const appel = prisma.experience.findMany.mock.calls[0][0];
-    expect(appel.include.projects.select.technologies).toBeDefined();
+    expect(appel.include.projects.select.technologies).toBeUndefined();
+    expect(appel.include.projects.select.cvSummary).toBe(true);
   });
 });

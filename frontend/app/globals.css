@@ -803,6 +803,11 @@ html {
      l'accent. Deux SVG superposes : le boitier, et le clapet articule en
      haut, que la perspective fait basculer. */
   .identite-boussole {
+    /* Le cafe du clapet, une matiere comme le bois de l'etagere : commun aux
+       deux themes. L'arete fonce le contour, la gravure s'eclaircit. */
+    --cafe: #6f4e37;
+    --cafe-arete: #4a3324;
+    --cafe-gravure: #d2b48c;
     position: relative;
     flex: 0 0 auto;
     width: 36px;
@@ -820,7 +825,7 @@ html {
   }
 
   .boussole-charniere {
-    fill: var(--bordure-signifiante);
+    fill: var(--cafe-arete);
   }
 
   .boussole-lunette {
@@ -847,6 +852,49 @@ html {
     transform-box: view-box;
     transform-origin: 18px 18px;
     transition: transform 900ms cubic-bezier(0.34, 1.56, 0.64, 1);
+  }
+
+  /* Au chargement, l'aiguille est deboussolee : elle part d'un bord, revient,
+     repart, de moins en moins loin, puis se pose. Elle revient a zero, donc
+     sur le cap que le groupe exterieur lui donne. */
+  .boussole-affolement {
+    transform-box: view-box;
+    transform-origin: 18px 18px;
+    animation: boussole-deboussolee 2.4s cubic-bezier(0.45, 0, 0.55, 1) both;
+  }
+
+  @keyframes boussole-deboussolee {
+    0% {
+      transform: rotate(0deg);
+    }
+
+    18% {
+      transform: rotate(230deg);
+    }
+
+    36% {
+      transform: rotate(-120deg);
+    }
+
+    54% {
+      transform: rotate(85deg);
+    }
+
+    70% {
+      transform: rotate(-40deg);
+    }
+
+    84% {
+      transform: rotate(16deg);
+    }
+
+    94% {
+      transform: rotate(-5deg);
+    }
+
+    to {
+      transform: rotate(0deg);
+    }
   }
 
   .boussole-nord {
@@ -877,26 +925,44 @@ html {
   }
 
   .boussole-couvercle {
-    fill: var(--surface);
-    stroke: var(--bordure-signifiante);
+    fill: var(--cafe);
+    stroke: var(--cafe-arete);
     stroke-width: 1;
   }
 
   .boussole-gravure {
     fill: none;
-    stroke: var(--bordure-signifiante);
+    stroke: var(--cafe-gravure);
     stroke-width: 0.6;
     stroke-dasharray: 1.2 1.6;
   }
 
   .boussole-rose {
-    fill: var(--texte-secondaire);
+    fill: var(--cafe-gravure);
+  }
+
+  /* La devise gravee sur le pourtour du clapet : petite, comme une gravure,
+     espacee pour couvrir le tour hors de la charniere. Elle se lit clapet
+     rabattu, au survol. Le cercle qui la porte ne se dessine pas. */
+  .boussole-pourtour {
+    fill: none;
+    stroke: none;
+  }
+
+  .boussole-devise {
+    fill: var(--cafe-gravure);
+    font-size: 3.1px;
+    font-weight: 600;
   }
 
   @media (prefers-reduced-motion: reduce) {
     :root:not([data-mouvement="force"]) .boussole-aiguille,
     :root:not([data-mouvement="force"]) .boussole-clapet {
       transition: none;
+    }
+
+    :root:not([data-mouvement="force"]) .boussole-affolement {
+      animation: none;
     }
   }
 
@@ -3644,7 +3710,8 @@ html {
   }
 
   .boussole-charniere,
-  .boussole-rose {
+  .boussole-rose,
+  .boussole-devise {
     fill: CanvasText;
   }
 

@@ -71,6 +71,59 @@ describe("la boussole a clapet au sommet de la colonne", () => {
   });
 });
 
+describe("le clapet couleur cafe", () => {
+  it("le couvercle et la charniere prennent le cafe, declare sur la boussole", () => {
+    const cafe = /--cafe:\s*(#[0-9a-f]{6})/i.exec(bloc(/\.identite-boussole\s*\{/))?.[1];
+    expect(cafe, "--cafe introuvable sur .identite-boussole").toBeDefined();
+    // Un brun : le rouge domine le vert, qui domine le bleu.
+    const [r, v, b] = [1, 3, 5].map((i) => parseInt(cafe!.slice(i, i + 2), 16));
+    expect(r).toBeGreaterThan(v);
+    expect(v).toBeGreaterThan(b);
+    expect(bloc(/\.boussole-couvercle\s*\{/)).toMatch(/fill:\s*var\(--cafe\)/);
+    expect(bloc(/\.boussole-charniere\s*\{/)).toMatch(/fill:\s*var\(--cafe/);
+  });
+});
+
+describe("la devise gravee sur le pourtour du clapet", () => {
+  it("suit le cercle du bord, entre la gravure et l arete", () => {
+    const lien = identite(rendre(REGLAGES));
+    const clapet = /<svg class="boussole-clapet"[\s\S]*?<\/svg>/.exec(lien)?.[0] ?? "";
+    const chemin = /<path id="([^"]+)" class="boussole-pourtour" d="M 18 ([\d.]+) A ([\d.]+) /.exec(clapet);
+    expect(chemin, "chemin du pourtour introuvable").not.toBeNull();
+    const rayon = Number(chemin![3]);
+    expect(rayon).toBeGreaterThan(12);
+    expect(rayon).toBeLessThan(16.5);
+    expect(clapet).toMatch(
+      new RegExp(`<text class="boussole-devise"[^>]*><textPath href="#${chemin![1]}"[^>]*>God is good all the time</textPath>`),
+    );
+  });
+
+  it("en petit, dans la teinte de la gravure", () => {
+    const devise = bloc(/\.boussole-devise\s*\{/);
+    expect(devise).toMatch(/fill:\s*var\(--cafe-gravure\)/);
+    expect(Number(/font-size:\s*([\d.]+)px/.exec(devise)?.[1])).toBeLessThanOrEqual(3.5);
+  });
+});
+
+describe("l affolement au chargement", () => {
+  it("un groupe interieur a l aiguille porte l affolement, le cap reste dehors", () => {
+    const lien = identite(rendre(REGLAGES));
+    expect(lien).toMatch(/class="boussole-aiguille"[^>]*><g class="boussole-affolement">/);
+  });
+
+  it("l aiguille s affole puis revient a zero, donc sur le cap de la section", () => {
+    const anim = bloc(/\.boussole-affolement\s*\{/);
+    const nom = /animation:\s*([a-z-]+)\s/.exec(anim)?.[1];
+    expect(nom).toBeDefined();
+    const images = bloc(new RegExp(`@keyframes ${nom}\\s*\\{`));
+    expect(images).toMatch(/to\s*\{\s*transform:\s*rotate\(0(deg)?\)/);
+    // Au moins trois changements de sens : elle cherche, elle ne tourne pas.
+    const angles = [...images.matchAll(/rotate\((-?\d+)deg\)/g)].map((m) => Number(m[1]));
+    const sens = angles.slice(1).map((a, i) => Math.sign(a - angles[i]!)).filter(Boolean);
+    expect(sens.slice(1).filter((x, i) => x !== sens[i]).length).toBeGreaterThanOrEqual(3);
+  });
+});
+
 describe("la feuille de la boussole", () => {
   it("le nord porte l accent, seule couleur du site", () => {
     expect(bloc(/\.boussole-nord\s*\{/)).toMatch(/fill:\s*var\(--accent\)/);
@@ -92,6 +145,9 @@ describe("la feuille de la boussole", () => {
   it("sans mouvement demande, aiguille et clapet changent sans transition", () => {
     expect(cssNu).toMatch(
       /@media \(prefers-reduced-motion: reduce\)\s*\{\s*:root:not\(\[data-mouvement="force"\]\) \.boussole-aiguille,\s*:root:not\(\[data-mouvement="force"\]\) \.boussole-clapet\s*\{\s*transition:\s*none/,
+    );
+    expect(cssNu).toMatch(
+      /@media \(prefers-reduced-motion: reduce\)\s*\{[^@]*:root:not\(\[data-mouvement="force"\]\) \.boussole-affolement\s*\{\s*animation:\s*none/,
     );
   });
 });

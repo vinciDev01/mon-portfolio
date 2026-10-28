@@ -22,7 +22,7 @@ import {
   type SectionBrouillon,
 } from './ordre-sections';
 import { grouperTechnologies } from './technologies-cv';
-import { ligneCours, ligneExperience } from './contenu-cv';
+import { ligneCours, ligneExperience, posteDe, projetCv, suiteProjet, type ProjetCv } from './contenu-cv';
 import {
   hrefDeLien,
   lignesContact,
@@ -61,6 +61,13 @@ const INTERLIGNE = 3;
 const AVANT_SECTION = 1.1;
 /** Largeur de la colonne des etiquettes (familles de technologies). */
 const COLONNE_ETIQUETTE = 108;
+/** Retrait des projets sous leur poste, et place de leur puce. */
+const RETRAIT_PROJET = 16;
+/** Les technologies d'un projet, un cran sous le corps. */
+const TECHNOS = 9;
+/** Largeur utile d'une page Word A4 (marges de 1120 twips), pour caler la
+ *  periode a droite par une tabulation. */
+const LARGEUR_WORD = 11906 - 2 * 1120;
 
 const LIEN = '#1A0DAB';
 const ENCRE = '#000000';
@@ -130,9 +137,21 @@ export class CvGeneratorService {
       }),
       this.prisma.experience.findMany({
         orderBy: { startDate: 'desc' },
-        include: { projects: { orderBy: { sortOrder: 'asc' }, select: { name: true } } },
+        include: {
+          projects: {
+            orderBy: { sortOrder: 'asc' },
+            select: {
+              name: true,
+              description: true,
+              technologies: { select: { technology: { select: { label: true } } } },
+            },
+          },
+        },
       }),
-      this.prisma.project.findMany({ orderBy: { sortOrder: 'asc' } }),
+      this.prisma.project.findMany({
+        orderBy: { sortOrder: 'asc' },
+        include: { technologies: { select: { technology: { select: { label: true } } } } },
+      }),
       this.prisma.cvSection.findMany({ orderBy: { sortOrder: 'asc' } }),
       // Les competences sans technologie (management...) : les techniques
       // sont deja dans TECHNOLOGIES.
@@ -189,11 +208,11 @@ export class CvGeneratorService {
         rang: RANG.experiences,
         // Ce qui y a ete fait et les projets menes, dans l'entree meme.
         lignes: experiences.map((e) =>
-          ligneExperience(
-            e,
-            e.projects.map((p) => p.name),
-          ),
+          // Chaque projet avec ce qu'il est, en quelques mots.
+          ligneExperience(e, e.projects),
         ),
+        // La meme matiere structuree, que les deux rendus dessinent.
+        postes: experiences.map((e) => posteDe(e, e.projects)),
       },
       (() => {
         const paires = grouperTechnologies(
@@ -219,6 +238,8 @@ export class CvGeneratorService {
             const detail = p.description ? ` : ${p.description}` : '';
             return `${i + 1}. ${p.name}${detail}`;
           }),
+        // En puces, comme sous un poste, avec la description entiere.
+        projets: projets.filter((p) => !p.experienceId).map((p) => projetCv(p, true)),
       },
       {
         cle: 'cours' as const,
@@ -273,6 +294,29 @@ export class CvGeneratorService {
 
       const largeur = doc.page.width - 2 * MARGE;
 
+      // Un projet en puce : le nom en gras et ce qu'il est sur une ligne, ses
+      // technologies en gris sur la suivante, alignees sous le nom. Separees,
+      // elles ne se coupent plus au milieu de la phrase.
+      const dessinerProjet = (projet: ProjetCv) => {
+        doc.moveDown(0.2);
+        const y = doc.y;
+        const x = MARGE + RETRAIT_PROJET;
+        const largeurProjet = largeur - RETRAIT_PROJET;
+        doc.font(polices.normal).fontSize(CORPS).fillColor(ENCRE).text('•', MARGE + 4, y);
+        doc
+          .font(polices.gras)
+          .fillColor(ENCRE)
+          .text(projet.nom, x, y, { width: largeurProjet, lineGap: INTERLIGNE - 2, continued: Boolean(projet.resume) });
+        if (projet.resume) doc.font(polices.normal).text(suiteProjet(projet.resume));
+        if (projet.technologies.length) {
+          doc
+            .font(polices.normal)
+            .fontSize(TECHNOS)
+            .fillColor(GRIS)
+            .text(projet.technologies.join(', '), x, doc.y + 1, { width: largeurProjet });
+        }
+      };
+
       // En-tete : le nom, le poste vise, puis les coordonnees sur une ligne.
       doc.font(polices.gras).fontSize(NOM).fillColor(ENCRE).text(nomComplet);
       // Le poste vise, sous le nom : c'est la premiere chose que lit un
@@ -326,6 +370,46 @@ export class CvGeneratorService {
           .strokeColor(FILET)
           .stroke();
         doc.y = yFilet + 5;
+
+        if (section.postes?.length) {
+          section.postes.forEach((poste, i) => {
+            if (i > 0) doc.moveDown(0.7);
+            // L'en-tete : intitule en gras et employeur a gauche, periode en
+            // gris calee a droite, sur la meme ligne. La colonne de gauche
+            // s'arrete avant la periode pour ne jamais la chevaucher.
+            const y = doc.y;
+            doc.font(polices.normal).fontSize(CORPS);
+            const largeurPeriode = doc.widthOfString(poste.periode);
+            doc.fillColor(GRIS).text(poste.periode, MARGE, y, { width: largeur, align: 'right' });
+            const basPeriode = doc.y;
+            doc
+              .font(polices.gras)
+              .fillColor(ENCRE)
+              .text(poste.intitule, MARGE, y, { width: largeur - largeurPeriode - 12, continued: true })
+              .font(polices.normal)
+              .text(`, ${poste.employeur}`);
+            doc.y = Math.max(doc.y, basPeriode);
+            if (poste.description) {
+              doc.moveDown(0.15);
+              doc.font(polices.normal).fontSize(CORPS).fillColor(ENCRE).text(poste.description, MARGE, doc.y, {
+                width: largeur,
+                lineGap: INTERLIGNE - 2,
+              });
+            }
+            for (const projet of poste.projets) dessinerProjet(projet);
+          });
+          doc.x = MARGE;
+          continue;
+        }
+
+        if (section.projets?.length) {
+          section.projets.forEach((projet, i) => {
+            if (i > 0) doc.moveDown(0.15);
+            dessinerProjet(projet);
+          });
+          doc.x = MARGE;
+          continue;
+        }
 
         if (section.paires?.length) {
           // Deux colonnes : l'etiquette en gras, sa valeur a droite. La ligne
@@ -401,6 +485,21 @@ export class CvGeneratorService {
       ...(dernier ? [] : [new TextRun({ text: SEPARATEUR, color: gris, size: 19 })]),
     ];
 
+    // Un projet en puce Word : le nom en gras et ce qu'il est, puis, apres un
+    // saut de ligne dans la meme puce, ses technologies en gris.
+    const paragrapheProjet = (projet: ProjetCv) =>
+      new Paragraph({
+        bullet: { level: 0 },
+        spacing: { after: 40 },
+        children: [
+          new TextRun({ text: projet.nom, bold: true }),
+          ...(projet.resume ? [new TextRun({ text: suiteProjet(projet.resume) })] : []),
+          ...(projet.technologies.length
+            ? [new TextRun({ text: projet.technologies.join(', '), color: gris, size: TECHNOS * 2, break: 1 })]
+            : []),
+        ],
+      });
+
     const corps: Paragraph[] = [
       new Paragraph({ text: nomComplet, heading: HeadingLevel.TITLE }),
       ...(titre
@@ -429,6 +528,33 @@ export class CvGeneratorService {
           heading: HeadingLevel.HEADING_1,
         }),
       );
+      if (section.postes?.length) {
+        for (const poste of section.postes) {
+          // L'en-tete : intitule et employeur, periode calee a droite par
+          // une vraie tabulation, que le destinataire peut deplacer.
+          corps.push(
+            new Paragraph({
+              spacing: { before: 120, after: 20 },
+              keepNext: true,
+              tabStops: [{ type: TabStopType.RIGHT, position: LARGEUR_WORD }],
+              children: [
+                new TextRun({ text: poste.intitule, bold: true }),
+                new TextRun({ text: `, ${poste.employeur}` }),
+                new TextRun({ children: [new Tab(), poste.periode], color: gris }),
+              ],
+            }),
+          );
+          if (poste.description) {
+            corps.push(new Paragraph({ text: poste.description, spacing: { after: 40 } }));
+          }
+          for (const projet of poste.projets) corps.push(paragrapheProjet(projet));
+        }
+        continue;
+      }
+      if (section.projets?.length) {
+        for (const projet of section.projets) corps.push(paragrapheProjet(projet));
+        continue;
+      }
       if (section.paires?.length) {
         // Deux colonnes par une tabulation : l'etiquette en gras, sa valeur
         // alignee a droite d'elle. Une vraie tabulation, pas des espaces :

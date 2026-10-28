@@ -27,6 +27,19 @@ function phrase(texte: string): string {
  * ce qui y a ete fait, puis les projets qui s'y rattachent. Un recruteur lit
  * d'abord le poste ; le detail suit, sans section a recouper.
  */
+/**
+ * Ce qu'est un projet, en quelques mots, pour qu'un recruteur sache de quoi
+ * parle son nom : le debut de sa description, jusqu'au premier « : » ou au
+ * premier point, la majuscule rabattue. Rien sans description.
+ */
+export function resumeProjet(description: string | null | undefined): string | null {
+  const t = description?.trim().replace(/\s+/g, ' ');
+  if (!t) return null;
+  const coupe = t.split(/\s:\s|:\s|\.\s|\.$/)[0]!.trim();
+  if (!coupe || coupe.length > 90) return null;
+  return coupe.charAt(0).toLowerCase() + coupe.slice(1);
+}
+
 export function ligneExperience(
   e: {
     role: string;
@@ -36,15 +49,81 @@ export function ligneExperience(
     endDate: Date | null;
     isCurrent: boolean;
   },
-  projets: readonly string[] = [],
+  projets: readonly (string | { name: string; description: string | null })[] = [],
 ): string {
   const debut = moisAnnee(e.startDate);
   const fin = e.isCurrent ? "aujourd'hui" : moisAnnee(e.endDate);
   const periode = [debut, fin].filter(Boolean).join(' à ');
   const morceaux = [`${periode ? `${periode} : ` : ''}${e.role} à ${e.company}.`];
   if (e.description?.trim()) morceaux.push(phrase(e.description));
-  if (projets.length) morceaux.push(`Projets : ${projets.join(', ')}.`);
+  if (projets.length) {
+    const noms = projets.map((p) => {
+      if (typeof p === 'string') return p;
+      const resume = resumeProjet(p.description);
+      return resume ? `${p.name} (${resume})` : p.name;
+    });
+    morceaux.push(`Projets : ${noms.join(', ')}.`);
+  }
   return morceaux.join(' ');
+}
+
+/** Un projet du CV : son nom, ce qu'il est, ses technologies. */
+export type ProjetCv = { nom: string; resume: string | null; technologies: string[] };
+
+type ProjetBrut = { name: string; description: string | null; technologies?: { technology: { label: string } }[] };
+
+/**
+ * Un projet pret a dessiner. Sous un poste, quelques mots suffisent
+ * (`resumeProjet`) ; dans « Projets realises », seul endroit ou il est
+ * decrit, la description entiere.
+ */
+export function projetCv(p: ProjetBrut, complet = false): ProjetCv {
+  return {
+    nom: p.name.trim(),
+    resume: complet ? (p.description?.trim() ? phrase(p.description) : null) : resumeProjet(p.description),
+    technologies: (p.technologies ?? []).map((t) => t.technology.label),
+  };
+}
+
+/** Le texte d'un projet apres son nom : « : ce qu'il est. », ponctue une fois. */
+export function suiteProjet(resume: string | null): string {
+  if (!resume) return '';
+  return /[.!?…]$/.test(resume) ? ` : ${resume}` : ` : ${resume}.`;
+}
+
+/**
+ * Une experience telle que le CV la dessine : l'intitule et l'employeur a
+ * gauche, la periode a droite, la description dessous, puis les projets en
+ * puces. Un recruteur lit d'abord le poste, puis ce qui y a ete construit.
+ */
+export type PosteCv = {
+  intitule: string;
+  employeur: string;
+  periode: string;
+  description: string | null;
+  projets: ProjetCv[];
+};
+
+export function posteDe(
+  e: {
+    role: string;
+    company: string;
+    description: string | null;
+    startDate: Date;
+    endDate: Date | null;
+    isCurrent: boolean;
+  },
+  projets: readonly ProjetBrut[] = [],
+): PosteCv {
+  const debut = moisAnnee(e.startDate);
+  const fin = e.isCurrent ? "aujourd'hui" : moisAnnee(e.endDate);
+  return {
+    intitule: e.role.trim(),
+    employeur: e.company.trim(),
+    periode: [debut, fin].filter(Boolean).join(' à '),
+    description: e.description?.trim() ? phrase(e.description) : null,
+    projets: projets.map((p) => projetCv(p)),
+  };
 }
 
 const NIVEAUX: Record<string, string> = {

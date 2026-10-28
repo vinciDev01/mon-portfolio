@@ -1,4 +1,5 @@
 import type { Paire } from './technologies-cv';
+import type { PosteCv, ProjetCv } from './contenu-cv';
 
 /**
  * Section prete a etre dessinee dans le CV. `paires` : la meme matiere que
@@ -10,6 +11,10 @@ export type SectionCv = {
   lignes: string[];
   rang: number;
   paires?: Paire[];
+  /** Les experiences, structurees : le rendu les prefere aux lignes. */
+  postes?: PosteCv[];
+  /** Des projets en puces, comme sous un poste. */
+  projets?: ProjetCv[];
 };
 
 /** Section alimentee par la base, avec son rang implicite. */
@@ -18,6 +23,8 @@ export type SectionBase = {
   lignes: string[];
   rang: number;
   paires?: Paire[];
+  postes?: PosteCv[];
+  projets?: ProjetCv[];
 };
 
 /** Section libre saisie depuis le backoffice. */
@@ -64,6 +71,8 @@ export function ordonnerSections(
       lignes: s.lignes.map((l) => l.trim()).filter((l) => l.length > 0),
       rang: s.rang,
       ...(s.paires ? { paires: s.paires } : {}),
+      ...(s.postes ? { postes: s.postes } : {}),
+      ...(s.projets ? { projets: s.projets } : {}),
     }));
 
   const depuisLibres: SectionCv[] = libres

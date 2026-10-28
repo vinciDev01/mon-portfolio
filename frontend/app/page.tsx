@@ -1,5 +1,6 @@
 import type { ReactNode } from "react";
-import { getPortfolioData } from "@/lib/api";
+import { getFileUrl, getPortfolioData } from "@/lib/api";
+import { enJsonLd, fichePersonne, ficheSite, urlDuSite } from "@/lib/seo/seo";
 import { Ampoule } from "@/components/ampoule/ampoule";
 import { ColonnePassage } from "@/components/parcours/colonne-passage";
 import { FournisseurSectionActive, ParcoursPagine } from "@/components/parcours/parcours-pagine";
@@ -120,8 +121,17 @@ export default async function Page() {
     ),
   };
 
+  // Les fiches de donnees structurees (schema.org) : la personne et le site,
+  // que Google lit pour relier le portfolio a son auteur.
+  const site = urlDuSite(data.siteSettings);
+  const fiches = [fichePersonne(data, site, getFileUrl(data.personalInfo.avatarPath)), ficheSite(data, site)];
+
   return (
     <FournisseurSectionActive initial={sections[0]?.id ?? null}>
+      {fiches.map((f, i) => (
+        // Le contenu est echappe par `enJsonLd` : rien ne peut fermer la balise.
+        <script key={i} type="application/ld+json" dangerouslySetInnerHTML={{ __html: enJsonLd(f) }} />
+      ))}
       <Ampoule />
       <ColonnePassage reglages={s} infos={data.personalInfo} />
       <main className="min-h-screen">

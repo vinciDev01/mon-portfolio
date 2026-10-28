@@ -11,6 +11,8 @@ export interface BlogPostDto {
   publishedAt: string | null;
   sortOrder: number;
   createdAt: string;
+  /** Derniere modification : le plan du site la donne aux moteurs. */
+  updatedAt?: string;
   /** La categorie de l'article, ou `null` : il parait sous « Sans categorie ». */
   categoryId: string | null;
   category: BlogCategoryDto | null;

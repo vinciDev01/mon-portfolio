@@ -1,4 +1,6 @@
 import Link from "next/link";
+import { getPortfolioData } from "@/lib/api";
+import { enJsonLd, urlDuSite } from "@/lib/seo/seo";
 import Image from "next/image";
 import { notFound } from "next/navigation";
 import ReactMarkdown from "react-markdown";
@@ -41,7 +43,11 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
   return {
     title: post.title,
     description: post.excerpt ?? undefined,
+    alternates: { canonical: `/blog/${encodeURIComponent(post.slug)}` },
     openGraph: {
+      type: "article",
+      url: `/blog/${encodeURIComponent(post.slug)}`,
+      ...(post.publishedAt ? { publishedTime: post.publishedAt } : {}),
       title: post.title,
       description: post.excerpt ?? undefined,
       ...(post.coverImagePath && {
@@ -59,8 +65,30 @@ export default async function BlogPostPage({ params }: PageProps) {
     notFound();
   }
 
+  // La fiche « BlogPosting » : titre, resume, dates, image et auteur, que
+  // Google lit pour presenter l'article. L'auteur vient du portfolio ;
+  // injoignable, la fiche s'en passe.
+  const donnees = await getPortfolioData().catch(() => null);
+  const site = urlDuSite(donnees?.siteSettings);
+  const fiche = {
+    "@context": "https://schema.org",
+    "@type": "BlogPosting",
+    headline: post.title,
+    ...(post.excerpt ? { description: post.excerpt } : {}),
+    url: `${site}/blog/${encodeURIComponent(post.slug)}`,
+    ...(post.publishedAt ? { datePublished: post.publishedAt } : {}),
+    ...(post.updatedAt ? { dateModified: post.updatedAt } : {}),
+    ...(post.coverImagePath ? { image: `${API_URL}/uploads/${post.coverImagePath}` } : {}),
+    ...(donnees
+      ? { author: { "@type": "Person", name: `${donnees.personalInfo.name} ${donnees.personalInfo.surname}`.trim(), url: site } }
+      : {}),
+    inLanguage: "fr",
+  };
+
   return (
     <article className="max-w-2xl mx-auto">
+      {/* Echappee par `enJsonLd` : rien ne peut fermer la balise. */}
+      <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: enJsonLd(fiche) }} />
       <div className="mb-8">
         <Link
           href="/blog"

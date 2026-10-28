@@ -54,9 +54,13 @@ export default function TechnologiesPage() {
           {items.map((item) => (
             <tr key={item.id} className="border-b border-border">
               <td className="py-3 px-2">
-                {item.logoPath && (
+                {item.logoPath ? (
                   <img src={getFileUrl(item.logoPath)!} alt="" className="h-8 w-8 object-contain" />
-                )}
+                ) : item.logoTrace ? (
+                  <svg viewBox="0 0 24 24" className="h-7 w-7" aria-hidden="true" fill="currentColor">
+                    <path d={item.logoTrace} />
+                  </svg>
+                ) : null}
               </td>
               <td className="py-3 px-2">{item.label}</td>
               <td className="py-3 px-2 text-muted-foreground">{item.family?.name ?? "Aucune"}</td>

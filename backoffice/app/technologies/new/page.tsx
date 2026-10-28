@@ -5,12 +5,14 @@ import { useRouter } from "next/navigation";
 import { createEntity } from "@/lib/api";
 import { ImageUpload } from "@/components/image-upload";
 import { ChampFamille } from "@/components/champ-famille";
+import { SelecteurLogo, type LogoChoisi } from "@/components/selecteur-logo";
 import { toast } from "sonner";
 
 export default function NewTechnologyPage() {
   const router = useRouter();
   const [label, setLabel] = useState("");
   const [logoPath, setLogoPath] = useState<string | null>(null);
+  const [logo, setLogo] = useState<LogoChoisi>(null);
   const [sortOrder, setSortOrder] = useState(0);
   // Cochee par defaut : une technologie nouvelle sort dans le CV.
   const [showInCv, setShowInCv] = useState(true);
@@ -21,7 +23,7 @@ export default function NewTechnologyPage() {
     e.preventDefault();
     setSaving(true);
     try {
-      await createEntity("technologies", { label, logoPath, sortOrder, showInCv, familyId: familyId || null });
+      await createEntity("technologies", { label, logoPath, logoSlug: logo?.slug ?? null, sortOrder, showInCv, familyId: familyId || null });
       toast.success("Technologie créée");
       router.push("/technologies");
     } catch {
@@ -45,7 +47,13 @@ export default function NewTechnologyPage() {
             className="w-full px-3 py-2 border border-border rounded-md text-sm"
           />
         </div>
-        <ImageUpload currentPath={logoPath} category="technologies" onUpload={setLogoPath} label="Logo" />
+        <SelecteurLogo libelle={label} choisi={logo} surChoix={setLogo} automatique />
+        <ImageUpload
+          currentPath={logoPath}
+          category="technologies"
+          onUpload={setLogoPath}
+          label="Image personnalisée (facultative, remplace le logo ci-dessus)"
+        />
         <ChampFamille valeur={familyId} surChangement={setFamilyId} />
         <div>
           <label className="block text-sm font-medium mb-1">Ordre d&apos;affichage</label>

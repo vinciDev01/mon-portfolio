@@ -5,6 +5,7 @@ import { useRouter, useParams } from "next/navigation";
 import { fetchEntity, updateEntity } from "@/lib/api";
 import { ImageUpload } from "@/components/image-upload";
 import { ChampFamille } from "@/components/champ-famille";
+import { SelecteurLogo } from "@/components/selecteur-logo";
 import { toast } from "sonner";
 import type { TechnologyDto } from "@portfolio/shared-types";
 
@@ -31,6 +32,7 @@ export default function EditTechnologyPage() {
       await updateEntity("technologies", id, {
         label: data.label,
         logoPath: data.logoPath,
+        logoSlug: data.logoSlug ?? null,
         sortOrder: data.sortOrder,
         showInCv: data.showInCv,
         familyId: data.familyId || null,
@@ -61,7 +63,17 @@ export default function EditTechnologyPage() {
             className="w-full px-3 py-2 border border-border rounded-md text-sm"
           />
         </div>
-        <ImageUpload currentPath={data.logoPath} category="technologies" onUpload={(p) => setData({ ...data, logoPath: p })} label="Logo" />
+        <SelecteurLogo
+          libelle={data.label}
+          choisi={data.logoSlug && data.logoTrace ? { slug: data.logoSlug, title: data.label, trace: data.logoTrace } : null}
+          surChoix={(l) => setData({ ...data, logoSlug: l?.slug ?? null, logoTrace: l?.trace ?? null })}
+        />
+        <ImageUpload
+          currentPath={data.logoPath}
+          category="technologies"
+          onUpload={(p) => setData({ ...data, logoPath: p })}
+          label="Image personnalisée (facultative, remplace le logo ci-dessus)"
+        />
         <ChampFamille valeur={data.familyId ?? ""} surChangement={(f) => setData({ ...data, familyId: f || null })} />
         <div>
           <label className="block text-sm font-medium mb-1">Ordre d&apos;affichage</label>

@@ -6,8 +6,8 @@ import type { SkillDto } from "@portfolio/shared-types";
 import { getFileUrl } from "@/lib/api";
 import { useTranslation } from "@/lib/i18n/i18n-context";
 import { BordImparfait } from "./bord-imparfait";
+import { couleursLogo } from "@/lib/competences/couleur-logo";
 import { competenceDe, rangerParFamille, remplirBande, type Competence, type Tiroir } from "@/lib/competences/outillage";
-import { traceDeLogo } from "@/lib/competences/logos";
 
 interface SkillsSectionProps {
   skills: SkillDto[];
@@ -17,15 +17,25 @@ interface SkillsSectionProps {
  *  rangee, une etiquette passe le temps de la lire sans la poursuivre. */
 export const SECONDES_PAR_ETIQUETTE = 8;
 
-/** Le logo d'une etiquette : celui charge au backoffice, sinon celui de la
- *  technologie s'il est connu, sinon son initiale. Decoratif : le nom suit. */
+/** Le logo d'une etiquette : l'image chargee au backoffice, sinon le logo du
+ *  catalogue choisi pour la technologie (son trace vient de l'API), sinon
+ *  l'initiale. Decoratif : le nom suit. */
 function LogoOutil({ competence }: { competence: Competence }) {
   const image = getFileUrl(competence.logoPath);
   if (image) return <Image src={image} alt="" width={18} height={18} className="etiquette-logo" />;
-  const trace = traceDeLogo(competence.nom);
+  const trace = competence.logoTrace;
   if (trace) {
+    // Couleur de marque, une par theme : la feuille melange les deux selon
+    // `--t-page`, le logo bascule avec l'ampoule.
+    const { nuit, jour } = couleursLogo(competence.logoHex);
     return (
-      <svg className="etiquette-logo" viewBox="0 0 24 24" aria-hidden="true" focusable="false">
+      <svg
+        className="etiquette-logo"
+        viewBox="0 0 24 24"
+        aria-hidden="true"
+        focusable="false"
+        style={{ "--logo-nuit": nuit, "--logo-jour": jour } as CSSProperties}
+      >
         <path d={trace} />
       </svg>
     );

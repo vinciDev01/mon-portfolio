@@ -21,11 +21,12 @@ describe("la largeur des sections", () => {
     expect(rendre()).not.toContain("data-largeur");
   });
 
-  it("presentation et experience sont larges, contact tres large, les autres normales", () => {
+  it("presentation, experience et competences sont larges, contact tres large, les autres normales", () => {
     expect(largeurDe("ouverture")).toBe("large");
     expect(largeurDe("experience")).toBe("large");
+    expect(largeurDe("competences")).toBe("large");
     expect(largeurDe("contact")).toBe("tres-large");
-    for (const id of ["stats", "competences", "certifications", "projets", "a-propos"]) {
+    for (const id of ["stats", "certifications", "projets", "a-propos"]) {
       expect(largeurDe(id), id).toBe("normale");
     }
   });

@@ -4,7 +4,6 @@ import { act, createElement, type ComponentType } from "react";
 import { createRoot, type Root } from "react-dom/client";
 import type { SkillDto, TechnologyDto } from "@portfolio/shared-types";
 import { competenceDe, niveauDe, rangerParFamille, remplirBande } from "@/lib/competences/outillage";
-import { traceDeLogo } from "@/lib/competences/logos";
 import { I18nProvider } from "../i18n/i18n-context";
 import { tracerBord } from "@/components/portfolio/bord-imparfait";
 import { SECONDES_PAR_ETIQUETTE, SkillsSection } from "@/components/portfolio/skills-section";
@@ -55,27 +54,13 @@ describe("trace du bord imparfait", () => {
 const Fournisseur = I18nProvider as ComponentType<{ defaultLocale: string }>;
 const fam = (id: string, sortOrder: number) => ({ id, name: id, sortOrder });
 const techno = (id: string, famille: ReturnType<typeof fam> | null, sortOrder = 0) =>
-  ({ id, label: id, logoPath: null, sortOrder, showInCv: true, familyId: famille?.id ?? null, family: famille }) as TechnologyDto;
+  ({ id, label: id, logoPath: null, logoSlug: null, logoTrace: null, sortOrder, showInCv: true, familyId: famille?.id ?? null, family: famille }) as TechnologyDto;
 /** Une competence liee a une technologie. */
 const competence = (t: TechnologyDto, proficiency: number | null, sortOrder = 0) =>
   ({ id: `s-${t.id}`, technologyId: t.id, technology: t, label: null, familyId: null, family: null, proficiency, sortOrder }) as SkillDto;
 /** Une competence libre, sans technologie. */
 const libre = (label: string, famille: ReturnType<typeof fam> | null, proficiency: number | null = null) =>
   ({ id: `l-${label}`, technologyId: null, technology: null, label, familyId: famille?.id ?? null, family: famille, proficiency, sortOrder: 0 }) as SkillDto;
-
-describe("logos des technologies", () => {
-  it("retrouve un logo quelle que soit l ecriture du nom", () => {
-    for (const nom of ["Next.js", "next js", "NextJS", "React", "Tailwind CSS", "PostgreSQL", "Java", "HTML", "Spring Boot", "Node.js"]) {
-      expect(traceDeLogo(nom), nom).toMatch(/^[Mm]/);
-    }
-    expect(traceDeLogo("Next.js")).toBe(traceDeLogo("nextjs"));
-  });
-
-  it("rend null pour une technologie inconnue", () => {
-    expect(traceDeLogo("Power BI")).toBeNull();
-    expect(traceDeLogo("Inconnue")).toBeNull();
-  });
-});
 
 describe("rangement et bande", () => {
   it("une competence liee prend nom, famille et logo de sa technologie ; une libre garde les siens", () => {
@@ -176,10 +161,14 @@ describe("competences en rangees qui defilent", () => {
     expect(fixes[1]!.querySelector(".etiquette-niveau")).toBeNull();
   });
 
-  it("chaque etiquette porte un logo : connu en trace, sinon l initiale", () => {
-    monter([competence(html, null), libre("Management", null)]);
+  it("chaque etiquette porte un logo : le trace du catalogue joint par l API, sinon l initiale", () => {
+    const avecLogo = { ...html, logoSlug: "html5", logoTrace: "M1 1h22v22H1z", logoHex: "E34F26" };
+    monter([competence(avecLogo, null), libre("Management", null)]);
     const fixes = [...hote.querySelectorAll(".liste-outils-fixe > li")];
-    expect(fixes[0]!.querySelector("svg.etiquette-logo path")).not.toBeNull();
+    expect(fixes[0]!.querySelector("svg.etiquette-logo path")?.getAttribute("d")).toBe("M1 1h22v22H1z");
+    // La couleur de marque, par theme.
+    const style = fixes[0]!.querySelector<SVGElement>("svg.etiquette-logo")!.style;
+    expect(style.getPropertyValue("--logo-jour")).toBe("#E34F26");
     expect(fixes[1]!.querySelector(".etiquette-initiale")?.textContent).toBe("M");
     for (const l of hote.querySelectorAll(".etiquette-logo")) expect(l.getAttribute("aria-hidden")).toBe("true");
   });

@@ -2606,8 +2606,14 @@ html {
     object-fit: contain;
   }
 
+  /* La couleur de marque du logo, choisie par theme (assez contrastee, sinon
+     celle du texte) et melangee selon `--t-page` comme toute la palette. */
   svg.etiquette-logo path {
-    fill: currentColor;
+    fill: color-mix(
+      in oklch,
+      var(--logo-nuit, currentColor),
+      var(--logo-jour, currentColor) calc(var(--t-page) * 100%)
+    );
   }
 
   /* Sans logo connu : l'initiale, dans un petit carre trace a la main. */
@@ -3486,6 +3492,11 @@ html {
   .bord-imparfait path.bord-trace {
     fill: none;
     stroke: Highlight;
+  }
+
+  /* Les logos des competences : leur couleur de marque n'est pas forcee. */
+  svg.etiquette-logo path {
+    fill: CanvasText;
   }
 
   /* Le sentier : `fill` et `stroke` ne sont pas forces non plus. */

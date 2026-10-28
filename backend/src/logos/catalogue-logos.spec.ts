@@ -43,7 +43,9 @@ describe('catalogue des logos', () => {
   });
 
   it('ajoute le trace a une technologie', () => {
-    expect(avecTrace({ label: 'Git', logoSlug: 'git' }).logoTrace).toMatch(/^[Mm]/);
-    expect(avecTrace({ label: 'X', logoSlug: null }).logoTrace).toBeNull();
+    const git = avecTrace({ label: 'Git', logoSlug: 'git' });
+    expect(git.logoTrace).toMatch(/^[Mm]/);
+    expect(git.logoHex).toMatch(/^[0-9A-F]{6}$/i);
+    expect(avecTrace({ label: 'X', logoSlug: null })).toMatchObject({ logoTrace: null, logoHex: null });
   });
 });

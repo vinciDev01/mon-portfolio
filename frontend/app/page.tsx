@@ -70,7 +70,7 @@ export default async function Page() {
       </SectionShell>
     ),
     competences: (
-      <SectionShell cleTitre="nav.skills" index={rang("competences")}>
+      <SectionShell cleTitre="nav.skills" index={rang("competences")} largeur="large">
         <SkillsSection skills={data.skills} />
       </SectionShell>
     ),

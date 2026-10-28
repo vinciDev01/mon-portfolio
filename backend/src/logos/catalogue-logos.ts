@@ -72,10 +72,13 @@ function charger(): Entree[] {
   return entrees;
 }
 
-/** Une technologie avec le trace de son logo, pour que le site et le
- *  backoffice le dessinent sans connaitre le catalogue. */
-export function avecTrace<T extends { logoSlug: string | null }>(t: T): T & { logoTrace: string | null } {
-  return { ...t, logoTrace: traceDe(t.logoSlug) };
+/** Une technologie avec le trace et la couleur de marque de son logo, pour
+ *  que le site et le backoffice le dessinent sans connaitre le catalogue. */
+export function avecTrace<T extends { logoSlug: string | null }>(
+  t: T,
+): T & { logoTrace: string | null; logoHex: string | null } {
+  const trace = traceDe(t.logoSlug);
+  return { ...t, logoTrace: trace, logoHex: trace && t.logoSlug ? (logoDe(t.logoSlug)?.hex ?? null) : null };
 }
 
 /** Le logo d'un identifiant, s'il existe. */

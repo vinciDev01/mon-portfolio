@@ -10,6 +10,10 @@ export type Competence = {
   nom: string;
   famille: TechnologyFamilyDto | null;
   logoPath: string | null;
+  /** Le trace du logo du catalogue, joint par l'API. */
+  logoTrace: string | null;
+  /** Sa couleur de marque, sans « # ». */
+  logoHex: string | null;
   niveau: number;
   ordre: number;
 };
@@ -28,6 +32,8 @@ export function competenceDe(s: SkillDto): Competence {
     nom: s.technology?.label ?? s.label ?? "",
     famille: s.technology?.family ?? s.family ?? null,
     logoPath: s.technology?.logoPath ?? null,
+    logoTrace: s.technology?.logoTrace ?? null,
+    logoHex: s.technology?.logoHex ?? null,
     niveau: niveauDe(s.proficiency),
     ordre: s.sortOrder,
   };

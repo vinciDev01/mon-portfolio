@@ -63,9 +63,10 @@ export const SECTIONS: readonly Section[] = [
   { id: "cours", cleTitre: "nav.cours", reglage: "showCours" },
   { id: "projets", cleTitre: "nav.projects", reglage: "showProjects" },
   { id: "a-propos", cleTitre: "nav.about", reglage: "showAbout" },
-  { id: "contact", cleTitre: "nav.contact", reglage: "showContact" },
   { id: "services", cleTitre: "nav.services", reglage: "showServices" },
   { id: "temoignages", cleTitre: "nav.testimonials", reglage: "showTestimonials" },
+  // Le contact ferme le parcours, apres tout ce qui peut convaincre.
+  { id: "contact", cleTitre: "nav.contact", reglage: "showContact" },
 ];
 
 export function sectionsActives(reglages: SiteSettingsDto): Section[] {

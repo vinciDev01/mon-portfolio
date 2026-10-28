@@ -4,6 +4,7 @@ import { useState, useEffect, useCallback } from "react";
 import type { TestimonialDto } from "@portfolio/shared-types";
 import { Button } from "@/components/ui/button";
 import { useTranslation } from "@/lib/i18n/i18n-context";
+import { BordImparfait } from "./bord-imparfait";
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:4000";
 
@@ -42,8 +43,10 @@ function TestimonialCarousel({ testimonials }: { testimonials: TestimonialDto[] 
       {/* Card */}
       <div
         key={`${t.id}-${direction}`}
-        className="bg-card rounded-2xl border border-border p-8 md:p-10 shadow-sm animate-in fade-in slide-in-from-right-4 duration-500"
+        className="temoignage-carte cadre-imparfait p-8 md:p-10 animate-in fade-in slide-in-from-right-4 duration-500"
       >
+        <BordImparfait graine={`${t.id}:dessous`} className="feuille-dessous" />
+        <BordImparfait graine={t.id} amplitude={2} />
         {/* Quote icon */}
         <svg className="size-8 text-foreground/10 mb-4" viewBox="0 0 24 24" fill="currentColor">
           <path d="M14.017 21v-7.391c0-5.704 3.731-9.57 8.983-10.609l.995 2.151c-2.432.917-3.995 3.638-3.995 5.849h4v10H14.017zM0 21v-7.391c0-5.704 3.731-9.57 8.983-10.609l.995 2.151C7.546 6.068 5.983 8.789 5.983 11H10v10H0z" />
@@ -75,9 +78,10 @@ function TestimonialCarousel({ testimonials }: { testimonials: TestimonialDto[] 
           <div className="flex items-center justify-center gap-4 mt-6">
             <button
               onClick={prev}
-              className="size-9 rounded-full border border-border flex items-center justify-center hover:bg-muted transition-colors cursor-pointer"
+              className="pagination-bouton cadre-imparfait"
               aria-label="Previous"
             >
+              <BordImparfait graine="temoignage-precedent" etire />
               <svg className="size-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
                 <path strokeLinecap="round" strokeLinejoin="round" d="M15 19l-7-7 7-7" />
               </svg>
@@ -97,9 +101,10 @@ function TestimonialCarousel({ testimonials }: { testimonials: TestimonialDto[] 
 
             <button
               onClick={next}
-              className="size-9 rounded-full border border-border flex items-center justify-center hover:bg-muted transition-colors cursor-pointer"
+              className="pagination-bouton cadre-imparfait"
               aria-label="Next"
             >
+              <BordImparfait graine="temoignage-suivant" etire />
               <svg className="size-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
                 <path strokeLinecap="round" strokeLinejoin="round" d="M9 5l7 7-7 7" />
               </svg>
@@ -147,7 +152,8 @@ function TestimonialForm() {
 
   if (status === "success") {
     return (
-      <div className="text-center py-6 mt-6 bg-card rounded-xl border border-border">
+      <div className="temoignage-carte cadre-imparfait text-center py-6 mt-6">
+        <BordImparfait graine="temoignage-merci" />
         <p className="font-semibold">{t("testimonials.thanks")}</p>
         <p className="text-sm text-muted-foreground mt-1">{t("testimonials.pendingApproval")}</p>
       </div>
@@ -165,7 +171,8 @@ function TestimonialForm() {
   }
 
   return (
-    <div className="mt-8 max-w-xl mx-auto bg-card rounded-xl border border-border p-6">
+    <div className="temoignage-carte cadre-imparfait mt-8 max-w-xl mx-auto p-6">
+      <BordImparfait graine="temoignage-formulaire" />
       <h3 className="font-semibold mb-4">{t("testimonials.leaveOne")}</h3>
       <form onSubmit={handleSubmit} className="space-y-4">
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">

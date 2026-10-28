@@ -81,7 +81,7 @@ export default async function Page() {
     ),
     experience: (
       <SectionShell cleTitre="nav.experience" index={rang("experience")} largeur="large">
-        <ExperienceSection experiences={data.experiences} projets={data.projects} />
+        <ExperienceSection experiences={data.experiences} />
       </SectionShell>
     ),
     certifications: (
@@ -104,11 +104,6 @@ export default async function Page() {
         <AboutSection about={data.about} />
       </SectionShell>
     ),
-    contact: (
-      <SectionShell cleTitre="nav.contact" index={rang("contact")} largeur="tres-large">
-        <ContactSection personalInfo={data.personalInfo} />
-      </SectionShell>
-    ),
     // Sections dormantes, reactivables depuis le backoffice.
     services: (
       <SectionShell cleTitre="nav.services" index={rang("services")}>
@@ -121,6 +116,11 @@ export default async function Page() {
           testimonials={data.testimonials}
           allowSubmission={s.allowTestimonialSubmission}
         />
+      </SectionShell>
+    ),
+    contact: (
+      <SectionShell cleTitre="nav.contact" index={rang("contact")} largeur="tres-large">
+        <ContactSection personalInfo={data.personalInfo} />
       </SectionShell>
     ),
   };

@@ -18,7 +18,7 @@ describe("entrees de la colonne", () => {
     const e = sectionsActives(tousActifs());
     expect(e.map((x) => x.id)).toEqual([
       "ouverture", "stats", "competences", "experience", "certifications", "cours",
-      "projets", "a-propos", "contact", "services", "temoignages",
+      "projets", "a-propos", "services", "temoignages", "contact",
     ]);
   });
 

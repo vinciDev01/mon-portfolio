@@ -296,85 +296,6 @@ html {
 }
 
 /*
-   ANIMATED CARD - Stacked cards effect + hover lift
-   */
-
-.animated-card {
-  position: relative;
-  border: 1px solid var(--border);
-  background: var(--card);
-  transition:
-    transform 0.4s cubic-bezier(0.22, 1, 0.36, 1),
-    box-shadow 0.4s cubic-bezier(0.22, 1, 0.36, 1);
-  cursor: pointer;
-  will-change: transform;
-}
-
-/* Stack layer 1 (closest behind) */
-.animated-card::before {
-  content: "";
-  position: absolute;
-  inset: 0;
-  border-radius: inherit;
-  background: var(--card);
-  border: 1px solid var(--border);
-  z-index: -1;
-  transition:
-    transform 0.4s cubic-bezier(0.22, 1, 0.36, 1),
-    opacity 0.4s ease;
-  transform: translate(4px, 4px);
-  opacity: 0.5;
-  pointer-events: none;
-}
-
-/* Stack layer 2 (furthest behind) */
-.animated-card::after {
-  content: "";
-  position: absolute;
-  inset: 0;
-  border-radius: inherit;
-  background: var(--card);
-  border: 1px solid var(--border);
-  z-index: -2;
-  transition:
-    transform 0.4s cubic-bezier(0.22, 1, 0.36, 1),
-    opacity 0.4s ease;
-  transform: translate(8px, 8px);
-  opacity: 0.25;
-  pointer-events: none;
-}
-
-/* Hover: main card lifts, stacked layers fan out */
-.animated-card:hover {
-  transform: translateY(-3px);
-  box-shadow: var(--ombre-lointaine), var(--ombre-moyenne);
-}
-
-.animated-card:hover::before {
-  transform: translate(6px, 6px) rotate(1.5deg);
-  opacity: 0.45;
-}
-
-.animated-card:hover::after {
-  transform: translate(12px, 12px) rotate(3deg);
-  opacity: 0.2;
-}
-
-/* Liseré décoratif des cartes empilées.
-   Dérivé de `--t-page` et non de la classe de thème : la classe bascule dès
-   le clic, alors que la palette attend 220 ms à l'allumage et 460 ms à
-   l'extinction. Une règle conditionnée par la classe afficherait donc son
-   liseré de thème sombre sur une pièce encore claire pendant 460 ms. C'était
-   la dernière dépendance d'apparence à la classe : celle-ci ne gouverne plus
-   que le repli sans JavaScript et `color-scheme`. */
-.animated-card::before,
-.animated-card::after {
-  border-color: color-mix(in oklch,
-      oklch(1 0 0 / 0.08),
-      var(--bordure) calc(var(--t-page, 0) * 100%));
-}
-
-/*
    SEE MORE - Staggered reveal animation
    */
 
@@ -410,17 +331,6 @@ html {
    */
 
 @media (prefers-reduced-motion: reduce) {
-
-  .animated-card,
-  .animated-card::before,
-  .animated-card::after {
-    animation: none !important;
-    transition: none !important;
-  }
-
-  .animated-card:hover {
-    transform: none;
-  }
 
   .see-more-item-enter {
     animation: none !important;
@@ -1572,6 +1482,16 @@ html {
   .experience-carte {
     --bord-fond: var(--surface);
     padding: var(--espace-3);
+  }
+
+  /* Les services et les temoignages : la meme feuille au bord imparfait. */
+  .service-carte {
+    --bord-fond: var(--surface);
+    padding: var(--espace-3);
+  }
+
+  .temoignage-carte {
+    --bord-fond: var(--surface);
   }
 
   /* L'experience en cours : une lueur couleur accent fait lentement le tour

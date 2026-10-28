@@ -18,7 +18,7 @@ describe("la liste des sections (spec section 2.2)", () => {
   it("porte les onze sections dans l ordre du parcours, les cours apres les certifications", () => {
     expect(SECTIONS.map((s) => s.id)).toEqual([
       "ouverture", "stats", "competences", "experience", "certifications", "cours",
-      "projets", "a-propos", "contact", "services", "temoignages",
+      "projets", "a-propos", "services", "temoignages", "contact",
     ]);
   });
 

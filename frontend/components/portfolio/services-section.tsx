@@ -4,6 +4,7 @@ import Image from "next/image";
 import type { ServiceDto } from "@portfolio/shared-types";
 import { getFileUrl } from "@/lib/api";
 import { SeeMoreList } from "./see-more-button";
+import { BordImparfait } from "./bord-imparfait";
 
 interface ServicesSectionProps {
   services: ServiceDto[];
@@ -13,7 +14,10 @@ function ServiceCard({ service }: { service: ServiceDto }) {
   const orgLogoUrl = service.organization ? getFileUrl(service.organization.logoPath) : null;
 
   return (
-    <div className="animated-card bg-card rounded-xl p-6 transition-colors flex flex-col gap-4">
+    // Une fiche au bord imparfait posee sur une autre, comme les experiences.
+    <div className="service-carte cadre-imparfait flex flex-col gap-4">
+      <BordImparfait graine={`${service.id}:dessous`} className="feuille-dessous" />
+      <BordImparfait graine={service.id} />
       {orgLogoUrl && (
         <div className="size-10 flex items-center justify-center">
           <Image src={orgLogoUrl} alt={service.organization!.label} width={40} height={40} className="object-contain" />

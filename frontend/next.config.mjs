@@ -23,9 +23,11 @@ const nextConfig = {
   // module d'execution, `variantes.ts` : on le fait transpiler explicitement
   // plutot que de compter sur le comportement par defaut du bundler.
   transpilePackages: ["@portfolio/shared-types"],
-  // Le serveur de dev refuse ses ressources aux autres origines ; un tunnel
-  // ngrok en est une.
-  allowedDevOrigins: ["*.ngrok-free.app", "*.ngrok-free.dev", "*.ngrok.app", "*.ngrok.dev"],
+  // Le serveur de dev refuse ses ressources aux autres origines ; le tunnel en
+  // est une. Seule SON adresse est admise, et seulement pendant le partage :
+  // un joker sur les domaines ngrok ouvrirait le serveur a tout site heberge
+  // chez ngrok.
+  allowedDevOrigins: relais ? [api.hostname] : [],
   async rewrites() {
     if (!relais) return []
     return [

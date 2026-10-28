@@ -102,6 +102,11 @@ describe('lignes du CV', () => {
     expect(projetCv({ ...p, cvSummary: '  ' }).resume).toBe('plateforme de microfinance');
   });
 
+  it('une section sans puce le reste jusqu au rendu', () => {
+    const [s] = ordonnerSections([{ titre: 'PRESENTATION', lignes: ['Breve presentation.'], rang: 10, sansPuce: true }], []);
+    expect(s.sansPuce).toBe(true);
+  });
+
   it('les postes passent jusqu au rendu', () => {
     const postes = [posteDe(exp)];
     const [s] = ordonnerSections([{ titre: 'EXP', lignes: ['x'], rang: 20, postes }], []);

@@ -170,6 +170,8 @@ export class CvGeneratorService {
         cle: 'presentation' as const,
         titre: 'PRÉSENTATION',
         rang: RANG.presentation,
+        // Une breve presentation, en paragraphe : pas une liste.
+        sansPuce: true,
         lignes: presentations
           .map((p) => p.description ?? p.subtitle ?? p.title)
           .filter((l): l is string => Boolean(l)),
@@ -430,7 +432,7 @@ export class CvGeneratorService {
             .font(polices.normal)
             .fontSize(CORPS)
             .fillColor(ENCRE)
-            .text(numerotee ? entree : `• ${entree}`, MARGE, doc.y, {
+            .text(numerotee || section.sansPuce ? entree : `• ${entree}`, MARGE, doc.y, {
               width: largeur,
               lineGap: INTERLIGNE - 2,
             });
@@ -562,7 +564,7 @@ export class CvGeneratorService {
           new Paragraph({
             text: entree,
             spacing: { after: 0 },
-            ...(numerotee ? {} : { bullet: { level: 0 } }),
+            ...(numerotee || section.sansPuce ? {} : { bullet: { level: 0 } }),
           }),
         );
       }

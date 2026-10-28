@@ -15,6 +15,8 @@ export type SectionCv = {
   postes?: PosteCv[];
   /** Des projets en puces, comme sous un poste. */
   projets?: ProjetCv[];
+  /** Des paragraphes simples, sans puce : une breve presentation. */
+  sansPuce?: boolean;
 };
 
 /** Section alimentee par la base, avec son rang implicite. */
@@ -25,6 +27,7 @@ export type SectionBase = {
   paires?: Paire[];
   postes?: PosteCv[];
   projets?: ProjetCv[];
+  sansPuce?: boolean;
 };
 
 /** Section libre saisie depuis le backoffice. */
@@ -73,6 +76,7 @@ export function ordonnerSections(
       ...(s.paires ? { paires: s.paires } : {}),
       ...(s.postes ? { postes: s.postes } : {}),
       ...(s.projets ? { projets: s.projets } : {}),
+      ...(s.sansPuce ? { sansPuce: true } : {}),
     }));
 
   const depuisLibres: SectionCv[] = libres

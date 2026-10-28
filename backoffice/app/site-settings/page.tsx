@@ -7,7 +7,23 @@ import { ZoneDepot } from "@/components/zone-depot";
 import { filtrerParametres } from "@/lib/recherche-parametres";
 import { toast } from "sonner";
 import type { SiteSettingsDto } from "@portfolio/shared-types";
-import { TelechargementCv } from "@/components/telechargement-cv";
+
+/** Les champs que cette page ne renvoie pas : l'identifiant, et les reglages
+ *  du CV, geres sur la page « Sections du CV ». */
+const GERES_AILLEURS = [
+  "id",
+  "cvFontFamily",
+  "siteUrl",
+  "cvAfficherQr",
+  "showCvDownload",
+  "cvJobTitle",
+  "cvJobTitleEn",
+  "cvBaseMasquees",
+  "cvFaitA",
+  "cvLieu",
+  "cvDateFaitA",
+  "cvEspaceSignature",
+] as const;
 
 export default function SiteSettingsPage() {
   const [data, setData] = useState<SiteSettingsDto | null>(null);
@@ -38,7 +54,12 @@ export default function SiteSettingsPage() {
     if (!data) return;
     setSaving(true);
     try {
-      const { id, ...rest } = data;
+      // Les reglages du CV et ses sections masquees se gerent sur la page
+      // « Sections du CV » : on ne les renvoie pas d'ici, ou une valeur chargee
+      // a l'ouverture de cette page ecraserait un changement fait la-bas.
+      const rest = Object.fromEntries(
+        Object.entries(data).filter(([cle]) => !GERES_AILLEURS.includes(cle as (typeof GERES_AILLEURS)[number])),
+      );
       await updateSingleton("site-settings", rest);
       toast.success("Paramètres sauvegardés");
     } catch {
@@ -311,68 +332,6 @@ export default function SiteSettingsPage() {
             </p>
           </div>
         </fieldset>
-
-        {/* --- CV genere --- */}
-<fieldset className="border border-border rounded-md p-4 space-y-4">
-  <legend className="text-sm font-semibold px-2">CV téléchargeable</legend>
-  <div>
-    <label className="block text-sm font-medium mb-1">Police du CV</label>
-    <select
-      value={data.cvFontFamily}
-      onChange={(e) => setData({ ...data, cvFontFamily: e.target.value })}
-      className="w-full px-3 py-2 border border-border rounded-md text-sm"
-    >
-      <option value="serif">Serif (Times)</option>
-      <option value="sans">Sans-serif (Helvetica)</option>
-    </select>
-    <p className="text-xs text-muted-foreground mt-1">
-      Le serif suit le canevas d&apos;origine du CV ; le sans-serif s&apos;accorde
-      avec la police du site.
-    </p>
-  </div>
-
-  <div>
-    <label htmlFor="site-url" className="block text-sm font-medium mb-1">Adresse publique du portfolio</label>
-    <input
-      id="site-url"
-      type="url"
-      value={data.siteUrl ?? ""}
-      onChange={(e) => setData({ ...data, siteUrl: e.target.value.trim() || null })}
-      placeholder="https://fanuel-benyo.dev"
-      className="w-full px-3 py-2 border border-border rounded-md text-sm"
-    />
-    <p className="text-xs text-muted-foreground mt-1">
-      Ajoutée aux coordonnées du CV, en lien. Le QR code qui y mène se règle dans « Sections du CV ».
-    </p>
-  </div>
-
-  <label className="flex items-start gap-3 text-sm">
-    <input
-      type="checkbox"
-      checked={data.showCvDownload}
-      onChange={(e) => setData({ ...data, showCvDownload: e.target.checked })}
-      className="mt-1"
-    />
-    <span>
-      Proposer le téléchargement du CV sur le site
-      <span className="block text-xs text-muted-foreground mt-1">
-        Décoché, aucun bouton n&apos;apparaît et l&apos;adresse de
-        téléchargement répond « introuvable ». Coché, les visiteurs peuvent
-        récupérer votre CV <strong>au format Word uniquement</strong>. Le PDF
-        reste réservé à cette page.
-      </span>
-    </span>
-  </label>
-
-  <div className="pt-2 border-t border-border">
-    <p className="text-sm font-medium mb-2">Récupérer le CV</p>
-    <p className="text-xs text-muted-foreground mb-3">
-      Généré à l&apos;instant depuis vos données. Le PDF n&apos;est jamais
-      accessible aux visiteurs.
-    </p>
-    <TelechargementCv />
-  </div>
-</fieldset>
 
 {/* --- Rythme --- */}
         <fieldset className="border border-border rounded-md p-4 space-y-4">

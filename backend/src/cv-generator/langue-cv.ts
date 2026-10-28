@@ -36,8 +36,6 @@ type Textes = {
     string
   >;
   aujourdhui: string;
-  /** Entre deux dates : « mars 2025 a juin 2026 ». */
-  jusqua: string;
   /** Entre le poste et l'employeur, dans la ligne a plat. */
   chez: string;
   projets: string;
@@ -68,7 +66,6 @@ export const TEXTES: Record<LangueCv, Textes> = {
       cours: 'COURS RÉDIGÉS',
     },
     aujourdhui: "aujourd'hui",
-    jusqua: 'à',
     chez: 'à',
     projets: 'Projets',
     autres: 'Autres',
@@ -101,8 +98,7 @@ export const TEXTES: Record<LangueCv, Textes> = {
       certifications: 'CERTIFICATIONS',
       cours: 'COURSES WRITTEN',
     },
-    aujourdhui: 'present',
-    jusqua: 'to',
+    aujourdhui: 'Present',
     chez: 'at',
     projets: 'Projects',
     autres: 'Other',

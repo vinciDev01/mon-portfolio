@@ -59,12 +59,14 @@ type ExperienceBrute = {
   isCurrent: boolean;
 };
 
-/** « Juillet 2025 à aujourd'hui », « July 2025 to present ». */
+/** « Juillet 2025 - aujourd'hui », « July 2025 - Present ». */
 function periodeDe(e: ExperienceBrute, langue: LangueCv): string {
   const t = TEXTES[langue];
   const debut = moisAnnee(e.startDate, langue);
   const fin = e.isCurrent ? t.aujourdhui : moisAnnee(e.endDate, langue);
-  return [debut, fin].filter(Boolean).join(` ${t.jusqua} `);
+  // « Mars 2026 - aujourd'hui » : la forme que les analyseurs de CV (ATS)
+  // reconnaissent le mieux pour une periode.
+  return [debut, fin].filter(Boolean).join(' - ');
 }
 
 export function ligneExperience(
@@ -198,4 +200,31 @@ export function ligneCours(
     c.pages ? `${c.pages} ${t.pages}` : null,
   ].filter(Boolean);
   return details.length ? `${titre} (${details.join(', ')})` : titre;
+}
+
+/** Le lieu a remplir a la main quand aucun n'est saisi. */
+export const POINTILLES = '........................................';
+
+/**
+ * Les deux lignes de la mention de fin, pour un CV a signer : « Fait a
+ * Lome, » puis « le 28 octobre 2026 ». Sans lieu, des pointilles a remplir ;
+ * sans date, celle du jour de la generation (`aujourdhui`, injectable pour
+ * les tests). En UTC, comme les autres dates du CV.
+ */
+export function lignesFaitA(
+  lieu: string | null | undefined,
+  date: Date | null | undefined,
+  langue: LangueCv = 'fr',
+  aujourdhui: Date = new Date(),
+): [string, string] {
+  const jour = new Intl.DateTimeFormat(TEXTES[langue].locale, {
+    day: 'numeric',
+    month: 'long',
+    year: 'numeric',
+    timeZone: 'UTC',
+  }).format(date ?? aujourdhui);
+  const ou = lieu?.trim() || POINTILLES;
+  return langue === 'en'
+    ? [`Done at ${ou},`, `on ${jour}`]
+    : [`Fait à ${ou},`, `le ${jour}`];
 }

@@ -9,7 +9,15 @@
 
 import { TEXTES, type LangueCv } from './langue-cv';
 
-import type { CleContact } from './icones-contact';
+/** La nature d'une coordonnee. */
+export type CleContact =
+  | 'nationalite'
+  | 'adresse'
+  | 'tel'
+  | 'email'
+  | 'github'
+  | 'linkedin'
+  | 'portfolio';
 
 export type InfoContact = {
   nationalite?: string | null;
@@ -24,8 +32,9 @@ export type InfoContact = {
 };
 
 /**
- * Une coordonnee : `texte` et `etiquette` portent le libelle (« Tel : »)
- * pour le Word ; le PDF dessine l'icone de `cle` et la seule `valeur`.
+ * Une coordonnee : `texte` et `etiquette` portent le libelle (« Tel : ») ;
+ * `valeur` est la valeur seule, que le PDF ecrit en noir apres le libelle
+ * en gris.
  */
 export type LigneContact =
   | { genre: 'texte'; cle: CleContact; texte: string; valeur: string }
@@ -166,33 +175,55 @@ export function urlAffichee(valeur: string): string {
 }
 
 /**
- * Les elements d'une ligne de coordonnees ranges en lignes completes : on
- * n'en coupe jamais un, et un separateur n'ouvre jamais une ligne. Un element
- * plus large que la ligne tient seul sur la sienne.
+ * Le libelle d'une coordonnee pour l'affichage en colonnes : sans ses
+ * deux-points (« Tel : » devient « Tel »). L'alignement separe deja le
+ * libelle de sa valeur, et des deux-points precedes d'une espace ne tombent
+ * pas au meme endroit d'une ligne a l'autre.
  */
-export function rangerEnLignes<T>(
+export function libelleContact(l: LigneContact): string {
+  const brut =
+    l.genre === 'texte'
+      ? l.texte.slice(0, l.texte.length - l.valeur.length)
+      : l.etiquette;
+  return brut.replace(/\s*:\s*$/, '').trim();
+}
+
+/** Une colonne de coordonnees : ses elements, la largeur de ses libelles
+ *  (les valeurs commencent toutes la), et sa largeur totale. */
+export type ColonneContact<T> = {
+  elements: T[];
+  libelle: number;
+  largeur: number;
+};
+
+/**
+ * Les coordonnees en colonnes alignees : dans chaque colonne, les libelles
+ * l'un sous l'autre, les valeurs alignees a leur droite. Deux colonnes si
+ * elles tiennent dans `largeurMax` avec leur `ecart`, la premiere prenant la
+ * moitie superieure ; sinon une seule. Rien n'est jamais coupe.
+ */
+export function disposerEnColonnes<T>(
   elements: readonly T[],
-  largeurDe: (e: T) => number,
-  largeurSeparateur: number,
+  largeurLibelle: (e: T) => number,
+  largeurValeur: (e: T) => number,
   largeurMax: number,
-): T[][] {
-  const lignes: T[][] = [];
-  let courante: T[] = [];
-  let occupee = 0;
-  for (const e of elements) {
-    const l = largeurDe(e);
-    const ajout = courante.length ? largeurSeparateur + l : l;
-    if (courante.length && occupee + ajout > largeurMax) {
-      lignes.push(courante);
-      courante = [e];
-      occupee = l;
-    } else {
-      courante.push(e);
-      occupee += ajout;
-    }
-  }
-  if (courante.length) lignes.push(courante);
-  return lignes;
+  ecart: number,
+): ColonneContact<T>[] {
+  const colonne = (liste: T[]): ColonneContact<T> => {
+    const libelle = Math.max(0, ...liste.map(largeurLibelle));
+    const valeur = Math.max(0, ...liste.map(largeurValeur));
+    return { elements: liste, libelle, largeur: libelle + valeur };
+  };
+  if (elements.length < 2)
+    return elements.length ? [colonne([...elements])] : [];
+  const moitie = Math.ceil(elements.length / 2);
+  const deux = [
+    colonne(elements.slice(0, moitie)),
+    colonne(elements.slice(moitie)),
+  ];
+  return deux[0].largeur + ecart + deux[1].largeur <= largeurMax
+    ? deux
+    : [colonne([...elements])];
 }
 
 /**

@@ -46,6 +46,14 @@ export interface SiteSettingsDto {
   siteUrl: string | null;
   /** Le QR code du portfolio en tete du CV, quand l'adresse est renseignee. */
   cvAfficherQr: boolean;
+  /** « Fait a ..., le ... » en fin de CV. */
+  cvFaitA: boolean;
+  /** Le lieu ; null : une ligne pointillee a remplir. */
+  cvLieu: string | null;
+  /** La date (AAAA-MM-JJ) ; null : le jour de la generation. */
+  cvDateFaitA: string | null;
+  /** Un blanc reserve sous la date, pour signer. */
+  cvEspaceSignature: boolean;
   /** Les sections de la base retirees du CV (presentation, technologies,
    *  certifications, experiences, projets). Vide : toutes incluses. */
   cvBaseMasquees: string[];

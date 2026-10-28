@@ -34,13 +34,13 @@ describe('lignes du CV', () => {
 
   it('une experience nue : periode, poste, entreprise', () => {
     expect(ligneExperience(exp)).toBe(
-      'Juillet 2025 à Février 2026 : Développeur à OssanAsur.',
+      'Juillet 2025 - Février 2026 : Développeur à OssanAsur.',
     );
   });
 
   it('en cours : jusqu a aujourd hui', () => {
     expect(ligneExperience({ ...exp, isCurrent: true, endDate: null })).toMatch(
-      /à aujourd'hui : /,
+      / - aujourd'hui : /,
     );
   });
 
@@ -50,7 +50,7 @@ describe('lignes du CV', () => {
       ['AGBLE', 'Dumevi'],
     );
     expect(l).toBe(
-      'Juillet 2025 à Février 2026 : Développeur à OssanAsur. Applications web et mobiles. Projets : AGBLE, Dumevi.',
+      'Juillet 2025 - Février 2026 : Développeur à OssanAsur. Applications web et mobiles. Projets : AGBLE, Dumevi.',
     );
   });
 
@@ -128,7 +128,7 @@ describe('lignes du CV', () => {
     expect(p).toEqual({
       intitule: 'Développeur',
       employeur: 'OssanAsur',
-      periode: "Juillet 2025 à aujourd'hui",
+      periode: "Juillet 2025 - aujourd'hui",
       description: 'Back-ends Java.',
       // Ses technologies ne sont pas reprises : la section Technologies les dit.
       projets: [{ nom: 'OssanFina', resume: 'plateforme de microfinance' }],

@@ -67,25 +67,33 @@ model SiteSettings {
   respectReducedMotion Boolean @default(true) @map("respect_reduced_motion")
 
   // CV genere
-  cvFontFamily   String   @default("serif") @map("cv_font_family")
+  cvFontFamily      String    @default("serif") @map("cv_font_family")
   /**
    * Le CV n'est telechargeable depuis le site que si cette case est cochee.
    * Le format Word est le seul propose publiquement ; le PDF reste reserve a
    * l'administrateur. Faux par defaut : la publication est une decision.
    */
-  showCvDownload Boolean  @default(false) @map("show_cv_download")
+  showCvDownload    Boolean   @default(false) @map("show_cv_download")
   /// Le poste vise, imprime sous le nom en tete du CV. Nul : pas de ligne.
-  cvJobTitle     String?  @map("cv_job_title")
+  cvJobTitle        String?   @map("cv_job_title")
   /// Version anglaise, pour le CV en anglais. Vide : le francais est repris.
-  cvJobTitleEn   String?  @map("cv_job_title_en")
+  cvJobTitleEn      String?   @map("cv_job_title_en")
   /// L'adresse publique du portfolio : imprimee dans les coordonnees du CV,
   /// et encodee dans son QR code. Nulle : ni lien ni QR code.
-  siteUrl        String?  @map("site_url")
+  siteUrl           String?   @map("site_url")
   /// Le QR code du portfolio en tete du CV, quand l'adresse est renseignee.
-  cvAfficherQr   Boolean  @default(true) @map("cv_afficher_qr")
+  cvAfficherQr      Boolean   @default(true) @map("cv_afficher_qr")
+  /// « Fait a ..., le ... » en fin de CV, pour un CV a signer.
+  cvFaitA           Boolean   @default(false) @map("cv_fait_a")
+  /// Le lieu ; vide : une ligne pointillee, a remplir a la main.
+  cvLieu            String?   @map("cv_lieu")
+  /// La date ; vide : la date du jour de la generation.
+  cvDateFaitA       DateTime? @map("cv_date_fait_a") @db.Date
+  /// Un blanc reserve sous la date, pour signer.
+  cvEspaceSignature Boolean   @default(false) @map("cv_espace_signature")
   /// Les sections de la base retirees du CV (presentation, technologies,
   /// certifications, experiences, projets). Vide : toutes sont incluses.
-  cvBaseMasquees String[] @default([]) @map("cv_base_masquees")
+  cvBaseMasquees    String[]  @default([]) @map("cv_base_masquees")
 
   // Accent
   accentHue        Int @default(107) @map("accent_hue")

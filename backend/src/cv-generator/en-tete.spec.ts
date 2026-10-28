@@ -3,8 +3,9 @@ import {
   lignesContact,
   nomFichier,
   titrePoste,
-  rangerEnLignes,
   urlAffichee,
+  disposerEnColonnes,
+  libelleContact,
 } from './en-tete';
 
 const complet = {
@@ -184,20 +185,73 @@ describe('affichage des coordonnees', () => {
       'benyofanuel@gmail.com',
     );
   });
+});
 
-  it('range en lignes completes, sans couper un element ni ouvrir une ligne par un separateur', () => {
-    const largeur = (s: string) => s.length;
-    expect(rangerEnLignes(['aaaa', 'bbbb', 'cccc'], largeur, 3, 11)).toEqual([
-      ['aaaa', 'bbbb'],
-      ['cccc'],
-    ]);
-    expect(rangerEnLignes(['aaaa', 'bbbb'], largeur, 3, 100)).toEqual([
-      ['aaaa', 'bbbb'],
-    ]);
-    // Trop large pour une ligne : seul sur la sienne, jamais perdu.
+describe('coordonnees en colonnes alignees', () => {
+  const libelle = (e: { l: number; v: number }) => e.l;
+  const valeur = (e: { l: number; v: number }) => e.v;
+  const e = (l: number, v: number) => ({ l, v });
+
+  it('deux colonnes si elles tiennent, la premiere avec la moitie superieure', () => {
+    const c = disposerEnColonnes(
+      [e(20, 50), e(30, 60), e(25, 40)],
+      libelle,
+      valeur,
+      300,
+      20,
+    );
+    expect(c.map((x) => x.elements.length)).toEqual([2, 1]);
+    // Les valeurs d'une colonne commencent toutes apres son plus long libelle.
+    expect(c[0]).toMatchObject({ libelle: 30, largeur: 90 });
+    expect(c[1]).toMatchObject({ libelle: 25, largeur: 65 });
+  });
+
+  it('une seule colonne si deux ne tiennent pas, rien n est coupe', () => {
+    const c = disposerEnColonnes(
+      [e(20, 150), e(30, 160), e(25, 140)],
+      libelle,
+      valeur,
+      300,
+      20,
+    );
+    expect(c).toHaveLength(1);
+    expect(c[0]).toMatchObject({ libelle: 30, largeur: 190 });
+    expect(c[0].elements).toHaveLength(3);
+  });
+
+  it('rien sans coordonnee, une colonne pour une seule', () => {
+    expect(disposerEnColonnes([], libelle, valeur, 300, 20)).toEqual([]);
     expect(
-      rangerEnLignes(['a', 'xxxxxxxxxxxxxxxx', 'b'], largeur, 1, 5),
-    ).toEqual([['a'], ['xxxxxxxxxxxxxxxx'], ['b']]);
-    expect(rangerEnLignes([], largeur, 1, 5)).toEqual([]);
+      disposerEnColonnes([e(10, 10)], libelle, valeur, 300, 20),
+    ).toHaveLength(1);
+  });
+});
+
+describe('libelle des coordonnees en colonnes', () => {
+  it('retire les deux-points, en francais comme en anglais', () => {
+    expect(
+      libelleContact({
+        genre: 'texte',
+        cle: 'tel',
+        texte: 'Tel : +228',
+        valeur: '+228',
+      }),
+    ).toBe('Tel');
+    expect(
+      libelleContact({
+        genre: 'lien',
+        cle: 'email',
+        etiquette: 'Email: ',
+        url: 'a@b.c',
+      }),
+    ).toBe('Email');
+    expect(
+      libelleContact({
+        genre: 'texte',
+        cle: 'nationalite',
+        texte: 'Togolaise',
+        valeur: 'Togolaise',
+      }),
+    ).toBe('');
   });
 });

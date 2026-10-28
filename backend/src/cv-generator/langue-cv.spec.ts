@@ -41,7 +41,7 @@ describe('langue du CV', () => {
     );
     expect(posteDe(exp, [], 'en')).toMatchObject({
       intitule: 'Software Engineer',
-      periode: 'March 2026 to present',
+      periode: 'March 2026 - Present',
       description: 'Banking and insurance systems.',
     });
   });
@@ -68,7 +68,7 @@ describe('langue du CV', () => {
     expect(suiteProjet('banking', 'en')).toBe(': banking.');
     expect(suiteProjet('banque', 'fr')).toBe(' : banque.');
     expect(ligneExperience(exp, [p], 'en')).toBe(
-      'March 2026 to present: Software Engineer at OssanAsur. Banking and insurance systems. Projects: OssanFina (digitalisation of microfinance).',
+      'March 2026 - Present: Software Engineer at OssanAsur. Banking and insurance systems. Projects: OssanFina (digitalisation of microfinance).',
     );
   });
 

@@ -29,7 +29,6 @@ import {
   type SectionBrouillon,
 } from './ordre-sections';
 import { grouperTechnologies } from './technologies-cv';
-import { iconeContact } from './icones-contact';
 import { choisir, langueCv, TEXTES, type LangueCv } from './langue-cv';
 import {
   ligneCours,
@@ -38,11 +37,13 @@ import {
   projetCv,
   suiteProjet,
   type ProjetCv,
+  lignesFaitA,
 } from './contenu-cv';
 import {
   hrefDeLien,
   lignesContact,
-  rangerEnLignes,
+  disposerEnColonnes,
+  libelleContact,
   urlAffichee,
   nomFichier,
   titrePoste,
@@ -85,11 +86,16 @@ const RETRAIT_PROJET = 16;
 const QR = 66;
 /** Blanc entre l'en-tete et le QR code. */
 const ECART_QR = 18;
-/** Entre l'icone d'une coordonnee et sa valeur, et entre deux coordonnees. */
-const ECART_ICONE = 3.5;
-const ECART_CONTACT = 14;
+/** Entre un libelle de coordonnee et sa valeur, et entre deux colonnes. */
+const ECART_LIBELLE = 9;
+const ECART_COLONNES = 26;
+/** Le blanc reserve pour signer sous « Fait a ..., le ... » (environ 2 cm). */
+const ESPACE_SIGNATURE = 56;
 /** La legende sous le QR code, un cran sous les coordonnees. */
 const LEGENDE_QR = 7.5;
+
+/** La colonne des valeurs des coordonnees dans le Word, en twips (2 cm). */
+const COLONNE_CONTACT_WORD = 1134;
 
 /** Largeur utile d'une page Word A4 (marges de 1120 twips), pour caler la
  *  periode a droite par une tabulation. */
@@ -99,8 +105,6 @@ const ENCRE = '#000000';
 /** Gris du poste, des coordonnees et du filet : lisible, en retrait du nom. */
 const GRIS = '#4A4A4A';
 const FILET = '#9A9A9A';
-/** Separateur des coordonnees, encodable en WinAnsi. */
-const SEPARATEUR = '   |   ';
 
 type Polices = { normal: string; gras: string };
 
@@ -346,8 +350,25 @@ export class CvGeneratorService {
     ];
 
     return {
+      // Les mots-cles du fichier, que lisent certains ATS : les technologies
+      // et competences retenues dans ce CV.
+      motsCles: [
+        ...technologies.map((x) => x.label),
+        ...competencesLibres
+          .filter((x) => !competencesRetenues || competencesRetenues.has(x.id))
+          .map((x) => choisir(x.label, x.labelEn, langue) ?? '')
+          .filter(Boolean),
+      ],
       personalInfo,
       reglages,
+      // La mention de fin, pour un CV a signer ; nulle si elle n'est pas
+      // demandee au backoffice.
+      faitA: reglages?.cvFaitA
+        ? {
+            lignes: lignesFaitA(reglages.cvLieu, reglages.cvDateFaitA, langue),
+            espace: reglages.cvEspaceSignature,
+          }
+        : null,
       // Les sections de la base retirees du CV depuis le backoffice.
       sections: ordonnerSections(
         // Les sections masquees de la version, ou a defaut le reglage general.
@@ -414,12 +435,36 @@ export class CvGeneratorService {
   ): Promise<DocumentCv> {
     const version = await this.version(versionId);
     if (version) langue = langueCv(version.langue);
-    const { reglages, sections, contact, titre, nomComplet, nom, prenom, qr } =
-      await this.collecter(brouillon, langue, version);
+    const {
+      reglages,
+      sections,
+      contact,
+      titre,
+      nomComplet,
+      nom,
+      prenom,
+      qr,
+      motsCles,
+      faitA,
+    } = await this.collecter(brouillon, langue, version);
     const polices = choisirPolices(reglages?.cvFontFamily);
 
     const contenu = await new Promise<Buffer>((resolve, reject) => {
-      const doc = new PDFDocument({ margin: MARGE, size: 'A4' });
+      // Les metadonnees du fichier et sa langue : lues par les ATS et les
+      // moteurs de recherche, elles disent qui, quel poste, quelles
+      // competences, meme avant d'ouvrir le document.
+      const doc = new PDFDocument({
+        margin: MARGE,
+        size: 'A4',
+        lang: TEXTES[langue].locale,
+        displayTitle: true,
+        info: {
+          Title: `CV - ${nomComplet}`,
+          Author: nomComplet,
+          Subject: titre ?? '',
+          Keywords: motsCles.join(', '),
+        },
+      });
       const morceaux: Buffer[] = [];
       doc.on('data', (c: Buffer) => morceaux.push(c));
       doc.on('end', () => resolve(Buffer.concat(morceaux)));
@@ -491,60 +536,44 @@ export class CvGeneratorService {
       if (contact.length) {
         doc.moveDown(0.45);
         doc.font(polices.normal).fontSize(CONTACT);
-        // Chaque coordonnee : une petite icone grise, puis sa seule valeur
-        // (« +228 ... », « github.com/... »), sans libelle. Les elements sont
-        // ranges en lignes completes, jamais coupes, espaces par un blanc
-        // plutot qu'une barre. Un lien reste cliquable sur toute sa valeur,
-        // sans souligne : le CV s'imprime sobre.
-        const taille = CONTACT * 1.05;
+        // Les coordonnees en colonnes alignees, sans separateur : dans chaque
+        // colonne, les libelles en gris l'un sous l'autre, les valeurs en
+        // noir alignees a leur droite. Deux colonnes si elles tiennent, une
+        // sinon ; rien n'est coupe. Les adresses s'affichent courtes et
+        // restent cliquables vers l'adresse complete.
         const morceaux = contact.map((l) => ({
-          icone: iconeContact(l.cle),
+          libelle: libelleContact(l),
           texte: l.genre === 'texte' ? l.valeur : urlAffichee(l.url),
           lien: l.genre === 'lien' ? l.url : null,
         }));
-        const largeurDe = (m: (typeof morceaux)[number]) =>
-          (m.icone ? taille + ECART_ICONE : 0) + doc.widthOfString(m.texte);
-        const lignes = rangerEnLignes(
+        const colonnes = disposerEnColonnes(
           morceaux,
-          largeurDe,
-          ECART_CONTACT,
+          (m) => (m.libelle ? doc.widthOfString(m.libelle) + ECART_LIBELLE : 0),
+          (m) => doc.widthOfString(m.texte),
           largeurEntete,
+          ECART_COLONNES,
         );
-        const hauteurLigne = doc.currentLineHeight() + 3;
-        for (const ligne of lignes) {
-          const y = doc.y;
-          let x = MARGE;
-          for (const m of ligne) {
-            if (m.icone) {
-              // L'icone, ramenee de 24 a la taille du texte, centree sur sa
-              // hauteur de ligne.
-              const echelle = taille / 24;
-              doc.save();
-              doc
-                .translate(x, y + (doc.currentLineHeight() - taille) / 2 - 0.5)
-                .scale(echelle);
-              if (m.icone.mode === 'plein') doc.path(m.icone.trace).fill(GRIS);
-              else
-                doc
-                  .path(m.icone.trace)
-                  .lineWidth(2)
-                  .lineCap('round')
-                  .lineJoin('round')
-                  .stroke(GRIS);
-              doc.restore();
-              x += taille + ECART_ICONE;
-            }
+        const hauteurLigne = doc.currentLineHeight() + 2.5;
+        const haut = doc.y;
+        let x = MARGE;
+        let bas = haut;
+        for (const colonne of colonnes) {
+          colonne.elements.forEach((m, i) => {
+            const y = haut + i * hauteurLigne;
+            if (m.libelle)
+              doc.fillColor(GRIS).text(m.libelle, x, y, { lineBreak: false });
             const largeurTexte = doc.widthOfString(m.texte);
-            doc.fillColor(m.lien ? ENCRE : GRIS).text(m.texte, x, y, {
+            doc.fillColor(ENCRE).text(m.texte, x + colonne.libelle, y, {
               lineBreak: false,
               width: largeurTexte + 1,
               ...(m.lien ? { link: hrefDeLien(m.lien) } : {}),
             });
-            x += largeurTexte + ECART_CONTACT;
-          }
-          doc.y = y + hauteurLigne;
+            bas = Math.max(bas, y + hauteurLigne);
+          });
+          x += colonne.largeur + ECART_COLONNES;
         }
         doc.x = MARGE;
+        doc.y = bas;
       }
 
       // Fin de l'en-tete : la marge reprend sa place, la suite part sous le
@@ -680,6 +709,28 @@ export class CvGeneratorService {
         }
       }
 
+      // La mention de fin, a droite, apres la derniere section : « Fait a
+      // ..., » puis « le ... », et le blanc pour signer s'il est demande. Le
+      // bloc ne se coupe jamais entre deux pages.
+      if (faitA) {
+        // Seules les deux lignes doivent tenir sur la page : le blanc de
+        // signature peut empieter sur la marge du bas, vide de toute facon.
+        // Sinon la mention partirait seule sur une page nouvelle.
+        doc.font(polices.normal).fontSize(CORPS).fillColor(ENCRE);
+        const deuxLignes = 2 * (doc.currentLineHeight() + INTERLIGNE);
+        const avant = doc.currentLineHeight() * 1.6;
+        if (doc.y + avant + deuxLignes > doc.page.height - MARGE) doc.addPage();
+        else doc.y += avant;
+        for (const ligne of faitA.lignes) {
+          doc.text(ligne, MARGE, doc.y, {
+            width: largeur,
+            align: 'right',
+            lineGap: INTERLIGNE - 2,
+          });
+        }
+        if (faitA.espace) doc.y += ESPACE_SIGNATURE;
+      }
+
       doc.end();
     });
 
@@ -700,32 +751,48 @@ export class CvGeneratorService {
   ): Promise<DocumentCv> {
     const version = await this.version(versionId);
     if (version) langue = langueCv(version.langue);
-    const { reglages, sections, contact, titre, nomComplet, nom, prenom, qr } =
-      await this.collecter(undefined, langue, version);
+    const {
+      reglages,
+      sections,
+      contact,
+      titre,
+      nomComplet,
+      nom,
+      prenom,
+      qr,
+      motsCles,
+      faitA,
+    } = await this.collecter(undefined, langue, version);
     const police = policeWord(reglages?.cvFontFamily);
 
     // Gris du poste et des coordonnees, comme dans le PDF.
     const gris = GRIS.slice(1);
-    const morceauxDeContact = (l: LigneContact, dernier: boolean) => [
-      ...(l.genre === 'texte'
-        ? [new TextRun({ text: l.texte, color: gris, size: 19 })]
-        : [
-            new TextRun({ text: l.etiquette, color: gris, size: 19 }),
-            new ExternalHyperlink({
-              link: hrefDeLien(l.url),
-              children: [
-                new TextRun({
-                  text: urlAffichee(l.url),
-                  style: 'Hyperlink',
-                  size: 19,
+    // Une coordonnee par ligne : le libelle en gris, puis une vraie
+    // tabulation, qui aligne toutes les valeurs (le destinataire peut la
+    // deplacer). Pas de separateur.
+    const paragrapheContact = (l: LigneContact) =>
+      new Paragraph({
+        spacing: { after: 0 },
+        tabStops: [{ type: TabStopType.LEFT, position: COLONNE_CONTACT_WORD }],
+        children: [
+          new TextRun({
+            text: libelleContact(l),
+            color: gris,
+            size: 19,
+          }),
+          new TextRun({ children: [new Tab()], size: 19 }),
+          ...(l.genre === 'texte'
+            ? [new TextRun({ text: l.valeur, size: 19 })]
+            : [
+                new ExternalHyperlink({
+                  link: hrefDeLien(l.url),
+                  children: [
+                    new TextRun({ text: urlAffichee(l.url), size: 19 }),
+                  ],
                 }),
-              ],
-            }),
-          ]),
-      ...(dernier
-        ? []
-        : [new TextRun({ text: SEPARATEUR, color: gris, size: 19 })]),
-    ];
+              ]),
+        ],
+      });
 
     // Un projet en puce Word : le nom en gras, puis ce qu'il est.
     const paragrapheProjet = (projet: ProjetCv) =>
@@ -781,17 +848,8 @@ export class CvGeneratorService {
             }),
           ]
         : []),
-      // Les coordonnees sur une ligne, comme dans le PDF.
-      ...(contact.length
-        ? [
-            new Paragraph({
-              spacing: { after: 0 },
-              children: contact.flatMap((l, i) =>
-                morceauxDeContact(l, i === contact.length - 1),
-              ),
-            }),
-          ]
-        : []),
+      // Les coordonnees, une par ligne, valeurs alignees.
+      ...contact.map(paragrapheContact),
     ];
 
     for (const section of sections) {
@@ -874,7 +932,31 @@ export class CvGeneratorService {
       }
     }
 
+    // La mention de fin, alignee a droite, et le blanc pour signer. Les deux
+    // lignes restent ensemble, et avec le blanc.
+    if (faitA) {
+      faitA.lignes.forEach((ligne, i) =>
+        corps.push(
+          new Paragraph({
+            text: ligne,
+            alignment: AlignmentType.RIGHT,
+            keepNext: true,
+            keepLines: true,
+            spacing: {
+              before: i === 0 ? 360 : 0,
+              after: i === 1 && faitA.espace ? ESPACE_SIGNATURE * 20 : 0,
+            },
+          }),
+        ),
+      );
+    }
+
     const doc = new Document({
+      // Les memes metadonnees que le PDF, lues par les ATS.
+      title: `CV - ${nomComplet}`,
+      creator: nomComplet,
+      subject: titre ?? '',
+      keywords: motsCles.join(', '),
       styles: {
         default: {
           document: {

@@ -134,9 +134,15 @@ describe('adresse du portfolio et QR code du CV', () => {
   });
 
   it('refuse une adresse sans protocole ou d un autre protocole', async () => {
-    expect(await erreursSur('siteUrl', 'fanuel-benyo.dev')).toContain('siteUrl');
-    expect(await erreursSur('siteUrl', 'javascript:alert(1)')).toContain('siteUrl');
-    expect(await erreursSur('siteUrl', 'ftp://exemple.org')).toContain('siteUrl');
+    expect(await erreursSur('siteUrl', 'fanuel-benyo.dev')).toContain(
+      'siteUrl',
+    );
+    expect(await erreursSur('siteUrl', 'javascript:alert(1)')).toContain(
+      'siteUrl',
+    );
+    expect(await erreursSur('siteUrl', 'ftp://exemple.org')).toContain(
+      'siteUrl',
+    );
   });
 
   it('la case du QR code est un booleen', async () => {

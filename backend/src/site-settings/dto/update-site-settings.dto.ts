@@ -4,6 +4,7 @@ import { CLES_SECTIONS_BASE } from '../../cv-generator/ordre-sections';
 import {
   IsArray,
   IsBoolean,
+  IsDateString,
   IsIn,
   IsInt,
   IsNumber,
@@ -235,14 +236,18 @@ export class UpdateSiteSettingsDto {
   @IsBoolean()
   showCvDownload?: boolean;
 
-  @ApiPropertyOptional({ default: false, description: 'Affiche la section Cours' })
+  @ApiPropertyOptional({
+    default: false,
+    description: 'Affiche la section Cours',
+  })
   @IsOptional()
   @IsBoolean()
   showCours?: boolean;
 
   @ApiPropertyOptional({
     example: 'Developpeur Java Spring Boot',
-    description: 'Poste vise, imprime sous le nom en tete du CV ; vide, pas de ligne',
+    description:
+      'Poste vise, imprime sous le nom en tete du CV ; vide, pas de ligne',
   })
   @IsOptional()
   @IsString()
@@ -251,7 +256,8 @@ export class UpdateSiteSettingsDto {
 
   @ApiPropertyOptional({
     example: 'https://fanuel-benyo.dev',
-    description: 'Adresse publique du portfolio : lien et QR code du CV ; vide, ni l un ni l autre',
+    description:
+      'Adresse publique du portfolio : lien et QR code du CV ; vide, ni l un ni l autre',
     nullable: true,
   })
   @IsOptional()
@@ -259,10 +265,42 @@ export class UpdateSiteSettingsDto {
   @MaxLength(200)
   siteUrl?: string | null;
 
-  @ApiPropertyOptional({ description: 'Affiche le QR code du portfolio en tete du CV' })
+  @ApiPropertyOptional({
+    description: 'Affiche le QR code du portfolio en tete du CV',
+  })
   @IsOptional()
   @IsBoolean()
   cvAfficherQr?: boolean;
+
+  @ApiPropertyOptional({ description: '« Fait a ..., le ... » en fin de CV' })
+  @IsOptional()
+  @IsBoolean()
+  cvFaitA?: boolean;
+
+  @ApiPropertyOptional({
+    description: 'Lieu du « Fait a » ; vide : une ligne a remplir',
+    nullable: true,
+  })
+  @IsOptional()
+  @IsString()
+  @MaxLength(80)
+  cvLieu?: string | null;
+
+  @ApiPropertyOptional({
+    description:
+      'Date du « Fait a » (AAAA-MM-JJ) ; vide : le jour de la generation',
+    nullable: true,
+  })
+  @IsOptional()
+  @IsDateString()
+  cvDateFaitA?: string | null;
+
+  @ApiPropertyOptional({
+    description: 'Reserve un blanc pour signer sous la date',
+  })
+  @IsOptional()
+  @IsBoolean()
+  cvEspaceSignature?: boolean;
 
   @ApiPropertyOptional({
     example: ['technologies'],
@@ -283,7 +321,10 @@ export class UpdateSiteSettingsDto {
   @Max(360)
   accentHue?: number;
 
-  @ApiPropertyOptional({ example: 16, description: 'Plafonne a 30 : interdit structurellement toute couleur vive' })
+  @ApiPropertyOptional({
+    example: 16,
+    description: 'Plafonne a 30 : interdit structurellement toute couleur vive',
+  })
   @IsOptional()
   @Type(() => Number)
   @IsInt()
@@ -291,7 +332,10 @@ export class UpdateSiteSettingsDto {
   @Max(30)
   accentSaturation?: number;
 
-  @ApiPropertyOptional({ description: 'Version anglaise, pour le CV en anglais ; vide : le francais', nullable: true })
+  @ApiPropertyOptional({
+    description: 'Version anglaise, pour le CV en anglais ; vide : le francais',
+    nullable: true,
+  })
   @IsOptional()
   @IsString()
   @MaxLength(120)

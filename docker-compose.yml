@@ -1,0 +1,94 @@
+# La pile de production : PostgreSQL, l'API, le portfolio, le backoffice, et
+# Caddy devant, qui obtient et renouvelle seul les certificats HTTPS.
+# Les valeurs viennent de `.env` (modele : .env.production.example).
+# Mode d'emploi : docs/deploiement.md.
+
+x-api-publique: &api-publique ${SCHEMA:-https}://${DOMAINE_API:?DOMAINE_API manquant dans .env}
+
+services:
+  postgres:
+    image: postgres:17-alpine
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: portfolio_db
+      POSTGRES_USER: portfolio
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?POSTGRES_PASSWORD manquant dans .env}
+    volumes:
+      - postgres:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U portfolio -d portfolio_db"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+  backend:
+    build: { context: ., target: backend }
+    restart: unless-stopped
+    depends_on:
+      postgres: { condition: service_healthy }
+    environment:
+      NODE_ENV: production
+      PORT: 4000
+      DATABASE_URL: postgresql://portfolio:${POSTGRES_PASSWORD}@postgres:5432/portfolio_db?schema=public
+      JWT_SECRET: ${JWT_SECRET:?JWT_SECRET manquant dans .env}
+      ADMIN_EMAIL: ${ADMIN_EMAIL:-}
+      ADMIN_PASSWORD: ${ADMIN_PASSWORD:-}
+      CORS_ORIGINS: ${SCHEMA:-https}://${DOMAINE_SITE},${SCHEMA:-https}://${DOMAINE_ADMIN}
+      SMTP_HOST: ${SMTP_HOST:-}
+      SMTP_PORT: ${SMTP_PORT:-}
+      SMTP_USER: ${SMTP_USER:-}
+      SMTP_PASS: ${SMTP_PASS:-}
+    volumes:
+      - uploads:/app/uploads
+      - cours:/app/cours
+
+  frontend:
+    build:
+      context: .
+      target: frontend
+      args:
+        NEXT_PUBLIC_API_URL: *api-publique
+        NEXT_PUBLIC_SITE_URL: ${SCHEMA:-https}://${DOMAINE_SITE:?DOMAINE_SITE manquant dans .env}
+    restart: unless-stopped
+    depends_on: [backend]
+
+  backoffice:
+    build:
+      context: .
+      target: backoffice
+      args:
+        NEXT_PUBLIC_API_URL: *api-publique
+    restart: unless-stopped
+    depends_on: [backend]
+
+  caddy:
+    image: caddy:2-alpine
+    restart: unless-stopped
+    ports:
+      - "80:80"
+      - "443:443"
+      - "443:443/udp"
+    environment:
+      SCHEMA: ${SCHEMA:-https}
+      DOMAINE_SITE: ${DOMAINE_SITE}
+      DOMAINE_API: ${DOMAINE_API}
+      DOMAINE_ADMIN: ${DOMAINE_ADMIN:?DOMAINE_ADMIN manquant dans .env}
+    volumes:
+      - ./deploiement/Caddyfile:/etc/caddy/Caddyfile:ro
+      - caddy_data:/data
+      - caddy_config:/config
+    networks:
+      default:
+        # Le rendu serveur du portfolio appelle l'API par son adresse publique
+        # (NEXT_PUBLIC_API_URL) : ces alias la font resoudre vers Caddy sans
+        # sortir sur Internet.
+        aliases:
+          - ${DOMAINE_API}
+          - ${DOMAINE_SITE}
+
+volumes:
+  postgres:
+  uploads:
+  cours:
+  caddy_data:
+  caddy_config:

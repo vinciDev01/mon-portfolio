@@ -1,0 +1,29 @@
+# Trois adresses, trois applications. Avec SCHEMA=https (le defaut), Caddy
+# obtient les certificats Let's Encrypt au premier acces et les renouvelle.
+
+(commun) {
+	encode zstd gzip
+	header {
+		Strict-Transport-Security "max-age=31536000"
+		X-Content-Type-Options "nosniff"
+		Referrer-Policy "strict-origin-when-cross-origin"
+		-Server
+	}
+}
+
+{$SCHEMA}://{$DOMAINE_SITE} {
+	import commun
+	reverse_proxy frontend:3000
+}
+
+{$SCHEMA}://{$DOMAINE_API} {
+	import commun
+	reverse_proxy backend:4000
+}
+
+{$SCHEMA}://{$DOMAINE_ADMIN} {
+	import commun
+	# Le backoffice n'a rien a faire dans un moteur de recherche.
+	header X-Robots-Tag "noindex, nofollow"
+	reverse_proxy backoffice:3001
+}

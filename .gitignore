@@ -46,3 +46,7 @@ next-env.d.ts
 /backend/dist/
 .superpowers/
 /cours/
+
+# deploiement
+/sauvegardes/
+.env.essai

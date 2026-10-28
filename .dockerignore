@@ -1,0 +1,27 @@
+# Le contexte de build est la racine du monorepo : on n'y envoie que le code.
+**/node_modules
+**/.next
+**/dist
+**/*.tsbuildinfo
+**/next-env.d.ts
+**/coverage
+
+# Donnees et secrets : jamais dans une image.
+uploads
+backend/uploads
+cours
+**/.env
+**/.env.*
+!**/.env.example
+secrets.env
+*.secrets.env
+
+# Outillage et documentation
+.git
+.claude
+.superpowers
+docs
+deploiement
+Dockerfile
+docker-compose.yml
+.dockerignore

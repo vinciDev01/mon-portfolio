@@ -150,18 +150,14 @@ CV, et la règle de confidentialité de l'adresse postale.
 
 ## 7. Mise en production
 
-```bash
-npm run build              # construit les trois applications
-cd backend && npx prisma migrate deploy
-```
+Le déploiement se fait sur un VPS avec Docker Compose, derrière Caddy qui
+gère le HTTPS. La marche à suivre complète se trouve dans
+[docs/deploiement.md](docs/deploiement.md) : serveur, DNS, premier démarrage,
+reprise du contenu local, mises à jour et sauvegardes.
 
-Avant tout déploiement :
-
-- définissez `JWT_SECRET` avec une valeur **propre à cet environnement** ;
-- définissez `ADMIN_EMAIL` et `ADMIN_PASSWORD` ;
-- pointez `NEXT_PUBLIC_API_URL` vers l'API publique, pas vers `localhost` ;
-- vérifiez la liste des origines autorisées dans `backend/src/main.ts`, qui
-  n'accepte aujourd'hui que `localhost:3000` et `localhost:3001`.
+En production, le backend exige `CORS_ORIGINS` (les adresses du portfolio et du
+backoffice, séparées par des virgules) et masque Swagger. Hors production, les
+origines `localhost:3000` et `localhost:3001` restent la valeur par défaut.
 
 ---
 

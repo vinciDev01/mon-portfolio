@@ -1,4 +1,5 @@
 import type { ReactNode } from "react";
+import { connection } from "next/server";
 import { getFileUrl, getPortfolioData } from "@/lib/api";
 import { enJsonLd, fichePersonne, ficheSite, urlDuSite } from "@/lib/seo/seo";
 import { Ampoule } from "@/components/ampoule/ampoule";
@@ -24,6 +25,9 @@ import { TestimonialsSection } from "@/components/portfolio/testimonials-section
 import { sectionsActives } from "@/lib/parcours/sections";
 
 export default async function Page() {
+  // Rendue a la demande, jamais au build : l'API n'est pas joignable pendant
+  // `docker build`. Les donnees restent en cache 60 s (getPortfolioData).
+  await connection();
   const data = await getPortfolioData();
   const s = data.siteSettings;
 

@@ -997,6 +997,9 @@ html {
      traits fins, l'icone non. Au palier reduit, ou le libelle est masque, le trait
      epaissi de l'icone reste seul a la designer. Soulignement et epaisseur
      sont des formes, pas seulement des couleurs (WCAG 1.4.1). */
+  /* `page` : la page hors parcours ou l'on se trouve (le blog), designee de
+     la meme facon. */
+  .entree-parcours[aria-current="page"],
   .entree-parcours[aria-current="true"] {
     color: var(--texte);
   }
@@ -1005,6 +1008,7 @@ html {
     stroke-width: 2.75;
   }
 
+  .entree-parcours[aria-current="page"] .entree-nom,
   .entree-parcours[aria-current="true"] .entree-nom {
     font-weight: 600;
     text-decoration: underline dashed;

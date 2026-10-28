@@ -62,9 +62,16 @@ function PictoSection({ id }: { id: string }) {
 export function ColonnePassage({
   reglages,
   infos,
+  racine = "",
+  page,
 }: {
   reglages: SiteSettingsDto;
   infos: PersonalInfoDto;
+  /** Prefixe des liens de section : vide sur le portfolio (ancres locales),
+   *  « / » ailleurs, pour ramener aux sections du portfolio. */
+  racine?: string;
+  /** La page hors parcours ou l'on se trouve : son entree est designee. */
+  page?: "blog";
 }) {
   const { t, locale } = useTranslation();
   const entrees = sectionsActives(reglages);
@@ -102,7 +109,7 @@ export function ColonnePassage({
           {entrees.map((e) => (
             <li key={e.id}>
               <a
-                href={`#${e.id}`}
+                href={`${racine}#${e.id}`}
                 className="entree-parcours"
                 title={t(e.cleTitre)}
                 aria-current={idActif === e.id ? "true" : undefined}
@@ -130,7 +137,13 @@ export function ColonnePassage({
           </a>
         )}
         <LanguageSwitcher />
-        <Link href="/blog" className="entree-parcours" aria-label={t("nav.blog")} title={t("nav.blog")}>
+        <Link
+          href="/blog"
+          className="entree-parcours"
+          aria-label={t("nav.blog")}
+          title={t("nav.blog")}
+          aria-current={page === "blog" ? "page" : undefined}
+        >
           <Picto chemin={PICTO_BLOG} />
           <span className="entree-nom">{t("nav.blog")}</span>
         </Link>

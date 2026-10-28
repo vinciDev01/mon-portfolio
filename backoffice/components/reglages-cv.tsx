@@ -260,7 +260,7 @@ export function ReglagesCv({ surEnregistrement }: { surEnregistrement: () => voi
           />
           <span>
             <span className="font-medium">Réserver un espace pour signer</span>
-            <span className="block text-xs text-muted-foreground mt-1">Environ 2 cm de blanc sous la date.</span>
+            <span className="block text-xs text-muted-foreground mt-1">Environ 3,5 cm de blanc sous la date.</span>
           </span>
         </label>
       </fieldset>

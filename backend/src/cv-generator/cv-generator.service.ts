@@ -89,8 +89,10 @@ const ECART_QR = 18;
 /** Entre un libelle de coordonnee et sa valeur, et entre deux colonnes. */
 const ECART_LIBELLE = 9;
 const ECART_COLONNES = 26;
-/** Le blanc reserve pour signer sous « Fait a ..., le ... » (environ 2 cm). */
-const ESPACE_SIGNATURE = 56;
+/** Le blanc reserve pour signer sous « Fait a ..., le ... » (environ 3,5 cm). */
+const ESPACE_SIGNATURE = 100;
+/** Le bord bas jusqu'ou le blanc de signature peut descendre (sur la marge). */
+const BORD_SIGNATURE = 24;
 /** La legende sous le QR code, un cran sous les coordonnees. */
 const LEGENDE_QR = 7.5;
 
@@ -713,13 +715,19 @@ export class CvGeneratorService {
       // ..., » puis « le ... », et le blanc pour signer s'il est demande. Le
       // bloc ne se coupe jamais entre deux pages.
       if (faitA) {
-        // Seules les deux lignes doivent tenir sur la page : le blanc de
-        // signature peut empieter sur la marge du bas, vide de toute facon.
-        // Sinon la mention partirait seule sur une page nouvelle.
+        // Les deux lignes tiennent dans la page, et le blanc de signature
+        // avec elles : il peut empieter sur la marge du bas, vide de toute
+        // facon, mais doit rester sur la feuille pour qu'on y signe. Sinon le
+        // bloc entier passe a la page suivante.
         doc.font(polices.normal).fontSize(CORPS).fillColor(ENCRE);
         const deuxLignes = 2 * (doc.currentLineHeight() + INTERLIGNE);
         const avant = doc.currentLineHeight() * 1.6;
-        if (doc.y + avant + deuxLignes > doc.page.height - MARGE) doc.addPage();
+        const tientPas =
+          doc.y + avant + deuxLignes > doc.page.height - MARGE ||
+          (faitA.espace &&
+            doc.y + avant + deuxLignes + ESPACE_SIGNATURE >
+              doc.page.height - BORD_SIGNATURE);
+        if (tientPas) doc.addPage();
         else doc.y += avant;
         for (const ligne of faitA.lignes) {
           doc.text(ligne, MARGE, doc.y, {

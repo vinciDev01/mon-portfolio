@@ -9,6 +9,7 @@ import { ConfirmDialog } from "@/components/confirm-dialog";
 import { RANGS_DE_LA_BASE } from "@/components/cv-section-form";
 import { ApercuCv } from "@/components/apercu-cv";
 import { TitrePosteCv } from "@/components/titre-poste-cv";
+import { OptionQrCv } from "@/components/option-qr-cv";
 import { toast } from "sonner";
 import type { CvSectionDto, SiteSettingsDto } from "@portfolio/shared-types";
 
@@ -115,6 +116,7 @@ export default function SectionsCvPage() {
       <div className="grid gap-8 xl:grid-cols-[minmax(0,1fr)_minmax(420px,42%)] items-start">
       <div>
       <TitrePosteCv surEnregistrement={() => setVersionApercu((v) => v + 1)} />
+      <OptionQrCv surEnregistrement={() => setVersionApercu((v) => v + 1)} />
 
       <p className="text-sm text-muted-foreground mb-6 max-w-2xl">
         Le CV téléchargeable est composé de deux sortes de sections. Celles

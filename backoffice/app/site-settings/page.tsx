@@ -342,26 +342,9 @@ export default function SiteSettingsPage() {
       className="w-full px-3 py-2 border border-border rounded-md text-sm"
     />
     <p className="text-xs text-muted-foreground mt-1">
-      Ajoutée aux coordonnées du CV, en lien. Vide : ni lien ni QR code.
+      Ajoutée aux coordonnées du CV, en lien. Le QR code qui y mène se règle dans « Sections du CV ».
     </p>
   </div>
-
-  <label className="flex items-start gap-3 text-sm">
-    <input
-      type="checkbox"
-      checked={data.cvAfficherQr}
-      onChange={(e) => setData({ ...data, cvAfficherQr: e.target.checked })}
-      disabled={!data.siteUrl}
-      className="mt-1"
-    />
-    <span>
-      Afficher le QR code du portfolio dans le CV
-      <span className="block text-xs text-muted-foreground mt-1">
-        En haut à droite du CV : un recruteur qui l&apos;imprime ouvre le portfolio d&apos;un coup de téléphone.
-        {!data.siteUrl && " Renseignez d'abord l'adresse du portfolio."}
-      </span>
-    </span>
-  </label>
 
   <label className="flex items-start gap-3 text-sm">
     <input

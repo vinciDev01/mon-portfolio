@@ -62,3 +62,21 @@ describe("le bois brut et le livre tire", () => {
     expect(valeur(piece, "block-size")).toBe(marge);
   });
 });
+
+describe("le livre ouvert suit le theme", () => {
+  it("pages, textes et bouton prennent les couleurs du theme ; la couverture reste en bois", () => {
+    const page = bloc(/^\s*\.livre-page\s*\{/m, cssNu);
+    expect(valeur(page, "--bord-fond")).toBe("var(--surface)");
+    expect(valeur(page, "color")).toBe("var(--texte)");
+    const bouton = bloc(/^\s*\.livre-telecharger\s*\{/m, cssNu);
+    expect(valeur(bouton, "--bord-fond")).toBe("var(--accent)");
+    expect(valeur(bouton, "color")).toBe("var(--fond)");
+    expect(valeur(bloc(/^\s*\.livre-reliure-ouverte\s*\{/m, cssNu), "--bord-fond")).toBe("#3b2819");
+  });
+
+  it("aucune couleur fixe dans les pages", () => {
+    const debut = cssNu.indexOf(".livre-page {");
+    const fin = cssNu.indexOf("}", cssNu.indexOf(".livre-telecharger:focus-visible"));
+    expect(cssNu.slice(debut, fin)).not.toMatch(/#[0-9a-f]{3,6}\b/i);
+  });
+});

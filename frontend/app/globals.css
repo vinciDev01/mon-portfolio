@@ -1303,9 +1303,11 @@ html {
   .livre-page {
     min-block-size: 300px;
     padding: var(--espace-3);
-    color: #2a2220;
-    --bord-fond: #efe4cc;
-    --bord-trait: #c9b48f;
+    /* Les pages suivent le theme : papier clair le jour, papier sombre la
+       nuit. La couverture, elle, reste en bois : c'est le livre. */
+    color: var(--texte);
+    --bord-fond: var(--surface);
+    --bord-trait: var(--bordure-signifiante);
     font-family: var(--font-sans);
   }
 
@@ -1313,7 +1315,7 @@ html {
     margin: 0;
     font-size: 10px;
     letter-spacing: 0.12em;
-    color: #6b4a33;
+    color: var(--texte-secondaire);
   }
 
   .livre-titre {
@@ -1327,9 +1329,9 @@ html {
     display: inline-block;
     padding: 1px 8px;
     font-size: 11px;
-    color: #5a3e2b;
+    color: var(--texte-secondaire);
     --bord-fond: transparent;
-    --bord-trait: #7a5a3f;
+    --bord-trait: var(--bordure-signifiante);
   }
 
   .livre-description {
@@ -1344,7 +1346,7 @@ html {
     font-size: 2.6em;
     font-weight: 700;
     line-height: 0.85;
-    color: #6b2f2a;
+    color: var(--accent);
   }
 
   .livre-page-droite {
@@ -1355,8 +1357,8 @@ html {
 
   .livre-fermer {
     align-self: flex-end;
-    color: #2a2220;
-    border-color: #7a5a3f;
+    color: var(--texte);
+    border-color: var(--bordure-signifiante);
   }
 
   .livre-details {
@@ -1377,7 +1379,7 @@ html {
 
   .livre-details dd {
     margin: 0;
-    color: #4a3c34;
+    color: var(--texte-secondaire);
   }
 
   .livre-telecharger {
@@ -1390,9 +1392,9 @@ html {
     font-weight: 600;
     text-align: center;
     text-decoration: none;
-    color: #efe4cc;
-    --bord-fond: #2f4a3a;
-    --bord-trait: #2f4a3a;
+    color: var(--fond);
+    --bord-fond: var(--accent);
+    --bord-trait: var(--accent);
   }
 
   /* Telephone : les deux pages s'empilent. */
@@ -1420,7 +1422,7 @@ html {
   }
 
   .livre-telecharger:focus-visible {
-    outline: 2px solid #6b2f2a;
+    outline: 2px solid var(--accent);
     outline-offset: 3px;
   }
 

@@ -85,17 +85,24 @@ describe("le clapet couleur cafe", () => {
 });
 
 describe("la devise gravee sur le pourtour du clapet", () => {
-  it("suit le cercle du bord, entre la gravure et l arete", () => {
+  /** Les arcs d'un couvercle : sens de parcours et texte porte. */
+  function arcs(svg: string) {
+    return [...svg.matchAll(/<path id="([^"]+)" class="boussole-arc" d="M [\d.]+ 18 A ([\d.]+) [\d.]+ 0 0 ([01]) /g)].map((m) => {
+      const texte = new RegExp(`<textPath href="#${m[1]}"[^>]*>([^<]*)</textPath>`).exec(svg)?.[1];
+      return { rayon: Number(m[2]), horaire: m[3] === "1", texte };
+    });
+  }
+
+  it("comme une piece : le haut dans le sens horaire, le bas a rebours, tout se lit a l endroit", () => {
     const lien = identite(rendre(REGLAGES));
     const clapet = /<svg class="boussole-clapet"[\s\S]*?<\/svg>/.exec(lien)?.[0] ?? "";
-    const chemin = /<path id="([^"]+)" class="boussole-pourtour" d="M 18 ([\d.]+) A ([\d.]+) /.exec(clapet);
-    expect(chemin, "chemin du pourtour introuvable").not.toBeNull();
-    const rayon = Number(chemin![3]);
-    expect(rayon).toBeGreaterThan(12);
-    expect(rayon).toBeLessThan(16.5);
-    expect(clapet).toMatch(
-      new RegExp(`<text class="boussole-devise"[^>]*><textPath href="#${chemin![1]}"[^>]*>God is good all the time</textPath>`),
-    );
+    const [haut, bas] = arcs(clapet);
+    expect(haut).toMatchObject({ horaire: true, texte: "God is good" });
+    expect(bas).toMatchObject({ horaire: false, texte: "all the time" });
+    for (const a of [haut!, bas!]) {
+      expect(a.rayon).toBeGreaterThan(12);
+      expect(a.rayon).toBeLessThan(16.5);
+    }
   });
 
   it("en petit, dans la teinte de la gravure", () => {

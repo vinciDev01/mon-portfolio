@@ -941,10 +941,10 @@ html {
     fill: var(--cafe-gravure);
   }
 
-  /* La devise gravee sur le pourtour du clapet : petite, comme une gravure,
-     espacee pour couvrir le tour hors de la charniere. Elle se lit clapet
-     rabattu, au survol. Le cercle qui la porte ne se dessine pas. */
-  .boussole-pourtour {
+  /* La devise gravee sur le pourtour du clapet, en deux arcs : petite, comme
+     une gravure, espacee comme sur une piece. Les arcs qui la portent ne se
+     dessinent pas. */
+  .boussole-arc {
     fill: none;
     stroke: none;
   }
@@ -953,6 +953,7 @@ html {
     fill: var(--cafe-gravure);
     font-size: 3.1px;
     font-weight: 600;
+    letter-spacing: 0.35px;
   }
 
   @media (prefers-reduced-motion: reduce) {

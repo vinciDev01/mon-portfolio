@@ -27,7 +27,7 @@ function LogoOutil({ competence }: { competence: Competence }) {
   if (trace) {
     // Couleur de marque, une par theme : la feuille melange les deux selon
     // `--t-page`, le logo bascule avec l'ampoule.
-    const { nuit, jour } = couleursLogo(competence.logoHex);
+    const { nuit, jour } = couleursLogo(competence.logoHex, competence.logoSlug);
     return (
       <svg
         className="etiquette-logo"

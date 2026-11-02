@@ -11,7 +11,9 @@ export type BrouillonSection = {
   titre: string;
   lignes: string;
   publique: boolean;
-  sortOrder: number;
+  /** Absent pour une section a creer : l'apercu la place en fin de CV. */
+  sortOrder?: number;
+  format?: string;
 };
 
 /**

@@ -83,7 +83,9 @@ export class CvGeneratorController {
         titre: dto.titre,
         lignes: dto.lignes,
         publique: dto.publique ?? true,
-        sortOrder: dto.sortOrder ?? 0,
+        // Une section pas encore creee prendra place en fin de CV.
+        sortOrder: dto.sortOrder ?? Number.MAX_SAFE_INTEGER,
+        format: dto.format,
       }),
       'application/pdf',
     );

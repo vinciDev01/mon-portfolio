@@ -2,6 +2,7 @@ import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
 import { Type } from 'class-transformer';
 import {
   IsBoolean,
+  IsIn,
   IsInt,
   IsOptional,
   IsString,
@@ -9,6 +10,7 @@ import {
   MaxLength,
   Min,
 } from 'class-validator';
+import { FORMATS_SECTION } from '../ordre-sections';
 
 /**
  * La section en cours de saisie, pour l'apercu. Memes bornes que
@@ -44,4 +46,9 @@ export class ApercuCvDto {
   @Min(0)
   @Max(999)
   sortOrder?: number;
+
+  @ApiPropertyOptional({ enum: FORMATS_SECTION, default: 'puces' })
+  @IsOptional()
+  @IsIn(FORMATS_SECTION)
+  format?: string;
 }

@@ -1,15 +1,16 @@
 "use client";
 
+import type { CvSectionDto } from "@portfolio/shared-types";
+
 /**
- * Formulaire partage par la creation et l'edition d'une section de CV.
- *
- * Le champ « rang » merite son explication : les sections issues de la base
- * occupent des rangs fixes, et c'est en s'intercalant entre eux que les
- * sections libres trouvent leur place dans le document.
+ * Formulaire partage par la creation et l'edition d'une section de CV. Sa
+ * place dans le document se regle par les fleches de la page « Sections du
+ * CV », pas ici.
  */
 
-/** Les sections produites depuis la base, avec la page du backoffice qui
- *  edite leurs donnees : c'est la qu'on les modifie, pas ici. */
+/** Les sections produites depuis la base, avec leur rang d'origine et la
+ *  page du backoffice qui edite leurs donnees : c'est la qu'on les modifie,
+ *  pas ici. */
 export const RANGS_DE_LA_BASE = [
   { cle: "presentation", rang: 10, titre: "PRÉSENTATION", page: "/presentations" },
   { cle: "experiences", rang: 20, titre: "EXPÉRIENCES PROFESSIONNELLES", page: "/experiences" },
@@ -27,8 +28,19 @@ export type ValeursSection = {
   lignes: string;
   lignesEn: string;
   publique: boolean;
-  sortOrder: number;
+  /** Absent a la creation : la section se place en fin de CV. */
+  sortOrder?: number;
+  format: FormatSection;
 };
+
+export type FormatSection = CvSectionDto["format"];
+
+/** Les trois presentations du corps, avec ce qu'elles donnent. */
+const FORMATS: { valeur: FormatSection; libelle: string; exemple: string }[] = [
+  { valeur: "puces", libelle: "Puces", exemple: "• Français (natif)\n• Anglais (courant)" },
+  { valeur: "virgules", libelle: "Virgules", exemple: "Français (natif), Anglais (courant)" },
+  { valeur: "lignes", libelle: "À la ligne", exemple: "Français (natif)\nAnglais (courant)" },
+];
 
 export function CvSectionForm({
   valeurs,
@@ -39,10 +51,6 @@ export function CvSectionForm({
 }) {
   const maj = (partiel: Partial<ValeursSection>) =>
     onChange({ ...valeurs, ...partiel });
-
-  const voisines = RANGS_DE_LA_BASE.filter((s) => s.rang < valeurs.sortOrder);
-  const precedente = voisines.length ? voisines[voisines.length - 1] : null;
-  const suivante = RANGS_DE_LA_BASE.find((s) => s.rang > valeurs.sortOrder);
 
   return (
     <>
@@ -104,30 +112,34 @@ export function CvSectionForm({
         <p className="text-xs text-muted-foreground mt-1">Pour le CV en anglais. Vide : le texte français est repris.</p>
       </div>
 
-      <div>
-        <label className="block text-sm font-medium mb-1">
-          Rang dans le CV : {valeurs.sortOrder}
-        </label>
-        <input
-          type="number"
-          value={valeurs.sortOrder}
-          onChange={(e) => maj({ sortOrder: Number(e.target.value) })}
-          min={0}
-          max={999}
-          className="w-full px-3 py-2 border border-border rounded-md text-sm"
-        />
+      <fieldset>
+        <legend className="block text-sm font-medium mb-2">Présentation dans le CV</legend>
+        <div className="grid gap-2 sm:grid-cols-3">
+          {FORMATS.map((f) => (
+            <label
+              key={f.valeur}
+              className={`flex flex-col gap-2 rounded-md border p-3 text-sm cursor-pointer ${
+                valeurs.format === f.valeur ? "border-primary ring-1 ring-primary" : "border-border"
+              }`}
+            >
+              <span className="flex items-center gap-2 font-medium">
+                <input
+                  type="radio"
+                  name="format-section"
+                  value={f.valeur}
+                  checked={valeurs.format === f.valeur}
+                  onChange={() => maj({ format: f.valeur })}
+                />
+                {f.libelle}
+              </span>
+              <span className="whitespace-pre-line text-xs text-muted-foreground">{f.exemple}</span>
+            </label>
+          ))}
+        </div>
         <p className="text-xs text-muted-foreground mt-1">
-          {precedente || suivante ? (
-            <>
-              Cette section apparaîtra{" "}
-              {precedente ? <>après <strong>{precedente.titre}</strong></> : <>en tête</>}
-              {suivante ? <> et avant <strong>{suivante.titre}</strong></> : <> et en dernier</>}.
-            </>
-          ) : (
-            <>Aucune section de la base n&apos;est actuellement définie.</>
-          )}
+          Sa place dans le CV se règle avec les flèches de la page « Sections du CV ».
         </p>
-      </div>
+      </fieldset>
 
       <label className="flex items-start gap-3 text-sm">
         <input

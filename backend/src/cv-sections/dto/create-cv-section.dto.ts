@@ -2,6 +2,7 @@ import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
 import { Type } from 'class-transformer';
 import {
   IsBoolean,
+  IsIn,
   IsInt,
   IsNotEmpty,
   IsOptional,
@@ -10,6 +11,7 @@ import {
   MaxLength,
   Min,
 } from 'class-validator';
+import { FORMATS_SECTION } from '../../cv-generator/ordre-sections';
 
 export class CreateCvSectionDto {
   @ApiProperty({ example: 'FORMATIONS' })
@@ -37,9 +39,8 @@ export class CreateCvSectionDto {
   @ApiPropertyOptional({
     default: 0,
     description:
-      'Rang dans le CV. La base occupe 10 (presentation), 30 (technologies), ' +
-      '40 (certifications), 50 (experiences) et 60 (projets) : une valeur de ' +
-      '20 intercale donc la section entre la presentation et les technologies.',
+      'Rang dans le CV, parmi les sections de la base. Absent a la ' +
+      'creation : la section se place en fin de CV.',
   })
   @IsOptional()
   @Type(() => Number)
@@ -48,15 +49,32 @@ export class CreateCvSectionDto {
   @Max(999)
   sortOrder?: number;
 
-  @ApiPropertyOptional({ description: 'Version anglaise, pour le CV en anglais ; vide : le francais', nullable: true })
+  @ApiPropertyOptional({
+    description: 'Version anglaise, pour le CV en anglais ; vide : le francais',
+    nullable: true,
+  })
   @IsOptional()
   @IsString()
   @MaxLength(120)
   titreEn?: string | null;
 
-  @ApiPropertyOptional({ description: 'Version anglaise, pour le CV en anglais ; vide : le francais', nullable: true })
+  @ApiPropertyOptional({
+    description: 'Version anglaise, pour le CV en anglais ; vide : le francais',
+    nullable: true,
+  })
   @IsOptional()
   @IsString()
   @MaxLength(6000)
   lignesEn?: string | null;
+
+  @ApiPropertyOptional({
+    enum: FORMATS_SECTION,
+    default: 'puces',
+    description:
+      'Presentation du corps : une puce par entree, les entrees separees ' +
+      'par des virgules, ou une entree par ligne sans puce.',
+  })
+  @IsOptional()
+  @IsIn(FORMATS_SECTION)
+  format?: string;
 }

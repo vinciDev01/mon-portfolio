@@ -15,7 +15,7 @@ export default function NouvelleSectionCvPage() {
     lignes: "",
     lignesEn: "",
     publique: true,
-    sortOrder: 20,
+    format: "puces",
   });
   const [saving, setSaving] = useState(false);
 

@@ -23,6 +23,7 @@ import {
 import {
   avecBrouillon,
   ordonnerSections,
+  rangsBase,
   sansMasquees,
   type CleSectionBase,
   type SectionBase,
@@ -49,22 +50,6 @@ import {
   titrePoste,
   type LigneContact,
 } from './en-tete';
-
-/**
- * Rangs implicites des sections alimentees par la base, dans l'ordre ou un
- * recruteur lit un CV : qui (presentation), ce qu'il a fait (experiences),
- * ce qu'il sait faire (competences, technologies), ce qu'il a construit
- * (projets), puis ce qui le confirme (certifications, cours rediges).
- */
-const RANG = {
-  presentation: 10,
-  experiences: 20,
-  competences: 25,
-  technologies: 30,
-  projets: 40,
-  certifications: 50,
-  cours: 55,
-} as const;
 
 /** Mise en page, en points PostScript. 56 pt valent environ 2 cm. */
 const MARGE = 56;
@@ -221,6 +206,9 @@ export class CvGeneratorService {
         include: { technology: true },
       }),
     ]);
+
+    // Le rang de chaque section de la base : regle au backoffice, ou d'origine.
+    const RANG = rangsBase(reglages?.cvRangsBase);
 
     const garderProjets = <P extends { id: string }>(liste: P[]) =>
       projetsRetenus ? liste.filter((p) => projetsRetenus.has(p.id)) : liste;

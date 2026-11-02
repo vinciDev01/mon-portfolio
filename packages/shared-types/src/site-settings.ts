@@ -57,6 +57,9 @@ export interface SiteSettingsDto {
   /** Les sections de la base retirees du CV (presentation, technologies,
    *  certifications, experiences, projets). Vide : toutes incluses. */
   cvBaseMasquees: string[];
+  /** Le rang de chaque section de la base dans le CV, regle par les fleches
+   *  de la page « Sections du CV ». Une cle absente : le rang d'origine. */
+  cvRangsBase: Record<string, number>;
   /** Affiche la section Cours. */
   showCours: boolean;
   accentHue: number;

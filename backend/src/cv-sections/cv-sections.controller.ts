@@ -6,10 +6,12 @@ import {
   Param,
   Patch,
   Post,
+  Put,
 } from '@nestjs/common';
 import { ApiOperation, ApiTags } from '@nestjs/swagger';
 import { CreateCvSectionDto } from './dto/create-cv-section.dto';
 import { UpdateCvSectionDto } from './dto/update-cv-section.dto';
+import { OrdreSectionsDto } from './dto/ordre-sections.dto';
 import { CvSectionsService } from './cv-sections.service';
 
 @ApiTags('cv-sections')
@@ -33,6 +35,13 @@ export class CvSectionsController {
   @ApiOperation({ summary: 'Create a CV section' })
   create(@Body() dto: CreateCvSectionDto) {
     return this.cvSectionsService.create(dto);
+  }
+
+  /** Les fleches de la page « Sections du CV » : l'ordre complet, d'un coup. */
+  @Put('ordre')
+  @ApiOperation({ summary: 'Reorder every CV section, database ones included' })
+  reordonner(@Body() dto: OrdreSectionsDto) {
+    return this.cvSectionsService.reordonner(dto.ordre);
   }
 
   @Patch(':id')

@@ -24,6 +24,7 @@ export default function EditerSectionCvPage() {
           lignesEn: s.lignesEn ?? "",
           publique: s.publique,
           sortOrder: s.sortOrder,
+          format: s.format ?? "puces",
         }),
       )
       .catch(() => toast.error("Erreur de chargement"));

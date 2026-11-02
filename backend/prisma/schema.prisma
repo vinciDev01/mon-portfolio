@@ -94,6 +94,10 @@ model SiteSettings {
   /// Les sections de la base retirees du CV (presentation, technologies,
   /// certifications, experiences, projets). Vide : toutes sont incluses.
   cvBaseMasquees    String[]  @default([]) @map("cv_base_masquees")
+  /// Le rang de chaque section de la base dans le CV ({ projets: 20, ... }),
+  /// regle par les fleches de la page « Sections du CV ». Une cle absente
+  /// garde son rang par defaut.
+  cvRangsBase       Json      @default("{}") @map("cv_rangs_base")
 
   // Accent
   accentHue        Int @default(107) @map("accent_hue")
@@ -429,6 +433,9 @@ model CvSection {
   lignes    String
   /// Version anglaise, pour le CV en anglais. Vide : le francais est repris.
   lignesEn  String?  @map("lignes_en")
+  /// La presentation du corps : « puces », « virgules » (les entrees sur une
+  /// seule ligne) ou « lignes » (une entree par ligne, sans puce).
+  format    String   @default("puces")
   /**
    * Fausse pour tout ce qui ne doit pas partir dans le CV telechargeable.
    */

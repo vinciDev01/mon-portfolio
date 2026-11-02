@@ -1,6 +1,9 @@
 import {
   avecBrouillon,
   ordonnerSections,
+  rangsBase,
+  rangsDepuisOrdre,
+  RANGS_BASE_DEFAUT,
   sansMasquees,
 } from './ordre-sections';
 
@@ -199,5 +202,88 @@ describe('les sections de la base masquees', () => {
 
   it('ignore une cle inconnue', () => {
     expect(sansMasquees(avecCles, ['inconnue'])).toHaveLength(2);
+  });
+});
+
+describe('format des sections libres', () => {
+  const corps = 'Francais (natif)\n\nAnglais (courant)\n';
+
+  it('met une puce par entree par defaut', () => {
+    const [s] = ordonnerSections([], [libre({ lignes: corps })]);
+    expect(s.lignes).toEqual(['Francais (natif)', 'Anglais (courant)']);
+    expect(s.sansPuce).toBeUndefined();
+  });
+
+  it('reunit les entrees sur une ligne, separees par des virgules', () => {
+    const [s] = ordonnerSections(
+      [],
+      [libre({ lignes: corps, format: 'virgules' })],
+    );
+    expect(s.lignes).toEqual(['Francais (natif), Anglais (courant)']);
+    expect(s.sansPuce).toBe(true);
+  });
+
+  it('garde une entree par ligne, sans puce', () => {
+    const [s] = ordonnerSections(
+      [],
+      [libre({ lignes: corps, format: 'lignes' })],
+    );
+    expect(s.lignes).toHaveLength(2);
+    expect(s.sansPuce).toBe(true);
+  });
+
+  it('omet une section en virgules sans entree', () => {
+    expect(
+      ordonnerSections([], [libre({ lignes: ' \n', format: 'virgules' })]),
+    ).toEqual([]);
+  });
+});
+
+describe('rangsBase', () => {
+  it('reprend les rangs d origine sans reglage', () => {
+    expect(rangsBase({})).toEqual(RANGS_BASE_DEFAUT);
+    expect(rangsBase(null)).toEqual(RANGS_BASE_DEFAUT);
+  });
+
+  it('applique les rangs enregistres et ignore le reste', () => {
+    const r = rangsBase({
+      projets: 15,
+      loisirs: 1,
+      cours: -3,
+      experiences: 'x',
+    });
+    expect(r.projets).toBe(15);
+    expect(r.cours).toBe(RANGS_BASE_DEFAUT.cours);
+    expect(r.experiences).toBe(RANGS_BASE_DEFAUT.experiences);
+    expect(r).not.toHaveProperty('loisirs');
+  });
+});
+
+describe('rangsDepuisOrdre', () => {
+  it('numerote de 10 en 10 et separe la base des sections libres', () => {
+    expect(rangsDepuisOrdre(['projets', 'abc-1', 'presentation'])).toEqual({
+      base: { projets: 10, presentation: 30 },
+      libres: [{ id: 'abc-1', sortOrder: 20 }],
+    });
+  });
+
+  it('donne un ordre que ordonnerSections reproduit', () => {
+    const { base: rangs, libres } = rangsDepuisOrdre([
+      'technologies',
+      'abc-1',
+      'presentation',
+    ]);
+    const r = ordonnerSections(
+      [
+        { ...base[0], rang: rangs.presentation! },
+        { ...base[1], rang: rangs.technologies! },
+      ],
+      [libre({ sortOrder: libres[0].sortOrder })],
+    );
+    expect(r.map((s) => s.titre)).toEqual([
+      'TECHNOLOGIES',
+      'FORMATIONS',
+      'PRESENTATION',
+    ]);
   });
 });

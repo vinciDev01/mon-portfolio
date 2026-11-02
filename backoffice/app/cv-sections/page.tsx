@@ -3,7 +3,7 @@
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
-import { fetchEntities, deleteEntity, fetchSingleton, updateEntity, updateSingleton } from "@/lib/api";
+import { appelerApi, fetchEntities, deleteEntity, fetchSingleton, updateEntity, updateSingleton } from "@/lib/api";
 import { PageHeader } from "@/components/page-header";
 import { ConfirmDialog } from "@/components/confirm-dialog";
 import { RANGS_DE_LA_BASE } from "@/components/cv-section-form";
@@ -26,6 +26,11 @@ export default function SectionsCvPage() {
   const [versionApercu, setVersionApercu] = useState(0);
   // Les sections de la base retirees du CV, lues dans les reglages du site.
   const [masquees, setMasquees] = useState<string[]>([]);
+  // Les rangs des sections de la base regles par les fleches ; une cle
+  // absente garde son rang d'origine.
+  const [rangsBase, setRangsBase] = useState<Record<string, number>>({});
+  // Vrai pendant l'enregistrement d'un deplacement : les fleches attendent.
+  const [deplacement, setDeplacement] = useState(false);
   // La ligne dont l'inclusion est en cours d'enregistrement.
   const [bascule, setBascule] = useState<string | null>(null);
   // Les versions du CV, et celle que la page regarde ; null : le CV general.
@@ -37,7 +42,10 @@ export default function SectionsCvPage() {
 
   useEffect(() => {
     fetchSingleton<SiteSettingsDto>("site-settings")
-      .then((r) => setMasquees(r.cvBaseMasquees ?? []))
+      .then((r) => {
+        setMasquees(r.cvBaseMasquees ?? []);
+        setRangsBase(r.cvRangsBase ?? {});
+      })
       .catch(() => toast.error("Erreur de chargement des sections incluses"));
     fetchEntities<CvVersionDto>("cv-versions")
       .then((liste) => {
@@ -110,12 +118,12 @@ export default function SectionsCvPage() {
     setDeleteId(null);
   }
 
-  // On affiche l'ordre FUSIONNE : c'est le seul moyen de comprendre ou une
-  // section libre viendra se placer dans le document final.
+  // On affiche l'ordre FUSIONNE, celui du document final. A rang egal, la
+  // base passe en premier, comme dans le generateur (tri stable).
   const lignes: Ligne[] = [
     ...RANGS_DE_LA_BASE.map((s) => ({
       genre: "base" as const,
-      rang: s.rang,
+      rang: rangsBase[s.cle] ?? s.rang,
       titre: s.titre,
       page: s.page,
       cle: s.cle,
@@ -126,6 +134,39 @@ export default function SectionsCvPage() {
       section: s,
     })),
   ].sort((a, b) => a.rang - b.rang);
+
+  const cleDe = (l: Ligne) => (l.genre === "base" ? l.cle : l.section.id);
+
+  /** Echange une ligne avec sa voisine et enregistre l'ordre complet : l'API
+   *  renumerote tout de 10 en 10, la page en fait autant. */
+  async function deplacer(index: number, sens: -1 | 1) {
+    const voisine = index + sens;
+    if (voisine < 0 || voisine >= lignes.length) return;
+    const ordre = lignes.map(cleDe);
+    [ordre[index], ordre[voisine]] = [ordre[voisine], ordre[index]];
+    setDeplacement(true);
+    try {
+      const res = await appelerApi("/api/cv-sections/ordre", {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ ordre }),
+      });
+      if (!res.ok) throw new Error();
+      setSections((await res.json()) as CvSectionDto[]);
+      setRangsBase((prev) => {
+        const suivants = { ...prev };
+        ordre.forEach((cle, i) => {
+          if (RANGS_DE_LA_BASE.some((s) => s.cle === cle)) suivants[cle] = (i + 1) * 10;
+        });
+        return suivants;
+      });
+      setVersionApercu((v) => v + 1);
+    } catch {
+      toast.error("Erreur d'enregistrement de l'ordre");
+    } finally {
+      setDeplacement(false);
+    }
+  }
 
   if (loading) return <p>Chargement…</p>;
 
@@ -181,16 +222,18 @@ export default function SectionsCvPage() {
 
       <p className="text-sm text-muted-foreground mb-6 max-w-2xl">
         Le CV téléchargeable est composé de deux sortes de sections. Celles
-        issues de la base sont produites automatiquement et occupent un rang
-        fixe ; celles que vous saisissez ici s&apos;intercalent entre elles.
-        L&apos;ordre ci-dessous est celui du document final. Décochez
-        « Inclus » pour retirer une section du CV sans la supprimer.
+        issues de la base sont produites automatiquement
+        depuis leurs pages ; celles que vous saisissez vous-même s&apos;y
+        mêlent librement.
+        L&apos;ordre ci-dessous est celui du document final : les flèches
+        le changent. Décochez « Inclus » pour retirer une section du CV sans
+        la supprimer.
       </p>
 
       <table className="w-full text-sm [&_th]:pr-4 [&_td]:pr-4">
         <thead>
           <tr className="border-b border-border text-left">
-            <th className="py-2 w-16">Rang</th>
+            <th className="py-2 w-20"><span className="sr-only">Ordre</span></th>
             <th className="py-2">Section</th>
             <th className="py-2">Origine</th>
             <th className="py-2">Inclus</th>
@@ -198,12 +241,37 @@ export default function SectionsCvPage() {
           </tr>
         </thead>
         <tbody>
-          {lignes.map((l) => (
+          {lignes.map((l, i) => {
+            const nom = l.genre === "base" ? l.titre : l.section.titre;
+            return (
             <tr
-              key={l.genre === "base" ? `base-${l.rang}` : l.section.id}
+              key={cleDe(l)}
               className="border-b border-border/50"
             >
-              <td className="py-3 tabular-nums text-muted-foreground">{l.rang}</td>
+              <td className="py-3">
+                <div className="flex gap-1">
+                  <button
+                    type="button"
+                    onClick={() => deplacer(i, -1)}
+                    disabled={deplacement || i === 0}
+                    aria-label={`Monter « ${nom} »`}
+                    title="Monter"
+                    className="h-7 w-7 rounded border border-border text-muted-foreground hover:bg-muted hover:text-foreground disabled:opacity-30 disabled:hover:bg-transparent"
+                  >
+                    ↑
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => deplacer(i, 1)}
+                    disabled={deplacement || i === lignes.length - 1}
+                    aria-label={`Descendre « ${nom} »`}
+                    title="Descendre"
+                    className="h-7 w-7 rounded border border-border text-muted-foreground hover:bg-muted hover:text-foreground disabled:opacity-30 disabled:hover:bg-transparent"
+                  >
+                    ↓
+                  </button>
+                </div>
+              </td>
               <td className="py-3 font-medium">
                 {l.genre === "base" ? l.titre : l.section.titre.toUpperCase()}
               </td>
@@ -254,7 +322,8 @@ export default function SectionsCvPage() {
                 )}
               </td>
             </tr>
-          ))}
+            );
+          })}
         </tbody>
       </table>
       </div>

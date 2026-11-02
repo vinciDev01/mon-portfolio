@@ -30,6 +30,14 @@ export type SectionBase = {
   sansPuce?: boolean;
 };
 
+/**
+ * La presentation du corps d'une section libre : une puce par entree, les
+ * entrees reunies sur une ligne et separees par des virgules, ou une entree
+ * par ligne sans puce.
+ */
+export const FORMATS_SECTION = ['puces', 'virgules', 'lignes'] as const;
+export type FormatSection = (typeof FORMATS_SECTION)[number];
+
 /** Section libre saisie depuis le backoffice. */
 export type SectionLibre = {
   titre: string;
@@ -37,6 +45,8 @@ export type SectionLibre = {
   lignes: string;
   publique: boolean;
   sortOrder: number;
+  /** Absent ou inconnu : des puces. */
+  format?: string | null;
 };
 
 /** Decoupe un bloc de texte en entrees, en jetant les lignes blanches. */
@@ -81,11 +91,22 @@ export function ordonnerSections(
 
   const depuisLibres: SectionCv[] = libres
     .filter((s) => s.publique)
-    .map((s) => ({
-      titre: s.titre,
-      lignes: decouper(s.lignes),
-      rang: s.sortOrder,
-    }))
+    .map((s): SectionCv => {
+      const entrees = decouper(s.lignes);
+      if (s.format === 'virgules')
+        return {
+          titre: s.titre,
+          lignes: entrees.length ? [entrees.join(', ')] : [],
+          rang: s.sortOrder,
+          sansPuce: true,
+        };
+      return {
+        titre: s.titre,
+        lignes: entrees,
+        rang: s.sortOrder,
+        ...(s.format === 'lignes' ? { sansPuce: true } : {}),
+      };
+    })
     .filter((s) => s.lignes.length > 0);
 
   return [...depuisBase, ...depuisLibres].sort((a, b) => a.rang - b.rang);
@@ -126,6 +147,63 @@ export const CLES_SECTIONS_BASE = [
   'cours',
 ] as const;
 export type CleSectionBase = (typeof CLES_SECTIONS_BASE)[number];
+
+/**
+ * Rangs par defaut des sections de la base, dans l'ordre ou un recruteur lit
+ * un CV : qui (presentation), ce qu'il a fait (experiences), ce qu'il sait
+ * faire (competences, technologies), ce qu'il a construit (projets), puis ce
+ * qui le confirme (certifications, cours rediges).
+ */
+export const RANGS_BASE_DEFAUT: Record<CleSectionBase, number> = {
+  presentation: 10,
+  experiences: 20,
+  competences: 25,
+  technologies: 30,
+  projets: 40,
+  certifications: 50,
+  cours: 55,
+};
+
+/**
+ * Les rangs des sections de la base : ceux enregistres au backoffice, et a
+ * defaut ceux d'origine. Le reglage vient d'une colonne JSON : une cle
+ * inconnue ou un rang qui n'est pas un entier positif est ignore.
+ */
+export function rangsBase(stockes: unknown): Record<CleSectionBase, number> {
+  const rangs = { ...RANGS_BASE_DEFAUT };
+  if (stockes && typeof stockes === 'object' && !Array.isArray(stockes)) {
+    for (const [cle, rang] of Object.entries(stockes)) {
+      if (
+        (CLES_SECTIONS_BASE as readonly string[]).includes(cle) &&
+        Number.isInteger(rang) &&
+        (rang as number) >= 0
+      )
+        rangs[cle as CleSectionBase] = rang as number;
+    }
+  }
+  return rangs;
+}
+
+/**
+ * Un ordre complet, tel que la page « Sections du CV » l'envoie (cles des
+ * sections de la base et identifiants des sections libres, de la premiere a
+ * la derniere), traduit en rangs espaces de 10 : 10, 20, 30... Les rangs
+ * etant tous distincts, l'ordre ne depend plus d'aucun departage.
+ */
+export function rangsDepuisOrdre(ordre: readonly string[]): {
+  base: Partial<Record<CleSectionBase, number>>;
+  libres: { id: string; sortOrder: number }[];
+} {
+  const base: Partial<Record<CleSectionBase, number>> = {};
+  const libres: { id: string; sortOrder: number }[] = [];
+  ordre.forEach((cle, i) => {
+    const rang = (i + 1) * 10;
+    if ((CLES_SECTIONS_BASE as readonly string[]).includes(cle))
+      base[cle as CleSectionBase] = rang;
+    else libres.push({ id: cle, sortOrder: rang });
+  });
+  return { base, libres };
+}
 
 /**
  * Les sections de la base, sans celles que le backoffice a retirees du CV.

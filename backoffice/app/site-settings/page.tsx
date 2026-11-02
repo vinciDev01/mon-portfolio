@@ -19,6 +19,7 @@ const GERES_AILLEURS = [
   "cvJobTitle",
   "cvJobTitleEn",
   "cvBaseMasquees",
+  "cvRangsBase",
   "cvFaitA",
   "cvLieu",
   "cvDateFaitA",

@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, type CSSProperties } from "react";
+import { useEffect, useRef, useState, type CSSProperties } from "react";
 import Image from "next/image";
 import type { SkillDto } from "@portfolio/shared-types";
 import { getFileUrl } from "@/lib/api";
@@ -64,8 +64,37 @@ function Etiquette({ competence, graine }: { competence: Competence; graine: str
   );
 }
 
+/**
+ * Vrai quand la liste tient dans sa fenetre : rien ne deborde, la bande
+ * n'aurait rien a reveler et ne ferait que bouger pour rien. Mesure a chaque
+ * changement de taille de la fenetre ou de la liste (polices chargees,
+ * ecran tourne). La liste reste sur une ligne dans les deux etats : sa
+ * largeur dit donc toujours si elle deborderait.
+ */
+function useTientDansLaFenetre() {
+  const fenetre = useRef<HTMLElement>(null);
+  const liste = useRef<HTMLUListElement>(null);
+  const [tient, setTient] = useState(false);
+
+  useEffect(() => {
+    const f = fenetre.current;
+    const l = liste.current;
+    if (!f || !l) return;
+    const mesurer = () => setTient(l.scrollWidth <= f.clientWidth);
+    mesurer();
+    if (typeof ResizeObserver === "undefined") return;
+    const obs = new ResizeObserver(mesurer);
+    obs.observe(f);
+    obs.observe(l);
+    return () => obs.disconnect();
+  }, []);
+
+  return { fenetre, liste, tient };
+}
+
 function Rangee({ tiroir, rang }: { tiroir: Tiroir; rang: number }) {
   const { t } = useTranslation();
+  const { fenetre, liste, tient } = useTientDansLaFenetre();
   // Une copie doit couvrir toute la fenetre de la bande, sans quoi la boucle
   // laisserait un trou : 12 etiquettes au moins.
   const bande = remplirBande(tiroir.competences, 12);
@@ -74,14 +103,15 @@ function Rangee({ tiroir, rang }: { tiroir: Tiroir; rang: number }) {
     <div
       className="rangee-outils"
       data-sens={rang % 2 ? "inverse" : undefined}
+      data-statique={tient ? "true" : undefined}
       style={{ "--duree": `${bande.length * SECONDES_PAR_ETIQUETTE}s` } as CSSProperties}
     >
       <dt className="tiroir-nom">{nom}</dt>
-      <dd className="defilement-outils">
+      <dd className="defilement-outils" ref={fenetre}>
         {/* La liste lue : chaque technologie une fois, fixe. Masquee a l'oeil
-            tant que la bande defile, elle la remplace pour qui demande moins
-            de mouvement. */}
-        <ul className="liste-outils-fixe">
+            tant que la bande defile, elle la remplace quand elle tient dans
+            la fenetre, et pour qui demande moins de mouvement. */}
+        <ul className="liste-outils-fixe" ref={liste}>
           {tiroir.competences.map((c) => (
             <Etiquette key={c.id} competence={c} graine={c.id} />
           ))}
@@ -108,8 +138,9 @@ function Rangee({ tiroir, rang }: { tiroir: Tiroir; rang: number }) {
  * imparfait qui defilent sans fin, lentement, une rangee sur deux dans
  * l'autre sens. Chacune porte son niveau en trois pierres.
  *
- * Le defilement s'arrete au survol d'une rangee, et pour toute la section par
- * le bouton pause (WCAG 2.2.2). Pour qui demande moins de mouvement, il n'y a
+ * Une rangee qui tient dans sa fenetre ne defile pas : ses etiquettes sont
+ * posees, fixes. Le defilement s'arrete au survol d'une rangee, et pour toute
+ * la section par le bouton pause (WCAG 2.2.2). Pour qui demande moins de mouvement, il n'y a
  * pas de defilement du tout : les etiquettes sont posees, fixes.
  */
 export function SkillsSection({ skills }: SkillsSectionProps) {

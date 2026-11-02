@@ -2755,6 +2755,30 @@ html {
     white-space: nowrap;
   }
 
+  /* Une rangee qui tient dans sa fenetre : pas de bande, la liste posee,
+     sans estompe aux bouts puisque rien n'en sort. Elle reste sur une
+     ligne : c'est sa largeur qui dit si elle deborderait. */
+  .rangee-outils[data-statique] .defilement-outils {
+    mask-image: none;
+  }
+
+  .rangee-outils[data-statique] .bande-outils {
+    display: none;
+  }
+
+  .rangee-outils[data-statique] .liste-outils-fixe {
+    position: static;
+    width: max-content;
+    height: auto;
+    overflow: visible;
+    clip-path: none;
+  }
+
+  /* Aucune rangee ne defile : le bouton pause n'a plus d'objet. */
+  .boite-outils:not(:has(.rangee-outils:not([data-statique]))) .pause-outils {
+    display: none;
+  }
+
   /* Une etiquette de papier : fond surface, bord imparfait, un rien de
      travers une sur trois, comme posees a la main. */
   .etiquette-outil {

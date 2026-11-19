@@ -34,9 +34,9 @@ const APRES_PARAGRAPHE = 9;
 /** Blanc laisse au-dessus du nom pour signer a la main. */
 const ESPACE_SIGNATURE = 36;
 const ENCRE = '#000000';
-/** Le bloc du destinataire commence a mi-page, comme dans une lettre
- *  classique a la francaise. */
-const DEBUT_DESTINATAIRE = 0.55;
+/** Le bloc de droite (destinataire, lieu et date, signature) prend au plus
+ *  cette part de la largeur utile ; une ligne plus longue passe a la ligne. */
+const BLOC_DROIT_MAX = 0.5;
 /** La page A4, en points. */
 const A4 = { largeur: 595.28, hauteur: 841.89 };
 
@@ -86,6 +86,25 @@ function tailles(mise: MiseEnPage) {
     apresParagraphe: APRES_PARAGRAPHE * k,
     signature: ESPACE_SIGNATURE * k,
   };
+}
+
+/**
+ * La largeur du bloc de droite : celle de sa plus longue ligne, pour que
+ * cette ligne finisse sur la marge de droite, les autres alignees a gauche
+ * sur elle. Mesuree dans la police et la taille du corps, et bornee a la
+ * moitie de la page.
+ */
+function largeurBlocDroit(
+  doc: PDFKit.PDFDocument,
+  l: Lettre,
+  corps: number,
+  largeur: number,
+): number {
+  doc.font(l.polices.normal).fontSize(corps);
+  const lignes = [...l.destinataire, l.lieuDate, l.nomComplet];
+  // Un point de jeu : PDFKit coupe une ligne qui tient tout juste.
+  const plusLongue = Math.max(...lignes.map((x) => doc.widthOfString(x))) + 1;
+  return Math.min(plusLongue, largeur * BLOC_DROIT_MAX);
 }
 
 /** Un PDF de la lettre, avec le nombre de pages, pour signaler a l'apercu
@@ -153,8 +172,8 @@ export class LettreService {
   private dessiner(doc: PDFKit.PDFDocument, l: Lettre, mise: MiseEnPage) {
     const t = tailles(mise);
     const largeur = doc.page.width - 2 * mise.marge;
-    const xDestinataire = mise.marge + largeur * DEBUT_DESTINATAIRE;
-    const largeurDestinataire = largeur * (1 - DEBUT_DESTINATAIRE);
+    const largeurDestinataire = largeurBlocDroit(doc, l, t.corps, largeur);
+    const xDestinataire = mise.marge + largeur - largeurDestinataire;
     doc.fillColor(ENCRE);
 
     // L'en-tete, en haut a gauche : la premiere ligne (le nom) en gras.
@@ -286,15 +305,20 @@ export class LettreService {
     const ligneCorps =
       mesure.font(l.polices.normal).fontSize(t.corps).currentLineHeight(true) +
       t.interligne;
+    // Le retrait du bloc de droite, en vingtiemes de point : la largeur
+    // utile moins celle du bloc, mesuree comme dans le PDF (les polices Word
+    // ont les memes chasses).
+    const largeurUtile = A4.largeur - 2 * mise.marge;
+    const retrait = Math.round(
+      // Trois points de jeu : Word ne doit pas couper la plus longue ligne.
+      (largeurUtile - largeurBlocDroit(mesure, l, t.corps, largeurUtile) - 3) *
+        20,
+    );
     mesure.end();
     const exact = (pt: number) => ({
       line: Math.round(pt * 20),
       lineRule: LineRuleType.EXACT,
     });
-    // Le retrait du destinataire, en vingtiemes de point.
-    const retrait = Math.round(
-      (A4.largeur - 2 * mise.marge) * DEBUT_DESTINATAIRE * 20,
-    );
     const texte = (s: string, gras = false, taille = t.corps) =>
       s.split('\n').map(
         (morceau, i) =>

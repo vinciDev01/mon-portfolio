@@ -1,5 +1,7 @@
 import {
   avecBrouillon,
+  libresSansMasquees,
+  MOTIF_SECTION_MASQUABLE,
   ordonnerSections,
   rangsBase,
   rangsDepuisOrdre,
@@ -285,5 +287,25 @@ describe('rangsDepuisOrdre', () => {
       'FORMATIONS',
       'PRESENTATION',
     ]);
+  });
+});
+
+describe('sections libres masquees par version', () => {
+  const id = '7d22ab1d-bd25-44b3-9224-6efc361719bc';
+
+  it('accepte les cles de la base et les identifiants, rien d autre', () => {
+    expect(MOTIF_SECTION_MASQUABLE.test('projets')).toBe(true);
+    expect(MOTIF_SECTION_MASQUABLE.test(id)).toBe(true);
+    expect(MOTIF_SECTION_MASQUABLE.test('loisirs')).toBe(false);
+    expect(MOTIF_SECTION_MASQUABLE.test(`${id}x`)).toBe(false);
+  });
+
+  it('retire une section libre par son identifiant, garde un brouillon neuf', () => {
+    const sections: { id?: string; titre: string }[] = [
+      { ...libre({ titre: 'OUTILS' }), id },
+      libre({ titre: 'NEUVE' }),
+    ];
+    const r = libresSansMasquees(sections, [id, 'projets']);
+    expect(r.map((s) => s.titre)).toEqual(['NEUVE']);
   });
 });

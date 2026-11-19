@@ -1,11 +1,12 @@
 import { ApiPropertyOptional } from '@nestjs/swagger';
 import { Type } from 'class-transformer';
-import { CLES_SECTIONS_BASE } from '../../cv-generator/ordre-sections';
+import { MOTIF_SECTION_MASQUABLE } from '../../cv-generator/ordre-sections';
 import {
   IsArray,
   IsBoolean,
   IsDateString,
   IsIn,
+  Matches,
   IsInt,
   IsNumber,
   IsOptional,
@@ -304,12 +305,23 @@ export class UpdateSiteSettingsDto {
 
   @ApiPropertyOptional({
     example: ['technologies'],
-    description: 'Sections de la base retirees du CV ; vide : toutes incluses',
+    description:
+      'Sections retirees du CV general (cles de la base, identifiants des sections libres) ; vide : toutes incluses',
   })
   @IsOptional()
   @IsArray()
-  @IsIn(CLES_SECTIONS_BASE, { each: true })
+  @Matches(MOTIF_SECTION_MASQUABLE, { each: true })
   cvBaseMasquees?: string[];
+
+  @ApiPropertyOptional({
+    description:
+      'En-tete commun des lettres de motivation, une ligne par information ; nul : deduit des informations personnelles',
+    nullable: true,
+  })
+  @IsOptional()
+  @IsString()
+  @MaxLength(600)
+  lettreEnTete?: string | null;
 
   // --- Accent ---
 

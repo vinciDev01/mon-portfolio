@@ -98,6 +98,10 @@ model SiteSettings {
   /// regle par les fleches de la page « Sections du CV ». Une cle absente
   /// garde son rang par defaut.
   cvRangsBase       Json      @default("{}") @map("cv_rangs_base")
+  /// L'en-tete des lettres de motivation, commun a toutes : une ligne par
+  /// information (nom, ville, telephone...). Nul : celui deduit des
+  /// informations personnelles.
+  lettreEnTete      String?   @map("lettre_en_tete") @db.Text
 
   // Accent
   accentHue        Int @default(107) @map("accent_hue")
@@ -497,6 +501,18 @@ model CvVersion {
   technologieIds   String[] @default([]) @map("technologie_ids")
   /// Les competences libres retenues (management...).
   competenceIds    String[] @default([]) @map("competence_ids")
+  /// La lettre de motivation de cette version ; sans corps, pas de lettre.
+  /// Le destinataire : une ligne par information.
+  lettreDestinataire String?   @map("lettre_destinataire") @db.Text
+  /// La ville d'ou la lettre est ecrite.
+  lettreLieu         String?   @map("lettre_lieu")
+  /// Nulle : la date du jour de la generation.
+  lettreDate         DateTime? @map("lettre_date") @db.Date
+  lettreObjet        String?   @map("lettre_objet")
+  /// Le corps, de l'appel a la formule de politesse, en sections dans
+  /// l'ordre : `[{ titre, corps }]`, le titre facultatif ; dans un corps,
+  /// une ligne vide separe deux paragraphes. Sans texte, pas de lettre.
+  lettreSections     Json      @default("[]") @map("lettre_sections")
   sortOrder        Int      @default(0) @map("sort_order")
   createdAt        DateTime @default(now()) @map("created_at")
   updatedAt        DateTime @updatedAt @map("updated_at")

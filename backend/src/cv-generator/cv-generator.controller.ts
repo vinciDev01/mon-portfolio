@@ -12,8 +12,11 @@ import type { Response } from 'express';
 import { PrismaService } from '../prisma/prisma.service';
 import { Public } from '../auth/auth.guard';
 import { CvGeneratorService } from './cv-generator.service';
+import { LettreService, type PdfLettre } from './lettre.service';
+import { enTeteParDefaut } from './lettre';
 import type { DocumentCv } from './cv-generator.service';
 import { ApercuCvDto } from './dto/apercu-cv.dto';
+import { ApercuLettreDto } from './dto/apercu-lettre.dto';
 import { langueCv } from './langue-cv';
 
 /** La langue du CV, en parametre de requete : `fr` par defaut, ou `en`. */
@@ -37,8 +40,68 @@ const TYPE_DOCX =
 export class CvGeneratorController {
   constructor(
     private readonly cvGeneratorService: CvGeneratorService,
+    private readonly lettreService: LettreService,
     private readonly prisma: PrismaService,
   ) {}
+
+  /**
+   * L'en-tete des lettres pour le backoffice : celui enregistre, et celui
+   * qu'on deduit des informations personnelles (prerempli tant que rien
+   * n'est saisi, et repris par « Revenir a l'en-tete par defaut »).
+   */
+  @Get('lettre/en-tete')
+  @ApiOperation({ summary: 'En-tete des lettres de motivation' })
+  async enTeteLettre() {
+    const [reglages, info] = await Promise.all([
+      this.prisma.siteSettings.findFirst({
+        select: { lettreEnTete: true, siteUrl: true },
+      }),
+      this.prisma.personalInfo.findFirst(),
+    ]);
+    return {
+      enTete: reglages?.lettreEnTete ?? null,
+      parDefaut: enTeteParDefaut(info, reglages?.siteUrl),
+    };
+  }
+
+  /** La lettre de motivation d'une version, en PDF (administrateur). */
+  @Get('lettre')
+  @ApiOperation({ summary: 'Lettre de motivation PDF d une version' })
+  @ApiQuery({ ...QUERY_VERSION, required: true })
+  async lettre(@Query('version') version: string, @Res() res: Response) {
+    this.envoyerLettre(res, await this.lettreService.pdf(version));
+  }
+
+  /**
+   * L'apercu de l'editeur de lettre : le PDF de la saisie, sans rien
+   * enregistrer. POST parce que la lettre voyage dans le corps.
+   */
+  @Post('lettre/apercu')
+  @ApiOperation({ summary: 'Apercu PDF d une lettre en cours de saisie' })
+  async apercuLettre(@Body() dto: ApercuLettreDto, @Res() res: Response) {
+    this.envoyerLettre(
+      res,
+      await this.lettreService.apercu({
+        langue: dto.langue ?? 'fr',
+        enTete: dto.enTete,
+        destinataire: dto.destinataire ?? null,
+        lieu: dto.lieu ?? null,
+        date: dto.date
+          ? new Date(`${dto.date.slice(0, 10)}T00:00:00.000Z`)
+          : null,
+        objet: dto.objet ?? null,
+        sections: dto.sections ?? [],
+      }),
+    );
+  }
+
+  /** La meme lettre, en Word, pour la retoucher avant l'envoi. */
+  @Get('lettre.docx')
+  @ApiOperation({ summary: 'Lettre de motivation Word d une version' })
+  @ApiQuery({ ...QUERY_VERSION, required: true })
+  async lettreDocx(@Query('version') version: string, @Res() res: Response) {
+    this.envoyer(res, await this.lettreService.docx(version), TYPE_DOCX);
+  }
 
   /**
    * PDF : reserve a l'administrateur.
@@ -140,6 +203,16 @@ export class CvGeneratorController {
       await this.cvGeneratorService.generateDocx(langueCv(langue)),
       TYPE_DOCX,
     );
+  }
+
+  /** Le PDF d'une lettre, avec son nombre de pages et la taille du corps
+   *  retenue, que l'editeur affiche. */
+  private envoyerLettre(res: Response, lettre: PdfLettre) {
+    res.set({
+      'X-Lettre-Pages': String(lettre.pages),
+      'X-Lettre-Corps': String(lettre.mise.corps),
+    });
+    this.envoyer(res, lettre, 'application/pdf');
   }
 
   private envoyer(res: Response, document: DocumentCv, type: string) {

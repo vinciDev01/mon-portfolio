@@ -64,30 +64,34 @@ export default function SectionsCvPage() {
   // Les sections de la base masquees : celles de la version regardee, ou a
   // defaut le reglage general.
   const masqueesVues = versionCv ? versionCv.sectionsMasquees : masquees;
+  // Une section libre privee n'entre dans aucun CV ; publique, elle se
+  // retire d'un CV comme une section de la base, par son identifiant.
   const estIncluse = (l: Ligne) =>
-    l.genre === "base" ? !masqueesVues.includes(l.cle) : l.section.publique;
+    l.genre === "base"
+      ? !masqueesVues.includes(l.cle)
+      : l.section.publique && !masqueesVues.includes(l.section.id);
 
   /** Inclut ou retire une section du CV, enregistre aussitot, et regenere
-   *  l'apercu. Base : la liste des masquees, celle de la version regardee ou
-   *  a defaut celle des reglages du site. Libre : la case « publique » de la
-   *  section, commune a toutes les versions. */
+   *  l'apercu, dans la liste des masquees de la version regardee ou a defaut
+   *  dans celle du CV general : la cle d'une section de la base, ou
+   *  l'identifiant d'une section libre. Une section libre privee se rend
+   *  d'abord publique. */
   async function basculerInclusion(l: Ligne) {
     const cle = l.genre === "base" ? l.cle : l.section.id;
     const incluse = !estIncluse(l);
     setBascule(cle);
     try {
-      if (l.genre === "base") {
-        const suivantes = incluse ? masqueesVues.filter((m) => m !== l.cle) : [...masqueesVues, l.cle];
-        if (versionCv) {
-          await updateEntity("cv-versions", versionCv.id, { sectionsMasquees: suivantes });
-          setVersions((prev) => prev.map((v) => (v.id === versionCv.id ? { ...v, sectionsMasquees: suivantes } : v)));
-        } else {
-          await updateSingleton("site-settings", { cvBaseMasquees: suivantes });
-          setMasquees(suivantes);
-        }
+      if (l.genre === "libre" && incluse && !l.section.publique) {
+        await updateEntity("cv-sections", l.section.id, { publique: true });
+        setSections((prev) => prev.map((s) => (s.id === l.section.id ? { ...s, publique: true } : s)));
+      }
+      const suivantes = incluse ? masqueesVues.filter((m) => m !== cle) : [...masqueesVues, cle];
+      if (versionCv) {
+        await updateEntity("cv-versions", versionCv.id, { sectionsMasquees: suivantes });
+        setVersions((prev) => prev.map((v) => (v.id === versionCv.id ? { ...v, sectionsMasquees: suivantes } : v)));
       } else {
-        await updateEntity("cv-sections", l.section.id, { publique: incluse });
-        setSections((prev) => prev.map((s) => (s.id === l.section.id ? { ...s, publique: incluse } : s)));
+        await updateSingleton("site-settings", { cvBaseMasquees: suivantes });
+        setMasquees(suivantes);
       }
       setVersionApercu((v) => v + 1);
       toast.success(incluse ? "Section incluse dans le CV" : "Section retirée du CV");
@@ -203,8 +207,8 @@ export default function SectionsCvPage() {
         <p className="text-xs text-muted-foreground mt-2">
           {versionCv ? (
             <>
-              L&apos;aperçu et la colonne « Inclus » des sections de la base portent sur cette version. Les
-              sections libres sont communes à tous les CV. Titre, présentation, projets et technologies :{" "}
+              L&apos;aperçu et la colonne « Inclus » portent sur cette version. Titre, présentation, projets,
+              technologies :{" "}
               <Link href={`/cv-versions/${versionCv.id}/edit`} className="text-primary hover:underline">
                 modifier la version
               </Link>

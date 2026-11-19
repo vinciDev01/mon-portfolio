@@ -110,6 +110,15 @@ describe('cvBaseMasquees', () => {
     expect(await erreursSur('cvBaseMasquees', [])).toEqual([]);
   });
 
+  it('accepte l identifiant d une section libre', async () => {
+    expect(
+      await erreursSur('cvBaseMasquees', [
+        'projets',
+        '7d22ab1d-bd25-44b3-9224-6efc361719bc',
+      ]),
+    ).toEqual([]);
+  });
+
   it('refuse une cle inconnue', async () => {
     expect(await erreursSur('cvBaseMasquees', ['loisirs'])).toContain(
       'cvBaseMasquees',

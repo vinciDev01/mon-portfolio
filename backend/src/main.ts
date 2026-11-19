@@ -15,6 +15,8 @@ async function bootstrap() {
     origin: lireOriginesAutorisees(process.env),
     methods: ['GET', 'POST', 'PATCH', 'PUT', 'DELETE', 'OPTIONS'],
     allowedHeaders: ['Content-Type', 'Authorization'],
+    // Lus par l'editeur de lettre du backoffice.
+    exposedHeaders: ['X-Lettre-Pages', 'X-Lettre-Corps'],
     credentials: true,
   });
 

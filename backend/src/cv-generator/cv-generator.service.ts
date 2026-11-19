@@ -22,6 +22,7 @@ import {
 } from 'docx';
 import {
   avecBrouillon,
+  libresSansMasquees,
   ordonnerSections,
   rangsBase,
   sansMasquees,
@@ -209,6 +210,11 @@ export class CvGeneratorService {
 
     // Le rang de chaque section de la base : regle au backoffice, ou d'origine.
     const RANG = rangsBase(reglages?.cvRangsBase);
+    // Les sections retirees de ce CV : celles de la version, ou a defaut
+    // celles du CV general. Cles de la base et identifiants de sections libres.
+    const masquees = version
+      ? version.sectionsMasquees
+      : (reglages?.cvBaseMasquees ?? []);
 
     const garderProjets = <P extends { id: string }>(liste: P[]) =>
       projetsRetenus ? liste.filter((p) => projetsRetenus.has(p.id)) : liste;
@@ -362,18 +368,20 @@ export class CvGeneratorService {
       // Les sections de la base retirees du CV depuis le backoffice.
       sections: ordonnerSections(
         // Les sections masquees de la version, ou a defaut le reglage general.
-        sansMasquees(
-          base,
-          version ? version.sectionsMasquees : (reglages?.cvBaseMasquees ?? []),
-        ),
-        avecBrouillon(
-          // Les sections libres dans la langue du CV, francais a defaut.
-          sectionsLibres.map((x) => ({
-            ...x,
-            titre: choisir(x.titre, x.titreEn, langue),
-            lignes: choisir(x.lignes, x.lignesEn, langue),
-          })),
-          brouillon,
+        sansMasquees(base, masquees),
+        // Les sections libres retirees de ce CV le sont par leur identifiant,
+        // dans la meme liste.
+        libresSansMasquees(
+          avecBrouillon(
+            // Les sections libres dans la langue du CV, francais a defaut.
+            sectionsLibres.map((x) => ({
+              ...x,
+              titre: choisir(x.titre, x.titreEn, langue),
+              lignes: choisir(x.lignes, x.lignesEn, langue),
+            })),
+            brouillon,
+          ),
+          masquees,
         ),
       ),
       contact: lignesContact(

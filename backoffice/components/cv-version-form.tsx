@@ -4,7 +4,7 @@ import { useEffect, useState } from "react";
 import { toast } from "sonner";
 import { fetchEntities } from "@/lib/api";
 import { RANGS_DE_LA_BASE } from "@/components/cv-section-form";
-import type { CvVersionDto, PresentationDto, ProjectDto, SkillDto, TechnologyDto } from "@portfolio/shared-types";
+import type { CvSectionDto, CvVersionDto, PresentationDto, ProjectDto, SkillDto, TechnologyDto } from "@portfolio/shared-types";
 
 export type ValeursVersion = {
   nom: string;
@@ -133,8 +133,9 @@ function presentationDuSite(presentations: PresentationDto[], langue: ValeursVer
 /**
  * Le formulaire d'une version du CV, partage par la creation et la
  * modification : son nom, sa langue, son titre et sa presentation, les
- * sections incluses, et ce qu'elle retient des projets, technologies et
- * competences libres.
+ * sections incluses (de la base et libres), ce qu'elle retient des projets,
+ * technologies et competences libres. Sa lettre de motivation se redige sur
+ * la page « Lettres de motivation ».
  */
 export function CvVersionForm({
   valeurs,
@@ -147,6 +148,9 @@ export function CvVersionForm({
   const [technologies, setTechnologies] = useState<TechnologyDto[]>([]);
   const [competences, setCompetences] = useState<SkillDto[]>([]);
   const [presentations, setPresentations] = useState<PresentationDto[]>([]);
+  // Les sections libres que la version peut retirer ; une section privee
+  // n'entre dans aucun CV, elle n'a pas de case.
+  const [sectionsLibres, setSectionsLibres] = useState<CvSectionDto[]>([]);
 
   useEffect(() => {
     Promise.all([
@@ -154,9 +158,11 @@ export function CvVersionForm({
       fetchEntities<TechnologyDto>("technologies"),
       fetchEntities<SkillDto>("skills"),
       fetchEntities<PresentationDto>("presentations"),
+      fetchEntities<CvSectionDto>("cv-sections"),
     ])
-      .then(([p, t, s, pr]) => {
+      .then(([p, t, s, pr, sl]) => {
         setPresentations(pr);
+        setSectionsLibres(sl.filter((x) => x.publique));
         setProjets(p);
         setTechnologies(t);
         // Les competences techniques passent par leurs technologies.
@@ -254,6 +260,16 @@ export function CvVersionForm({
               {s.titre.charAt(0) + s.titre.slice(1).toLowerCase()}
             </label>
           ))}
+          {sectionsLibres.map((s) => (
+            <label key={s.id} className="flex items-center gap-2 text-sm cursor-pointer">
+              <input
+                type="checkbox"
+                checked={!valeurs.sectionsMasquees.includes(s.id)}
+                onChange={() => maj("sectionsMasquees", basculer(valeurs.sectionsMasquees, s.id))}
+              />
+              {s.titre}
+            </label>
+          ))}
         </div>
       </fieldset>
 
@@ -279,6 +295,7 @@ export function CvVersionForm({
         coches={valeurs.competenceIds}
         surChangement={(ids) => maj("competenceIds", ids)}
       />
+
     </>
   );
 }

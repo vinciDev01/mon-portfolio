@@ -54,12 +54,15 @@ export interface SiteSettingsDto {
   cvDateFaitA: string | null;
   /** Un blanc reserve sous la date, pour signer. */
   cvEspaceSignature: boolean;
-  /** Les sections de la base retirees du CV (presentation, technologies,
-   *  certifications, experiences, projets). Vide : toutes incluses. */
+  /** Les sections retirees du CV general : cles de la base et identifiants
+   *  des sections libres. Vide : toutes incluses. */
   cvBaseMasquees: string[];
   /** Le rang de chaque section de la base dans le CV, regle par les fleches
    *  de la page « Sections du CV ». Une cle absente : le rang d'origine. */
   cvRangsBase: Record<string, number>;
+  /** L'en-tete commun des lettres de motivation, une ligne par information ;
+   *  null : deduit des informations personnelles. */
+  lettreEnTete: string | null;
   /** Affiche la section Cours. */
   showCours: boolean;
   accentHue: number;

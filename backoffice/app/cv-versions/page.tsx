@@ -41,8 +41,7 @@ export default function CvVersionsPage() {
   }, []);
 
   async function telecharger(v: CvVersionDto, format: "pdf" | "docx") {
-    const cle = `${v.id}:${format}`;
-    setEnCours(cle);
+    setEnCours(`${v.id}:cv:${format}`);
     try {
       await telechargerCv(`${format === "pdf" ? "generate" : "generate.docx"}?version=${v.id}`, `CV.${format}`);
     } finally {
@@ -70,8 +69,8 @@ export default function CvVersionsPage() {
     <div>
       <PageHeader title="Versions du CV" addHref="/cv-versions/new" addLabel="Nouvelle version" />
       <p className="text-sm text-muted-foreground mb-6 max-w-2xl">
-        Une version par candidature : sa langue, son titre de poste, sa présentation, et ce qu&apos;elle retient des
-        projets, technologies et compétences. Une version neuve donne le CV complet.
+        Une version par candidature : sa langue, son titre de poste, sa présentation, ce qu&apos;elle retient des
+        projets, technologies et compétences. Sa lettre de motivation se rédige depuis « Lettre ». Une version neuve donne le CV complet.
       </p>
       {/* Les actions restent sur une ligne : sur un ecran etroit, le tableau
           defile plutot que d'empiler les boutons. */}
@@ -101,11 +100,18 @@ export default function CvVersionsPage() {
                   </button>
                   <button type="button" onClick={() => telecharger(v, "pdf")} disabled={enCours !== null} className={bouton}>
                     <IconeFormat format="PDF" />
-                    {enCours === `${v.id}:pdf` ? "…" : "PDF"}
+                    {enCours === `${v.id}:cv:pdf` ? "…" : "PDF"}
                   </button>
                   <button type="button" onClick={() => telecharger(v, "docx")} disabled={enCours !== null} className={bouton}>
                     <IconeFormat format="DOC" />
-                    {enCours === `${v.id}:docx` ? "…" : "Word"}
+                    {enCours === `${v.id}:cv:docx` ? "…" : "Word"}
+                  </button>
+                  <button
+                    onClick={() => router.push(`/lettres/${v.id}`)}
+                    className={bouton}
+                    title="Rédiger et prévisualiser la lettre de motivation"
+                  >
+                    Lettre
                   </button>
                   <button onClick={() => router.push(`/cv-versions/${v.id}/edit`)} className="text-xs px-3 py-1 rounded border border-border hover:bg-accent">
                     Modifier

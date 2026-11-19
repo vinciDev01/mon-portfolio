@@ -4,13 +4,17 @@ import {
   ArrayMaxSize,
   IsArray,
   IsIn,
+  Matches,
+  IsDateString,
   IsInt,
   IsOptional,
   IsString,
   MaxLength,
   Min,
+  ValidateNested,
 } from 'class-validator';
-import { CLES_SECTIONS_BASE } from '../../cv-generator/ordre-sections';
+import { SectionLettreDto } from '../../cv-generator/dto/section-lettre.dto';
+import { MOTIF_SECTION_MASQUABLE } from '../../cv-generator/ordre-sections';
 import { LANGUES_CV } from '../../cv-generator/langue-cv';
 
 /**
@@ -47,12 +51,13 @@ export class CreateCvVersionDto {
   presentation?: string | null;
 
   @ApiPropertyOptional({
-    description: 'Sections de la base retirees de cette version',
+    description:
+      'Sections retirees de cette version : cles de la base, identifiants des sections libres',
     example: ['cours'],
   })
   @IsOptional()
   @IsArray()
-  @IsIn(CLES_SECTIONS_BASE, { each: true })
+  @Matches(MOTIF_SECTION_MASQUABLE, { each: true })
   sectionsMasquees?: string[];
 
   @ApiPropertyOptional({ description: 'Projets retenus ; vide : tous' })
@@ -79,6 +84,47 @@ export class CreateCvVersionDto {
   @ArrayMaxSize(200)
   @IsString({ each: true })
   competenceIds?: string[];
+
+  @ApiPropertyOptional({
+    description: 'Lettre : le destinataire, une ligne par information',
+    nullable: true,
+  })
+  @IsOptional()
+  @IsString()
+  @MaxLength(600)
+  lettreDestinataire?: string | null;
+
+  @ApiPropertyOptional({ description: 'Lettre : la ville', nullable: true })
+  @IsOptional()
+  @IsString()
+  @MaxLength(80)
+  lettreLieu?: string | null;
+
+  @ApiPropertyOptional({
+    description: 'Lettre : la date (AAAA-MM-JJ) ; nulle : le jour meme',
+    nullable: true,
+  })
+  @IsOptional()
+  @IsDateString()
+  lettreDate?: string | null;
+
+  @ApiPropertyOptional({ description: 'Lettre : l objet', nullable: true })
+  @IsOptional()
+  @IsString()
+  @MaxLength(200)
+  lettreObjet?: string | null;
+
+  @ApiPropertyOptional({
+    description:
+      'Lettre : le corps en sections, de l appel a la formule de politesse ; sans texte : pas de lettre',
+    type: [SectionLettreDto],
+  })
+  @IsOptional()
+  @IsArray()
+  @ArrayMaxSize(20)
+  @ValidateNested({ each: true })
+  @Type(() => SectionLettreDto)
+  lettreSections?: SectionLettreDto[];
 
   @ApiPropertyOptional({ default: 0 })
   @IsOptional()

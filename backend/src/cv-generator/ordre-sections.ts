@@ -206,6 +206,16 @@ export function rangsDepuisOrdre(ordre: readonly string[]): {
 }
 
 /**
+ * Ce qu'une liste de sections masquees peut contenir : la cle d'une section
+ * de la base, ou l'identifiant (UUID) d'une section libre. Une section libre
+ * se retire ainsi d'un CV comme une section de la base, version par version.
+ */
+export const MOTIF_SECTION_MASQUABLE = new RegExp(
+  `^(${CLES_SECTIONS_BASE.join('|')}|[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12})$`,
+  'i',
+);
+
+/**
  * Les sections de la base, sans celles que le backoffice a retirees du CV.
  * Une cle inconnue ne retire rien. Rien n'est modifie en place.
  */
@@ -214,4 +224,13 @@ export function sansMasquees<T extends { cle: string }>(
   masquees: readonly string[],
 ): T[] {
   return base.filter((s) => !masquees.includes(s.cle));
+}
+
+/** Les sections libres, sans celles retirees de ce CV par leur identifiant.
+ *  Une section en cours de creation (sans identifiant) reste. */
+export function libresSansMasquees<T extends { id?: string }>(
+  libres: readonly T[],
+  masquees: readonly string[],
+): T[] {
+  return libres.filter((s) => !s.id || !masquees.includes(s.id));
 }

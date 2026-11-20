@@ -156,6 +156,7 @@ export class CvGeneratorController {
         projetIds: dto.projetIds,
         technologieIds: dto.technologieIds,
         competenceIds: dto.competenceIds,
+        projetsParAnnee: dto.projetsParAnnee,
       }),
       'application/pdf',
     );

@@ -113,6 +113,14 @@ export class UpdateSiteSettingsDto {
   @IsBoolean()
   showTestimonials?: boolean;
 
+  @ApiPropertyOptional({
+    description:
+      'Projets du CV avec leurs annees, du plus recent ; faux : tels quels',
+  })
+  @IsOptional()
+  @IsBoolean()
+  cvProjetsParAnnee?: boolean;
+
   @ApiPropertyOptional()
   @IsOptional()
   @IsBoolean()

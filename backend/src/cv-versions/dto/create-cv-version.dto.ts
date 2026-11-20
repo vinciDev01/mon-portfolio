@@ -3,6 +3,7 @@ import { Type } from 'class-transformer';
 import {
   ArrayMaxSize,
   IsArray,
+  IsBoolean,
   IsIn,
   Matches,
   IsDateString,
@@ -84,6 +85,15 @@ export class CreateCvVersionDto {
   @ArrayMaxSize(200)
   @IsString({ each: true })
   competenceIds?: string[];
+
+  @ApiPropertyOptional({
+    description:
+      'Projets avec leurs annees, du plus recent ; nul : le reglage du CV',
+    nullable: true,
+  })
+  @IsOptional()
+  @IsBoolean()
+  projetsParAnnee?: boolean | null;
 
   @ApiPropertyOptional({
     description: 'Lettre : le destinataire, une ligne par information',

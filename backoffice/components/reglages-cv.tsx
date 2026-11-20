@@ -8,7 +8,7 @@ import type { SiteSettingsDto } from "@portfolio/shared-types";
 
 type Reglages = Pick<
   SiteSettingsDto,
-  "cvFontFamily" | "siteUrl" | "cvAfficherQr" | "showCvDownload" | "cvFaitA" | "cvLieu" | "cvDateFaitA" | "cvEspaceSignature"
+  "cvFontFamily" | "siteUrl" | "cvAfficherQr" | "showCvDownload" | "cvFaitA" | "cvLieu" | "cvDateFaitA" | "cvEspaceSignature" | "cvProjetsParAnnee"
 >;
 
 const champ = "w-full px-3 py-2 border border-border rounded-md text-sm";
@@ -36,6 +36,7 @@ export function ReglagesCv({ surEnregistrement }: { surEnregistrement: () => voi
           cvLieu: r.cvLieu,
           cvDateFaitA: r.cvDateFaitA,
           cvEspaceSignature: r.cvEspaceSignature,
+          cvProjetsParAnnee: r.cvProjetsParAnnee,
           siteUrl: r.siteUrl,
           cvAfficherQr: r.cvAfficherQr,
           showCvDownload: r.showCvDownload,
@@ -121,6 +122,37 @@ export function ReglagesCv({ surEnregistrement }: { surEnregistrement: () => voi
           Ajoutée aux coordonnées du CV, en lien. Vide : ni lien ni QR code.
         </p>
       </form>
+
+      <fieldset className="text-sm">
+        <legend className="font-medium mb-1">Présentation des projets</legend>
+        <div className="flex flex-wrap gap-x-5 gap-y-1">
+          {[
+            { valeur: false, libelle: "Tels quels", aide: "dans l'ordre du backoffice" },
+            { valeur: true, libelle: "Par année", aide: "avec leur période, du plus récent au plus ancien" },
+          ].map((o) => (
+            <label key={String(o.valeur)} className="flex items-center gap-2 cursor-pointer">
+              <input
+                type="radio"
+                name="cv-projets-par-annee"
+                checked={reglages.cvProjetsParAnnee === o.valeur}
+                disabled={saving}
+                onChange={() =>
+                  enregistrer(
+                    { cvProjetsParAnnee: o.valeur },
+                    o.valeur ? "Projets présentés par année" : "Projets présentés tels quels",
+                  )
+                }
+              />
+              {o.libelle}
+              <span className="text-xs text-muted-foreground">({o.aide})</span>
+            </label>
+          ))}
+        </div>
+        <p className="text-xs text-muted-foreground mt-1">
+          Par année : « OssanFina (Septembre 2025 - aujourd&apos;hui) ». Un projet sans date de début n&apos;a pas de période et
+          passe en dernier. Chaque version du CV peut choisir autrement.
+        </p>
+      </fieldset>
 
       <label className="flex items-start gap-3 text-sm">
         <input

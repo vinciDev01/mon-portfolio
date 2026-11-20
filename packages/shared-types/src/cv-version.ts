@@ -24,6 +24,8 @@ export interface CvVersionDto {
   technologieIds: string[];
   /** Les competences libres retenues (management...). */
   competenceIds: string[];
+  /** Les projets par annee pour cette version ; null : le reglage du CV. */
+  projetsParAnnee: boolean | null;
   /** La lettre de motivation ; sans texte dans ses sections, la version
    *  n'en a pas. Le destinataire : une ligne par information. */
   lettreDestinataire: string | null;

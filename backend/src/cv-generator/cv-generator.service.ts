@@ -36,6 +36,7 @@ import {
   ligneCours,
   ligneExperience,
   posteDe,
+  ordonnerParPeriode,
   projetCv,
   suiteProjet,
   type ProjetCv,
@@ -147,6 +148,7 @@ export class CvGeneratorService {
         | 'projetIds'
         | 'technologieIds'
         | 'competenceIds'
+        | 'projetsParAnnee'
       >
     >,
   ): Promise<DocumentCv> {
@@ -163,6 +165,7 @@ export class CvGeneratorService {
         projetIds: [],
         technologieIds: [],
         competenceIds: [],
+        projetsParAnnee: null,
       }),
       ...Object.fromEntries(
         Object.entries(saisie).filter(([, v]) => v !== undefined),
@@ -231,6 +234,8 @@ export class CvGeneratorService {
               cvSummary: true,
               descriptionEn: true,
               cvSummaryEn: true,
+              startDate: true,
+              endDate: true,
             },
           },
         },
@@ -261,6 +266,9 @@ export class CvGeneratorService {
 
     const garderProjets = <P extends { id: string }>(liste: P[]) =>
       projetsRetenus ? liste.filter((p) => projetsRetenus.has(p.id)) : liste;
+    // Les projets avec leurs annees : choix de la version, ou a defaut du CV.
+    const parAnnee =
+      version?.projetsParAnnee ?? reglages?.cvProjetsParAnnee ?? false;
 
     // Sections alimentees par la base
     const base: (SectionBase & { cle: CleSectionBase })[] = [
@@ -331,7 +339,7 @@ export class CvGeneratorService {
         ),
         // La meme matiere structuree, que les deux rendus dessinent.
         postes: experiences.map((e) =>
-          posteDe(e, garderProjets(e.projects), langue),
+          posteDe(e, garderProjets(e.projects), langue, parAnnee),
         ),
       },
       (() => {
@@ -376,9 +384,12 @@ export class CvGeneratorService {
             return `${i + 1}. ${p.name}${detail}`;
           }),
         // En puces, comme sous un poste, avec la description entiere.
-        projets: garderProjets(projets)
-          .filter((p) => !p.experienceId)
-          .map((p) => projetCv(p, true, langue)),
+        projets: (() => {
+          const autres = garderProjets(projets).filter((p) => !p.experienceId);
+          return (parAnnee ? ordonnerParPeriode(autres) : autres).map((p) =>
+            projetCv(p, true, langue, parAnnee),
+          );
+        })(),
       },
       {
         cle: 'cours' as const,
@@ -518,6 +529,12 @@ export class CvGeneratorService {
       // Un projet en puce : le nom en gras, puis ce qu'il est.
       const dessinerProjet = (projet: ProjetCv) => {
         doc.moveDown(0.2);
+        // Pas la place d'une ligne en bas de page : le projet passe entier a
+        // la page suivante, sinon sa puce resterait seule en bas.
+        doc.font(polices.normal).fontSize(CORPS);
+        if (doc.y + doc.currentLineHeight(true) > doc.page.maxY()) {
+          doc.addPage();
+        }
         const y = doc.y;
         const x = MARGE + RETRAIT_PROJET;
         const largeurProjet = largeur - RETRAIT_PROJET;
@@ -532,6 +549,11 @@ export class CvGeneratorService {
           .text(projet.nom, x, y, {
             width: largeurProjet,
             lineGap: INTERLIGNE - 2,
+            continued: Boolean(projet.periode || projet.resume),
+          });
+        // Les annees, apres le nom, en caracteres normaux.
+        if (projet.periode)
+          doc.font(polices.normal).text(` (${projet.periode})`, {
             continued: Boolean(projet.resume),
           });
         if (projet.resume)
@@ -850,6 +872,9 @@ export class CvGeneratorService {
         spacing: { after: 40 },
         children: [
           new TextRun({ text: projet.nom, bold: true }),
+          ...(projet.periode
+            ? [new TextRun({ text: ` (${projet.periode})` })]
+            : []),
           ...(projet.resume
             ? [new TextRun({ text: suiteProjet(projet.resume, langue) })]
             : []),

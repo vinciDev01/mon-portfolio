@@ -1,7 +1,9 @@
 import {
+  periodeProjet,
   ligneCours,
   ligneExperience,
   moisAnnee,
+  ordonnerParPeriode,
   posteDe,
   projetCv,
   resumeProjet,
@@ -332,4 +334,75 @@ describe('QR code du portfolio', () => {
     },
     RENDU_MS,
   );
+});
+
+describe('projets par annee', () => {
+  const d = (s: string) => new Date(`${s}T00:00:00.000Z`);
+
+  it('donne la periode du projet, au mois pres', () => {
+    expect(periodeProjet(d('2024-03-01'), d('2024-09-15'))).toBe(
+      'Mars 2024 - Septembre 2024',
+    );
+    expect(periodeProjet(d('2024-03-01'), d('2024-03-20'))).toBe('Mars 2024');
+    expect(periodeProjet(d('2025-09-01'), null)).toBe(
+      "Septembre 2025 - aujourd'hui",
+    );
+    expect(periodeProjet(d('2025-09-01'), null, 'en')).toBe(
+      'September 2025 - Present',
+    );
+    expect(periodeProjet(null, d('2026-01-01'))).toBe('');
+  });
+
+  it('range du plus recent au plus ancien, les non dates a la fin', () => {
+    const liste = [
+      { nom: 'sans date A' },
+      { nom: 'ancien', startDate: d('2024-03-01') },
+      { nom: 'recent', startDate: d('2026-04-01') },
+      { nom: 'sans date B', startDate: null },
+    ];
+    expect(ordonnerParPeriode(liste).map((p) => p.nom)).toEqual([
+      'recent',
+      'ancien',
+      'sans date A',
+      'sans date B',
+    ]);
+    expect(liste[0].nom).toBe('sans date A');
+  });
+
+  it('ajoute la periode au projet seulement sur demande', () => {
+    const p = {
+      name: 'OssanFina',
+      description: 'Plateforme de microfinance.',
+      startDate: d('2025-09-01'),
+    };
+    expect(projetCv(p).periode).toBeUndefined();
+    expect(projetCv(p, false, 'fr', true).periode).toBe(
+      "Septembre 2025 - aujourd'hui",
+    );
+    expect(
+      projetCv({ ...p, startDate: null }, false, 'fr', true).periode,
+    ).toBeUndefined();
+  });
+
+  it('un poste par annee range ses projets', () => {
+    const e = {
+      role: 'Ingenieur',
+      company: 'X',
+      description: null,
+      startDate: d('2025-07-01'),
+      endDate: null,
+      isCurrent: true,
+    };
+    const projets = [
+      { name: 'A', description: null, startDate: d('2025-09-01') },
+      { name: 'B', description: null, startDate: d('2026-04-01') },
+    ];
+    expect(posteDe(e, projets).projets.map((p) => p.nom)).toEqual(['A', 'B']);
+    expect(
+      posteDe(e, projets, 'fr', true).projets.map((p) => [p.nom, p.periode]),
+    ).toEqual([
+      ['B', "Avril 2026 - aujourd'hui"],
+      ['A', "Septembre 2025 - aujourd'hui"],
+    ]);
+  });
 });

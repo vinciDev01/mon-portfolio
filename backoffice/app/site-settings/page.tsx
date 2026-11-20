@@ -15,6 +15,7 @@ const GERES_AILLEURS = [
   "cvFontFamily",
   "siteUrl",
   "cvAfficherQr",
+  "cvProjetsParAnnee",
   "showCvDownload",
   "cvJobTitle",
   "cvJobTitleEn",

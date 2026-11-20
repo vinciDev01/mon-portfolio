@@ -54,6 +54,9 @@ export interface SiteSettingsDto {
   cvDateFaitA: string | null;
   /** Un blanc reserve sous la date, pour signer. */
   cvEspaceSignature: boolean;
+  /** Les projets du CV avec leurs annees, du plus recent ; faux : tels
+   *  quels. */
+  cvProjetsParAnnee: boolean;
   /** Les sections retirees du CV general : cles de la base et identifiants
    *  des sections libres. Vide : toutes incluses. */
   cvBaseMasquees: string[];

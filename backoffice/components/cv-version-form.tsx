@@ -15,6 +15,8 @@ export type ValeursVersion = {
   projetIds: string[];
   technologieIds: string[];
   competenceIds: string[];
+  /** null : le reglage du CV. */
+  projetsParAnnee: boolean | null;
 };
 
 export const VERSION_VIDE: ValeursVersion = {
@@ -26,6 +28,7 @@ export const VERSION_VIDE: ValeursVersion = {
   projetIds: [],
   technologieIds: [],
   competenceIds: [],
+  projetsParAnnee: null,
 };
 
 export function valeursDeVersion(v: CvVersionDto): ValeursVersion {
@@ -38,6 +41,7 @@ export function valeursDeVersion(v: CvVersionDto): ValeursVersion {
     projetIds: v.projetIds,
     technologieIds: v.technologieIds,
     competenceIds: v.competenceIds,
+    projetsParAnnee: v.projetsParAnnee,
   };
 }
 
@@ -272,6 +276,22 @@ export function CvVersionForm({
           ))}
         </div>
       </fieldset>
+
+      <div>
+        <label htmlFor="version-projets-par-annee" className="block text-sm font-medium mb-1">
+          Présentation des projets
+        </label>
+        <select
+          id="version-projets-par-annee"
+          value={valeurs.projetsParAnnee === null ? "" : String(valeurs.projetsParAnnee)}
+          onChange={(e) => maj("projetsParAnnee", e.target.value === "" ? null : e.target.value === "true")}
+          className={`${champ} bg-background`}
+        >
+          <option value="">Comme le réglage du CV</option>
+          <option value="false">Tels quels</option>
+          <option value="true">Par année, avec leur période</option>
+        </select>
+      </div>
 
       <Choix
         titre="Projets"

@@ -98,6 +98,9 @@ model SiteSettings {
   /// regle par les fleches de la page « Sections du CV ». Une cle absente
   /// garde son rang par defaut.
   cvRangsBase       Json      @default("{}") @map("cv_rangs_base")
+  /// Les projets du CV avec leurs annees, du plus recent au plus ancien ;
+  /// faux : tels quels, dans l'ordre du backoffice.
+  cvProjetsParAnnee Boolean   @default(false) @map("cv_projets_par_annee")
   /// L'en-tete des lettres de motivation, commun a toutes : une ligne par
   /// information (nom, ville, telephone...). Nul : celui deduit des
   /// informations personnelles.
@@ -501,6 +504,8 @@ model CvVersion {
   technologieIds   String[] @default([]) @map("technologie_ids")
   /// Les competences libres retenues (management...).
   competenceIds    String[] @default([]) @map("competence_ids")
+  /// Les projets par annee pour cette version ; nul : le reglage du CV.
+  projetsParAnnee  Boolean? @map("projets_par_annee")
   /// La lettre de motivation de cette version ; sans corps, pas de lettre.
   /// Le destinataire : une ligne par information.
   lettreDestinataire String?   @map("lettre_destinataire") @db.Text

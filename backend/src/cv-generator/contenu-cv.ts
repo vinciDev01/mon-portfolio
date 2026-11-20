@@ -95,7 +95,13 @@ export function ligneExperience(
 
 /** Un projet du CV : son nom et ce qu'il est. Ses technologies n'y figurent
  *  pas : la section Technologies les dit deja. */
-export type ProjetCv = { nom: string; resume: string | null };
+export type ProjetCv = {
+  nom: string;
+  resume: string | null;
+  /** La periode du projet, « Mars 2024 - Septembre 2024 » : seulement quand
+   *  le CV presente les projets par annee, et si le projet est date. */
+  periode?: string;
+};
 
 type ProjetBrut = {
   name: string;
@@ -104,6 +110,8 @@ type ProjetBrut = {
   /** La breve description ecrite pour le CV : quand elle existe, elle prime. */
   cvSummary?: string | null;
   cvSummaryEn?: string | null;
+  startDate?: Date | null;
+  endDate?: Date | null;
 };
 
 /**
@@ -116,7 +124,11 @@ export function projetCv(
   p: ProjetBrut,
   complet = false,
   langue: LangueCv = 'fr',
+  avecPeriode = false,
 ): ProjetCv {
+  const periode = avecPeriode
+    ? periodeProjet(p.startDate, p.endDate, langue)
+    : '';
   const ecrite = choisir(p.cvSummary, p.cvSummaryEn, langue)
     ?.trim()
     .replace(/\s+/g, ' ');
@@ -129,6 +141,7 @@ export function projetCv(
       : t.charAt(0).toLowerCase() + t.slice(1);
   return {
     nom: p.name.trim(),
+    ...(periode ? { periode } : {}),
     resume: ecrite
       ? apresDeuxPoints(ecrite)
       : complet
@@ -170,6 +183,7 @@ export function posteDe(
   e: ExperienceBrute,
   projets: readonly ProjetBrut[] = [],
   langue: LangueCv = 'fr',
+  parAnnee = false,
 ): PosteCv {
   const description = choisir(e.description, e.descriptionEn, langue);
   return {
@@ -177,7 +191,9 @@ export function posteDe(
     employeur: e.company.trim(),
     periode: periodeDe(e, langue),
     description: description?.trim() ? phrase(description) : null,
-    projets: projets.map((p) => projetCv(p, false, langue)),
+    projets: (parAnnee ? ordonnerParPeriode(projets) : projets).map((p) =>
+      projetCv(p, false, langue, parAnnee),
+    ),
   };
 }
 
@@ -227,4 +243,37 @@ export function lignesFaitA(
   return langue === 'en'
     ? [`Done at ${ou},`, `on ${jour}`]
     : [`Fait à ${ou},`, `le ${jour}`];
+}
+
+/**
+ * La periode d'un projet, au mois pres, comme celle des experiences :
+ * « Mars 2024 - Septembre 2024 », « Mars 2024 » sur un seul mois,
+ * « Septembre 2025 - aujourd'hui » sans fin. Rien sans debut : un projet non
+ * date n'affiche pas de periode inventee.
+ */
+export function periodeProjet(
+  debut: Date | null | undefined,
+  fin: Date | null | undefined,
+  langue: LangueCv = 'fr',
+): string {
+  if (!debut) return '';
+  const de = moisAnnee(debut, langue);
+  if (!fin) return `${de} - ${TEXTES[langue].aujourdhui}`;
+  const a = moisAnnee(fin, langue);
+  return new Date(fin) <= new Date(debut) || a === de ? de : `${de} - ${a}`;
+}
+
+/**
+ * Les projets du plus recent au plus ancien, par date de debut ; les projets
+ * non dates a la fin, dans leur ordre d'origine. Ne modifie pas la liste.
+ */
+export function ordonnerParPeriode<P extends { startDate?: Date | null }>(
+  projets: readonly P[],
+): P[] {
+  const temps = (p: P) =>
+    p.startDate ? new Date(p.startDate).getTime() : -Infinity;
+  return projets
+    .map((p, i) => ({ p, i }))
+    .sort((a, b) => temps(b.p) - temps(a.p) || a.i - b.i)
+    .map(({ p }) => p);
 }

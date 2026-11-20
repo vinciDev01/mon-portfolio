@@ -2,22 +2,14 @@
 
 import { useEffect, useRef, useState } from "react";
 import { fetchEntities } from "@/lib/api";
+import { couleurLogo } from "@/lib/couleur-logo";
 
 /** Un logo du catalogue tel que l'API le rend : `exact` quand il porte
  *  exactement le nom cherche. */
 export type LogoCatalogue = { slug: string; title: string; hex: string; trace: string; exact: boolean };
 
-/** Le logo retenu : son identifiant, et de quoi le montrer. */
-export type LogoChoisi = { slug: string; title: string; trace: string } | null;
-
-/** La couleur de marque, sauf si elle est presque blanche : invisible sur le
- *  fond blanc du backoffice, le logo prend alors la couleur du texte. */
-function couleurLisible(hex: string): string | undefined {
-  const n = parseInt(hex, 16);
-  if (Number.isNaN(n)) return undefined;
-  const [r, g, b] = [(n >> 16) & 255, (n >> 8) & 255, n & 255];
-  return 0.2126 * r + 0.7152 * g + 0.0722 * b > 210 ? undefined : `#${hex}`;
-}
+/** Le logo retenu : son identifiant, et de quoi le montrer dans sa couleur. */
+export type LogoChoisi = { slug: string; title: string; trace: string; hex?: string | null } | null;
 
 function Trace({ trace, couleur, taille = 28 }: { trace: string; couleur?: string; taille?: number }) {
   return (
@@ -66,7 +58,7 @@ export function SelecteurLogo({
           setResultats(r);
           const exact = r.find((l) => l.exact);
           if (automatique && !touche.current && exact) {
-            surChoix({ slug: exact.slug, title: exact.title, trace: exact.trace });
+            surChoix({ slug: exact.slug, title: exact.title, trace: exact.trace, hex: exact.hex });
           }
         })
         .catch(() => setResultats([]))
@@ -93,7 +85,7 @@ export function SelecteurLogo({
         {choisi ? (
           <>
             <span className="grid place-items-center size-11 rounded-md border border-border">
-              <Trace trace={choisi.trace} />
+              <Trace trace={choisi.trace} couleur={couleurLogo(choisi.hex, choisi.slug)} />
             </span>
             <span className="text-sm">
               <span className="font-medium">{choisi.title}</span>
@@ -151,7 +143,7 @@ export function SelecteurLogo({
                     actif ? "border-primary ring-2 ring-primary/40" : "border-border"
                   }`}
                 >
-                  <Trace trace={l.trace} couleur={couleurLisible(l.hex)} />
+                  <Trace trace={l.trace} couleur={couleurLogo(l.hex, l.slug)} />
                   <span className="w-full truncate text-center">{l.title}</span>
                 </button>
               </li>

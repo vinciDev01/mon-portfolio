@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { fetchEntities, deleteEntity, getFileUrl } from "@/lib/api";
+import { couleurLogo } from "@/lib/couleur-logo";
 import { PageHeader } from "@/components/page-header";
 import { ConfirmDialog } from "@/components/confirm-dialog";
 import { toast } from "sonner";
@@ -57,7 +58,13 @@ export default function TechnologiesPage() {
                 {item.logoPath ? (
                   <img src={getFileUrl(item.logoPath)!} alt="" className="h-8 w-8 object-contain" />
                 ) : item.logoTrace ? (
-                  <svg viewBox="0 0 24 24" className="h-7 w-7" aria-hidden="true" fill="currentColor">
+                  <svg
+                    viewBox="0 0 24 24"
+                    className="h-7 w-7"
+                    aria-hidden="true"
+                    // La couleur de la marque, comme sur le site.
+                    fill={couleurLogo(item.logoHex, item.logoSlug) ?? "currentColor"}
+                  >
                     <path d={item.logoTrace} />
                   </svg>
                 ) : null}

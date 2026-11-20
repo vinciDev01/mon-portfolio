@@ -8,7 +8,8 @@ import { ZoneDepot } from "@/components/zone-depot";
 interface ImageUploadProps {
   currentPath: string | null;
   category: string;
-  onUpload: (path: string) => void;
+  /** Le chemin de la nouvelle image, ou `null` quand l'image est retiree. */
+  onUpload: (path: string | null) => void;
   label?: string;
 }
 
@@ -57,6 +58,15 @@ export function ImageUpload({ currentPath, category, onUpload, label = "Image" }
       setPreview(value.trim());
       onUpload(value.trim());
     }
+  }
+
+  /** Retire l'image : le champ redevient vide, l'enregistrement du
+   *  formulaire efface le chemin. Le fichier lui-meme reste sur le serveur. */
+  function retirer() {
+    setPreview(null);
+    setUrlValue("");
+    setUrlError(false);
+    onUpload(null);
   }
 
   function handleImageError() {
@@ -108,6 +118,16 @@ export function ImageUpload({ currentPath, category, onUpload, label = "Image" }
           <p className="text-xs text-red-500 mt-0.5">URL invalide ou image inaccessible</p>
         )}
       </div>
+
+      {(currentPath || preview) && !uploading && (
+        <button
+          type="button"
+          onClick={retirer}
+          className="mt-2 text-xs text-destructive underline underline-offset-2 hover:text-destructive/80"
+        >
+          Retirer l&apos;image
+        </button>
+      )}
     </div>
   );
 }

@@ -65,8 +65,12 @@ export default function EditTechnologyPage() {
         </div>
         <SelecteurLogo
           libelle={data.label}
-          choisi={data.logoSlug && data.logoTrace ? { slug: data.logoSlug, title: data.label, trace: data.logoTrace } : null}
-          surChoix={(l) => setData({ ...data, logoSlug: l?.slug ?? null, logoTrace: l?.trace ?? null })}
+          choisi={
+            data.logoSlug && data.logoTrace
+              ? { slug: data.logoSlug, title: data.label, trace: data.logoTrace, hex: data.logoHex }
+              : null
+          }
+          surChoix={(l) => setData({ ...data, logoSlug: l?.slug ?? null, logoTrace: l?.trace ?? null, logoHex: l?.hex ?? null })}
         />
         <ImageUpload
           currentPath={data.logoPath}

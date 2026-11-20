@@ -34,6 +34,7 @@ import {
 } from "@hugeicons/core-free-icons";
 import { cn } from "@/lib/utils";
 import { removeToken } from "@/lib/auth";
+import { ConfirmDialog } from "@/components/confirm-dialog";
 
 type Item = { href: string; label: string; icone: IconSvgElement };
 
@@ -152,6 +153,10 @@ export function SidebarNav() {
   const replie = useSyncExternalStore(sAbonner, lireReplie, () => false);
   const basculerReplie = () => ecrireReplie(!replie);
 
+  // La deconnexion demande confirmation : un clic de travers, en bas du
+  // menu, ferait perdre une saisie en cours.
+  const [confirmerSortie, setConfirmerSortie] = useState(false);
+
   function handleLogout() {
     removeToken();
     router.replace("/login");
@@ -223,7 +228,7 @@ export function SidebarNav() {
       </nav>
       <div className="mt-3 pt-3 border-t border-border">
         <button
-          onClick={handleLogout}
+          onClick={() => setConfirmerSortie(true)}
           title={replie ? "Déconnexion" : undefined}
           className={cn(
             "w-full flex items-center gap-3 px-3 py-2 rounded-md text-sm text-left text-destructive hover:bg-destructive/10 transition-colors",
@@ -234,6 +239,17 @@ export function SidebarNav() {
           <span className={cn(replie && "sr-only")}>Déconnexion</span>
         </button>
       </div>
+      <ConfirmDialog
+        open={confirmerSortie}
+        title="Se déconnecter ?"
+        message="Vous devrez vous reconnecter pour revenir au backoffice. Les modifications non enregistrées seront perdues."
+        confirmLabel="Se déconnecter"
+        onConfirm={() => {
+          setConfirmerSortie(false);
+          handleLogout();
+        }}
+        onCancel={() => setConfirmerSortie(false)}
+      />
     </aside>
   );
 }

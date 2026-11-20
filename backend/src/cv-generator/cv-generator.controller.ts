@@ -17,6 +17,7 @@ import { enTeteParDefaut } from './lettre';
 import type { DocumentCv } from './cv-generator.service';
 import { ApercuCvDto } from './dto/apercu-cv.dto';
 import { ApercuLettreDto } from './dto/apercu-lettre.dto';
+import { UpdateCvVersionDto } from '../cv-versions/dto/update-cv-version.dto';
 import { langueCv } from './langue-cv';
 
 /** La langue du CV, en parametre de requete : `fr` par defaut, ou `en`. */
@@ -126,6 +127,36 @@ export class CvGeneratorController {
         langueCv(langue),
         version || undefined,
       ),
+      'application/pdf',
+    );
+  }
+
+  /**
+   * L'apercu de la page de modification d'une version : le CV de la saisie,
+   * sans rien enregistrer. `id` : la version modifiee ; absent pour une
+   * version a creer.
+   */
+  @Post('apercu-version')
+  @ApiOperation({
+    summary: 'Apercu PDF d une version du CV en cours de saisie',
+  })
+  @ApiQuery({ name: 'id', required: false })
+  async apercuVersion(
+    @Query('id') id: string | undefined,
+    @Body() dto: UpdateCvVersionDto,
+    @Res() res: Response,
+  ) {
+    this.envoyer(
+      res,
+      await this.cvGeneratorService.apercuVersion(id || undefined, {
+        langue: dto.langue,
+        titrePoste: dto.titrePoste,
+        presentation: dto.presentation,
+        sectionsMasquees: dto.sectionsMasquees,
+        projetIds: dto.projetIds,
+        technologieIds: dto.technologieIds,
+        competenceIds: dto.competenceIds,
+      }),
       'application/pdf',
     );
   }

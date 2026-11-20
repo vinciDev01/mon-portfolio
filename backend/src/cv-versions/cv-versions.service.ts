@@ -65,7 +65,8 @@ export class CvVersionsService {
 
   findAll() {
     return this.prisma.cvVersion.findMany({
-      orderBy: [{ sortOrder: 'asc' }, { nom: 'asc' }],
+      // La plus recente en tete : la candidature en cours d'abord.
+      orderBy: [{ createdAt: 'desc' }, { nom: 'asc' }],
     });
   }
 

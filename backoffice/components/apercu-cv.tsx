@@ -34,20 +34,34 @@ export type BrouillonSection = {
  *
  * `versionCv` : l'identifiant d'une version du CV ; l'apercu montre alors le
  * CV de cette version, dans sa langue.
+ *
+ * `brouillonVersion` : la version en cours de modification ; l'apercu montre
+ * le CV tel qu'il sera une fois la version enregistree, selon la meme regle
+ * que le brouillon d'une section (repris a l'ouverture et sur « Actualiser »).
  */
 export function ApercuCv({
   version = 0,
   brouillon,
   versionCv,
+  brouillonVersion,
 }: {
   version?: number;
   brouillon?: BrouillonSection;
   versionCv?: string;
+  brouillonVersion?: Record<string, unknown>;
 }) {
   const [relance, setRelance] = useState(0);
   const [resultat, setResultat] = useState<Resultat | null>(null);
   const actuelle = useRef<string | null>(null);
-  const saisie = brouillon ? JSON.stringify(brouillon) : null;
+  const saisie = brouillon
+    ? JSON.stringify(brouillon)
+    : brouillonVersion
+      ? JSON.stringify(brouillonVersion)
+      : null;
+  // La route d'apercu : la section en cours de saisie, ou la version.
+  const routeApercu = brouillonVersion
+    ? `/api/cv-generator/apercu-version${versionCv ? `?id=${encodeURIComponent(versionCv)}` : ""}`
+    : "/api/cv-generator/apercu";
   // Le brouillon que montre l'apercu : fige a l'ouverture, repris au clic.
   const [corps, setCorps] = useState(saisie);
   const cle = `${version}-${relance}-${versionCv ?? ""}-${corps ?? ""}`;
@@ -62,7 +76,7 @@ export function ApercuCv({
     let annule = false;
     const generer = () =>
       corps
-        ? appelerApi("/api/cv-generator/apercu", {
+        ? appelerApi(routeApercu, {
             method: "POST",
             headers: { "Content-Type": "application/json" },
             body: corps,
@@ -87,7 +101,7 @@ export function ApercuCv({
     return () => {
       annule = true;
     };
-  }, [cle, corps, versionCv]);
+  }, [cle, corps, versionCv, routeApercu]);
 
   // A la fermeture de la page, la derniere adresse est liberee.
   useEffect(

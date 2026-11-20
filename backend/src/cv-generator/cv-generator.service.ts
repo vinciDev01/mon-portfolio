@@ -130,6 +130,49 @@ export class CvGeneratorService {
    * La version demandee, s'il y en a une : elle fixe aussi la langue. Une
    * version inconnue est un 404, jamais le CV complet a sa place.
    */
+  /**
+   * L'apercu d'une version en cours de saisie, sans rien enregistrer : la
+   * saisie par-dessus la version enregistree (ou une version vide, pour une
+   * version a creer).
+   */
+  async apercuVersion(
+    id: string | undefined,
+    saisie: Partial<
+      Pick<
+        CvVersion,
+        | 'langue'
+        | 'titrePoste'
+        | 'presentation'
+        | 'sectionsMasquees'
+        | 'projetIds'
+        | 'technologieIds'
+        | 'competenceIds'
+      >
+    >,
+  ): Promise<DocumentCv> {
+    const base = id ? await this.version(id) : null;
+    const vide = (t: string | null | undefined) => t?.trim() || null;
+    const version = {
+      ...(base ?? {
+        id: 'apercu',
+        nom: '',
+        langue: 'fr',
+        titrePoste: null,
+        presentation: null,
+        sectionsMasquees: [],
+        projetIds: [],
+        technologieIds: [],
+        competenceIds: [],
+      }),
+      ...Object.fromEntries(
+        Object.entries(saisie).filter(([, v]) => v !== undefined),
+      ),
+    } as CvVersion;
+    version.titrePoste = vide(version.titrePoste);
+    version.presentation = vide(version.presentation);
+    return this.generatePdf(undefined, langueCv(version.langue), version);
+  }
+
   private async version(id: string | undefined): Promise<CvVersion | null> {
     if (!id) return null;
     const v = await this.prisma.cvVersion.findUnique({ where: { id } });
@@ -425,13 +468,15 @@ export class CvGeneratorService {
   }
 
   /** `brouillon` : la section du formulaire, pour l'apercu du backoffice. */
-  /** `versionId` : une version du CV, dont la langue prime sur `langue`. */
+  /** `versionId` : une version du CV, dont la langue prime sur `langue` ;
+   *  ou la version elle-meme, en cours de saisie (apercu du backoffice). */
   async generatePdf(
     brouillon?: SectionBrouillon,
     langue: LangueCv = 'fr',
-    versionId?: string,
+    versionId?: string | CvVersion,
   ): Promise<DocumentCv> {
-    const version = await this.version(versionId);
+    const version =
+      typeof versionId === 'object' ? versionId : await this.version(versionId);
     if (version) langue = langueCv(version.langue);
     const {
       reglages,

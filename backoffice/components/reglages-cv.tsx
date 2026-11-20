@@ -14,6 +14,47 @@ type Reglages = Pick<
 const champ = "w-full px-3 py-2 border border-border rounded-md text-sm";
 
 /**
+ * Pourquoi un reglage est grise, et comment le debloquer : un message visible
+ * sous le reglage, lie a lui par `id` (aria-describedby), avec le geste qui
+ * leve la condition.
+ */
+function Condition({
+  id,
+  children,
+  action,
+  surAction,
+}: {
+  id: string;
+  children: React.ReactNode;
+  action: string;
+  surAction: () => void;
+}) {
+  return (
+    <div
+      id={id}
+      role="note"
+      className="mt-2 flex flex-wrap items-center gap-x-3 gap-y-1 rounded-md border border-amber-300 bg-amber-50 px-3 py-2 text-xs text-amber-900 dark:border-amber-700 dark:bg-amber-950/40 dark:text-amber-200"
+    >
+      <span className="flex-1 min-w-48">{children}</span>
+      <button
+        type="button"
+        onClick={surAction}
+        className="shrink-0 rounded border border-current px-2 py-0.5 font-medium hover:bg-amber-100 dark:hover:bg-amber-900/40"
+      >
+        {action}
+      </button>
+    </div>
+  );
+}
+
+/** Amene le champ a l'ecran et y place le curseur. */
+function allerAuChamp(id: string) {
+  const champ = document.getElementById(id);
+  champ?.scrollIntoView({ behavior: "smooth", block: "center" });
+  champ?.focus({ preventScroll: true });
+}
+
+/**
  * Les reglages du CV telechargeable, sur la page des sections du CV : la
  * police, l'adresse du portfolio et son QR code, la publication sur le site,
  * et le telechargement. Chaque reglage s'enregistre aussitot (l'adresse, par
@@ -154,24 +195,32 @@ export function ReglagesCv({ surEnregistrement }: { surEnregistrement: () => voi
         </p>
       </fieldset>
 
-      <label className="flex items-start gap-3 text-sm">
-        <input
-          type="checkbox"
-          checked={reglages.cvAfficherQr}
-          disabled={saving || !reglages.siteUrl}
-          onChange={(e) =>
-            enregistrer({ cvAfficherQr: e.target.checked }, e.target.checked ? "QR code ajouté au CV" : "QR code retiré du CV")
-          }
-          className="mt-1"
-        />
-        <span>
-          <span className="font-medium">Afficher le QR code du portfolio dans le CV</span>
-          <span className="block text-xs text-muted-foreground mt-1">
-            En haut à droite du CV : un recruteur qui l&apos;imprime ouvre le portfolio d&apos;un coup de téléphone.
-            {!reglages.siteUrl && " Renseignez d'abord l'adresse du portfolio ci-dessus."}
+      <div>
+        <label className={`flex items-start gap-3 text-sm ${reglages.siteUrl ? "" : "opacity-60"}`}>
+          <input
+            type="checkbox"
+            checked={reglages.cvAfficherQr}
+            disabled={saving || !reglages.siteUrl}
+            aria-describedby={reglages.siteUrl ? undefined : "condition-qr"}
+            onChange={(e) =>
+              enregistrer({ cvAfficherQr: e.target.checked }, e.target.checked ? "QR code ajouté au CV" : "QR code retiré du CV")
+            }
+            className="mt-1"
+          />
+          <span>
+            <span className="font-medium">Afficher le QR code du portfolio dans le CV</span>
+            <span className="block text-xs text-muted-foreground mt-1">
+              En haut à droite du CV : un recruteur qui l&apos;imprime ouvre le portfolio d&apos;un coup de téléphone.
+            </span>
           </span>
-        </span>
-      </label>
+        </label>
+        {!reglages.siteUrl && (
+          <Condition id="condition-qr" action="Renseigner l'adresse" surAction={() => allerAuChamp("site-url")}>
+            Indisponible tant que l&apos;adresse publique du portfolio est vide : le QR code mène à cette adresse.
+            Saisissez-la puis enregistrez-la, la case s&apos;activera.
+          </Condition>
+        )}
+      </div>
 
       <label className="flex items-start gap-3 text-sm">
         <input
@@ -277,9 +326,21 @@ export function ReglagesCv({ surEnregistrement }: { surEnregistrement: () => voi
           </div>
         </form>
 
+        {!reglages.cvFaitA && (
+          <Condition
+            id="condition-fait-a"
+            action="Activer « Fait à »"
+            surAction={() => enregistrer({ cvFaitA: true }, "« Fait à … le … » ajouté au CV")}
+          >
+            Le lieu, la date et l&apos;espace de signature ne servent qu&apos;avec « Fait à …, le … » : cochez
+            d&apos;abord la case ci-dessus.
+          </Condition>
+        )}
+
         <label className={`flex items-start gap-3 text-sm ${reglages.cvFaitA ? "" : "opacity-50"}`}>
           <input
             type="checkbox"
+            aria-describedby={reglages.cvFaitA ? undefined : "condition-fait-a"}
             checked={reglages.cvEspaceSignature}
             disabled={saving || !reglages.cvFaitA}
             onChange={(e) =>
